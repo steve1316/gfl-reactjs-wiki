@@ -4,14 +4,17 @@ import { Link } from "react-router-dom";
 // Component imports
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardContent, Typography } from "@material-ui/core";
-import CssBaseline from "@material-ui/core/CssBaseline";
+import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActions, CardContent, Typography } from "@material-ui/core";
 
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 
 // Image imports
-import card1_logo from "../../images/tdoll-index.png";
+import tdoll_index_logo from "../../images/tdoll_index_logo.png";
+import equipment_index_logo from "../../images/equipment_index_logo.png";
+import hoc_index_logo from "../../images/hoc_index_logo.png";
+import fairy_index_logo from "../../images/fairy_index_logo.png";
+import formation_logo from "../../images/formation_logo.png";
 
 export default function Home() {
 	const useStyles = makeStyles((theme) => ({
@@ -21,73 +24,106 @@ export default function Home() {
 		paper: {
 			padding: theme.spacing(2)
 		},
-		card: {
-			minWidth: 250
+		heroContent: {
+			backgroundColor: theme.palette.background.paper,
+			padding: theme.spacing(8, 0, 6)
 		},
-		cardImage: {
-			height: 140
+		heroButtons: {
+			marginTop: theme.spacing(4)
+		},
+		cardGrid: {
+			paddingTop: theme.spacing(8),
+			paddingBottom: theme.spacing(8)
+		},
+		card: {
+			height: "100%",
+			display: "flex",
+			flexDirection: "column"
+		},
+		cardMedia: {
+			paddingTop: "56.25%" // 16:9
+		},
+		cardContent: {
+			flexGrow: 1
 		},
 		cardButton: {
-			margin: 10
+			display: "flex",
+			margin: 10,
+			justifyContent: "flex-end"
+		},
+		footer: {
+			backgroundColor: theme.palette.background.paper,
+			padding: theme.spacing(6)
 		}
 	}));
 
 	const classes = useStyles();
 
-	return (
-		<>
-			<CssBaseline />
-			<Container className={classes.root}>
-				<br />
-				<br />
+	const cards = [
+		{ title: "T-Doll Index", description: "View Index of T-Dolls along with additional information like statisticss and sprite animations.", link: "/index", image: tdoll_index_logo },
+		{ title: "Equipment Index", description: "View Index of Equipment available for T-Dolls.", link: "", image: equipment_index_logo },
+		{ title: "HOC Index", description: "View Index of HOCs available.", link: "", image: hoc_index_logo },
+		{ title: "Fairy Index", description: "View Index of Fairies available.", link: "", image: fairy_index_logo },
+		{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "", image: formation_logo }
+	];
 
-				<Grid container spacing={3}>
-					<Grid item xs>
-						<Card className={classes.card}>
-							<CardActionArea>
-								<CardMedia className={classes.cardImage} image={card1_logo} style={{ height: "140px" }} title="T-Doll Index"></CardMedia>
-							</CardActionArea>
-							<CardContent>
-								<Typography gutterbottom="true" variant="h5" component="h2">
-									T-Doll Index
-								</Typography>
-								<Typography variant="body2" color="textSecondary" component="p">
-									List of Tactical Dolls with Search and Filtering
-								</Typography>
-							</CardContent>
-							<Link to="/index" className={classes.link}>
-								<Button className={classes.cardButton} color="primary" variant="contained">
-									<ArrowForwardIcon />
+	return (
+		<main>
+			{/* Hero Unit */}
+			<div className={classes.heroContent}>
+				<Container maxWidth="sm">
+					<Typography component="h1" variant="h5" align="center" color="textPrimary" gutterBottom>
+						TODO: Random T-Dolls will display here. A timed function will randomly select from JSON of T-Dolls. Do not display all information.
+					</Typography>
+					<Typography variant="h5" align="center" color="textSecondary" paragraph>
+						Insert random T-Doll here
+					</Typography>
+					<div className={classes.heroButtons}>
+						<Grid container spacing={2} justify="center">
+							<Grid item>
+								<Button variant="contained" color="primary">
+									Go to this T-Doll
 								</Button>
-							</Link>
-						</Card>
-					</Grid>
-					<Grid item xs>
-						<Card className={classes.card}>
-							<CardContent>
-								<Typography gutterbottom="true" variant="h5" component="h2">
-									wip
-								</Typography>
-								<Typography variant="body2" color="textSecondary" component="p">
-									wip
-								</Typography>
-							</CardContent>
-						</Card>
-					</Grid>
-					<Grid item xs>
-						<Card className={classes.card}>
-							<CardContent>
-								<Typography gutterbottom="true" variant="h5" component="h2">
-									wip
-								</Typography>
-								<Typography variant="body2" color="textSecondary" component="p">
-									wip
-								</Typography>
-							</CardContent>
-						</Card>
-					</Grid>
+							</Grid>
+							<Grid item>
+								<Button variant="outlined" color="primary">
+									Reroll for a different one
+								</Button>
+							</Grid>
+						</Grid>
+					</div>
+				</Container>
+			</div>
+			{/* End of Hero Unit */}
+
+			{/* Cards Section for Navigation */}
+			<Container className={classes.cardGrid} maxWidth="md">
+				<Grid container spacing={4}>
+					{cards.map((card) => {
+						return (
+							<Grid item key={card["title"]} xs={12} sm={6} md={4}>
+								<Card className={classes.card} elevation={12}>
+									<CardMedia className={classes.cardMedia} image={card["image"]} title={card["title"]} />
+									<CardContent className={classes.cardContent}>
+										<Typography component="h2" variant="h5" gutterBottom>
+											{card["title"]}
+										</Typography>
+										<Typography color="textSecondary">{card["description"]}</Typography>
+									</CardContent>
+									<CardActions className={classes.cardButton}>
+										<Link to={card["link"]}>
+											<Button size="small" variant="contained" color="primary">
+												<ArrowForwardIcon />
+											</Button>
+										</Link>
+									</CardActions>
+								</Card>
+							</Grid>
+						);
+					})}
 				</Grid>
 			</Container>
-		</>
+			{/* End of Cards Section */}
+		</main>
 	);
 }
