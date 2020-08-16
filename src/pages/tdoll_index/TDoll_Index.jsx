@@ -1,8 +1,7 @@
 import React from "react";
 
 // MaterialUI imports
-import { Container, makeStyles, Grid, Card, CardMedia, CardActionArea, CardContent, Typography } from "@material-ui/core";
-import CssBaseline from "@material-ui/core/CssBaseline";
+import { Container, makeStyles, Grid } from "@material-ui/core";
 
 export default function TDoll_Index() {
 	const useStyles = makeStyles((theme) => ({
@@ -25,25 +24,5 @@ export default function TDoll_Index() {
 
 	const classes = useStyles();
 
-	return (
-		<>
-			<CssBaseline />
-			<Container className={classes.root}>
-				<br />
-				<br />
-
-				<Grid container spacing={3}>
-					<Grid item xs>
-						wip
-					</Grid>
-					<Grid item xs>
-						wip
-					</Grid>
-					<Grid item xs>
-						wip
-					</Grid>
-				</Grid>
-			</Container>
-		</>
-	);
+	return <main></main>;
 }

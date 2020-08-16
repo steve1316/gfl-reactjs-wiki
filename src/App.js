@@ -3,6 +3,7 @@ import { Route } from "react-router-dom";
 
 // MaterialUI imports
 import { orange, deepOrange } from "@material-ui/core/colors";
+import CssBaseline from "@material-ui/core/CssBaseline";
 
 // Pages imports
 import Home from "./pages/home/Home";
@@ -33,6 +34,7 @@ export default function App() {
 
 	return (
 		<ThemeProvider theme={theme}>
+			<CssBaseline />
 			<Navbar />
 			<div className="App">
 				<Route exact path="/" component={Home} />
