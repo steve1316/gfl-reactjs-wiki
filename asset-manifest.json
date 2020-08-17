@@ -1,30 +1,29 @@
 {
   "files": {
     "main.css": "/gfl-database/static/css/main.df2ad1ec.chunk.css",
-    "main.js": "/gfl-database/static/js/main.930a3393.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.930a3393.chunk.js.map",
+    "main.js": "/gfl-database/static/js/main.0baea310.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.0baea310.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.5721d095.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.5721d095.js.map",
-    "static/js/2.97280a83.chunk.js": "/gfl-database/static/js/2.97280a83.chunk.js",
-    "static/js/2.97280a83.chunk.js.map": "/gfl-database/static/js/2.97280a83.chunk.js.map",
+    "static/js/2.a93a136e.chunk.js": "/gfl-database/static/js/2.a93a136e.chunk.js",
+    "static/js/2.a93a136e.chunk.js.map": "/gfl-database/static/js/2.a93a136e.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.0eeb842b4c11556f83480e1d695542cc.js": "/gfl-database/precache-manifest.0eeb842b4c11556f83480e1d695542cc.js",
+    "precache-manifest.9f0117ea14a785871063fad5e889dad2.js": "/gfl-database/precache-manifest.9f0117ea14a785871063fad5e889dad2.js",
     "service-worker.js": "/gfl-database/service-worker.js",
     "static/css/main.df2ad1ec.chunk.css.map": "/gfl-database/static/css/main.df2ad1ec.chunk.css.map",
-    "static/js/2.97280a83.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.97280a83.chunk.js.LICENSE.txt",
+    "static/js/2.a93a136e.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.a93a136e.chunk.js.LICENSE.txt",
     "static/media/equipment_icon.png": "/gfl-database/static/media/equipment_icon.82a01645.png",
-    "static/media/equipment_index_logo.png": "/gfl-database/static/media/equipment_index_logo.9237380d.png",
-    "static/media/fairy_index_logo.png": "/gfl-database/static/media/fairy_index_logo.0499da5b.png",
+    "static/media/equipment_index_logo.jpg": "/gfl-database/static/media/equipment_index_logo.697585ef.jpg",
+    "static/media/fairy_index_logo.jpg": "/gfl-database/static/media/fairy_index_logo.965cdee9.jpg",
     "static/media/formation_icon.png": "/gfl-database/static/media/formation_icon.d9ddd721.png",
-    "static/media/formation_logo.png": "/gfl-database/static/media/formation_logo.f57bb9f2.png",
-    "static/media/hoc_index_logo.png": "/gfl-database/static/media/hoc_index_logo.156b0679.png",
-    "static/media/home_icon.png": "/gfl-database/static/media/home_icon.62859853.png",
-    "static/media/tdoll_index_logo.png": "/gfl-database/static/media/tdoll_index_logo.5ec74a4d.png"
+    "static/media/formation_logo.jpg": "/gfl-database/static/media/formation_logo.65853a49.jpg",
+    "static/media/hoc_index_logo.jpg": "/gfl-database/static/media/hoc_index_logo.e88fdcde.jpg",
+    "static/media/tdoll_index_logo.jpg": "/gfl-database/static/media/tdoll_index_logo.7b73bbb2.jpg"
   },
   "entrypoints": [
     "static/js/runtime-main.5721d095.js",
-    "static/js/2.97280a83.chunk.js",
+    "static/js/2.a93a136e.chunk.js",
     "static/css/main.df2ad1ec.chunk.css",
-    "static/js/main.930a3393.chunk.js"
+    "static/js/main.0baea310.chunk.js"
   ]
 }
