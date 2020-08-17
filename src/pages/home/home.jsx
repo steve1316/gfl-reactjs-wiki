@@ -101,19 +101,19 @@ export default function Home() {
 				<Grid container spacing={4}>
 					{cards.map((card) => {
 						return (
-							<Grid item key={card["title"]} xs={12} sm={6} md={4}>
+							<Grid item key={card.title} xs={12} sm={6} md={4}>
 								<Card className={classes.card} elevation={12}>
 									<CardActionArea>
-										<CardMedia className={classes.cardMedia} image={card["image"]} title={card["title"]} />
+										<CardMedia className={classes.cardMedia} image={card.image} title={card.title} />
 									</CardActionArea>
 									<CardContent className={classes.cardContent}>
 										<Typography component="h2" variant="h5" gutterBottom>
-											{card["title"]}
+											{card.title}
 										</Typography>
-										<Typography color="textSecondary">{card["description"]}</Typography>
+										<Typography color="textSecondary">{card.description}</Typography>
 									</CardContent>
 									<CardActions className={classes.cardButton}>
-										<Link to={card["link"]}>
+										<Link to={card.link}>
 											<Button size="small" variant="contained" color="primary">
 												<ArrowForwardIcon />
 											</Button>
