@@ -167,19 +167,19 @@ export default function Navbar() {
 				<List>
 					{listItems.map((item) => {
 						return (
-							<>
-								<Link to={item["link"]} className={classes.link}>
+							<div key={item.title}>
+								<Link to={item.link} className={classes.link}>
 									<ListItem button>
 										<ListItemIcon>
 											<Icon>
-												<img src={item["image"]} height={item["height"]} width={item["width"]} alt={item["title"]} />
+												<img src={item.image} height={item.height} width={item.width} alt={item.title} />
 											</Icon>
 										</ListItemIcon>
-										<ListItemText primary={item["title"]} />
+										<ListItemText primary={item.title} />
 									</ListItem>
 								</Link>
 								<Divider />
-							</>
+							</div>
 						);
 					})}
 				</List>
