@@ -4,17 +4,17 @@ import { Link } from "react-router-dom";
 // Component imports
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActions, CardContent, Typography } from "@material-ui/core";
+import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography } from "@material-ui/core";
 
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 
 // Image imports
-import tdoll_index_logo from "../../images/tdoll_index_logo.png";
-import equipment_index_logo from "../../images/equipment_index_logo.png";
-import hoc_index_logo from "../../images/hoc_index_logo.png";
-import fairy_index_logo from "../../images/fairy_index_logo.png";
-import formation_logo from "../../images/formation_logo.png";
+import tdoll_index_logo from "../../images/tdoll_index_logo.jpg";
+import equipment_index_logo from "../../images/equipment_index_logo.jpg";
+import hoc_index_logo from "../../images/hoc_index_logo.jpg";
+import fairy_index_logo from "../../images/fairy_index_logo.jpg";
+import formation_logo from "../../images/formation_logo.jpg";
 
 export default function Home() {
 	const useStyles = makeStyles((theme) => ({
@@ -103,7 +103,9 @@ export default function Home() {
 						return (
 							<Grid item key={card["title"]} xs={12} sm={6} md={4}>
 								<Card className={classes.card} elevation={12}>
-									<CardMedia className={classes.cardMedia} image={card["image"]} title={card["title"]} />
+									<CardActionArea>
+										<CardMedia className={classes.cardMedia} image={card["image"]} title={card["title"]} />
+									</CardActionArea>
 									<CardContent className={classes.cardContent}>
 										<Typography component="h2" variant="h5" gutterBottom>
 											{card["title"]}
