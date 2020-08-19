@@ -1,17 +1,21 @@
 {
   "files": {
     "main.css": "/gfl-database/static/css/main.df2ad1ec.chunk.css",
-    "main.js": "/gfl-database/static/js/main.0baea310.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.0baea310.chunk.js.map",
+    "main.js": "/gfl-database/static/js/main.6a6bfb8b.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.6a6bfb8b.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.5721d095.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.5721d095.js.map",
-    "static/js/2.a93a136e.chunk.js": "/gfl-database/static/js/2.a93a136e.chunk.js",
-    "static/js/2.a93a136e.chunk.js.map": "/gfl-database/static/js/2.a93a136e.chunk.js.map",
+    "static/js/2.41b4ee4f.chunk.js": "/gfl-database/static/js/2.41b4ee4f.chunk.js",
+    "static/js/2.41b4ee4f.chunk.js.map": "/gfl-database/static/js/2.41b4ee4f.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.9f0117ea14a785871063fad5e889dad2.js": "/gfl-database/precache-manifest.9f0117ea14a785871063fad5e889dad2.js",
+    "precache-manifest.c5a6413ce602f646791cf16796a66935.js": "/gfl-database/precache-manifest.c5a6413ce602f646791cf16796a66935.js",
     "service-worker.js": "/gfl-database/service-worker.js",
     "static/css/main.df2ad1ec.chunk.css.map": "/gfl-database/static/css/main.df2ad1ec.chunk.css.map",
-    "static/js/2.a93a136e.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.a93a136e.chunk.js.LICENSE.txt",
+    "static/js/2.41b4ee4f.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.41b4ee4f.chunk.js.LICENSE.txt",
+    "static/media/1_damaged.jpg": "/gfl-database/static/media/1_damaged.8cf73025.jpg",
+    "static/media/1_mod_damaged.jpg": "/gfl-database/static/media/1_mod_damaged.265e1dc3.jpg",
+    "static/media/1_mod_normal.jpg": "/gfl-database/static/media/1_mod_normal.9305d52d.jpg",
+    "static/media/1_normal.jpg": "/gfl-database/static/media/1_normal.59a702d5.jpg",
     "static/media/equipment_icon.png": "/gfl-database/static/media/equipment_icon.82a01645.png",
     "static/media/equipment_index_logo.jpg": "/gfl-database/static/media/equipment_index_logo.697585ef.jpg",
     "static/media/fairy_index_logo.jpg": "/gfl-database/static/media/fairy_index_logo.965cdee9.jpg",
@@ -22,8 +26,8 @@
   },
   "entrypoints": [
     "static/js/runtime-main.5721d095.js",
-    "static/js/2.a93a136e.chunk.js",
+    "static/js/2.41b4ee4f.chunk.js",
     "static/css/main.df2ad1ec.chunk.css",
-    "static/js/main.0baea310.chunk.js"
+    "static/js/main.6a6bfb8b.chunk.js"
   ]
 }
