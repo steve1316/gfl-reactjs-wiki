@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 // MaterialUI imports
-import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, CardContent, Typography, CardActions, Button } from "@material-ui/core";
+import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography } from "@material-ui/core";
 
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
-import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 import { useEffect } from "react";
 
 // T-Dolls JSON import
@@ -28,12 +27,12 @@ export default function TDoll_Index() {
 			display: "flex",
 			flexDirection: "column",
 			maxWidth: 200,
-			maxHeight: 550
+			maxHeight: 500
 		},
 		cardMedia: {
 			height: "100%",
 			width: "100%",
-			objectFit: "contain"
+			objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
 		},
 		cardContent: {
 			flexGrow: 1
@@ -86,13 +85,19 @@ export default function TDoll_Index() {
 		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
 	};
 
+	// Set the number of search results to the length of the T-Doll JSON. Runs once for now.
+	// TODO: Revamp this logic for updating this when user selects any filters or types in Search Bar inside Navbar and
+	// watch out for infinite rerendering issue.
 	useEffect(() => {
 		setNumberOfSearchResults(tdolls_from_1_to_10.length);
 	}, []);
 
+	// The following handler functions below are setting the filters selected as active.
 	const handleOnClickRarity = (rarityToBeUpdated) => () => {
 		const key = rarityToBeUpdated.key;
 		const newSelected = !rarityToBeUpdated.selected;
+
+		// Match the rarity's key with the given rarity's key and only set its selected boolean to the opposite of what it was.
 		setRarityFilter((rarities) => rarities.map((rarity) => (rarity.key === key ? { ...rarity, selected: newSelected } : rarity)));
 	};
 
@@ -131,7 +136,9 @@ export default function TDoll_Index() {
 						);
 					})}
 				</div>
+
 				<Divider className={classes.divider} />
+
 				<div className={classes.chipList}>
 					{typeFilter.map((type) => {
 						return (
@@ -172,10 +179,12 @@ export default function TDoll_Index() {
 									<Link
 										to={{
 											pathname: "/tdoll",
+											search: "?id=" + tdoll.id,
 											state: {
 												tdoll: tdoll
 											}
 										}}
+										onClick={() => sessionStorage.setItem(tdoll.id, JSON.stringify(tdoll))}
 									>
 										<CardActionArea>
 											<CardMedia component="img" className={classes.cardMedia} image={tdoll.image_normal} title={tdoll.name} />
