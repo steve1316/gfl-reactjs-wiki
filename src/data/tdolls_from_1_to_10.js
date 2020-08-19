@@ -1,13 +1,15 @@
 /*
     This array of T-Dolls will contain information about each one in JSON format. Some things to note:
     - All stats are considered at max rank. For skill stats, I'm separating them for now.
-    - If T-Doll has MOD, mod attribute will be populated. If not, mod attribute will be NULL.
-    - number_of_stats in skill attribute dictates the amount of numbers from stat(1) to stat(n) to be replacing the "#(n)"" delimiters inside the skill description in sequential order.
+    - If T-Doll has MOD, mod attribute will be populated. If not, mod attribute will be set to NULL.
+	- number_of_stats in skill attribute dictates the amount of numbers from stat(1) to stat(n) to be replacing the "#(n)"" delimiters inside the skill description in sequential order.
+	- TODO: include their sprites as well.
 
 */
 
 const tdolls = [
 	{
+		id: 1,
 		name: "SAA",
 		type: "hg",
 		rarity: 4,
