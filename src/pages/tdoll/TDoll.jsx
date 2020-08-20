@@ -86,7 +86,8 @@ export default function TDoll(props) {
 		},
 		cardForSkill: {
 			display: "flex",
-			minWidth: 300
+			minWidth: 300,
+			backgroundColor: theme.palette.grey[700]
 		},
 		cardMedia: {
 			paddingTop: "56.25%" // 16:9
@@ -117,7 +118,7 @@ export default function TDoll(props) {
 		table: {
 			minWidth: 150,
 			maxWidth: 200,
-			backgroundColor: theme.palette.grey[600]
+			backgroundColor: theme.palette.grey[700]
 		},
 		title: {
 			fontSize: 14
