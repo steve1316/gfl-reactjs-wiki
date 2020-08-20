@@ -198,16 +198,15 @@ export default function TDoll(props) {
 
 	useEffect(() => {
 		// Switch the information shown from Normal to MOD for the T-Doll depending on the tab selected above its image.
-		tdoll.selected = {};
+		var tdoll_temp = backup;
 		if (value === 1) {
-			//console.log("Setting to MOD");
-			tdoll.selected = tdoll.mod;
-			setTDollImage(tdoll.selected.image_normal);
+			tdoll_temp.selected = backup.mod;
 		} else {
-			//console.log("Setting to Normal");
-			tdoll.selected = tdoll.normal;
-			setTDollImage(tdoll.selected.image_normal);
+			tdoll_temp.selected = backup.normal;
 		}
+
+		setTDollImage(tdoll_temp.selected.image_normal);
+		setTDoll(tdoll_temp);
 	}, [value]);
 
 	useEffect(() => {
