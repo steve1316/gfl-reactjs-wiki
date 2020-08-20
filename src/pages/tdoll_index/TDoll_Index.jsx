@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 // MaterialUI imports
-import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography } from "@material-ui/core";
+import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Button, Tooltip, withStyles } from "@material-ui/core";
 
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
@@ -10,6 +10,16 @@ import { useEffect } from "react";
 
 // T-Dolls JSON import
 const tdolls_from_1_to_10 = require("../../data/tdolls_from_1_to_10");
+
+const HtmlTooltip = withStyles((theme) => ({
+	tooltip: {
+		backgroundColor: "#f5f5f9",
+		color: "rgba(0, 0, 0, 0.87)",
+		maxWidth: 220,
+		fontSize: theme.typography.pxToRem(12),
+		border: "1px solid #dadde9"
+	}
+}))(Tooltip);
 
 export default function TDoll_Index() {
 	const useStyles = makeStyles((theme) => ({
@@ -54,15 +64,18 @@ export default function TDoll_Index() {
 				margin: theme.spacing(0.5)
 			}
 		},
-		divider: {
-			marginTop: 5,
-			marginBottom: 5
+		dividerForChips: {
+			margin: 5
+		},
+		dividerForCards: {
+			marginBottom: 50
 		}
 	}));
 
 	const classes = useStyles();
 
 	const [numberOfSearchResults, setNumberOfSearchResults] = useState(0);
+	const [filterMOD, setFilterMOD] = useState(false);
 
 	const [rarityFilter, setRarityFilter] = useState([
 		{ key: 0, label: "General", rarity: "2*", selected: false },
@@ -137,7 +150,7 @@ export default function TDoll_Index() {
 					})}
 				</div>
 
-				<Divider className={classes.divider} />
+				<Divider className={classes.dividerForChips} />
 
 				<div className={classes.chipList}>
 					{typeFilter.map((type) => {
@@ -170,25 +183,52 @@ export default function TDoll_Index() {
 				<Typography component="h1" variant="h5" color="textPrimary" gutterBottom>
 					Now showing {numberOfSearchResults} search results.
 				</Typography>
-				<Divider />
+
+				<Button variant="contained" onClick={() => setFilterMOD(!filterMOD)}>
+					MOD HERE
+				</Button>
+
+				<Divider className={classes.dividerForCards} />
+
 				<Grid container spacing={4}>
 					{tdolls_from_1_to_10.map((tdoll) => {
+						if (filterMOD) {
+							tdoll.selected = tdoll.mod;
+						} else {
+							tdoll.selected = tdoll.normal;
+						}
+
 						return (
-							<Grid item key={tdoll.name} xs={12} sm={6} md={4}>
+							<Grid item key={tdoll.selected.name} xs={12} sm={6} md={4}>
 								<Card className={classes.card} elevation={12}>
 									<Link
 										to={{
 											pathname: "/tdoll",
-											search: "?id=" + tdoll.id,
+											search: "?id=" + tdoll.selected.id,
 											state: {
 												tdoll: tdoll
 											}
 										}}
-										onClick={() => sessionStorage.setItem(tdoll.id, JSON.stringify(tdoll))}
+										onClick={() => sessionStorage.setItem(tdoll.selected.id, JSON.stringify(tdoll))}
 									>
-										<CardActionArea>
-											<CardMedia component="img" className={classes.cardMedia} image={tdoll.image_normal} title={tdoll.name} />
-										</CardActionArea>
+										<HtmlTooltip
+											title={
+												<>
+													<Typography color="inherit">
+														{tdoll.selected.name}
+														<small>
+															<sup>[#{tdoll.selected.id}]</sup>
+														</small>
+													</Typography>
+													<b>{tdoll.selected.rarity + "*" + " " + tdoll.selected.type}</b>
+												</>
+											}
+											placement="right"
+										>
+											<CardActionArea>
+												<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.image_normal} title={tdoll.selected.name} />
+											</CardActionArea>
+										</HtmlTooltip>
 									</Link>
 								</Card>
 							</Grid>
