@@ -1,24 +1,26 @@
 {
   "files": {
     "main.css": "/gfl-database/static/css/main.df2ad1ec.chunk.css",
-    "main.js": "/gfl-database/static/js/main.9ff28f65.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.9ff28f65.chunk.js.map",
+    "main.js": "/gfl-database/static/js/main.5c2bf824.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.5c2bf824.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.5721d095.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.5721d095.js.map",
-    "static/js/2.a8cd9207.chunk.js": "/gfl-database/static/js/2.a8cd9207.chunk.js",
-    "static/js/2.a8cd9207.chunk.js.map": "/gfl-database/static/js/2.a8cd9207.chunk.js.map",
+    "static/js/2.d35197cd.chunk.js": "/gfl-database/static/js/2.d35197cd.chunk.js",
+    "static/js/2.d35197cd.chunk.js.map": "/gfl-database/static/js/2.d35197cd.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.adbb9db2e74adb61cc4efdfee3a721cb.js": "/gfl-database/precache-manifest.adbb9db2e74adb61cc4efdfee3a721cb.js",
+    "precache-manifest.29b11c067baec798dd96209fb50cfae7.js": "/gfl-database/precache-manifest.29b11c067baec798dd96209fb50cfae7.js",
     "service-worker.js": "/gfl-database/service-worker.js",
     "static/css/main.df2ad1ec.chunk.css.map": "/gfl-database/static/css/main.df2ad1ec.chunk.css.map",
-    "static/js/2.a8cd9207.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.a8cd9207.chunk.js.LICENSE.txt",
-    "static/media/1_damaged.jpg": "/gfl-database/static/media/1_damaged.8cf73025.jpg",
-    "static/media/1_mod_damaged.jpg": "/gfl-database/static/media/1_mod_damaged.265e1dc3.jpg",
-    "static/media/1_mod_normal.jpg": "/gfl-database/static/media/1_mod_normal.9305d52d.jpg",
-    "static/media/1_normal.jpg": "/gfl-database/static/media/1_normal.59a702d5.jpg",
+    "static/js/2.d35197cd.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.d35197cd.chunk.js.LICENSE.txt",
+    "static/media/1_damaged.png": "/gfl-database/static/media/1_damaged.52f70274.png",
+    "static/media/1_mod_damaged.png": "/gfl-database/static/media/1_mod_damaged.02039b6c.png",
+    "static/media/1_mod_normal.png": "/gfl-database/static/media/1_mod_normal.6583de57.png",
+    "static/media/1_normal.png": "/gfl-database/static/media/1_normal.6472ab6e.png",
+    "static/media/duel_survivor.jpg": "/gfl-database/static/media/duel_survivor.0bdbc665.jpg",
     "static/media/equipment_icon.png": "/gfl-database/static/media/equipment_icon.82a01645.png",
     "static/media/equipment_index_logo.jpg": "/gfl-database/static/media/equipment_index_logo.697585ef.jpg",
     "static/media/fairy_index_logo.jpg": "/gfl-database/static/media/fairy_index_logo.965cdee9.jpg",
+    "static/media/fire_command.jpg": "/gfl-database/static/media/fire_command.3bc31852.jpg",
     "static/media/formation_icon.png": "/gfl-database/static/media/formation_icon.d9ddd721.png",
     "static/media/formation_logo.jpg": "/gfl-database/static/media/formation_logo.65853a49.jpg",
     "static/media/hoc_index_logo.jpg": "/gfl-database/static/media/hoc_index_logo.e88fdcde.jpg",
@@ -26,8 +28,8 @@
   },
   "entrypoints": [
     "static/js/runtime-main.5721d095.js",
-    "static/js/2.a8cd9207.chunk.js",
+    "static/js/2.d35197cd.chunk.js",
     "static/css/main.df2ad1ec.chunk.css",
-    "static/js/main.9ff28f65.chunk.js"
+    "static/js/main.5c2bf824.chunk.js"
   ]
 }

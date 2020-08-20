@@ -1,43 +1,47 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "06e9d1d383d027428061f1555b091615",
+    "revision": "f065766db0b7f5c559ef5367f752b34a",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "3e750a2518661ec7f5a3",
+    "revision": "00a6a4df0d368c34fbd0",
     "url": "/gfl-database/static/css/main.df2ad1ec.chunk.css"
   },
   {
-    "revision": "d0b633f65631ff4228b4",
-    "url": "/gfl-database/static/js/2.a8cd9207.chunk.js"
+    "revision": "06563572b7801c1bc994",
+    "url": "/gfl-database/static/js/2.d35197cd.chunk.js"
   },
   {
-    "revision": "0749163b59fbee32225059cb60c18af6",
-    "url": "/gfl-database/static/js/2.a8cd9207.chunk.js.LICENSE.txt"
+    "revision": "89b0379e7bcda1a468d8b0343aeb4e53",
+    "url": "/gfl-database/static/js/2.d35197cd.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "3e750a2518661ec7f5a3",
-    "url": "/gfl-database/static/js/main.9ff28f65.chunk.js"
+    "revision": "00a6a4df0d368c34fbd0",
+    "url": "/gfl-database/static/js/main.5c2bf824.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
     "url": "/gfl-database/static/js/runtime-main.5721d095.js"
   },
   {
-    "revision": "8cf73025818f941502429fca2396798c",
-    "url": "/gfl-database/static/media/1_damaged.8cf73025.jpg"
+    "revision": "52f702741d3623ec0fd077c702ebc17f",
+    "url": "/gfl-database/static/media/1_damaged.52f70274.png"
   },
   {
-    "revision": "265e1dc33faa4dab70bdcd0d3c2d5dc3",
-    "url": "/gfl-database/static/media/1_mod_damaged.265e1dc3.jpg"
+    "revision": "02039b6c6731ed533c77fd84990c7c10",
+    "url": "/gfl-database/static/media/1_mod_damaged.02039b6c.png"
   },
   {
-    "revision": "9305d52d69d5541d54b995574bf75e2c",
-    "url": "/gfl-database/static/media/1_mod_normal.9305d52d.jpg"
+    "revision": "6583de575f887600d907ff03b3852941",
+    "url": "/gfl-database/static/media/1_mod_normal.6583de57.png"
   },
   {
-    "revision": "59a702d5d4449b21de5398c87c18c6a8",
-    "url": "/gfl-database/static/media/1_normal.59a702d5.jpg"
+    "revision": "6472ab6e2419d84f6cb3a930a195028c",
+    "url": "/gfl-database/static/media/1_normal.6472ab6e.png"
+  },
+  {
+    "revision": "0bdbc665beea39553b8ebd176ac35750",
+    "url": "/gfl-database/static/media/duel_survivor.0bdbc665.jpg"
   },
   {
     "revision": "82a016451fc60e93bfcb3ea47a9e8ee4",
@@ -50,6 +54,10 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "965cdee9ce5ca8c4d0416d1365e25544",
     "url": "/gfl-database/static/media/fairy_index_logo.965cdee9.jpg"
+  },
+  {
+    "revision": "3bc318526fc05c27a5adb46bfa5dfe8e",
+    "url": "/gfl-database/static/media/fire_command.3bc31852.jpg"
   },
   {
     "revision": "d9ddd721dbf3ade3ed9aefd7df8532f1",
