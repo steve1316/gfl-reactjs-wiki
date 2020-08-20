@@ -160,6 +160,7 @@ export default function TDoll(props) {
 	// Grab the T-Doll's information from the sessionStorage.
 	const id = props.location.search.substring(4);
 	const [tdoll, setTDoll] = useState(JSON.parse(sessionStorage.getItem(id)));
+	const backup = JSON.parse(sessionStorage.getItem(id));
 
 	// Set initial states.
 	const [skillLevel, setSkillLevel] = useState(10);
@@ -213,7 +214,7 @@ export default function TDoll(props) {
 		// It will also insert into the strings some <span> and <ins> tags in order to highlight what stats are changed when the skill level changes.
 		// The npm package html-react-parser will parse the inserted span tags and properly render them into HTML tags.
 		// Note: The styling being inserted is using HTML styling and not using React styling.
-		var tdoll_temp = tdoll; // Make a temp copy of this JSON state.
+		var tdoll_temp = backup; // Using the const backup to make sure that it is reading the delimiters inside the description correctly.
 		var skillDescription = tdoll_temp.selected.skill.description;
 		var numberOfStats = tdoll_temp.selected.skill.number_of_stats;
 		switch (numberOfStats) {
@@ -233,11 +234,11 @@ export default function TDoll(props) {
 			default:
 		}
 
-		console.log("Saving skill description");
+		tdoll_temp.selected.skill.description = skillDescription;
 
 		// Save the properly formatted skill description.
 		setTDoll(tdoll_temp);
-	}, [skillLevel]);
+	}, [skillLevel, value]);
 
 	return (
 		<main>
