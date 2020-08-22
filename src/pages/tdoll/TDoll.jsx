@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
-import PropTypes from "prop-types";
 
 // MaterialUI imports
 import {
@@ -27,8 +26,7 @@ import {
 	InputLabel,
 	FormControl,
 	Tabs,
-	Tab,
-	withStyles
+	Tab
 } from "@material-ui/core";
 
 // MaterialUI icon imports
@@ -37,32 +35,6 @@ import { useEffect } from "react";
 
 // Image imports
 //import rarity_star from "../../images/rarity_star.png";
-
-const StyledTabs = withStyles({
-	indicator: {
-		display: "flex",
-		justifyContent: "center",
-		backgroundColor: "transparent",
-		"& > span": {
-			maxWidth: 40,
-			width: "100%",
-			backgroundColor: "#635ee7"
-		}
-	}
-})((props) => <Tabs {...props} TabIndicatorProps={{ children: <span /> }} />);
-
-const StyledTab = withStyles((theme) => ({
-	root: {
-		textTransform: "none",
-		color: "#fff",
-		fontWeight: theme.typography.fontWeightRegular,
-		fontSize: theme.typography.pxToRem(15),
-		marginRight: theme.spacing(1),
-		"&:focus": {
-			opacity: 1
-		}
-	}
-}))((props) => <Tab {...props} />);
 
 export default function TDoll(props) {
 	const useStyles = makeStyles((theme) => ({
@@ -132,6 +104,10 @@ export default function TDoll(props) {
 		tabs: {
 			width: 256,
 			backgroundColor: theme.palette.grey[900]
+		},
+		tabsForSkills: {
+			width: "100%",
+			backgroundColor: theme.palette.grey[900]
 		}
 	}));
 
@@ -163,24 +139,43 @@ export default function TDoll(props) {
 	const [tdoll, setTDoll] = useState(JSON.parse(sessionStorage.getItem(id)));
 	const backup = JSON.parse(sessionStorage.getItem(id));
 
+	// Set initial states for the skill descriptions. Set Skill 2 to the description of Skill 1 in case T-Doll does not have a Neural Upgrade.
+	const [skillDescription1, setSkillDescription1] = useState(backup.normal.skill.description);
+	const [skillDescription2, setSkillDescription2] = useState(backup.normal.skill.description);
+
 	// Set initial states.
 	const [skillLevel, setSkillLevel] = useState(10);
 	const [tdollImage, setTDollImage] = useState(undefined);
 	const [switchImage, setSwitchImage] = useState(false);
-	const [MOD, setMOD] = useState(false);
-	const [value, setValue] = useState(0); // 0 for Normal, 1 for MOD.
+	const [mode, setMode] = useState(0); // 0 for Normal, 1 for MOD.
+	const [hasMod, setHasMod] = useState(false);
+	const [showModSkill, setShowModSkill] = useState(false);
+	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Normal skill, 1 for MOD skill if it exists.
 
+	// This useEffect will run after the first render and will not be called again. This will be used to initialize the functionality of the page.
 	useEffect(() => {
+		// Set initial information displayed for Normal.
 		tdoll.selected = tdoll.normal;
 
-		// Console log the T-Doll's information only once.
-		console.log("T-Doll: ", tdoll);
+		// Check if T-Doll has Mod. If so, set state to true. If not, then false. This will impact various functions in this page.
+		if (tdoll.mod !== null) {
+			setHasMod(true);
+		} else {
+			setHasMod(false);
+		}
 
+		// Run initial skill description formatter.
+		handleChangeSkillDescription();
+
+		// Console log the T-Doll's information only once.
+		console.log("Initial T-Doll state: ", tdoll);
+
+		// Set the initial image to be displayed for the T-Doll.
 		setTDollImage(tdoll.selected.image_normal);
 	}, []);
 
+	// Replace the T-Doll's image with normal or damaged versions.
 	const handleChangeImage = () => {
-		// Replace the T-Doll's image with normal or damaged versions.
 		if (switchImage) {
 			setTDollImage(tdoll.selected.image_normal);
 			//console.log("Normal art is showed.");
@@ -192,53 +187,118 @@ export default function TDoll(props) {
 		}
 	};
 
-	const handleChange = (event, newValue) => {
-		setValue(newValue);
-	};
+	const switchModes = (event, newValue) => {
+		setMode(newValue);
 
-	useEffect(() => {
-		// Switch the information shown from Normal to MOD for the T-Doll depending on the tab selected above its image.
+		// Perform check if the information shown should be MOD. Then set the state of the T-Doll depending if MOD. Also set the state of the image.
 		var tdoll_temp = backup;
-		if (value === 1) {
+		if (newValue === 1) {
+			//console.log("Setting to MOD");
+			setShowModSkill(true);
 			tdoll_temp.selected = backup.mod;
 		} else {
+			//console.log("Setting to Normal");
+			setShowModSkill(false);
 			tdoll_temp.selected = backup.normal;
 		}
 
-		setTDollImage(tdoll_temp.selected.image_normal);
 		setTDoll(tdoll_temp);
-	}, [value]);
 
-	useEffect(() => {
+		// Set the state of the T-Doll image and made sure to prevent duplicate click bug on the image.
+		setTDollImage(tdoll_temp.selected.image_normal);
+		setSwitchImage(false);
+	};
+
+	// Switch between Skills 1 and 2 if T-Doll has Mod.
+	const handleChangeSkills = (event, newValue) => {
+		setSelectedSkill(newValue);
+	};
+
+	const handleChangeSkillDescription = () => {
 		// A hack-job attempt at programmatically replacing all delimiters with the appropriate stat numbers at the chosen skill level.
 		// It will also insert into the strings some <span> and <ins> tags in order to highlight what stats are changed when the skill level changes.
 		// The npm package html-react-parser will parse the inserted span tags and properly render them into HTML tags.
 		// Note: The styling being inserted is using HTML styling and not using React styling.
-		var tdoll_temp = backup; // Using the const backup to make sure that it is reading the delimiters inside the description correctly.
-		var skillDescription = tdoll_temp.selected.skill.description;
-		var numberOfStats = tdoll_temp.selected.skill.number_of_stats;
-		switch (numberOfStats) {
-			case 1:
-				skillDescription = skillDescription.replace("#1", '<span style="color: cyan;"><ins>' + tdoll_temp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-				break;
-			case 2:
-				skillDescription = skillDescription.replace("#1", '<span style="color: cyan; font-size: 125%;"><ins>' + tdoll_temp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-				skillDescription = skillDescription.replace("#2", '<span style="color: cyan; font-size: 125%;"><ins>' + tdoll_temp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-				break;
-			case 3:
-				skillDescription = skillDescription.replace("#1", '<span style="color: cyan;"><ins>' + tdoll_temp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-				skillDescription = skillDescription.replace("#2", '<span style="color: cyan;"><ins>' + tdoll_temp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-				skillDescription = skillDescription.replace("#3", '<span style="color: cyan;"><ins>' + tdoll_temp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-				break;
 
-			default:
+		var tdollTemp = tdoll; // Using the const backup to make sure that it is reading the delimiters inside the description correctly.
+
+		// Reset the description to have it include the delimiters again and set variables to be used.
+		tdollTemp.selected.skill.description = backup.normal.skill.description;
+		var tempSkillDescription1 = tdollTemp.selected.skill.description;
+		var numberOfStats1 = tdollTemp.selected.skill.number_of_stats;
+		if ("skill2" in tdollTemp.selected) {
+			tdollTemp.selected.skill2.description = backup.mod.skill2.description;
+			var tempSkillDescription2 = tdollTemp.selected.skill2.description;
+			var numberOfStats2 = tdollTemp.selected.skill2.number_of_stats;
 		}
 
-		tdoll_temp.selected.skill.description = skillDescription;
+		// If T-Doll has Mod, set both Skills 1 and 2. If not, only set Skill 1.
+		if (showModSkill) {
+			// Go through Skill 1 first.
+			switch (numberOfStats1) {
+				case 1:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					break;
+				case 2:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 125%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 125%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					break;
+				case 3:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
+					break;
+				default:
+			}
 
-		// Save the properly formatted skill description.
-		setTDoll(tdoll_temp);
-	}, [skillLevel, value]);
+			// Go through Skill 2 next.
+			switch (numberOfStats2) {
+				case 1:
+					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
+					break;
+				case 2:
+					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan; font-size: 125%;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription2 = tempSkillDescription2.replace("#2", '<span style="color: cyan; font-size: 125%;"><ins>' + tdollTemp.selected.skill2.stat2[skillLevel - 1] + "</ins></span>");
+					break;
+				case 3:
+					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription2 = tempSkillDescription2.replace("#2", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill2.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription2 = tempSkillDescription2.replace("#3", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill2.stat3[skillLevel - 1] + "</ins></span>");
+					break;
+				default:
+			}
+
+			//console.log("Skill 1 Description: ", tempSkillDescription1);
+			//console.log("Skill 2 Description: ", tempSkillDescription2);
+
+			// Save the skill descriptions into their states.
+			setSkillDescription1(tempSkillDescription1);
+			setSkillDescription2(tempSkillDescription2);
+		} else {
+			switch (numberOfStats1) {
+				case 1:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					break;
+				case 2:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 125%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 125%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					break;
+				case 3:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
+					break;
+				default:
+			}
+
+			//console.log("Skill 1 only Description: ", tempSkillDescription1);
+			setSkillDescription1(tempSkillDescription1);
+		}
+	};
+
+	useEffect(() => {
+		handleChangeSkillDescription();
+	}, [skillLevel, mode]);
 
 	return (
 		<main>
@@ -263,10 +323,17 @@ export default function TDoll(props) {
 						{/* T-Doll image */}
 						<Grid container direction="row" spacing={2}>
 							<Grid item key="T-Doll image" xs={6}>
-								<Tabs className={classes.tabs} value={value} onChange={handleChange} indicatorColor="primary" textColor="primary">
-									<Tab label="Normal" />
-									<Tab label="MOD" />
-								</Tabs>
+								{hasMod ? (
+									<Tabs className={classes.tabs} value={mode} onChange={switchModes} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
+										<Tab label="Normal" />
+										<Tab label="MOD" />
+									</Tabs>
+								) : (
+									<Tabs className={classes.tabs} value={0} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
+										<Tab label="Normal" />
+									</Tabs>
+								)}
+
 								<Card className={classes.cardForImage} elevation={12}>
 									<CardActionArea onClick={handleChangeImage}>
 										<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
@@ -324,10 +391,31 @@ export default function TDoll(props) {
 							<Grid item key="T-Doll skill(s)" xs={6} sm={6}>
 								<Card className={classes.cardForSkill} elevation={12}>
 									<CardContent>
+										{showModSkill ? (
+											<Tabs
+												className={classes.tabsForSkills}
+												value={selectedSkill}
+												onChange={handleChangeSkills}
+												indicatorColor="primary"
+												textColor="primary"
+												variant="scrollable"
+												scrollButtons="auto"
+											>
+												<Tab label="Skill 1" />
+												<Tab label="Skill 2" />
+											</Tabs>
+										) : (
+											<Tabs className={classes.tabsForSkills} value={0} indicatorColor="primary" textColor="primary" centered>
+												<Tab label="Skill 1" />
+											</Tabs>
+										)}
+
 										<CardHeader
-											avatar={<Avatar variant="rounded" src={tdoll.selected.skill.image_skill} />}
-											title={tdoll.selected.skill.name}
-											subheader={"Initial CD: " + tdoll.selected.skill.initial_cooldown + "s"}
+											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.image_skill : tdoll.selected.skill.image_skill} />}
+											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
+											subheader={
+												selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? "Initial CD: " + tdoll.selected.skill2.initial_cooldown : "Initial CD: " + tdoll.selected.skill.initial_cooldown
+											}
 											action={
 												<FormControl>
 													<InputLabel id="skill-level-select-label">Level</InputLabel>
@@ -339,7 +427,7 @@ export default function TDoll(props) {
 														onChange={(e) => {
 															setSkillLevel(e.target.value);
 														}}
-														// MenuProps will shift the drop down menu to the right
+														// MenuProps will shift the drop down menu to the right.
 														MenuProps={{
 															anchorOrigin: {
 																vertical: "top",
@@ -368,13 +456,13 @@ export default function TDoll(props) {
 										/>
 										<Typography className={classes.title} color="textSecondary" gutterBottom>
 											{/* This will render the span tags inserted into the skill description and will color the numbers. */}
-											{parse(tdoll.selected.skill.description)}
+											{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
 										</Typography>
 										<Typography className={classes.pos} color="textSecondary">
 											Cooldown:{" "}
 											{
 												<span style={{ color: "cyan" }}>
-													<ins>{tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
+													<ins>{selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.cooldown[skillLevel - 1] : tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
 												</span>
 											}
 										</Typography>
