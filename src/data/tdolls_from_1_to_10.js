@@ -25,7 +25,7 @@ const tdolls = [
 			max_rof: 47,
 			skill: {
 				name: "Fire Command",
-				initial_cooldown: 6,
+				initial_cooldown: "6s",
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				description: "Increase all allies' damage by #1 for #2 seconds.",
 				number_of_stats: 2,
@@ -48,7 +48,7 @@ const tdolls = [
 			max_rof: 50,
 			skill: {
 				name: "Fire Command",
-				initial_cooldown: 6,
+				initial_cooldown: "6s",
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				description: "Increase all allies' damage by #1 for #2 seconds.",
 				number_of_stats: 2,
@@ -58,11 +58,11 @@ const tdolls = [
 			},
 			skill2: {
 				name: "Duel Survivor",
-				initial_cooldown: 6,
+				initial_cooldown: "Passive",
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-				description: "Increase all allies' rate of fire and accuracy by #1% for every #2 seconds that SAA is alive in battle. Max 3 stacks.",
+				description: "Increase all allies' rate of fire and accuracy by #1 for every #2 seconds that SAA is alive in battle. Max 3 stacks.",
 				number_of_stats: 2,
-				stat1: [3, 3, 3, 4, 4, 4, 5, 5, 5, 5],
+				stat1: ["3%", "3%", "3%", "4%", "4%", "4%", "5%", "5%", "5%", "5%"],
 				stat2: [6, 5.8, 5.6, 5.3, 5.1, 4.9, 4.7, 4.4, 4.2, 4],
 				image_skill: require("../images/tdolls/duel_survivor.jpg")
 			},
