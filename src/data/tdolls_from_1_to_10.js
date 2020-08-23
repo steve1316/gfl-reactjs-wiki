@@ -33,6 +33,15 @@ const tdolls = [
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
 				image_skill: require("../images/tdolls/fire_command.jpg")
 			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [1, 2, 1],
+				row3: [0, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["24%", "50%"]
+			},
 			image_normal: require("../images/tdolls/1_normal.png"),
 			image_damaged: require("../images/tdolls/1_damaged.png")
 		},
@@ -65,6 +74,15 @@ const tdolls = [
 				stat1: ["3%", "3%", "3%", "4%", "4%", "4%", "5%", "5%", "5%", "5%"],
 				stat2: [6, 5.8, 5.6, 5.3, 5.1, 4.9, 4.7, 4.4, 4.2, 4],
 				image_skill: require("../images/tdolls/duel_survivor.jpg")
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [1, 2, 1],
+				row3: [0, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["24%", "60%"]
 			},
 			image_normal: require("../images/tdolls/1_mod_normal.png"),
 			image_damaged: require("../images/tdolls/1_mod_damaged.png")
