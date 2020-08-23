@@ -2,6 +2,8 @@ import React, { useState } from "react";
 
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
 
+// Component imports
+
 // MaterialUI imports
 import {
 	Container,
@@ -47,29 +49,23 @@ export default function TDoll(props) {
 		},
 		card: {
 			height: "100%",
-			width: "100%",
-			display: "flex"
+			width: "100%"
 		},
 		cardForImage: {
-			display: "flex",
 			width: 256, // The dimensions of the images.
 			height: 512,
 			marginBottom: 10
 		},
 		cardForSkill: {
-			display: "flex",
-			minWidth: 300,
+			minWidth: 256,
+			backgroundColor: theme.palette.grey[700]
+		},
+		cardForTileSet: {
+			minWidth: 256,
 			backgroundColor: theme.palette.grey[700]
 		},
 		cardMedia: {
 			paddingTop: "56.25%" // 16:9
-		},
-		cardMediaForImage: {
-			// height: "100%",
-			// objectFit: "contain"
-		},
-		cardContent: {
-			flexGrow: 1
 		},
 		cardButton: {
 			display: "flex",
@@ -87,9 +83,11 @@ export default function TDoll(props) {
 			transform: "translate(0px, 3px)", // This will set the rendered stars to be about inline with the T-Doll's type text.
 			marginLeft: 3
 		},
+		tableContainer: {
+			minWidth: 256
+		},
 		table: {
-			minWidth: 150,
-			maxWidth: 200,
+			width: "100%",
 			backgroundColor: theme.palette.grey[700]
 		},
 		title: {
@@ -98,16 +96,52 @@ export default function TDoll(props) {
 		pos: {
 			marginBottom: 12
 		},
-		skillLevel: {
-			//
-		},
 		tabs: {
 			width: 256,
 			backgroundColor: theme.palette.grey[900]
 		},
 		tabsForSkills: {
-			width: "100%",
+			minWidth: 256,
 			backgroundColor: theme.palette.grey[900]
+		},
+		tableTileSet: {
+			width: 100,
+			height: 100,
+			borderStyle: "solid",
+			borderColor: "black",
+			borderSpacing: 0,
+			borderWidth: 2
+		},
+		blackTile: {
+			backgroundColor: theme.palette.grey[800],
+			width: "33%",
+			borderStyle: "solid",
+			borderColor: "black",
+			borderWidth: 1
+		},
+		cyanTile: {
+			backgroundColor: "cyan",
+			width: "33%",
+			borderStyle: "solid",
+			borderColor: "black",
+			borderWidth: 1
+		},
+		whiteTile: {
+			backgroundColor: "white",
+			width: "33%",
+			borderStyle: "solid",
+			borderColor: "black",
+			borderWidth: 1
+		},
+		tileSetDiv: {
+			display: "flex"
+		},
+		content: {
+			flex: "0 1 auto"
+		},
+		tileSetInformation: {
+			display: "flex",
+			flexDirection: "column"
 		}
 	}));
 
@@ -195,6 +229,7 @@ export default function TDoll(props) {
 		if (newValue === 1) {
 			//console.log("Setting to MOD");
 			setShowModSkill(true);
+			setSelectedSkill(0);
 			tdoll_temp.selected = backup.mod;
 		} else {
 			//console.log("Setting to Normal");
@@ -207,6 +242,44 @@ export default function TDoll(props) {
 		// Set the state of the T-Doll image and made sure to prevent duplicate click bug on the image.
 		setTDollImage(tdoll_temp.selected.image_normal);
 		setSwitchImage(false);
+	};
+
+	// This function will return tiles depending on the tile set information in the JSON.
+	const tileSetFunction = (tile, index) => {
+		var temp = "";
+		if (tile === 0) {
+			temp = <td className={classes.blackTile} key={index}></td>;
+		} else if (tile === 1) {
+			temp = <td className={classes.cyanTile} key={index}></td>;
+		} else {
+			temp = <td className={classes.whiteTile} key={index}></td>;
+		}
+
+		return temp;
+	};
+
+	const renderTileSetInformation = () => {
+		var number_of_stats = tdoll.selected.tile_set.number_of_stats;
+		var tempStat = "";
+		switch (number_of_stats) {
+			case 1:
+				tempStat = tdoll.selected.tile_set.stat1[0] + '<span style="color: yellow;"><ins>' + tdoll.selected.tile_set.stat2[0] + "</ins></span>";
+				break;
+			case 2:
+				tempStat =
+					tdoll.selected.tile_set.stat1[0] +
+					'<span style="color: yellow;"><ins>' +
+					tdoll.selected.tile_set.stat2[0] +
+					"</ins></span> <br />" +
+					tdoll.selected.tile_set.stat1[1] +
+					'<span style="color: yellow;"><ins>' +
+					tdoll.selected.tile_set.stat2[1] +
+					"</ins></span>";
+				break;
+			default:
+		}
+
+		return tempStat;
 	};
 
 	// Switch between Skills 1 and 2 if T-Doll has Mod.
@@ -306,7 +379,7 @@ export default function TDoll(props) {
 				<br />
 
 				<Card className={classes.card}>
-					<CardContent className={classes.cardContent}>
+					<CardContent>
 						{/* T-Doll's Name, Rarity in stars, type, and Index Number */}
 						<Typography className={classes.rarityStars} color="textSecondary" gutterBottom>
 							{tdoll.selected.type}
@@ -322,9 +395,9 @@ export default function TDoll(props) {
 
 						{/* T-Doll image */}
 						<Grid container direction="row" spacing={2}>
-							<Grid item key="T-Doll image" xs={6}>
+							<Grid item key="T-Doll image" xs={12} sm={6}>
 								{hasMod ? (
-									<Tabs className={classes.tabs} value={mode} onChange={switchModes} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
+									<Tabs className={classes.tabs} value={mode} onChange={switchModes} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
 										<Tab label="Normal" />
 										<Tab label="MOD" />
 									</Tabs>
@@ -341,75 +414,20 @@ export default function TDoll(props) {
 								</Card>
 							</Grid>
 
-							{/* T-Doll's stats in table format */}
-							<Grid item key="T-Doll stat table" xs={10} sm={6}>
-								<TableContainer className={classes.table} component={Paper} elevation={12}>
-									<Table>
-										<TableHead>
-											<TableRow>
-												<TableCell>Stats</TableCell>
-												<TableCell align="right">At Max Level</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													HP
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_hp}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													DMG
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_dmg}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													ACC
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_acc}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													EVA
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_eva}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													ROF
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_rof}</TableCell>
-											</TableRow>
-										</TableBody>
-									</Table>
-								</TableContainer>
-							</Grid>
-
-							{/* T-Doll's skill information */}
-							<Grid item key="T-Doll skill(s)" xs={6} sm={6}>
+							<Grid item key="T-Doll stat table and skill card" xs={12} sm={6}>
+								{/* T-Doll's skill information */}
+								{showModSkill ? (
+									<Tabs className={classes.tabsForSkills} value={selectedSkill} onChange={handleChangeSkills} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
+										<Tab label="Skill 1" />
+										<Tab label="Skill 2" />
+									</Tabs>
+								) : (
+									<Tabs className={classes.tabsForSkills} value={0} indicatorColor="primary" textColor="primary" centered>
+										<Tab label="Skill 1" />
+									</Tabs>
+								)}
 								<Card className={classes.cardForSkill} elevation={12}>
 									<CardContent>
-										{showModSkill ? (
-											<Tabs
-												className={classes.tabsForSkills}
-												value={selectedSkill}
-												onChange={handleChangeSkills}
-												indicatorColor="primary"
-												textColor="primary"
-												variant="scrollable"
-												scrollButtons="auto"
-											>
-												<Tab label="Skill 1" />
-												<Tab label="Skill 2" />
-											</Tabs>
-										) : (
-											<Tabs className={classes.tabsForSkills} value={0} indicatorColor="primary" textColor="primary" centered>
-												<Tab label="Skill 1" />
-											</Tabs>
-										)}
-
 										<CardHeader
 											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.image_skill : tdoll.selected.skill.image_skill} />}
 											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
@@ -468,6 +486,90 @@ export default function TDoll(props) {
 										</Typography>
 									</CardContent>
 								</Card>
+
+								<br />
+
+								{/* T-Doll's tileset information */}
+								<Card className={classes.cardForTileSet} elevation={12}>
+									<div className={classes.tileSetDiv}>
+										<CardContent className={classes.content}>
+											<table className={classes.tableTileSet} id="tdoll-tileset">
+												<tbody>
+													<tr>
+														{tdoll.selected.tile_set.row1.map((tile, index) => {
+															return tileSetFunction(tile, index);
+														})}
+													</tr>
+													<tr>
+														{tdoll.selected.tile_set.row2.map((tile, index) => {
+															return tileSetFunction(tile, index);
+														})}
+													</tr>
+													<tr>
+														{tdoll.selected.tile_set.row3.map((tile, index) => {
+															return tileSetFunction(tile, index);
+														})}
+													</tr>
+												</tbody>
+											</table>
+										</CardContent>
+
+										<CardContent className={classes.tileSetInformation}>
+											<Typography className={classes.title} color="textPrimary" gutterBottom>
+												{tdoll.selected.tile_set.targets}
+											</Typography>
+											<Typography className={classes.pos} color="textSecondary">
+												{parse(renderTileSetInformation())}
+											</Typography>
+										</CardContent>
+									</div>
+								</Card>
+
+								<br />
+
+								{/* T-Doll's stats in table format */}
+								<TableContainer className={classes.tableContainer} component={Paper} elevation={12}>
+									<Table className={classes.table} size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell>Stats</TableCell>
+												<TableCell align="right">At Max Level</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													HP
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_hp}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													DMG
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_dmg}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													ACC
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_acc}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													EVA
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_eva}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													ROF
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_rof}</TableCell>
+											</TableRow>
+										</TableBody>
+									</Table>
+								</TableContainer>
 							</Grid>
 						</Grid>
 					</CardContent>
