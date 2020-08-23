@@ -197,6 +197,10 @@ export default function TDoll(props) {
 	const [showModSkill, setShowModSkill] = useState(false);
 	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Normal skill, 1 for MOD skill if it exists.
 
+	// Set initial states for showing skin images.
+	const [showSkin, setShowSkin] = useState(false);
+	const [skinMode, setSkinMode] = useState(0);
+
 	// States and functions for the Backdrop overlay image when the Floating Button is pressed.
 	const [open, setOpen] = useState(false);
 	const handleClose = () => {
@@ -230,19 +234,49 @@ export default function TDoll(props) {
 
 	// Replace the T-Doll's image with normal or damaged versions.
 	const handleChangeImage = () => {
-		if (switchImage) {
-			setTDollImage(tdoll.selected.image_normal);
-			//console.log("Normal art is showed.");
-			setSwitchImage(false);
+		if (showSkin) {
+			if (switchImage) {
+				setTDollImage(tdoll.skins.skin_images[skinMode]);
+				//console.log("Normal skin art is showed.");
+				setSwitchImage(false);
+			} else {
+				setTDollImage(tdoll.skins.skin_images[skinMode + 1]);
+				//console.log("Damaged skin art is showed.");
+				setSwitchImage(true);
+			}
 		} else {
-			setTDollImage(tdoll.selected.image_damaged);
-			//console.log("Damaged art is showed.");
-			setSwitchImage(true);
+			if (switchImage) {
+				setTDollImage(tdoll.selected.image_normal);
+				//console.log("Normal art is showed.");
+				setSwitchImage(false);
+			} else {
+				setTDollImage(tdoll.selected.image_damaged);
+				//console.log("Damaged art is showed.");
+				setSwitchImage(true);
+			}
+		}
+	};
+
+	const renderImage = () => {
+		// Show images depending on booleans, either Skins or Normal/Mod.
+		if (showSkin) {
+			if (switchImage) {
+				return <img src={tdoll.skins.skin_images_full[skinMode + 1]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+			} else {
+				return <img src={tdoll.skins.skin_images_full[skinMode]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+			}
+		} else {
+			if (switchImage) {
+				return <img src={tdoll.selected.image_damaged_full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+			} else {
+				return <img src={tdoll.selected.image_normal_full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+			}
 		}
 	};
 
 	const switchModes = (event, newValue) => {
 		setMode(newValue);
+		setShowSkin(false); // Set this to false so that the image rendered belongs to Normal or Mod, not any skin already selected.
 
 		// Perform check if the information shown should be MOD. Then set the state of the T-Doll depending if MOD. Also set the state of the image.
 		var tdoll_temp = backup;
@@ -262,6 +296,36 @@ export default function TDoll(props) {
 		// Set the state of the T-Doll image and made sure to prevent duplicate click bug on the image.
 		setTDollImage(tdoll_temp.selected.image_normal);
 		setSwitchImage(false);
+	};
+
+	// Set skin images.
+	const switchSkinModes = (event, newValue) => {
+		setSkinMode(newValue);
+		setShowSkin(true);
+		setSwitchImage(false); // This is needed to make sure there are no duplicate click bug.
+
+		// Odd numbers are the damaged versions. We only need the normal versions.
+		switch (newValue) {
+			case 0:
+				setTDollImage(tdoll.skins.skin_images[0]);
+				break;
+			case 2:
+				setTDollImage(tdoll.skins.skin_images[2]);
+				break;
+			case 4:
+				setTDollImage(tdoll.skins.skin_images[4]);
+				break;
+			case 6:
+				setTDollImage(tdoll.skins.skin_images[6]);
+				break;
+			case 8:
+				setTDollImage(tdoll.skins.skin_images[8]);
+				break;
+			case 10:
+				setTDollImage(tdoll.skins.skin_images[10]);
+				break;
+			default:
+		}
 	};
 
 	// This function will return tiles depending on the tile set information in the JSON.
@@ -300,6 +364,16 @@ export default function TDoll(props) {
 		}
 
 		return tempStat;
+	};
+
+	const renderSkinsTabs = () => {
+		var tempTabs = [];
+
+		tdoll.skins.skin_names.map((name, index) => {
+			tempTabs.push(<Tab label={name} key={index} value={index === 0 ? 0 : index + 1} />);
+		});
+
+		return tempTabs;
 	};
 
 	// Switch between Skills 1 and 2 if T-Doll has Mod.
@@ -422,10 +496,14 @@ export default function TDoll(props) {
 										<Tab label="MOD" />
 									</Tabs>
 								) : (
-									<Tabs className={classes.tabs} value={0} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
+									<Tabs className={classes.tabs} value={mode} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
 										<Tab label="Normal" />
 									</Tabs>
 								)}
+
+								<Tabs className={classes.tabs} value={false} onChange={switchSkinModes} indicatorColor="primary" textColor="primary" scrollButtons="auto" variant="scrollable">
+									{renderSkinsTabs()}
+								</Tabs>
 
 								<Card className={classes.cardForImage} elevation={12}>
 									<CardActionArea onClick={handleChangeImage}>
@@ -437,11 +515,7 @@ export default function TDoll(props) {
 									</Fab>
 									{/* Display full size images based on boolean */}
 									<Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
-										{switchImage ? (
-											<img src={tdoll.selected.image_damaged_full} style={{ transform: "translate(0px, 50px)", minWidth: 600, maxWidth: "100%" }} alt="Backdrop image" />
-										) : (
-											<img src={tdoll.selected.image_normal_full} style={{ transform: "translate(0px, 50px)", minWidth: 600, maxWidth: "100%" }} alt="Backdrop image" />
-										)}
+										{renderImage()}
 									</Backdrop>
 								</Card>
 							</Grid>
