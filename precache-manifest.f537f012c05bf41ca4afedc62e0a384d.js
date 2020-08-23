@@ -1,23 +1,23 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "8ce709fa63a473e7998edd1c7697ac46",
+    "revision": "9e609993d2b7192ef94e6cc2063f824c",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "dda1ceba8201295838c6",
+    "revision": "77a75fc92903e6b2ecab",
     "url": "/gfl-database/static/css/main.df2ad1ec.chunk.css"
   },
   {
-    "revision": "b1ec466e9562aecf09b4",
-    "url": "/gfl-database/static/js/2.69626aba.chunk.js"
+    "revision": "94b436fc9f0c058bd1c5",
+    "url": "/gfl-database/static/js/2.8b789d05.chunk.js"
   },
   {
     "revision": "89b0379e7bcda1a468d8b0343aeb4e53",
-    "url": "/gfl-database/static/js/2.69626aba.chunk.js.LICENSE.txt"
+    "url": "/gfl-database/static/js/2.8b789d05.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "dda1ceba8201295838c6",
-    "url": "/gfl-database/static/js/main.1f85cd6f.chunk.js"
+    "revision": "77a75fc92903e6b2ecab",
+    "url": "/gfl-database/static/js/main.8a8b669c.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
@@ -54,6 +54,38 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "92ee7c76a44402037f78beb33d48c434",
     "url": "/gfl-database/static/media/1_normal_full.92ee7c76.png"
+  },
+  {
+    "revision": "2951c96891e05da3aaab1b88a16fa357",
+    "url": "/gfl-database/static/media/1_skin1_damaged.2951c968.png"
+  },
+  {
+    "revision": "020299361e913a3214a4108d480f2209",
+    "url": "/gfl-database/static/media/1_skin1_damaged_full.02029936.png"
+  },
+  {
+    "revision": "5183a4bcd343f8870e1e7e5ad6982c42",
+    "url": "/gfl-database/static/media/1_skin1_normal.5183a4bc.png"
+  },
+  {
+    "revision": "b5bb7dc222270f4a9411f78df55f6237",
+    "url": "/gfl-database/static/media/1_skin1_normal_full.b5bb7dc2.png"
+  },
+  {
+    "revision": "cdd2779385d9631b612f8e9259144f36",
+    "url": "/gfl-database/static/media/1_skin2_damaged.cdd27793.png"
+  },
+  {
+    "revision": "25453ee8eb5c97b3a5ef792357fa394a",
+    "url": "/gfl-database/static/media/1_skin2_damaged_full.25453ee8.png"
+  },
+  {
+    "revision": "0480f870c02b49a081d083d271dd9364",
+    "url": "/gfl-database/static/media/1_skin2_normal.0480f870.png"
+  },
+  {
+    "revision": "900b97adaee61b2d71143d1668941394",
+    "url": "/gfl-database/static/media/1_skin2_normal_full.900b97ad.png"
   },
   {
     "revision": "0bdbc665beea39553b8ebd176ac35750",
