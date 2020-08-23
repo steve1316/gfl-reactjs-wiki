@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
 
@@ -28,12 +28,14 @@ import {
 	InputLabel,
 	FormControl,
 	Tabs,
-	Tab
+	Tab,
+	Fab,
+	Backdrop
 } from "@material-ui/core";
 
 // MaterialUI icon imports
 import StarIcon from "@material-ui/icons/Star";
-import { useEffect } from "react";
+import ZoomOutMapIcon from "@material-ui/icons/ZoomOutMap";
 
 // Image imports
 //import rarity_star from "../../images/rarity_star.png";
@@ -142,6 +144,15 @@ export default function TDoll(props) {
 		tileSetInformation: {
 			display: "flex",
 			flexDirection: "column"
+		},
+		fab: {
+			display: "inline-flex",
+			transform: "translate(5px, -60px)",
+			opacity: "75%"
+		},
+		backdrop: {
+			zIndex: theme.zIndex.drawer + 1,
+			color: "#fff"
 		}
 	}));
 
@@ -185,6 +196,15 @@ export default function TDoll(props) {
 	const [hasMod, setHasMod] = useState(false);
 	const [showModSkill, setShowModSkill] = useState(false);
 	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Normal skill, 1 for MOD skill if it exists.
+
+	// States and functions for the Backdrop overlay image when the Floating Button is pressed.
+	const [open, setOpen] = useState(false);
+	const handleClose = () => {
+		setOpen(false);
+	};
+	const handleToggle = () => {
+		setOpen(!open);
+	};
 
 	// This useEffect will run after the first render and will not be called again. This will be used to initialize the functionality of the page.
 	useEffect(() => {
@@ -411,6 +431,18 @@ export default function TDoll(props) {
 									<CardActionArea onClick={handleChangeImage}>
 										<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
 									</CardActionArea>
+									{/* Floating Action Button overlayed over image at the bottom left */}
+									<Fab color="primary" className={classes.fab} onClick={handleToggle}>
+										<ZoomOutMapIcon />
+									</Fab>
+									{/* Display full size images based on boolean */}
+									<Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
+										{switchImage ? (
+											<img src={tdoll.selected.image_damaged_full} style={{ transform: "translate(0px, 50px)", minWidth: 600, maxWidth: "100%" }} alt="Backdrop image" />
+										) : (
+											<img src={tdoll.selected.image_normal_full} style={{ transform: "translate(0px, 50px)", minWidth: 600, maxWidth: "100%" }} alt="Backdrop image" />
+										)}
+									</Backdrop>
 								</Card>
 							</Grid>
 
