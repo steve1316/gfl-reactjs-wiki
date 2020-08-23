@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "0c48cf87ad37d82241342d96387ade5c",
+    "revision": "8ce709fa63a473e7998edd1c7697ac46",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "840cfa7bf8db748e9cdc",
+    "revision": "dda1ceba8201295838c6",
     "url": "/gfl-database/static/css/main.df2ad1ec.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/gfl-database/static/js/2.69626aba.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "840cfa7bf8db748e9cdc",
-    "url": "/gfl-database/static/js/main.52ab6c58.chunk.js"
+    "revision": "dda1ceba8201295838c6",
+    "url": "/gfl-database/static/js/main.1f85cd6f.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
