@@ -397,7 +397,7 @@ export default function TDoll(props) {
 						<Grid container direction="row" spacing={2}>
 							<Grid item key="T-Doll image" xs={12} sm={6}>
 								{hasMod ? (
-									<Tabs className={classes.tabs} value={mode} onChange={switchModes} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
+									<Tabs className={classes.tabs} value={mode} onChange={switchModes} indicatorColor="primary" textColor="primary" scrollButtons="auto" variant="scrollable">
 										<Tab label="Normal" />
 										<Tab label="MOD" />
 									</Tabs>
