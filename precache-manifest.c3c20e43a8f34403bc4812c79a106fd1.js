@@ -1,23 +1,23 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "7ad3f67f44f53da6957492fe9236bd4a",
+    "revision": "0c48cf87ad37d82241342d96387ade5c",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "2fd0d38325fcc0960671",
+    "revision": "840cfa7bf8db748e9cdc",
     "url": "/gfl-database/static/css/main.df2ad1ec.chunk.css"
   },
   {
-    "revision": "53dce61905b60c9bff45",
-    "url": "/gfl-database/static/js/2.fa2b14bc.chunk.js"
+    "revision": "b1ec466e9562aecf09b4",
+    "url": "/gfl-database/static/js/2.69626aba.chunk.js"
   },
   {
     "revision": "89b0379e7bcda1a468d8b0343aeb4e53",
-    "url": "/gfl-database/static/js/2.fa2b14bc.chunk.js.LICENSE.txt"
+    "url": "/gfl-database/static/js/2.69626aba.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "2fd0d38325fcc0960671",
-    "url": "/gfl-database/static/js/main.69617998.chunk.js"
+    "revision": "840cfa7bf8db748e9cdc",
+    "url": "/gfl-database/static/js/main.52ab6c58.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
@@ -28,16 +28,32 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/gfl-database/static/media/1_damaged.52f70274.png"
   },
   {
+    "revision": "5524675b90597d567b3815caa7d727e3",
+    "url": "/gfl-database/static/media/1_damaged_full.5524675b.png"
+  },
+  {
     "revision": "02039b6c6731ed533c77fd84990c7c10",
     "url": "/gfl-database/static/media/1_mod_damaged.02039b6c.png"
+  },
+  {
+    "revision": "6e872f09bd0445ce2972e367386135c1",
+    "url": "/gfl-database/static/media/1_mod_damaged_full.6e872f09.png"
   },
   {
     "revision": "6583de575f887600d907ff03b3852941",
     "url": "/gfl-database/static/media/1_mod_normal.6583de57.png"
   },
   {
+    "revision": "ba83aafd442626d2f23834bee59b8007",
+    "url": "/gfl-database/static/media/1_mod_normal_full.ba83aafd.png"
+  },
+  {
     "revision": "6472ab6e2419d84f6cb3a930a195028c",
     "url": "/gfl-database/static/media/1_normal.6472ab6e.png"
+  },
+  {
+    "revision": "92ee7c76a44402037f78beb33d48c434",
+    "url": "/gfl-database/static/media/1_normal_full.92ee7c76.png"
   },
   {
     "revision": "0bdbc665beea39553b8ebd176ac35750",
