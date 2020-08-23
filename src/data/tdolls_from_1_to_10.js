@@ -43,7 +43,9 @@ const tdolls = [
 				stat2: ["24%", "50%"]
 			},
 			image_normal: require("../images/tdolls/1_normal.png"),
-			image_damaged: require("../images/tdolls/1_damaged.png")
+			image_normal_full: require("../images/tdolls/1_normal_full.png"),
+			image_damaged: require("../images/tdolls/1_damaged.png"),
+			image_damaged_full: require("../images/tdolls/1_damaged_full.png")
 		},
 		mod: {
 			id: 1,
@@ -85,7 +87,9 @@ const tdolls = [
 				stat2: ["24%", "60%"]
 			},
 			image_normal: require("../images/tdolls/1_mod_normal.png"),
-			image_damaged: require("../images/tdolls/1_mod_damaged.png")
+			image_normal_full: require("../images/tdolls/1_mod_normal_full.png"),
+			image_damaged: require("../images/tdolls/1_mod_damaged.png"),
+			image_damaged_full: require("../images/tdolls/1_mod_damaged_full.png")
 		},
 		selected: {}
 	}
