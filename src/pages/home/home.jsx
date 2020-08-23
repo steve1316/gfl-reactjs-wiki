@@ -61,7 +61,7 @@ export default function Home() {
 
 	// This contains the information to be rendered into cards. The link attribute is tied to the Route in App.js.
 	const cards = [
-		{ title: "T-Doll Index", description: "View Index of T-Dolls along with additional information like statisticss and sprite animations.", link: "/index", image: tdoll_index_logo },
+		{ title: "T-Doll Index", description: "View Index of T-Dolls along with additional information like statistics and sprite animations.", link: "/index", image: tdoll_index_logo },
 		{ title: "Equipment Index", description: "View Index of Equipment available for T-Dolls.", link: "", image: equipment_index_logo },
 		{ title: "HOC Index", description: "View Index of HOCs available.", link: "", image: hoc_index_logo },
 		{ title: "Fairy Index", description: "View Index of Fairies available.", link: "", image: fairy_index_logo },
