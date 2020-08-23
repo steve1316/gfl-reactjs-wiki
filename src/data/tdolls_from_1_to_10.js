@@ -91,7 +91,23 @@ const tdolls = [
 			image_damaged: require("../images/tdolls/1_mod_damaged.png"),
 			image_damaged_full: require("../images/tdolls/1_mod_damaged_full.png")
 		},
-		selected: {}
+		selected: {},
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Wish Upon A Star", "Queen of Miracle"],
+			skin_images: [
+				require("../images/tdolls/1_skin1_normal.png"),
+				require("../images/tdolls/1_skin1_damaged.png"),
+				require("../images/tdolls/1_skin2_normal.png"),
+				require("../images/tdolls/1_skin2_damaged.png")
+			],
+			skin_images_full: [
+				require("../images/tdolls/1_skin1_normal_full.png"),
+				require("../images/tdolls/1_skin1_damaged_full.png"),
+				require("../images/tdolls/1_skin2_normal_full.png"),
+				require("../images/tdolls/1_skin2_damaged_full.png")
+			]
+		}
 	}
 ];
 
