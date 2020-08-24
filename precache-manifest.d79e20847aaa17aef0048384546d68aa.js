@@ -1,23 +1,23 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "9e609993d2b7192ef94e6cc2063f824c",
+    "revision": "479810a5c032328e11b2d3ac7a9cd2d4",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "77a75fc92903e6b2ecab",
+    "revision": "6d75f3d93b0758850c7b",
     "url": "/gfl-database/static/css/main.df2ad1ec.chunk.css"
   },
   {
-    "revision": "94b436fc9f0c058bd1c5",
-    "url": "/gfl-database/static/js/2.8b789d05.chunk.js"
+    "revision": "2cc9f59e91b045fa6f72",
+    "url": "/gfl-database/static/js/2.5b80e1d1.chunk.js"
   },
   {
-    "revision": "89b0379e7bcda1a468d8b0343aeb4e53",
-    "url": "/gfl-database/static/js/2.8b789d05.chunk.js.LICENSE.txt"
+    "revision": "0e87c5f5c0a2624c658902770de0ebad",
+    "url": "/gfl-database/static/js/2.5b80e1d1.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "77a75fc92903e6b2ecab",
-    "url": "/gfl-database/static/js/main.8a8b669c.chunk.js"
+    "revision": "6d75f3d93b0758850c7b",
+    "url": "/gfl-database/static/js/main.b10fd5ad.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
@@ -54,6 +54,10 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "92ee7c76a44402037f78beb33d48c434",
     "url": "/gfl-database/static/media/1_normal_full.92ee7c76.png"
+  },
+  {
+    "revision": "6dc4bc48aedcfec6c733d40af5294a99",
+    "url": "/gfl-database/static/media/1_normal_move.6dc4bc48.gif"
   },
   {
     "revision": "2951c96891e05da3aaab1b88a16fa357",
