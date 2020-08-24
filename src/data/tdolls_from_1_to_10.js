@@ -45,7 +45,8 @@ const tdolls = [
 			image_normal: require("../images/tdolls/1_normal.png"),
 			image_normal_full: require("../images/tdolls/1_normal_full.png"),
 			image_damaged: require("../images/tdolls/1_damaged.png"),
-			image_damaged_full: require("../images/tdolls/1_damaged_full.png")
+			image_damaged_full: require("../images/tdolls/1_damaged_full.png"),
+			animations: [require("../images/tdolls/1_normal_move.gif")]
 		},
 		mod: {
 			id: 1,
@@ -89,7 +90,8 @@ const tdolls = [
 			image_normal: require("../images/tdolls/1_mod_normal.png"),
 			image_normal_full: require("../images/tdolls/1_mod_normal_full.png"),
 			image_damaged: require("../images/tdolls/1_mod_damaged.png"),
-			image_damaged_full: require("../images/tdolls/1_mod_damaged_full.png")
+			image_damaged_full: require("../images/tdolls/1_mod_damaged_full.png"),
+			animations: [require("../images/tdolls/1_normal_move.gif")]
 		},
 		selected: {},
 		skins: {
