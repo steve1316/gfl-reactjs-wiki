@@ -37,6 +37,10 @@ import {
 import StarIcon from "@material-ui/icons/Star";
 import ZoomOutMapIcon from "@material-ui/icons/ZoomOutMap";
 
+// GifPlayer import and CSS styling
+import GifPlayer from "react-gif-player";
+import "./styles.css";
+
 // Image imports
 //import rarity_star from "../../images/rarity_star.png";
 
@@ -64,6 +68,10 @@ export default function TDoll(props) {
 		},
 		cardForTileSet: {
 			minWidth: 256,
+			backgroundColor: theme.palette.grey[700]
+		},
+		cardForAnimation: {
+			width: 256,
 			backgroundColor: theme.palette.grey[700]
 		},
 		cardMedia: {
@@ -469,7 +477,7 @@ export default function TDoll(props) {
 
 	return (
 		<main>
-			<Container className={classes.cardGrid} maxWidth="md">
+			<Container className={classes.cardGrid} maxWidth="lg">
 				<br />
 
 				<Card className={classes.card}>
@@ -517,6 +525,11 @@ export default function TDoll(props) {
 									<Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
 										{renderImage()}
 									</Backdrop>
+								</Card>
+
+								{/* T-Doll's animations */}
+								<Card className={classes.cardForAnimation} elevation={12}>
+									<GifPlayer gif={tdoll.selected.animations[0]} />
 								</Card>
 							</Grid>
 
