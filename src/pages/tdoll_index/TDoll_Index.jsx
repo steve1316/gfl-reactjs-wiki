@@ -226,7 +226,7 @@ export default function TDoll_Index() {
 											placement="right"
 										>
 											<CardActionArea>
-												<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.image_normal} title={tdoll.selected.name} />
+												<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
 											</CardActionArea>
 										</HtmlTooltip>
 									</Link>
