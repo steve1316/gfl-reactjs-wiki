@@ -3,10 +3,7 @@
     - All stats are considered at max rank. For skill stats, I'm separating them for now.
     - If T-Doll has MOD, mod attribute will be populated. If not, mod attribute will be set to NULL.
 	- number_of_stats in skill attribute dictates the amount of numbers from stat(1) to stat(n) to be replacing the "#(n)"" delimiters inside the skill description in sequential order.
-	- TODO: include full body pictures as well.
 	- TODO: include their sprites as well.
-	- TODO: include pictures of skills as well.
-	- TODO: include Tile information as well.
 	- TODO: differentiate between Passive and/or Active skills.
 
 */
@@ -31,7 +28,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-				image_skill: require("../images/tdolls/fire_command.jpg")
+				image_skill: require("../images/tdolls/1/1_skill1.jpg")
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -42,11 +39,28 @@ const tdolls = [
 				stat1: ["Damage by ", "Accuracy by "],
 				stat2: ["24%", "50%"]
 			},
-			image_normal: require("../images/tdolls/1_normal.png"),
-			image_normal_full: require("../images/tdolls/1_normal_full.png"),
-			image_damaged: require("../images/tdolls/1_damaged.png"),
-			image_damaged_full: require("../images/tdolls/1_damaged_full.png"),
-			animations: [require("../images/tdolls/1_normal_move.gif")]
+			images: {
+				card: require("../images/tdolls/1/1_card.png"),
+				card_damaged: require("../images/tdolls/1/1_card_damaged.png"),
+				full: require("../images/tdolls/1/1_full.png"),
+				full_damaged: require("../images/tdolls/1/1_full_damaged.png")
+			},
+			animations: {
+				attack: require("../images/tdolls/1/animations/1_normal_attack.gif"),
+				die: require("../images/tdolls/1/animations/1_normal_die.gif"),
+				move: require("../images/tdolls/1/animations/1_normal_move.gif"),
+				victory: require("../images/tdolls/1/animations/1_normal_victory.gif"),
+				victory2: require("../images/tdolls/1/animations/1_normal_victory2.gif"),
+				victoryloop: require("../images/tdolls/1/animations/1_normal_victoryloop.gif"),
+				wait: require("../images/tdolls/1/animations/1_normal_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/1/animations/1_dorm_lying.gif"),
+				move: require("../images/tdolls/1/animations/1_dorm_move.gif"),
+				pick: require("../images/tdolls/1/animations/1_dorm_pick.gif"),
+				sit: require("../images/tdolls/1/animations/1_dorm_sit.gif"),
+				wait: require("../images/tdolls/1/animations/1_dorm_wait.gif")
+			}
 		},
 		mod: {
 			id: 1,
@@ -66,7 +80,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-				image_skill: require("../images/tdolls/fire_command.jpg")
+				image_skill: require("../images/tdolls/1/1_skill1.jpg")
 			},
 			skill2: {
 				name: "Duel Survivor",
@@ -76,7 +90,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["3%", "3%", "3%", "4%", "4%", "4%", "5%", "5%", "5%", "5%"],
 				stat2: [6, 5.8, 5.6, 5.3, 5.1, 4.9, 4.7, 4.4, 4.2, 4],
-				image_skill: require("../images/tdolls/duel_survivor.jpg")
+				image_skill: require("../images/tdolls/1/1_skill2.jpg")
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -87,28 +101,60 @@ const tdolls = [
 				stat1: ["Damage by ", "Accuracy by "],
 				stat2: ["24%", "60%"]
 			},
-			image_normal: require("../images/tdolls/1_mod_normal.png"),
-			image_normal_full: require("../images/tdolls/1_mod_normal_full.png"),
-			image_damaged: require("../images/tdolls/1_mod_damaged.png"),
-			image_damaged_full: require("../images/tdolls/1_mod_damaged_full.png"),
-			animations: [require("../images/tdolls/1_normal_move.gif")]
+			images: {
+				card: require("../images/tdolls/1/1_mod_card.png"),
+				card_damaged: require("../images/tdolls/1/1_mod_card_damaged.png"),
+				full: require("../images/tdolls/1/1_mod_full.png"),
+				full_damaged: require("../images/tdolls/1/1_mod_full_damaged.png")
+			},
+			animations: {
+				attack: require("../images/tdolls/1/animations/1_normal_attack.gif"),
+				die: require("../images/tdolls/1/animations/1_normal_die.gif"),
+				move: require("../images/tdolls/1/animations/1_normal_move.gif"),
+				victory: require("../images/tdolls/1/animations/1_normal_victory.gif"),
+				victory2: require("../images/tdolls/1/animations/1_normal_victory2.gif"),
+				victoryloop: require("../images/tdolls/1/animations/1_normal_victoryloop.gif"),
+				wait: require("../images/tdolls/1/animations/1_normal_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/1/animations/1_dorm_lying.gif"),
+				move: require("../images/tdolls/1/animations/1_dorm_move.gif"),
+				pick: require("../images/tdolls/1/animations/1_dorm_pick.gif"),
+				sit: require("../images/tdolls/1/animations/1_dorm_sit.gif"),
+				wait: require("../images/tdolls/1/animations/1_dorm_wait.gif")
+			}
 		},
 		selected: {},
 		skins: {
 			number_of_skins: 2,
 			skin_names: ["Wish Upon A Star", "Queen of Miracle"],
 			skin_images: [
-				require("../images/tdolls/1_skin1_normal.png"),
-				require("../images/tdolls/1_skin1_damaged.png"),
-				require("../images/tdolls/1_skin2_normal.png"),
-				require("../images/tdolls/1_skin2_damaged.png")
+				require("../images/tdolls/1/1_skin1_card.png"),
+				require("../images/tdolls/1/1_skin1_card_damaged.png"),
+				require("../images/tdolls/1/1_skin2_card.png"),
+				require("../images/tdolls/1/1_skin2_card_damaged.png")
 			],
 			skin_images_full: [
-				require("../images/tdolls/1_skin1_normal_full.png"),
-				require("../images/tdolls/1_skin1_damaged_full.png"),
-				require("../images/tdolls/1_skin2_normal_full.png"),
-				require("../images/tdolls/1_skin2_damaged_full.png")
-			]
+				require("../images/tdolls/1/1_skin1_full.png"),
+				require("../images/tdolls/1/1_skin1_full_damaged.png"),
+				require("../images/tdolls/1/1_skin2_full.png"),
+				require("../images/tdolls/1/1_skin2_full_damaged.png")
+			],
+			animations: {
+				attack: require("../images/tdolls/1/animations/1_normal_attack.gif"),
+				die: require("../images/tdolls/1/animations/1_normal_die.gif"),
+				move: require("../images/tdolls/1/animations/1_normal_move.gif"),
+				victory: require("../images/tdolls/1/animations/1_normal_victory.gif"),
+				victoryloop: require("../images/tdolls/1/animations/1_normal_victoryloop.gif"),
+				wait: require("../images/tdolls/1/animations/1_normal_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/1/animations/1_dorm_lying.gif"),
+				move: require("../images/tdolls/1/animations/1_dorm_move.gif"),
+				pick: require("../images/tdolls/1/animations/1_dorm_pick.gif"),
+				sit: require("../images/tdolls/1/animations/1_dorm_sit.gif"),
+				wait: require("../images/tdolls/1/animations/1_dorm_wait.gif")
+			}
 		}
 	}
 ];
