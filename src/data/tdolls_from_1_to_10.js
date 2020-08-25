@@ -55,11 +55,11 @@ const tdolls = [
 				wait: require("../images/tdolls/1/animations/1_normal_wait.gif")
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/1/animations/1_dorm_lying.gif"),
-				move: require("../images/tdolls/1/animations/1_dorm_move.gif"),
-				pick: require("../images/tdolls/1/animations/1_dorm_pick.gif"),
-				sit: require("../images/tdolls/1/animations/1_dorm_sit.gif"),
-				wait: require("../images/tdolls/1/animations/1_dorm_wait.gif")
+				lying: require("../images/tdolls/1/animations/1_normal_dorm_lying.gif"),
+				move: require("../images/tdolls/1/animations/1_normal_dorm_move.gif"),
+				pick: require("../images/tdolls/1/animations/1_normal_dorm_pick.gif"),
+				sit: require("../images/tdolls/1/animations/1_normal_dorm_sit.gif"),
+				wait: require("../images/tdolls/1/animations/1_normal_dorm_wait.gif")
 			}
 		},
 		mod: {
@@ -108,20 +108,19 @@ const tdolls = [
 				full_damaged: require("../images/tdolls/1/1_mod_full_damaged.png")
 			},
 			animations: {
-				attack: require("../images/tdolls/1/animations/1_normal_attack.gif"),
-				die: require("../images/tdolls/1/animations/1_normal_die.gif"),
-				move: require("../images/tdolls/1/animations/1_normal_move.gif"),
-				victory: require("../images/tdolls/1/animations/1_normal_victory.gif"),
-				victory2: require("../images/tdolls/1/animations/1_normal_victory2.gif"),
-				victoryloop: require("../images/tdolls/1/animations/1_normal_victoryloop.gif"),
-				wait: require("../images/tdolls/1/animations/1_normal_wait.gif")
+				attack: require("../images/tdolls/1/animations/1_mod_attack.gif"),
+				die: require("../images/tdolls/1/animations/1_mod_die.gif"),
+				move: require("../images/tdolls/1/animations/1_mod_move.gif"),
+				victory: require("../images/tdolls/1/animations/1_mod_victory.gif"),
+				victoryloop: require("../images/tdolls/1/animations/1_mod_victoryloop.gif"),
+				wait: require("../images/tdolls/1/animations/1_mod_wait.gif")
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/1/animations/1_dorm_lying.gif"),
-				move: require("../images/tdolls/1/animations/1_dorm_move.gif"),
-				pick: require("../images/tdolls/1/animations/1_dorm_pick.gif"),
-				sit: require("../images/tdolls/1/animations/1_dorm_sit.gif"),
-				wait: require("../images/tdolls/1/animations/1_dorm_wait.gif")
+				lying: require("../images/tdolls/1/animations/1_mod_dorm_lying.gif"),
+				move: require("../images/tdolls/1/animations/1_mod_dorm_move.gif"),
+				pick: require("../images/tdolls/1/animations/1_mod_dorm_pick.gif"),
+				sit: require("../images/tdolls/1/animations/1_mod_dorm_sit.gif"),
+				wait: require("../images/tdolls/1/animations/1_mod_dorm_wait.gif")
 			}
 		},
 		selected: {},
@@ -141,19 +140,19 @@ const tdolls = [
 				require("../images/tdolls/1/1_skin2_full_damaged.png")
 			],
 			animations: {
-				attack: require("../images/tdolls/1/animations/1_normal_attack.gif"),
-				die: require("../images/tdolls/1/animations/1_normal_die.gif"),
-				move: require("../images/tdolls/1/animations/1_normal_move.gif"),
-				victory: require("../images/tdolls/1/animations/1_normal_victory.gif"),
-				victoryloop: require("../images/tdolls/1/animations/1_normal_victoryloop.gif"),
-				wait: require("../images/tdolls/1/animations/1_normal_wait.gif")
+				attack: [require("../images/tdolls/1/animations/1_skin1_attack.gif"), require("../images/tdolls/1/animations/1_skin2_attack.gif")],
+				die: [require("../images/tdolls/1/animations/1_skin1_die.gif"), require("../images/tdolls/1/animations/1_skin2_die.gif")],
+				move: [require("../images/tdolls/1/animations/1_skin1_move.gif"), require("../images/tdolls/1/animations/1_skin2_move.gif")],
+				victory: [require("../images/tdolls/1/animations/1_skin1_victory.gif"), require("../images/tdolls/1/animations/1_skin2_victory.gif")],
+				victoryloop: [require("../images/tdolls/1/animations/1_skin1_victoryloop.gif"), require("../images/tdolls/1/animations/1_skin2_victoryloop.gif")],
+				wait: [require("../images/tdolls/1/animations/1_skin1_wait.gif"), require("../images/tdolls/1/animations/1_skin2_wait.gif")]
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/1/animations/1_dorm_lying.gif"),
-				move: require("../images/tdolls/1/animations/1_dorm_move.gif"),
-				pick: require("../images/tdolls/1/animations/1_dorm_pick.gif"),
-				sit: require("../images/tdolls/1/animations/1_dorm_sit.gif"),
-				wait: require("../images/tdolls/1/animations/1_dorm_wait.gif")
+				lying: [require("../images/tdolls/1/animations/1_skin1_dorm_lying.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_lying.gif")],
+				move: [require("../images/tdolls/1/animations/1_skin1_dorm_move.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_move.gif")],
+				pick: [require("../images/tdolls/1/animations/1_skin1_dorm_pick.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_pick.gif")],
+				sit: [require("../images/tdolls/1/animations/1_skin1_dorm_sit.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_sit.gif")],
+				wait: [require("../images/tdolls/1/animations/1_skin1_dorm_wait.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_wait.gif")]
 			}
 		}
 	}
