@@ -1,23 +1,23 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "940eab44e35bd77e37731079dee2404e",
+    "revision": "b4c3ab8c94555a2a2aad4d7948571019",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "af713704d2c3d112720c",
+    "revision": "3a8203d65cdf0a19682d",
     "url": "/gfl-database/static/css/main.f4486e0d.chunk.css"
   },
   {
-    "revision": "79a0730c11cb8c401073",
-    "url": "/gfl-database/static/js/2.452fc0e3.chunk.js"
+    "revision": "f0442bd03cf2cee9cb8f",
+    "url": "/gfl-database/static/js/2.a6e075bd.chunk.js"
   },
   {
     "revision": "0e87c5f5c0a2624c658902770de0ebad",
-    "url": "/gfl-database/static/js/2.452fc0e3.chunk.js.LICENSE.txt"
+    "url": "/gfl-database/static/js/2.a6e075bd.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "af713704d2c3d112720c",
-    "url": "/gfl-database/static/js/main.93b905c3.chunk.js"
+    "revision": "3a8203d65cdf0a19682d",
+    "url": "/gfl-database/static/js/main.c1cd9706.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
@@ -30,6 +30,26 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "52f702741d3623ec0fd077c702ebc17f",
     "url": "/gfl-database/static/media/1_card_damaged.52f70274.png"
+  },
+  {
+    "revision": "ac7abac26329c4aa6fc807eed9aa4a86",
+    "url": "/gfl-database/static/media/1_dorm_lying.ac7abac2.gif"
+  },
+  {
+    "revision": "701e94b0b0acbaf28804cddc0ecf85dd",
+    "url": "/gfl-database/static/media/1_dorm_move.701e94b0.gif"
+  },
+  {
+    "revision": "f45a7a19ce064628b96b66c3b98e33cd",
+    "url": "/gfl-database/static/media/1_dorm_pick.f45a7a19.gif"
+  },
+  {
+    "revision": "7af24987d980e7b7fac49b7d024af3c8",
+    "url": "/gfl-database/static/media/1_dorm_sit.7af24987.gif"
+  },
+  {
+    "revision": "8b6037063675decce53544b1a4a3b505",
+    "url": "/gfl-database/static/media/1_dorm_wait.8b603706.gif"
   },
   {
     "revision": "92ee7c76a44402037f78beb33d48c434",
@@ -56,28 +76,32 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/gfl-database/static/media/1_mod_full_damaged.6e872f09.png"
   },
   {
-    "revision": "65f124996021c3ec0ccd4c4dc7eb9d76",
-    "url": "/gfl-database/static/media/1_normal_attack.65f12499.gif"
+    "revision": "bb57cf4367d72d6276b0f1df0266ae54",
+    "url": "/gfl-database/static/media/1_normal_attack.bb57cf43.gif"
   },
   {
-    "revision": "22274eefbd06f959265928dac2bcde74",
-    "url": "/gfl-database/static/media/1_normal_die.22274eef.gif"
+    "revision": "b4cbd82bf5bdbed2a812800f0408a471",
+    "url": "/gfl-database/static/media/1_normal_die.b4cbd82b.gif"
   },
   {
-    "revision": "6dc4bc48aedcfec6c733d40af5294a99",
-    "url": "/gfl-database/static/media/1_normal_move.6dc4bc48.gif"
+    "revision": "ada89b236ba1571cfa1089d2b68c9083",
+    "url": "/gfl-database/static/media/1_normal_move.ada89b23.gif"
   },
   {
-    "revision": "84118f3de28a91843ece5b2c67a18a64",
-    "url": "/gfl-database/static/media/1_normal_victory.84118f3d.gif"
+    "revision": "e7d42f7cfec8120ea6cf69b6488e2582",
+    "url": "/gfl-database/static/media/1_normal_victory.e7d42f7c.gif"
   },
   {
-    "revision": "6f02f7cc2fc3bbae0391ed2a4e809756",
-    "url": "/gfl-database/static/media/1_normal_victoryloop.6f02f7cc.gif"
+    "revision": "933b54512423520c5ec0633754b079f3",
+    "url": "/gfl-database/static/media/1_normal_victory2.933b5451.gif"
   },
   {
-    "revision": "bff277f62a022bb4d8eebd8427e1250f",
-    "url": "/gfl-database/static/media/1_normal_wait.bff277f6.gif"
+    "revision": "921ffc4ae83ad0b280b3c00bac6e8d63",
+    "url": "/gfl-database/static/media/1_normal_victoryloop.921ffc4a.gif"
+  },
+  {
+    "revision": "b1ba4f6784ca7784827e3537848d7536",
+    "url": "/gfl-database/static/media/1_normal_wait.b1ba4f67.gif"
   },
   {
     "revision": "3bc318526fc05c27a5adb46bfa5dfe8e",
@@ -142,6 +166,10 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "e88fdcde56bc7aa99091ccb0a9d3d73f",
     "url": "/gfl-database/static/media/hoc_index_logo.e88fdcde.jpg"
+  },
+  {
+    "revision": "b56c75c8e534c90149358e18432fce2f",
+    "url": "/gfl-database/static/media/mod.b56c75c8.png"
   },
   {
     "revision": "7b73bbb26c3b5e94444225c55aedeaec",
