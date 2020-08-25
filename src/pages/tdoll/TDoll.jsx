@@ -43,6 +43,8 @@ import "./styles.css";
 
 // Image imports
 //import rarity_star from "../../images/rarity_star.png";
+import mod_button from "../../images/mod.png";
+import dorm_button from "../../images/dorm_button.png";
 
 export default function TDoll(props) {
 	const useStyles = makeStyles((theme) => ({
@@ -71,6 +73,8 @@ export default function TDoll(props) {
 			backgroundColor: theme.palette.grey[700]
 		},
 		cardForAnimation: {
+			display: "flex",
+			justifyContent: "center",
 			width: 256,
 			backgroundColor: theme.palette.grey[700]
 		},
@@ -155,8 +159,25 @@ export default function TDoll(props) {
 		},
 		fab: {
 			display: "inline-flex",
-			transform: "translate(5px, -60px)",
+			transform: "translate(5px, -85px)",
+			height: 40,
+			width: 40,
 			opacity: "75%"
+		},
+		fab_mod: {
+			display: "block",
+			transform: "translate(5px, -505px)",
+			height: 40,
+			width: 40,
+			opacity: "85%"
+		},
+		fab_dorm: {
+			display: "block",
+			transform: "translate(5px, 100px)",
+			height: 40,
+			width: 40,
+			opacity: "85%",
+			zIndex: 100
 		},
 		backdrop: {
 			zIndex: theme.zIndex.drawer + 1,
@@ -209,6 +230,12 @@ export default function TDoll(props) {
 	const [showSkin, setShowSkin] = useState(false);
 	const [skinMode, setSkinMode] = useState(0);
 
+	// Set initial states for animations.
+	const [animationValue, setAnimationValue] = useState(0);
+	const [animation, setAnimation] = useState(undefined);
+	const [animationMode, setAnimationMode] = useState(0);
+	const [animationDormValue, setAnimationDormValue] = useState(0);
+
 	// States and functions for the Backdrop overlay image when the Floating Button is pressed.
 	const [open, setOpen] = useState(false);
 	const handleClose = () => {
@@ -237,7 +264,10 @@ export default function TDoll(props) {
 		console.log("Initial T-Doll state: ", tdoll);
 
 		// Set the initial image to be displayed for the T-Doll.
-		setTDollImage(tdoll.selected.image_normal);
+		setTDollImage(tdoll.selected.images.card);
+
+		// Set the initial animation to Wait.
+		setAnimation(tdoll.selected.animations.wait);
 	}, []);
 
 	// Replace the T-Doll's image with normal or damaged versions.
@@ -254,11 +284,11 @@ export default function TDoll(props) {
 			}
 		} else {
 			if (switchImage) {
-				setTDollImage(tdoll.selected.image_normal);
+				setTDollImage(tdoll.selected.images.card);
 				//console.log("Normal art is showed.");
 				setSwitchImage(false);
 			} else {
-				setTDollImage(tdoll.selected.image_damaged);
+				setTDollImage(tdoll.selected.images.card_damaged);
 				//console.log("Damaged art is showed.");
 				setSwitchImage(true);
 			}
@@ -275,26 +305,27 @@ export default function TDoll(props) {
 			}
 		} else {
 			if (switchImage) {
-				return <img src={tdoll.selected.image_damaged_full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+				return <img src={tdoll.selected.images.full_damaged} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
 			} else {
-				return <img src={tdoll.selected.image_normal_full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+				return <img src={tdoll.selected.images.full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
 			}
 		}
 	};
 
-	const switchModes = (event, newValue) => {
-		setMode(newValue);
+	const switchModes = (event) => {
 		setShowSkin(false); // Set this to false so that the image rendered belongs to Normal or Mod, not any skin already selected.
 
 		// Perform check if the information shown should be MOD. Then set the state of the T-Doll depending if MOD. Also set the state of the image.
 		var tdoll_temp = backup;
-		if (newValue === 1) {
+		if (mode === 0) {
 			//console.log("Setting to MOD");
+			setMode(1);
 			setShowModSkill(true);
 			setSelectedSkill(0);
 			tdoll_temp.selected = backup.mod;
 		} else {
 			//console.log("Setting to Normal");
+			setMode(0);
 			setShowModSkill(false);
 			tdoll_temp.selected = backup.normal;
 		}
@@ -302,7 +333,7 @@ export default function TDoll(props) {
 		setTDoll(tdoll_temp);
 
 		// Set the state of the T-Doll image and made sure to prevent duplicate click bug on the image.
-		setTDollImage(tdoll_temp.selected.image_normal);
+		setTDollImage(tdoll_temp.selected.images.card);
 		setSwitchImage(false);
 	};
 
@@ -333,6 +364,70 @@ export default function TDoll(props) {
 				setTDollImage(tdoll.skins.skin_images[10]);
 				break;
 			default:
+		}
+	};
+
+	const switchAnimationMode = (event) => {
+		if (animationMode === 0) {
+			setAnimationMode(1);
+			setAnimationDormValue(0);
+			setAnimation(tdoll.selected.animations_dorm.lying);
+		} else {
+			setAnimationMode(0);
+			setAnimationValue(0);
+			setAnimation(tdoll.selected.animations.wait);
+		}
+	};
+
+	const switchAnimations = (event, newValue) => {
+		if (animationMode === 0) {
+			setAnimationValue(newValue);
+
+			switch (newValue) {
+				case 0:
+					setAnimation(tdoll.selected.animations.wait);
+					break;
+				case 1:
+					setAnimation(tdoll.selected.animations.move);
+					break;
+				case 2:
+					setAnimation(tdoll.selected.animations.attack);
+					break;
+				case 3:
+					setAnimation(tdoll.selected.animations.die);
+					break;
+				case 4:
+					setAnimation(tdoll.selected.animations.victory);
+					break;
+				case 5:
+					setAnimation(tdoll.selected.animations.victory2);
+					break;
+				case 6:
+					setAnimation(tdoll.selected.animations.victoryloop);
+					break;
+				default:
+			}
+		} else {
+			setAnimationDormValue(newValue);
+
+			switch (newValue) {
+				case 0:
+					setAnimation(tdoll.selected.animations_dorm.lying);
+					break;
+				case 1:
+					setAnimation(tdoll.selected.animations_dorm.move);
+					break;
+				case 2:
+					setAnimation(tdoll.selected.animations_dorm.pick);
+					break;
+				case 3:
+					setAnimation(tdoll.selected.animations_dorm.sit);
+					break;
+				case 4:
+					setAnimation(tdoll.selected.animations_dorm.wait);
+					break;
+				default:
+			}
 		}
 	};
 
@@ -498,8 +593,8 @@ export default function TDoll(props) {
 						{/* T-Doll image */}
 						<Grid container direction="row" spacing={2}>
 							<Grid item key="T-Doll image" xs={12} sm={6}>
-								{hasMod ? (
-									<Tabs className={classes.tabs} value={mode} onChange={switchModes} indicatorColor="primary" textColor="primary" scrollButtons="auto" variant="scrollable">
+								{/* {hasMod ? (
+									<Tabs className={classes.tabs} value={mode} onChange={switchModes} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
 										<Tab label="Normal" />
 										<Tab label="MOD" />
 									</Tabs>
@@ -507,9 +602,9 @@ export default function TDoll(props) {
 									<Tabs className={classes.tabs} value={mode} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="auto">
 										<Tab label="Normal" />
 									</Tabs>
-								)}
+								)} */}
 
-								<Tabs className={classes.tabs} value={false} onChange={switchSkinModes} indicatorColor="primary" textColor="primary" scrollButtons="auto" variant="scrollable">
+								<Tabs className={classes.tabs} value={false} onChange={switchSkinModes} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
 									{renderSkinsTabs()}
 								</Tabs>
 
@@ -517,6 +612,15 @@ export default function TDoll(props) {
 									<CardActionArea onClick={handleChangeImage}>
 										<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
 									</CardActionArea>
+									{/* Floating Action Button overlayed over image at the top left */}
+									{hasMod ? (
+										<Fab color="primary" className={classes.fab_mod} onClick={switchModes}>
+											<img src={mod_button} alt="Switch between Normal/Mod" style={{ height: 32, width: 32 }} />
+										</Fab>
+									) : (
+										""
+									)}
+
 									{/* Floating Action Button overlayed over image at the bottom left */}
 									<Fab color="primary" className={classes.fab} onClick={handleToggle}>
 										<ZoomOutMapIcon />
@@ -528,8 +632,30 @@ export default function TDoll(props) {
 								</Card>
 
 								{/* T-Doll's animations */}
+								<Fab color="primary" className={classes.fab_dorm} onClick={switchAnimationMode}>
+									<img src={dorm_button} alt="Switch between Normal/Dorm" style={{ height: 28, width: 28 }} />
+								</Fab>
+								{animationMode === 0 ? (
+									<Tabs className={classes.tabs} value={animationValue} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+										<Tab label="Wait" />
+										<Tab label="Move" />
+										<Tab label="Attack" />
+										<Tab label="Die" />
+										<Tab label="Victory" />
+										<Tab label="Victory 2" />
+										<Tab label="VictoryLoop" />
+									</Tabs>
+								) : (
+									<Tabs className={classes.tabs} value={animationDormValue} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+										<Tab label="Lying" />
+										<Tab label="Move" />
+										<Tab label="Pick" />
+										<Tab label="Sit" />
+										<Tab label="Wait" />
+									</Tabs>
+								)}
 								<Card className={classes.cardForAnimation} elevation={12}>
-									<GifPlayer gif={tdoll.selected.animations[0]} />
+									<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} />
 								</Card>
 							</Grid>
 
