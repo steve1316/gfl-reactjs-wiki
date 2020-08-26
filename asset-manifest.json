@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/gfl-database/static/css/main.f4486e0d.chunk.css",
-    "main.js": "/gfl-database/static/js/main.3443f73c.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.3443f73c.chunk.js.map",
+    "main.js": "/gfl-database/static/js/main.f8babf3a.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.f8babf3a.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.5721d095.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.5721d095.js.map",
     "static/js/2.84defbd0.chunk.js": "/gfl-database/static/js/2.84defbd0.chunk.js",
     "static/js/2.84defbd0.chunk.js.map": "/gfl-database/static/js/2.84defbd0.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.43fade15ecf19e0fb0825c664d3346b0.js": "/gfl-database/precache-manifest.43fade15ecf19e0fb0825c664d3346b0.js",
+    "precache-manifest.a89fdc98ae617f830618eb7a8eb9bb9d.js": "/gfl-database/precache-manifest.a89fdc98ae617f830618eb7a8eb9bb9d.js",
     "service-worker.js": "/gfl-database/service-worker.js",
     "static/css/main.f4486e0d.chunk.css.map": "/gfl-database/static/css/main.f4486e0d.chunk.css.map",
     "static/js/2.84defbd0.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.84defbd0.chunk.js.LICENSE.txt",
@@ -58,7 +58,7 @@
     "static/media/1_skin1_full_damaged.png": "/gfl-database/static/media/1_skin1_full_damaged.02029936.png",
     "static/media/1_skin1_move.gif": "/gfl-database/static/media/1_skin1_move.2f41abb6.gif",
     "static/media/1_skin1_victory.gif": "/gfl-database/static/media/1_skin1_victory.244dea68.gif",
-    "static/media/1_skin1_victoryloop.gif": "/gfl-database/static/media/1_skin1_victoryloop.244dea68.gif",
+    "static/media/1_skin1_victoryloop.gif": "/gfl-database/static/media/1_skin1_victoryloop.fe15f769.gif",
     "static/media/1_skin1_wait.gif": "/gfl-database/static/media/1_skin1_wait.7baa1b4b.gif",
     "static/media/1_skin2_attack.gif": "/gfl-database/static/media/1_skin2_attack.d7398ca5.gif",
     "static/media/1_skin2_card.png": "/gfl-database/static/media/1_skin2_card.0480f870.png",
@@ -88,6 +88,6 @@
     "static/js/runtime-main.5721d095.js",
     "static/js/2.84defbd0.chunk.js",
     "static/css/main.f4486e0d.chunk.css",
-    "static/js/main.3443f73c.chunk.js"
+    "static/js/main.f8babf3a.chunk.js"
   ]
 }
