@@ -220,7 +220,7 @@ export default function TDoll_Index() {
 															<sup>[#{tdoll.selected.id}]</sup>
 														</small>
 													</Typography>
-													<b>{tdoll.selected.rarity + "*" + " " + tdoll.selected.type}</b>
+													<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
 												</>
 											}
 											placement="right"
