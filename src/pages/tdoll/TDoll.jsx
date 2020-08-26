@@ -300,15 +300,15 @@ export default function TDoll(props) {
 
 		if (showSkin) {
 			if (switchImage) {
-				return <img src={tdoll.skins.skin_images_full[skinMode + 1]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+				return <img src={tdoll.skins.skin_images_full[skinMode + 1]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Damaged Full Skin" />;
 			} else {
-				return <img src={tdoll.skins.skin_images_full[skinMode]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+				return <img src={tdoll.skins.skin_images_full[skinMode]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Normal Full Skin" />;
 			}
 		} else {
 			if (switchImage) {
-				return <img src={tdoll.selected.images.full_damaged} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+				return <img src={tdoll.selected.images.full_damaged} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Damaged Full" />;
 			} else {
-				return <img src={tdoll.selected.images.full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
+				return <img src={tdoll.selected.images.full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Normal Full" />;
 			}
 		}
 	};
@@ -332,7 +332,7 @@ export default function TDoll(props) {
 	}, [showSkin, skinMode]);
 
 	const switchModes = (event) => {
-		console.log("Switching between Normal and Mod information.");
+		//console.log("Switching between Normal and Mod information.");
 		setShowSkin(false); // Set this to false so that the image rendered belongs to Normal or Mod, not any skin already selected.
 
 		// Perform check if the information shown should be MOD. Then set the state of the T-Doll depending if MOD. Also set the state of the image.
@@ -368,7 +368,7 @@ export default function TDoll(props) {
 
 	// Set image to the Normal skin at the newValue index inside JSON.
 	const switchSkinModes = (event, newValue) => {
-		console.log("Setting displayed skin to Normal version and setting animation to the skin's wait animation.");
+		//console.log("Setting displayed skin to Normal version and setting animation to the skin's wait animation.");
 		setSkinMode(newValue);
 		setShowSkin(true);
 
@@ -417,7 +417,7 @@ export default function TDoll(props) {
 
 	// Switch the animations between Normal and Dorm.
 	const switchAnimationMode = () => {
-		console.log("Switching between Normal and Dorm animations.");
+		//console.log("Switching between Normal and Dorm animations.");
 
 		var tempSkinMode = skinMode;
 
@@ -428,7 +428,7 @@ export default function TDoll(props) {
 		}
 
 		if (animationMode === 0) {
-			console.log("Switching to Dorm animations...");
+			//console.log("Switching to Dorm animations...");
 			setAnimationMode(1);
 			setAnimationValue(0);
 			setAnimationDormValue(0);
@@ -439,7 +439,7 @@ export default function TDoll(props) {
 				setAnimation(tdoll.selected.animations_dorm.wait);
 			}
 		} else {
-			console.log("Switching to Normal animations...");
+			//console.log("Switching to Normal animations...");
 			setAnimationMode(0);
 			setAnimationValue(0);
 			setAnimationDormValue(0);
@@ -494,7 +494,7 @@ export default function TDoll(props) {
 
 	// Switch animations based on Tab selected.
 	const switchAnimations = (event, newValue) => {
-		console.log("Switching animation based on the tab selected.");
+		//console.log("Switching animation based on the tab selected.");
 		var tempSkinMode = skinMode;
 
 		if (tempSkinMode - 1 > 0) {
@@ -645,7 +645,7 @@ export default function TDoll(props) {
 		var tempTabs = [];
 
 		tdoll.skins.skin_names.map((name, index) => {
-			tempTabs.push(<Tab label={name} key={index} value={index === 0 ? 0 : index + 1} />);
+			return tempTabs.push(<Tab label={name} key={index} value={index === 0 ? 0 : index + 1} />);
 		});
 
 		return tempTabs;
@@ -742,22 +742,22 @@ export default function TDoll(props) {
 		handleChangeSkillDescription();
 	}, [skillLevel, mode]);
 
-	useEffect(() => {
-		console.log("0 for Normal, 1 for Dorm animations...");
-		console.log("Animation Mode: ", animationMode);
-		console.log("Normal Animation Tab selected: ", animationValue);
-		console.log("Dorm Animation Tab selected: ", animationDormValue);
-		var tempSkinMode = skinMode;
-		console.log("Skin selected before calc: ", tempSkinMode);
+	// useEffect(() => {
+	// 	console.log("0 for Normal, 1 for Dorm animations...");
+	// 	console.log("Animation Mode: ", animationMode);
+	// 	console.log("Normal Animation Tab selected: ", animationValue);
+	// 	console.log("Dorm Animation Tab selected: ", animationDormValue);
+	// 	var tempSkinMode = skinMode;
+	// 	console.log("Skin selected before calc: ", tempSkinMode);
 
-		if (tempSkinMode - 1 > 0) {
-			tempSkinMode -= 1;
-		} else {
-			tempSkinMode = 0;
-		}
+	// 	if (tempSkinMode - 1 > 0) {
+	// 		tempSkinMode -= 1;
+	// 	} else {
+	// 		tempSkinMode = 0;
+	// 	}
 
-		console.log("Skin selected after calc: ", tempSkinMode);
-	});
+	// 	console.log("Skin selected after calc: ", tempSkinMode);
+	// });
 
 	return (
 		<main>
