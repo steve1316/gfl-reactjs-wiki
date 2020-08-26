@@ -271,7 +271,7 @@ export default function TDoll(props) {
 	}, []);
 
 	// Replace the T-Doll's image with normal or damaged versions.
-	const handleChangeImage = () => {
+	const switchBetweenNormalDamaged = () => {
 		if (showSkin) {
 			if (switchImage) {
 				setTDollImage(tdoll.skins.skin_images[skinMode]);
@@ -297,6 +297,7 @@ export default function TDoll(props) {
 
 	const renderImage = () => {
 		// Show images depending on booleans, either Skins or Normal/Mod.
+
 		if (showSkin) {
 			if (switchImage) {
 				return <img src={tdoll.skins.skin_images_full[skinMode + 1]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Backdrop image" />;
@@ -312,7 +313,26 @@ export default function TDoll(props) {
 		}
 	};
 
+	useEffect(() => {
+		var tempSkinMode = skinMode;
+
+		if (tempSkinMode - 1 > 0) {
+			tempSkinMode -= 1;
+		} else {
+			tempSkinMode = 0;
+		}
+
+		if (showSkin) {
+			if (animationMode === 0) {
+				setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+			} else {
+				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+			}
+		}
+	}, [showSkin, skinMode]);
+
 	const switchModes = (event) => {
+		console.log("Switching between Normal and Mod information.");
 		setShowSkin(false); // Set this to false so that the image rendered belongs to Normal or Mod, not any skin already selected.
 
 		// Perform check if the information shown should be MOD. Then set the state of the T-Doll depending if MOD. Also set the state of the image.
@@ -335,12 +355,23 @@ export default function TDoll(props) {
 		// Set the state of the T-Doll image and made sure to prevent duplicate click bug on the image.
 		setTDollImage(tdoll_temp.selected.images.card);
 		setSwitchImage(false);
+
+		if (animationMode === 1) {
+			setAnimation(tdoll_temp.selected.animations_dorm.wait);
+		} else {
+			setAnimation(tdoll_temp.selected.animations.wait);
+		}
+
+		setAnimationValue(0);
+		setAnimationDormValue(0);
 	};
 
-	// Set skin images.
+	// Set image to the Normal skin at the newValue index inside JSON.
 	const switchSkinModes = (event, newValue) => {
+		console.log("Setting displayed skin to Normal version and setting animation to the skin's wait animation.");
 		setSkinMode(newValue);
 		setShowSkin(true);
+
 		setSwitchImage(false); // This is needed to make sure there are no duplicate click bug.
 
 		// Odd numbers are the damaged versions. We only need the normal versions.
@@ -365,42 +396,162 @@ export default function TDoll(props) {
 				break;
 			default:
 		}
+
+		var tempSkinMode = skinMode;
+
+		if (tempSkinMode - 1 > 0) {
+			tempSkinMode -= 1;
+		} else {
+			tempSkinMode = 0;
+		}
+
+		if (animationMode === 0) {
+			setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+		} else {
+			setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+		}
+
+		setAnimationValue(0);
+		setAnimationDormValue(0);
 	};
 
-	const switchAnimationMode = (event) => {
-		if (animationMode === 0) {
-			setAnimationMode(1);
-			setAnimationDormValue(0);
-			setAnimation(tdoll.selected.animations_dorm.lying);
+	// Switch the animations between Normal and Dorm.
+	const switchAnimationMode = () => {
+		console.log("Switching between Normal and Dorm animations.");
+
+		var tempSkinMode = skinMode;
+
+		if (tempSkinMode - 1 > 0) {
+			tempSkinMode -= 1;
 		} else {
+			tempSkinMode = 0;
+		}
+
+		if (animationMode === 0) {
+			console.log("Switching to Dorm animations...");
+			setAnimationMode(1);
+			setAnimationValue(0);
+			setAnimationDormValue(0);
+
+			if (showSkin) {
+				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+			} else {
+				setAnimation(tdoll.selected.animations_dorm.wait);
+			}
+		} else {
+			console.log("Switching to Normal animations...");
 			setAnimationMode(0);
 			setAnimationValue(0);
-			setAnimation(tdoll.selected.animations.wait);
+			setAnimationDormValue(0);
+
+			if (showSkin) {
+				setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+			} else {
+				setAnimation(tdoll.selected.animations.wait);
+			}
 		}
 	};
 
+	const renderAnimationTabs = () => {
+		if (animationMode === 0) {
+			// If Mod...
+			if (mode === 1 || showSkin) {
+				return (
+					<Tabs className={classes.tabs} value={animationValue} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+						<Tab label="Wait" />
+						<Tab label="Move" />
+						<Tab label="Attack" />
+						<Tab label="Die" />
+						<Tab label="Victory" />
+						<Tab label="VictoryLoop" />
+					</Tabs>
+				);
+			} else {
+				return (
+					<Tabs className={classes.tabs} value={animationValue} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+						<Tab label="Wait" />
+						<Tab label="Move" />
+						<Tab label="Attack" />
+						<Tab label="Die" />
+						<Tab label="Victory" />
+						<Tab label="Victory2" />
+						<Tab label="VictoryLoop" />
+					</Tabs>
+				);
+			}
+		} else {
+			return (
+				<Tabs className={classes.tabs} value={animationDormValue} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+					<Tab label="Wait" />
+					<Tab label="Move" />
+					<Tab label="Pick" />
+					<Tab label="Sit" />
+					<Tab label="Lying" />
+				</Tabs>
+			);
+		}
+	};
+
+	// Switch animations based on Tab selected.
 	const switchAnimations = (event, newValue) => {
+		console.log("Switching animation based on the tab selected.");
+		var tempSkinMode = skinMode;
+
+		if (tempSkinMode - 1 > 0) {
+			tempSkinMode -= 1;
+		} else {
+			tempSkinMode = 0;
+		}
+
 		if (animationMode === 0) {
 			setAnimationValue(newValue);
 
 			switch (newValue) {
 				case 0:
-					setAnimation(tdoll.selected.animations.wait);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations.wait);
+					}
 					break;
 				case 1:
-					setAnimation(tdoll.selected.animations.move);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.move[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations.move);
+					}
 					break;
 				case 2:
-					setAnimation(tdoll.selected.animations.attack);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.attack[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations.attack);
+					}
 					break;
 				case 3:
-					setAnimation(tdoll.selected.animations.die);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.die[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations.die);
+					}
 					break;
 				case 4:
-					setAnimation(tdoll.selected.animations.victory);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.victory[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations.victory);
+					}
 					break;
 				case 5:
-					setAnimation(tdoll.selected.animations.victory2);
+					if (mode === 1 || showSkin) {
+						if (showSkin) {
+							setAnimation(tdoll.skins.animations.victoryloop[tempSkinMode]);
+						} else {
+							setAnimation(tdoll.selected.animations.victoryloop);
+						}
+					} else {
+						setAnimation(tdoll.selected.animations.victory2);
+					}
 					break;
 				case 6:
 					setAnimation(tdoll.selected.animations.victoryloop);
@@ -412,19 +563,40 @@ export default function TDoll(props) {
 
 			switch (newValue) {
 				case 0:
-					setAnimation(tdoll.selected.animations_dorm.lying);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations_dorm.wait);
+					}
+
 					break;
 				case 1:
-					setAnimation(tdoll.selected.animations_dorm.move);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations_dorm.move[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations_dorm.move);
+					}
 					break;
 				case 2:
-					setAnimation(tdoll.selected.animations_dorm.pick);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations_dorm.pick[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations_dorm.pick);
+					}
 					break;
 				case 3:
-					setAnimation(tdoll.selected.animations_dorm.sit);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations_dorm.sit);
+					}
 					break;
 				case 4:
-					setAnimation(tdoll.selected.animations_dorm.wait);
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations_dorm.lying[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations_dorm.lying);
+					}
 					break;
 				default:
 			}
@@ -570,6 +742,23 @@ export default function TDoll(props) {
 		handleChangeSkillDescription();
 	}, [skillLevel, mode]);
 
+	useEffect(() => {
+		console.log("0 for Normal, 1 for Dorm animations...");
+		console.log("Animation Mode: ", animationMode);
+		console.log("Normal Animation Tab selected: ", animationValue);
+		console.log("Dorm Animation Tab selected: ", animationDormValue);
+		var tempSkinMode = skinMode;
+		console.log("Skin selected before calc: ", tempSkinMode);
+
+		if (tempSkinMode - 1 > 0) {
+			tempSkinMode -= 1;
+		} else {
+			tempSkinMode = 0;
+		}
+
+		console.log("Skin selected after calc: ", tempSkinMode);
+	});
+
 	return (
 		<main>
 			<Container className={classes.cardGrid} maxWidth="lg">
@@ -609,7 +798,7 @@ export default function TDoll(props) {
 								</Tabs>
 
 								<Card className={classes.cardForImage} elevation={12}>
-									<CardActionArea onClick={handleChangeImage}>
+									<CardActionArea onClick={switchBetweenNormalDamaged}>
 										<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
 									</CardActionArea>
 									{/* Floating Action Button overlayed over image at the top left */}
@@ -635,27 +824,11 @@ export default function TDoll(props) {
 								<Fab color="primary" className={classes.fab_dorm} onClick={switchAnimationMode}>
 									<img src={dorm_button} alt="Switch between Normal/Dorm" style={{ height: 28, width: 28 }} />
 								</Fab>
-								{animationMode === 0 ? (
-									<Tabs className={classes.tabs} value={animationValue} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
-										<Tab label="Wait" />
-										<Tab label="Move" />
-										<Tab label="Attack" />
-										<Tab label="Die" />
-										<Tab label="Victory" />
-										<Tab label="Victory 2" />
-										<Tab label="VictoryLoop" />
-									</Tabs>
-								) : (
-									<Tabs className={classes.tabs} value={animationDormValue} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
-										<Tab label="Lying" />
-										<Tab label="Move" />
-										<Tab label="Pick" />
-										<Tab label="Sit" />
-										<Tab label="Wait" />
-									</Tabs>
-								)}
+
+								{renderAnimationTabs()}
+
 								<Card className={classes.cardForAnimation} elevation={12}>
-									<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} />
+									<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} />
 								</Card>
 							</Grid>
 
