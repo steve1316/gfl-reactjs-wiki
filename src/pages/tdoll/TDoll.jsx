@@ -565,6 +565,7 @@ export default function TDoll(props) {
 					{tdoll.skins && "action" in tdoll.skins.animations_dorm ? <Tab label="Action" value="action" /> : ""}
 					<Tab label="Pick" value="pick" />
 					<Tab label="Sit" value="sit" />
+					{tdoll.skins && "sit2" in tdoll.skins.animations_dorm && tdoll.skins.animations_dorm.sit2[skinSelected] !== null ? <Tab label="Sit2" value="sit2" /> : ""}
 					<Tab label="Lying" value="lying" />
 				</Tabs>
 			);
@@ -694,6 +695,13 @@ export default function TDoll(props) {
 						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.sit);
+					}
+					break;
+				case "sit2":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations_dorm.sit2[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations_dorm.sit2);
 					}
 					break;
 				case "lying":
