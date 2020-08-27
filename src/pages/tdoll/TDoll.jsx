@@ -208,8 +208,8 @@ export default function TDoll(props) {
 	// Set initial states for animations.
 	const [animation, setAnimation] = useState(undefined);
 	const [animationMode, setAnimationMode] = useState(0); // 0 for Normal animations, 1 for Dorm animations.
-	const [animationTabSelected, setAnimationTabSelected] = useState(0);
-	const [animationDormTabSelected, setAnimationDormTabSelected] = useState(0);
+	const [animationTabSelected, setAnimationTabSelected] = useState("wait");
+	const [animationDormTabSelected, setAnimationDormTabSelected] = useState("wait");
 
 	// Set initial miscellaneous states.
 	const [open, setOpen] = useState(false);
@@ -282,8 +282,8 @@ export default function TDoll(props) {
 
 	// Helper function to reset selected animation tab back to the default tab.
 	const helperResetAnimationTabs = () => {
-		setAnimationTabSelected(0);
-		setAnimationDormTabSelected(0);
+		setAnimationTabSelected("wait");
+		setAnimationDormTabSelected("wait");
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -487,8 +487,7 @@ export default function TDoll(props) {
 		}
 
 		// Reset animation tab selected.
-		setAnimationTabSelected(0);
-		setAnimationDormTabSelected(0);
+		helperResetAnimationTabs();
 	};
 
 	// Show full images for the Backdrop component depending on whether it is the skin or Normal/Mod selected.
@@ -517,23 +516,24 @@ export default function TDoll(props) {
 		if (animationMode === 0) {
 			return (
 				<Tabs className={classes.tabs} value={animationTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
-					<Tab label="Wait" />
-					<Tab label="Move" />
-					<Tab label="Attack" />
-					<Tab label="Die" />
-					<Tab label="Victory" />
-					{mode === 1 || showSkin ? "" : <Tab label="Victory2" />}
-					<Tab label="VictoryLoop" />
+					<Tab label="Wait" value="wait" />
+					<Tab label="Move" value="move" />
+					<Tab label="Attack" value="attack" />
+					{"skill" in tdoll.selected.animations ? <Tab label="Skill" value="skill" /> : ""}
+					<Tab label="Die" value="die" />
+					<Tab label="Victory" value="victory" />
+					{"victory2" in tdoll.selected.animations ? <Tab label="Victory2" value="victory2" /> : ""}
+					<Tab label="VictoryLoop" value="victoryloop" />
 				</Tabs>
 			);
 		} else {
 			return (
 				<Tabs className={classes.tabs} value={animationDormTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
-					<Tab label="Wait" />
-					<Tab label="Move" />
-					<Tab label="Pick" />
-					<Tab label="Sit" />
-					<Tab label="Lying" />
+					<Tab label="Wait" value="wait" />
+					<Tab label="Move" value="move" />
+					<Tab label="Pick" value="pick" />
+					<Tab label="Sit" value="sit" />
+					<Tab label="Lying" value="lying" />
 				</Tabs>
 			);
 		}
@@ -566,54 +566,61 @@ export default function TDoll(props) {
 			setAnimationTabSelected(newValue);
 
 			switch (newValue) {
-				case 0:
+				case "wait":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations.wait);
 					}
 					break;
-				case 1:
+				case "move":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.move[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations.move);
 					}
 					break;
-				case 2:
+				case "attack":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.attack[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations.attack);
 					}
 					break;
-				case 3:
+				case "die":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.die[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations.die);
 					}
 					break;
-				case 4:
+				case "skill":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.skill[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations.skill);
+					}
+					break;
+				case "victory":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.victory[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations.victory);
 					}
 					break;
-				case 5:
-					if (mode === 1 || showSkin) {
-						if (showSkin) {
-							setAnimation(tdoll.skins.animations.victoryloop[tempSkinMode]);
-						} else {
-							setAnimation(tdoll.selected.animations.victoryloop);
-						}
+				case "victory2":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.victory2[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations.victory2);
 					}
 					break;
-				case 6:
-					setAnimation(tdoll.selected.animations.victoryloop);
+				case "victoryloop":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.victoryloop[tempSkinMode]);
+					} else {
+						setAnimation(tdoll.selected.animations.victoryloop);
+					}
 					break;
 				default:
 			}
@@ -621,7 +628,7 @@ export default function TDoll(props) {
 			setAnimationDormTabSelected(newValue);
 
 			switch (newValue) {
-				case 0:
+				case "wait":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
 					} else {
@@ -629,28 +636,28 @@ export default function TDoll(props) {
 					}
 
 					break;
-				case 1:
+				case "move":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations_dorm.move[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.move);
 					}
 					break;
-				case 2:
+				case "pick":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations_dorm.pick[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.pick);
 					}
 					break;
-				case 3:
+				case "sit":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinMode]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.sit);
 					}
 					break;
-				case 4:
+				case "lying":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations_dorm.lying[tempSkinMode]);
 					} else {
@@ -864,14 +871,18 @@ export default function TDoll(props) {
 											{/* This will render the span tags inserted into the skill description and will color the numbers. */}
 											{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
 										</Typography>
-										<Typography className={classes.pos} color="textSecondary">
-											Cooldown:{" "}
-											{
-												<span style={{ color: "cyan" }}>
-													<ins>{selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.cooldown[skillLevel - 1] : tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
-												</span>
-											}
-										</Typography>
+										{selectedSkill === 0 ? (
+											<Typography className={classes.pos} color="textSecondary">
+												Cooldown:{" "}
+												{
+													<span style={{ color: "cyan" }}>
+														<ins>{tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
+													</span>
+												}
+											</Typography>
+										) : (
+											""
+										)}
 									</CardContent>
 								</Card>
 
