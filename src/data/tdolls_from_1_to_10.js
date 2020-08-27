@@ -569,7 +569,98 @@ const tdolls = [
 				action: [require("../images/tdolls/5/animations/5_skin1_dorm_action.gif")]
 			}
 		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 6,
+			name: "Tokarev",
+			type: "HG",
+			rarity: 3,
+			max_hp: 86,
+			max_dmg: 31,
+			max_acc: 47,
+			max_eva: 66,
+			max_rof: 52,
+			skill: {
+				name: "Cover Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increase all allies' evasion by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
+				image_skill: require("../images/tdolls/6/6_skill1.png")
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 0],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Accuracy by "],
+				stat2: ["20%", "50%"]
+			},
+			images: {
+				card: require("../images/tdolls/6/6_card.png"),
+				card_damaged: require("../images/tdolls/6/6_card_damaged.png"),
+				full: require("../images/tdolls/6/6_full.png"),
+				full_damaged: require("../images/tdolls/6/6_full_damaged.png")
+			},
+			animations: {
+				attack: require("../images/tdolls/6/animations/6_normal_attack.gif"),
+				die: require("../images/tdolls/6/animations/6_normal_die.gif"),
+				move: require("../images/tdolls/6/animations/6_normal_move.gif"),
+				victory: require("../images/tdolls/6/animations/6_normal_victory.gif"),
+				victoryloop: require("../images/tdolls/6/animations/6_normal_victoryloop.gif"),
+				wait: require("../images/tdolls/6/animations/6_normal_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/6/animations/6_normal_dorm_lying.gif"),
+				move: require("../images/tdolls/6/animations/6_normal_dorm_move.gif"),
+				pick: require("../images/tdolls/6/animations/6_normal_dorm_pick.gif"),
+				sit: require("../images/tdolls/6/animations/6_normal_dorm_sit.gif"),
+				wait: require("../images/tdolls/6/animations/6_normal_dorm_wait.gif")
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["A Couple's Journey", "Griffon Dancer"],
+			skin_images: [
+				require("../images/tdolls/6/6_skin1_card.png"),
+				require("../images/tdolls/6/6_skin1_card_damaged.png"),
+				require("../images/tdolls/6/6_skin2_card.png"),
+				require("../images/tdolls/6/6_skin2_card_damaged.png")
+			],
+			skin_images_full: [
+				require("../images/tdolls/6/6_skin1_full.png"),
+				require("../images/tdolls/6/6_skin1_full_damaged.png"),
+				require("../images/tdolls/6/6_skin2_full.png"),
+				require("../images/tdolls/6/6_skin2_full_damaged.png")
+			],
+			animations: {
+				attack: [require("../images/tdolls/6/animations/6_skin1_attack.gif"), require("../images/tdolls/6/animations/6_skin2_attack.gif")],
+				die: [require("../images/tdolls/6/animations/6_skin1_die.gif"), require("../images/tdolls/6/animations/6_skin2_die.gif")],
+				move: [require("../images/tdolls/6/animations/6_skin1_move.gif"), require("../images/tdolls/6/animations/6_skin2_move.gif")],
+				victory: [require("../images/tdolls/6/animations/6_skin1_victory.gif"), require("../images/tdolls/6/animations/6_skin2_victory.gif")],
+				victoryloop: [require("../images/tdolls/6/animations/6_skin1_victoryloop.gif"), require("../images/tdolls/6/animations/6_skin2_victoryloop.gif")],
+				wait: [require("../images/tdolls/6/animations/6_skin1_wait.gif"), require("../images/tdolls/6/animations/6_skin2_wait.gif")]
+			},
+			animations_dorm: {
+				lying: [require("../images/tdolls/6/animations/6_skin1_dorm_lying.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_lying.gif")],
+				move: [require("../images/tdolls/6/animations/6_skin1_dorm_move.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_move.gif")],
+				pick: [require("../images/tdolls/6/animations/6_skin1_dorm_pick.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_pick.gif")],
+				sit: [require("../images/tdolls/6/animations/6_skin1_dorm_sit.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_sit.gif")],
+				sit2: [null, require("../images/tdolls/6/animations/6_skin2_dorm_sit2.gif")],
+				wait: [require("../images/tdolls/6/animations/6_skin1_dorm_wait.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_wait.gif")]
+			}
+		}
 	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 ];
 
 module.exports = tdolls;
