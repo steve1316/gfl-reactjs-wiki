@@ -1,13 +1,16 @@
 /*
     This array of T-Dolls will contain information about each one in JSON format. Some things to note:
     - All stats are considered at max rank. For skill stats, I'm separating them for now.
-    - If T-Doll has Mod, mod property will be populated. If not, mod property will be set to null.
+	- If T-Doll has Mod, mod property will be populated. If not, mod property will be set to null.
+	- Likewise, if T-Doll has no skins, skins property will be set to null.
 	- number_of_stats in skill attribute dictates the amount of numbers from stat(1) to stat(n) to be replacing the "#(n)"" delimiters inside the skill description in sequential order.
 	- Note: Depending on the T-Doll, whether Normal, Mod, or skin, sometimes they do not come with some animations like Victory2 and sometimes come with additional animations like Skill.
 
 */
 
 const tdolls = [
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	{
 		normal: {
 			id: 1,
@@ -154,6 +157,8 @@ const tdolls = [
 			}
 		}
 	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	{
 		normal: {
 			id: 2,
@@ -290,6 +295,278 @@ const tdolls = [
 				pick: [require("../images/tdolls/2/animations/2_skin1_dorm_pick.gif")],
 				sit: [require("../images/tdolls/2/animations/2_skin1_dorm_sit.gif")],
 				wait: [require("../images/tdolls/2/animations/2_skin1_dorm_wait.gif")]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 3,
+			name: "M9",
+			type: "HG",
+			rarity: 3,
+			max_hp: 76,
+			max_dmg: 29,
+			max_acc: 56,
+			max_eva: 66,
+			max_rof: 61,
+			skill: {
+				name: "Stun Grenade",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds",
+				number_of_stats: 1,
+				stat1: [1.6, 1.8, 2, 2.1, 2.3, 2.5, 2.7, 2.8, 3, 3.2],
+				image_skill: require("../images/tdolls/3/3_skill1.png")
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 1],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Evasion by ", "Damage by "],
+				stat2: ["20%", "20%"]
+			},
+			images: {
+				card: require("../images/tdolls/3/3_card.png"),
+				card_damaged: require("../images/tdolls/3/3_card_damaged.png"),
+				full: require("../images/tdolls/3/3_full.png"),
+				full_damaged: require("../images/tdolls/3/3_full_damaged.png")
+			},
+			animations: {
+				attack: require("../images/tdolls/3/animations/3_normal_attack.gif"),
+				die: require("../images/tdolls/3/animations/3_normal_die.gif"),
+				move: require("../images/tdolls/3/animations/3_normal_move.gif"),
+				victory: require("../images/tdolls/3/animations/3_normal_victory.gif"),
+				skill: require("../images/tdolls/3/animations/3_normal_skill.gif"),
+				wait: require("../images/tdolls/3/animations/3_normal_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/3/animations/3_normal_dorm_lying.gif"),
+				move: require("../images/tdolls/3/animations/3_normal_dorm_move.gif"),
+				pick: require("../images/tdolls/3/animations/3_normal_dorm_pick.gif"),
+				sit: require("../images/tdolls/3/animations/3_normal_dorm_sit.gif"),
+				wait: require("../images/tdolls/3/animations/3_normal_dorm_wait.gif")
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 4,
+			name: "Python",
+			type: "HG",
+			rarity: 5,
+			max_hp: 70,
+			max_dmg: 40,
+			max_acc: 81,
+			max_eva: 82,
+			max_rof: 49,
+			skill: {
+				name: "Embrace of the Fearless",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				passive_active_description: true,
+				description:
+					"Passive: Whenever Python receives damage/rate of fire/evasion/accuracy/crit rate (including Fairies) skill buffs, increase the corresponding stats of allies on her tiles by #1 for 3 seconds. Active: The next six attacks will have a #2 chance of increasing self damage by #3 for #4 seconds. Max 6 stacks.",
+				number_of_stats: 4,
+				stat1: [
+					"3%/3%/15%/15%/6%",
+					"3%/3%/17%/17%/7%",
+					"4%/4%/18%/18%/7%",
+					"4%/4%/20%/20%/7%",
+					"5%/5%/22%/22%/8%",
+					"5%/5%/23%/23%/9%",
+					"5%/5%/25%/25%/9%",
+					"6%/6%/27%/27%/10%",
+					"6%/6%/28%/28%/11%",
+					"6%/6%/30%/30%/12%"
+				],
+				stat2: ["40%", "47%", "53%", "60%", "67%", "73%", "80%", "87%", "93%", "100%"],
+				stat3: ["15%", "17%", "18%", "20%", "22%", "23%", "25%", "27%", "28%", "30%"],
+				stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: require("../images/tdolls/4/4_skill1.png")
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [1, 2, 1],
+				row3: [1, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Crit Rate by "],
+				stat2: ["30%", "20%"]
+			},
+			images: {
+				card: require("../images/tdolls/4/4_card.png"),
+				card_damaged: require("../images/tdolls/4/4_card_damaged.png"),
+				full: require("../images/tdolls/4/4_full.png"),
+				full_damaged: require("../images/tdolls/4/4_full_damaged.png")
+			},
+			animations: {
+				attack: require("../images/tdolls/4/animations/4_normal_attack.gif"),
+				die: require("../images/tdolls/4/animations/4_normal_die.gif"),
+				move: require("../images/tdolls/4/animations/4_normal_move.gif"),
+				victory: require("../images/tdolls/4/animations/4_normal_victory.gif"),
+				victoryloop: require("../images/tdolls/4/animations/4_normal_victoryloop.gif"),
+				wait: require("../images/tdolls/4/animations/4_normal_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/4/animations/4_normal_dorm_lying.gif"),
+				move: require("../images/tdolls/4/animations/4_normal_dorm_move.gif"),
+				pick: require("../images/tdolls/4/animations/4_normal_dorm_pick.gif"),
+				sit: require("../images/tdolls/4/animations/4_normal_dorm_sit.gif"),
+				wait: require("../images/tdolls/4/animations/4_normal_dorm_wait.gif")
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 5,
+			name: "Nagant Revolver",
+			type: "HG",
+			rarity: 2,
+			max_hp: 70,
+			max_dmg: 32,
+			max_acc: 46,
+			max_eva: 92,
+			max_rof: 44,
+			skill: {
+				name: "Firepower Supression N",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "During nighttime, decrease all enemies' damage by #1 (#2 during daytime) for #3 seconds (#4 seconds during daytime).",
+				number_of_stats: 4,
+				stat1: ["20%", "22%", "23%", "25%", "27%", "28%", "30%", "32%", "33%", "35%"],
+				stat2: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
+				stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				stat4: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: require("../images/tdolls/5/5_skill1.png")
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [1, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Crit Rate by "],
+				stat2: ["32%", "16%"]
+			},
+			images: {
+				card: require("../images/tdolls/5/5_card.png"),
+				card_damaged: require("../images/tdolls/5/5_card_damaged.png"),
+				full: require("../images/tdolls/5/5_full.png"),
+				full_damaged: require("../images/tdolls/5/5_full_damaged.png")
+			},
+			animations: {
+				attack: require("../images/tdolls/5/animations/5_normal_attack.gif"),
+				die: require("../images/tdolls/5/animations/5_normal_die.gif"),
+				move: require("../images/tdolls/5/animations/5_normal_move.gif"),
+				victory: require("../images/tdolls/5/animations/5_normal_victory.gif"),
+				victoryloop: require("../images/tdolls/5/animations/5_normal_victoryloop.gif"),
+				wait: require("../images/tdolls/5/animations/5_normal_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/5/animations/5_normal_dorm_lying.gif"),
+				move: require("../images/tdolls/5/animations/5_normal_dorm_move.gif"),
+				pick: require("../images/tdolls/5/animations/5_normal_dorm_pick.gif"),
+				sit: require("../images/tdolls/5/animations/5_normal_dorm_sit.gif"),
+				wait: require("../images/tdolls/5/animations/5_normal_dorm_wait.gif")
+			}
+		},
+		mod: {
+			id: 5,
+			name: "Nagant Revolver Mod",
+			type: "HG",
+			rarity: 4,
+			max_hp: 70,
+			max_dmg: 34,
+			max_acc: 46,
+			max_eva: 96,
+			max_rof: 44,
+			skill: {
+				name: "Firepower Supression N",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "During nighttime, decrease all enemies' damage by #1 (#2 during daytime) for #3 seconds (#4 seconds during daytime).",
+				number_of_stats: 4,
+				stat1: ["20%", "22%", "23%", "25%", "27%", "28%", "30%", "32%", "33%", "35%"],
+				stat2: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
+				stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				stat4: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: require("../images/tdolls/5/5_skill1.png")
+			},
+			skill2: {
+				name: "Seven Note Cadenza",
+				initial_cooldown: "Passive",
+				description: "Reloads after every 7 attacks. The first attack after reloading will increase all allies' damage and accuracy by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
+				stat2: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
+				image_skill: require("../images/tdolls/5/5_skill2.png")
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [1, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Crit Rate by "],
+				stat2: ["36%", "20%"]
+			},
+			images: {
+				card: require("../images/tdolls/5/5_mod_card.png"),
+				card_damaged: require("../images/tdolls/5/5_mod_card_damaged.png"),
+				full: require("../images/tdolls/5/5_mod_full.png"),
+				full_damaged: require("../images/tdolls/5/5_mod_full_damaged.png")
+			},
+			animations: {
+				attack: require("../images/tdolls/5/animations/5_mod_attack.gif"),
+				die: require("../images/tdolls/5/animations/5_mod_die.gif"),
+				move: require("../images/tdolls/5/animations/5_mod_move.gif"),
+				victory: require("../images/tdolls/5/animations/5_mod_victory.gif"),
+				victoryloop: require("../images/tdolls/5/animations/5_mod_victoryloop.gif"),
+				wait: require("../images/tdolls/5/animations/5_mod_wait.gif")
+			},
+			animations_dorm: {
+				lying: require("../images/tdolls/5/animations/5_mod_dorm_lying.gif"),
+				move: require("../images/tdolls/5/animations/5_mod_dorm_move.gif"),
+				pick: require("../images/tdolls/5/animations/5_mod_dorm_pick.gif"),
+				sit: require("../images/tdolls/5/animations/5_mod_dorm_sit.gif"),
+				wait: require("../images/tdolls/5/animations/5_mod_dorm_wait.gif")
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Starry Reins"],
+			skin_images: [require("../images/tdolls/5/5_skin1_card.png"), require("../images/tdolls/5/5_skin1_card_damaged.png")],
+			skin_images_full: [require("../images/tdolls/5/5_skin1_full.png"), require("../images/tdolls/5/5_skin1_full_damaged.png")],
+			animations: {
+				attack: [require("../images/tdolls/5/animations/5_skin1_attack.gif")],
+				die: [require("../images/tdolls/5/animations/5_skin1_die.gif")],
+				move: [require("../images/tdolls/5/animations/5_skin1_move.gif")],
+				victory: [require("../images/tdolls/5/animations/5_skin1_victory.gif")],
+				victoryloop: [require("../images/tdolls/5/animations/5_skin1_victoryloop.gif")],
+				wait: [require("../images/tdolls/5/animations/5_skin1_wait.gif")]
+			},
+			animations_dorm: {
+				lying: [require("../images/tdolls/5/animations/5_skin1_dorm_lying.gif")],
+				move: [require("../images/tdolls/5/animations/5_skin1_dorm_move.gif")],
+				pick: [require("../images/tdolls/5/animations/5_skin1_dorm_pick.gif")],
+				sit: [require("../images/tdolls/5/animations/5_skin1_dorm_sit.gif")],
+				wait: [require("../images/tdolls/5/animations/5_skin1_dorm_wait.gif")],
+				action: [require("../images/tdolls/5/animations/5_skin1_dorm_action.gif")]
 			}
 		}
 	}
