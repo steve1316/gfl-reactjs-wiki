@@ -199,7 +199,7 @@ export default function TDoll_Index() {
 						}
 
 						return (
-							<Grid item key={tdoll.selected.name} xs={12} sm={6} md={4}>
+							<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
 								<Card className={classes.card} elevation={12}>
 									<Link
 										to={{
