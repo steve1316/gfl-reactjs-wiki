@@ -928,6 +928,181 @@ const tdolls = [
 				wait: []
 			}
 		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 9,
+			name: "P38",
+			type: "HG",
+			rarity: 2,
+			max_hp: 66,
+			max_dmg: 28,
+			max_acc: 49,
+			max_eva: 81,
+			max_rof: 57,
+			skill: {
+				name: "Flare",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases all allies' accuracy by #1 for #2 seconds (night battles only).",
+				number_of_stats: 2,
+				stat1: ["50%", "54%", "59%", "63%", "68%", "72%", "77%", "81%", "86%", "90%"],
+				stat2: [8, 9, 10, 11, 12, 12, 13, 13, 14, 15],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 0],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Accuracy by "],
+				stat2: ["14%", "56%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["High Sorceress Apprentice"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [true],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 10,
+			name: "PPK",
+			type: "HG",
+			rarity: 2,
+			max_hp: 57,
+			max_dmg: 25,
+			max_acc: 59,
+			max_eva: 100,
+			max_rof: 63,
+			skill: {
+				name: "Annihilation Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increases all allies' damage by #1 and critical rate by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%", "10%"],
+				stat2: ["25%", "26%", "27%", "28%", "29%", "31%", "32%", "33%", "34%", "35%"],
+				stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 1],
+				row3: [1, 0, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Critical Rate by "],
+				stat2: ["32%", "16%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Mach Tempest"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
 	}
 ];
 
