@@ -1,27 +1,147 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "a4f22f3805a47a5e50657bf40deeaa44",
+    "revision": "940eaa3294e3eca7cf3bc382f807059f",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "eee5888589eddffcb8a8",
+    "revision": "86d035411677dac19d6f",
     "url": "/gfl-database/static/css/main.f4486e0d.chunk.css"
   },
   {
-    "revision": "29ddce0ed63a544c262e",
-    "url": "/gfl-database/static/js/2.7acf2577.chunk.js"
+    "revision": "c89be884e980adaa3e67",
+    "url": "/gfl-database/static/js/2.8d8f5d63.chunk.js"
   },
   {
     "revision": "0e87c5f5c0a2624c658902770de0ebad",
-    "url": "/gfl-database/static/js/2.7acf2577.chunk.js.LICENSE.txt"
+    "url": "/gfl-database/static/js/2.8d8f5d63.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "eee5888589eddffcb8a8",
-    "url": "/gfl-database/static/js/main.f2756bbe.chunk.js"
+    "revision": "86d035411677dac19d6f",
+    "url": "/gfl-database/static/js/main.20aabd2d.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
     "url": "/gfl-database/static/js/runtime-main.5721d095.js"
+  },
+  {
+    "revision": "eb3095521f4c537e50bc0e30d23a265b",
+    "url": "/gfl-database/static/media/10_card.eb309552.png"
+  },
+  {
+    "revision": "53a88de5a584376ea326d3ca7dbf2b9f",
+    "url": "/gfl-database/static/media/10_card_damaged.53a88de5.png"
+  },
+  {
+    "revision": "b12164c218aff44e5548834b298e46b5",
+    "url": "/gfl-database/static/media/10_full.b12164c2.png"
+  },
+  {
+    "revision": "442ad0e0858e0f05de6ec41c18b6fbc4",
+    "url": "/gfl-database/static/media/10_full_damaged.442ad0e0.png"
+  },
+  {
+    "revision": "9f923f0c9a265736a435bc2c8622f271",
+    "url": "/gfl-database/static/media/10_normal_attack.9f923f0c.gif"
+  },
+  {
+    "revision": "d19b3bb36c294c0047ee4a544e103d45",
+    "url": "/gfl-database/static/media/10_normal_die.d19b3bb3.gif"
+  },
+  {
+    "revision": "f4d82c357332bbea356ba3da6f8356c5",
+    "url": "/gfl-database/static/media/10_normal_dorm_lying.f4d82c35.gif"
+  },
+  {
+    "revision": "4e0422247a0692c260e155ced2521233",
+    "url": "/gfl-database/static/media/10_normal_dorm_move.4e042224.gif"
+  },
+  {
+    "revision": "de1561d8d2f62b8cf1c5ccb46dde0765",
+    "url": "/gfl-database/static/media/10_normal_dorm_pick.de1561d8.gif"
+  },
+  {
+    "revision": "c627aa5d6380ae24ac4e1489196a8900",
+    "url": "/gfl-database/static/media/10_normal_dorm_sit.c627aa5d.gif"
+  },
+  {
+    "revision": "4dc9862f6e523e7d299aef4febd013cb",
+    "url": "/gfl-database/static/media/10_normal_dorm_wait.4dc9862f.gif"
+  },
+  {
+    "revision": "ffaaf4da598f566ec613f40a38acdcd3",
+    "url": "/gfl-database/static/media/10_normal_move.ffaaf4da.gif"
+  },
+  {
+    "revision": "9ddf6be9f046981b17ee2ca8ecda506b",
+    "url": "/gfl-database/static/media/10_normal_victory.9ddf6be9.gif"
+  },
+  {
+    "revision": "ec8285e8276a2baacdd056619c8b7fbd",
+    "url": "/gfl-database/static/media/10_normal_victoryloop.ec8285e8.gif"
+  },
+  {
+    "revision": "f310eb9d56b3b9e39e139a913763d99e",
+    "url": "/gfl-database/static/media/10_normal_wait.f310eb9d.gif"
+  },
+  {
+    "revision": "357ec632aee673bd5e4150b6463c5ca8",
+    "url": "/gfl-database/static/media/10_skin1_attack.357ec632.gif"
+  },
+  {
+    "revision": "9afceb74d7a44cfc9303a71865bb5647",
+    "url": "/gfl-database/static/media/10_skin1_card.9afceb74.png"
+  },
+  {
+    "revision": "0f30ca046fb431a2af75cf1aa21b8dc3",
+    "url": "/gfl-database/static/media/10_skin1_card_damaged.0f30ca04.png"
+  },
+  {
+    "revision": "677686cb3d49b7cf484855e364f346f6",
+    "url": "/gfl-database/static/media/10_skin1_die.677686cb.gif"
+  },
+  {
+    "revision": "53bbfb1c68bddfc7568cd5595eb34076",
+    "url": "/gfl-database/static/media/10_skin1_dorm_lying.53bbfb1c.gif"
+  },
+  {
+    "revision": "d6169142b75562c47fb62cd7973fad86",
+    "url": "/gfl-database/static/media/10_skin1_dorm_move.d6169142.gif"
+  },
+  {
+    "revision": "58cf4498a3f2dc1d621eae2278742721",
+    "url": "/gfl-database/static/media/10_skin1_dorm_pick.58cf4498.gif"
+  },
+  {
+    "revision": "38a7ab632d246c2abb18967feee979ec",
+    "url": "/gfl-database/static/media/10_skin1_dorm_sit.38a7ab63.gif"
+  },
+  {
+    "revision": "fec76f6964f2bd87bf7a36754357a06d",
+    "url": "/gfl-database/static/media/10_skin1_dorm_wait.fec76f69.gif"
+  },
+  {
+    "revision": "54cd5904af2024dc31c93293ebacb129",
+    "url": "/gfl-database/static/media/10_skin1_full.54cd5904.png"
+  },
+  {
+    "revision": "bc1d48b5263e03cd4e013e704b8644f8",
+    "url": "/gfl-database/static/media/10_skin1_full_damaged.bc1d48b5.png"
+  },
+  {
+    "revision": "93d6158d9380ec3ac38f34ed183aaa3d",
+    "url": "/gfl-database/static/media/10_skin1_move.93d6158d.gif"
+  },
+  {
+    "revision": "81119d45c1579f7e0d4af1cde45def4d",
+    "url": "/gfl-database/static/media/10_skin1_victory.81119d45.gif"
+  },
+  {
+    "revision": "81119d45c1579f7e0d4af1cde45def4d",
+    "url": "/gfl-database/static/media/10_skin1_victoryloop.81119d45.gif"
+  },
+  {
+    "revision": "46865e515602a2a9777b9cfa915eb42a",
+    "url": "/gfl-database/static/media/10_skin1_wait.46865e51.gif"
   },
   {
     "revision": "6472ab6e2419d84f6cb3a930a195028c",
@@ -1310,6 +1430,138 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
     "revision": "ff01164c79599510a2ffbd5a0489248e",
     "url": "/gfl-database/static/media/8_skin2_wait.ff01164c.gif"
+  },
+  {
+    "revision": "9b2856c74eebc599ea339a88ce429631",
+    "url": "/gfl-database/static/media/9_card.9b2856c7.png"
+  },
+  {
+    "revision": "463be22b89b4778c6972eb5ca9e3ea69",
+    "url": "/gfl-database/static/media/9_card_damaged.463be22b.png"
+  },
+  {
+    "revision": "b344c408d5c49f4ed8e079246b428215",
+    "url": "/gfl-database/static/media/9_full.b344c408.png"
+  },
+  {
+    "revision": "e779e451aede880b7acb09c77cf4b186",
+    "url": "/gfl-database/static/media/9_full_damaged.e779e451.png"
+  },
+  {
+    "revision": "db221424622dd43fbe297b1c6a3b224f",
+    "url": "/gfl-database/static/media/9_normal_attack.db221424.gif"
+  },
+  {
+    "revision": "4521592617fc3b8aaf80921bbd0b9905",
+    "url": "/gfl-database/static/media/9_normal_die.45215926.gif"
+  },
+  {
+    "revision": "8c8411b07c1bf49d3fe9cba8f9fe8d0c",
+    "url": "/gfl-database/static/media/9_normal_dorm_lying.8c8411b0.gif"
+  },
+  {
+    "revision": "91dff1e12a04d6be362f0a7331407cf4",
+    "url": "/gfl-database/static/media/9_normal_dorm_move.91dff1e1.gif"
+  },
+  {
+    "revision": "4b532e72e4240b7d198729a57b29c34d",
+    "url": "/gfl-database/static/media/9_normal_dorm_pick.4b532e72.gif"
+  },
+  {
+    "revision": "e85e4acb3b4c4624583900f00cb58943",
+    "url": "/gfl-database/static/media/9_normal_dorm_sit.e85e4acb.gif"
+  },
+  {
+    "revision": "bcc13c094de94a707960d0911e2ab132",
+    "url": "/gfl-database/static/media/9_normal_dorm_wait.bcc13c09.gif"
+  },
+  {
+    "revision": "f5a8f0833f692940b89366d52831171d",
+    "url": "/gfl-database/static/media/9_normal_move.f5a8f083.gif"
+  },
+  {
+    "revision": "53fa83dafc04ec80f8174cbfab846d9b",
+    "url": "/gfl-database/static/media/9_normal_skill.53fa83da.gif"
+  },
+  {
+    "revision": "9fd599bba7db29c564faecebe3b91f42",
+    "url": "/gfl-database/static/media/9_normal_victory.9fd599bb.gif"
+  },
+  {
+    "revision": "0a760fae18c42fe242294cd9cdbd4700",
+    "url": "/gfl-database/static/media/9_normal_victoryloop.0a760fae.gif"
+  },
+  {
+    "revision": "ce594a546df26364ac948896d6af5be0",
+    "url": "/gfl-database/static/media/9_normal_wait.ce594a54.gif"
+  },
+  {
+    "revision": "612e3f08ae36d3803fadd5f0faacd982",
+    "url": "/gfl-database/static/media/9_skin1_attack.612e3f08.gif"
+  },
+  {
+    "revision": "60c00c9e8507b95697d526e8cb2fdfb1",
+    "url": "/gfl-database/static/media/9_skin1_card.60c00c9e.png"
+  },
+  {
+    "revision": "ca7710429dd9245f352bc223b498b3e3",
+    "url": "/gfl-database/static/media/9_skin1_card_damaged.ca771042.png"
+  },
+  {
+    "revision": "dac1c4b5eeeefaf2773bd820b0a862c9",
+    "url": "/gfl-database/static/media/9_skin1_die.dac1c4b5.gif"
+  },
+  {
+    "revision": "77d1d6082e523fb9c3c34b927f7707fe",
+    "url": "/gfl-database/static/media/9_skin1_dorm_action.77d1d608.gif"
+  },
+  {
+    "revision": "cae06964d2a839ee970da06dfb6f9bd7",
+    "url": "/gfl-database/static/media/9_skin1_dorm_lying.cae06964.gif"
+  },
+  {
+    "revision": "3b162bb92a34839309b346b5cccc37da",
+    "url": "/gfl-database/static/media/9_skin1_dorm_move.3b162bb9.gif"
+  },
+  {
+    "revision": "9cac29f2b5d474b766b5ad55c2094085",
+    "url": "/gfl-database/static/media/9_skin1_dorm_pick.9cac29f2.gif"
+  },
+  {
+    "revision": "58715733d4457e7fa505fe628a5930d1",
+    "url": "/gfl-database/static/media/9_skin1_dorm_sit.58715733.gif"
+  },
+  {
+    "revision": "df555aa9869935073e73669a416ab15f",
+    "url": "/gfl-database/static/media/9_skin1_dorm_wait.df555aa9.gif"
+  },
+  {
+    "revision": "638c0b05446ac7420a35e07cb00633ca",
+    "url": "/gfl-database/static/media/9_skin1_full.638c0b05.png"
+  },
+  {
+    "revision": "6c7b393c2fd25cca4092f1ce48a8fa36",
+    "url": "/gfl-database/static/media/9_skin1_full_damaged.6c7b393c.png"
+  },
+  {
+    "revision": "0ed75ab8a8c3ea8a2b4312c811eb6760",
+    "url": "/gfl-database/static/media/9_skin1_move.0ed75ab8.gif"
+  },
+  {
+    "revision": "488c091cc5f11dffbf77639bfa813e56",
+    "url": "/gfl-database/static/media/9_skin1_skill.488c091c.gif"
+  },
+  {
+    "revision": "0f71e9b4ee2a85a32153afe383e3c9bf",
+    "url": "/gfl-database/static/media/9_skin1_victory.0f71e9b4.gif"
+  },
+  {
+    "revision": "f9f3c0ae67a52fb5ba81d08c7c93918e",
+    "url": "/gfl-database/static/media/9_skin1_victoryloop.f9f3c0ae.gif"
+  },
+  {
+    "revision": "27b155647a3f247ba6b5f0646ea5f524",
+    "url": "/gfl-database/static/media/9_skin1_wait.27b15564.gif"
   },
   {
     "revision": "82a016451fc60e93bfcb3ea47a9e8ee4",
