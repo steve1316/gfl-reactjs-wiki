@@ -30,7 +30,8 @@ import {
 	Tabs,
 	Tab,
 	Fab,
-	Backdrop
+	Backdrop,
+	Divider
 } from "@material-ui/core";
 
 // MaterialUI icon imports
@@ -99,12 +100,15 @@ export default function TDoll(props) {
 		title: {
 			fontSize: 14
 		},
-		pos: {
-			marginBottom: 12
+		cooldownText: {
+			paddingTop: 12
 		},
 		tabs: {
 			width: 256,
 			backgroundColor: theme.palette.grey[900]
+		},
+		tabForSkin: {
+			width: 100
 		},
 		tabsForSkills: {
 			minWidth: 256,
@@ -249,12 +253,12 @@ export default function TDoll(props) {
 
 	// This will update the animations when skins are switched.
 	useEffect(() => {
-		var tempSkinMode = helperSkinSelected();
+		var tempSkinSelected = helperSkinSelected();
 		if (showSkin) {
 			if (animationMode === 0) {
-				setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+				setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
 			} else {
-				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
 			}
 		}
 	}, [showSkin, skinSelected]);
@@ -269,23 +273,23 @@ export default function TDoll(props) {
 	// 	console.log("Animation Mode: ", animationMode);
 	// 	console.log("Normal Animation Tab selected: ", animationTabSelected);
 	// 	console.log("Dorm Animation Tab selected: ", animationDormTabSelected);
-	// 	var tempSkinMode = helperSkinSelected();
+	// 	var tempSkinSelected = helperSkinSelected();
 	// 	console.log("Show skin? ", showSkin);
-	// 	console.log("Skin selected before calc: ", tempSkinMode);
-	// 	console.log("Skin selected after calc: ", tempSkinMode);
+	// 	console.log("Skin selected before calc: ", tempSkinSelected);
+	// 	console.log("Skin selected after calc: ", tempSkinSelected);
 	// });
 
 	// Helper function to determine the correct selected skin.
 	const helperSkinSelected = () => {
-		var tempSkinMode = skinSelected;
+		var tempSkinSelected = skinSelected;
 
-		if (tempSkinMode - 1 > 0) {
-			tempSkinMode -= 1;
+		if (tempSkinSelected - 1 > 0) {
+			tempSkinSelected -= 1;
 		} else {
-			tempSkinMode = 0;
+			tempSkinSelected = 0;
 		}
 
-		return tempSkinMode;
+		return tempSkinSelected;
 	};
 
 	// Helper function to reset selected animation tab back to the default tab.
@@ -338,11 +342,11 @@ export default function TDoll(props) {
 	const switchAnimationMode = () => {
 		helperResetAnimationTabs();
 
-		var tempSkinMode = helperSkinSelected();
+		var tempSkinSelected = helperSkinSelected();
 		if (animationMode === 0) {
 			// Switch to Dorm animations.
 			if (showSkin) {
-				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
 			} else {
 				setAnimation(tdoll.selected.animations_dorm.wait);
 			}
@@ -351,7 +355,7 @@ export default function TDoll(props) {
 		} else {
 			// Switch to Normal animations.
 			if (showSkin) {
-				setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+				setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
 			} else {
 				setAnimation(tdoll.selected.animations.wait);
 			}
@@ -411,6 +415,13 @@ export default function TDoll(props) {
 					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
 					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
 					break;
+				case 5:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
+					break;
 				default:
 			}
 
@@ -434,7 +445,23 @@ export default function TDoll(props) {
 					tempSkillDescription2 = tempSkillDescription2.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat3[skillLevel - 1] + "</ins></span>");
 					tempSkillDescription2 = tempSkillDescription2.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat4[skillLevel - 1] + "</ins></span>");
 					break;
+				case 5:
+					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription2 = tempSkillDescription2.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription2 = tempSkillDescription2.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat3[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription2 = tempSkillDescription2.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat4[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription2 = tempSkillDescription2.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat5[skillLevel - 1] + "</ins></span>");
+					break;
 				default:
+			}
+
+			if ("passive_active_description" in tdollTemp.selected.skill) {
+				tempSkillDescription1 = tempSkillDescription1.replace("Passive: ", '<span style="color: orange; font-size: 110%;"><ins>Passive:</ins></span> ');
+				tempSkillDescription1 = tempSkillDescription1.replace("Active: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Active:</ins></span> ');
+			}
+			if ("passive_active_description" in tdollTemp.selected.skill2) {
+				tempSkillDescription2 = tempSkillDescription2.replace("Passive: ", '<span style="color: orange; font-size: 110%;"><ins>Passive:</ins></span> ');
+				tempSkillDescription2 = tempSkillDescription2.replace("Active: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Active:</ins></span> ');
 			}
 
 			setSkillDescription1(tempSkillDescription1);
@@ -459,6 +486,13 @@ export default function TDoll(props) {
 					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
 					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
 					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
+					break;
+				case 5:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
 					break;
 				default:
 			}
@@ -510,11 +544,11 @@ export default function TDoll(props) {
 		setTDollImage(tdoll.skins.skin_images[newValue]);
 
 		// Switch animations based on the animation mode selected, Normal or Dorm.
-		var tempSkinMode = helperSkinSelected();
+		var tempSkinSelected = helperSkinSelected();
 		if (animationMode === 0) {
-			setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+			setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
 		} else {
-			setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+			setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
 		}
 
 		// Reset animation tab selected.
@@ -550,22 +584,24 @@ export default function TDoll(props) {
 					<Tab label="Wait" value="wait" />
 					<Tab label="Move" value="move" />
 					<Tab label="Attack" value="attack" />
-					{"skill" in tdoll.selected.animations ? <Tab label="Skill" value="skill" /> : ""}
+					{"skill" in tdoll.selected.animations && tdoll.selected.animations.skill !== undefined ? <Tab label="Skill" value="skill" /> : ""}
 					<Tab label="Die" value="die" />
 					<Tab label="Victory" value="victory" />
-					{"victory2" in tdoll.selected.animations ? <Tab label="Victory2" value="victory2" /> : ""}
+					{"victory2" in tdoll.selected.animations && !showSkin ? <Tab label="Victory2" value="victory2" /> : ""}
 					{"victoryloop" in tdoll.selected.animations ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
 				</Tabs>
 			);
 		} else {
+			var tempSkinSelected = helperSkinSelected();
+
 			return (
 				<Tabs className={classes.tabs} value={animationDormTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
 					<Tab label="Wait" value="wait" />
 					<Tab label="Move" value="move" />
-					{tdoll.skins && "action" in tdoll.skins.animations_dorm ? <Tab label="Action" value="action" /> : ""}
+					{tdoll.skins && showSkin && "action" in tdoll.skins.animations_dorm && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected] ? <Tab label="Action" value="action" /> : ""}
 					<Tab label="Pick" value="pick" />
 					<Tab label="Sit" value="sit" />
-					{tdoll.skins && "sit2" in tdoll.skins.animations_dorm && tdoll.skins.animations_dorm.sit2[skinSelected] !== null ? <Tab label="Sit2" value="sit2" /> : ""}
+					{tdoll.skins && showSkin && "sit2" in tdoll.skins.animations_dorm && tdoll.skins.animations_dorm.hasSit2Animation[tempSkinSelected] ? <Tab label="Sit2" value="sit2" /> : ""}
 					<Tab label="Lying" value="lying" />
 				</Tabs>
 			);
@@ -576,9 +612,13 @@ export default function TDoll(props) {
 	const renderSkinsTabs = () => {
 		var tempTabs = [];
 
+		if (tdoll.skins === null) {
+			return tempTabs.push();
+		}
+
 		tdoll.skins.skin_names.map((name, index) => {
 			// Index is incremented by 1 such that the Damaged versions are not selected.
-			return tempTabs.push(<Tab label={name} key={index} value={index === 0 ? 0 : index + 1} />);
+			return tempTabs.push(<Tab className={classes.tabForSkin} label={name} key={index} wrapped value={index === 0 ? 0 : index + 1} />);
 		});
 
 		return tempTabs;
@@ -586,14 +626,7 @@ export default function TDoll(props) {
 
 	// Switch animations based on Tab selected.
 	const switchAnimations = (event, newValue) => {
-		//console.log("Switching animation based on the tab selected.");
-		var tempSkinMode = skinSelected;
-
-		if (tempSkinMode - 1 > 0) {
-			tempSkinMode -= 1;
-		} else {
-			tempSkinMode = 0;
-		}
+		var tempSkinSelected = helperSkinSelected();
 
 		if (animationMode === 0) {
 			setAnimationTabSelected(newValue);
@@ -601,56 +634,56 @@ export default function TDoll(props) {
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.wait[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.wait);
 					}
 					break;
 				case "move":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.move[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.move[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.move);
 					}
 					break;
 				case "attack":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.attack[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.attack[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.attack);
 					}
 					break;
 				case "die":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.die[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.die[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.die);
 					}
 					break;
 				case "skill":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.skill[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.skill[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.skill);
 					}
 					break;
 				case "victory":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victory[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.victory[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.victory);
 					}
 					break;
 				case "victory2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victory2[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.victory2[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.victory2);
 					}
 					break;
 				case "victoryloop":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victoryloop[tempSkinMode]);
+						setAnimation(tdoll.skins.animations.victoryloop[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.victoryloop);
 					}
@@ -663,7 +696,7 @@ export default function TDoll(props) {
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.wait[tempSkinMode]);
+						setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.wait);
 					}
@@ -671,42 +704,42 @@ export default function TDoll(props) {
 					break;
 				case "move":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.move[tempSkinMode]);
+						setAnimation(tdoll.skins.animations_dorm.move[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.move);
 					}
 					break;
 				case "action":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.action[tempSkinMode]);
+						setAnimation(tdoll.skins.animations_dorm.action[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.action);
 					}
 					break;
 				case "pick":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.pick[tempSkinMode]);
+						setAnimation(tdoll.skins.animations_dorm.pick[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.pick);
 					}
 					break;
 				case "sit":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinMode]);
+						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.sit);
 					}
 					break;
 				case "sit2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.sit2[tempSkinMode]);
+						setAnimation(tdoll.skins.animations_dorm.sit2[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.sit2);
 					}
 					break;
 				case "lying":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.lying[tempSkinMode]);
+						setAnimation(tdoll.skins.animations_dorm.lying[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations_dorm.lying);
 					}
@@ -794,12 +827,12 @@ export default function TDoll(props) {
 
 	return (
 		<main>
-			<Container className={classes.cardGrid} maxWidth="lg">
+			<Container className={classes.cardGrid} maxWidth="md">
 				<br />
 
 				<Card className={classes.card}>
 					<CardContent>
-						{/* T-Doll's Name, Rarity in stars, type, and Index Number */}
+						{/************** T-Doll's Name, Rarity in stars, type, and Index Number **************/}
 						<Typography className={classes.rarityStars} color="textSecondary" gutterBottom>
 							{tdoll.selected.type}
 							{renderStars(tdoll.selected.rarity)}
@@ -812,15 +845,16 @@ export default function TDoll(props) {
 							</Typography>
 						</Typography>
 
-						{/* T-Doll image */}
+						{/************** T-Doll image and skin images (Card/Full) **************/}
 						<Grid container direction="row" spacing={2}>
 							<Grid item key="T-Doll image" xs={12} sm={6}>
+								{/* {window.innerWidth > 600 ? } */}
 								{tdoll.skins !== null ? (
-									<Tabs className={classes.tabs} value={false} onChange={switchSkinSelected} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+									<Tabs className={classes.tabs} value={false} onChange={switchSkinSelected} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="on">
 										{renderSkinsTabs()}
 									</Tabs>
 								) : (
-									<Tabs className={classes.tabs} value={false} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+									<Tabs className={classes.tabs} value={false} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
 										<Tab label="No skins" />
 									</Tabs>
 								)}
@@ -829,7 +863,7 @@ export default function TDoll(props) {
 									<CardActionArea onClick={switchBetweenNormalDamagedCardImages}>
 										<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
 									</CardActionArea>
-									{/* Floating Action Button overlayed over image at the top left */}
+									{/************** Floating Action Button overlayed over image at the top left **************/}
 									{hasMod ? (
 										<Fab color="primary" className={classes.fab_mod} onClick={switchModes}>
 											<img src={mod_button} alt="Switch between Normal/Mod" style={{ height: 32, width: 32 }} />
@@ -838,7 +872,7 @@ export default function TDoll(props) {
 										""
 									)}
 
-									{/* Floating Action Button overlayed over image at the bottom left */}
+									{/************** Floating Action Button overlayed over image at the bottom left **************/}
 									{hasMod ? (
 										<Fab color="primary" className={classes.fab} onClick={handleToggle}>
 											<ZoomOutMapIcon />
@@ -849,13 +883,13 @@ export default function TDoll(props) {
 										</Fab>
 									)}
 
-									{/* Display full size images based on boolean */}
+									{/************** Display full size images based on boolean **************/}
 									<Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
 										{renderImage()}
 									</Backdrop>
 								</Card>
 
-								{/* T-Doll's animations */}
+								{/************** T-Doll's animations **************/}
 								<Fab color="primary" className={classes.fab_dorm} onClick={switchAnimationMode}>
 									<img src={dorm_button} alt="Switch between Normal/Dorm" style={{ height: 28, width: 28 }} />
 								</Fab>
@@ -868,7 +902,7 @@ export default function TDoll(props) {
 							</Grid>
 
 							<Grid item key="T-Doll stat table and skill card" xs={12} sm={6}>
-								{/* T-Doll's skill information */}
+								{/************** T-Doll's skill information **************/}
 								{showModSkill ? (
 									<Tabs className={classes.tabsForSkills} value={selectedSkill} onChange={handleChangeSkills} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
 										<Tab label="Skill 1" />
@@ -926,19 +960,25 @@ export default function TDoll(props) {
 												</FormControl>
 											}
 										/>
+
+										<Divider />
+
+										{/************** This will render the span tags inserted into the skill description and will color the numbers. **************/}
 										<Typography className={classes.title} color="textSecondary" gutterBottom>
-											{/* This will render the span tags inserted into the skill description and will color the numbers. */}
 											{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
 										</Typography>
 										{selectedSkill === 0 ? (
-											<Typography className={classes.pos} color="textSecondary">
-												Cooldown:{" "}
-												{
-													<span style={{ color: "cyan" }}>
-														<ins>{tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
-													</span>
-												}
-											</Typography>
+											<>
+												<Divider />
+												<Typography className={classes.cooldownText} color="textSecondary">
+													Cooldown:{" "}
+													{
+														<span style={{ color: "cyan" }}>
+															<ins>{tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
+														</span>
+													}
+												</Typography>
+											</>
 										) : (
 											""
 										)}
@@ -947,7 +987,7 @@ export default function TDoll(props) {
 
 								<br />
 
-								{/* T-Doll's tileset information */}
+								{/************** T-Doll's tileset information **************/}
 								<Card className={classes.cardForTileSet} elevation={12}>
 									<div className={classes.tileSetDiv}>
 										<CardContent className={classes.content}>
@@ -976,16 +1016,14 @@ export default function TDoll(props) {
 											<Typography className={classes.title} color="textPrimary" gutterBottom>
 												{tdoll.selected.tile_set.targets}
 											</Typography>
-											<Typography className={classes.pos} color="textSecondary">
-												{parse(renderTileSetInformation())}
-											</Typography>
+											<Typography color="textSecondary">{parse(renderTileSetInformation())}</Typography>
 										</CardContent>
 									</div>
 								</Card>
 
 								<br />
 
-								{/* T-Doll's stats in table format */}
+								{/************** T-Doll's stats in table format **************/}
 								<TableContainer className={classes.tableContainer} component={Paper} elevation={12}>
 									<Table className={classes.table} size="small">
 										<TableHead>
