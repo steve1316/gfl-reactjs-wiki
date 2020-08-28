@@ -6,6 +6,7 @@
 	- number_of_stats in skill attribute dictates the amount of numbers from stat(1) to stat(n) to be replacing the "#(n)"" delimiters inside the skill description in sequential order.
 	- Note: Depending on the T-Doll, whether Normal, Mod, or skin, sometimes they do not come with some animations like Victory2 and sometimes come with additional animations like Skill.
 
+	- TODO: Include exclusive equipment for Mods.
 */
 
 const tdolls = [
@@ -30,7 +31,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-				image_skill: require("../images/tdolls/1/1_skill1.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -42,26 +43,28 @@ const tdolls = [
 				stat2: ["24%", "50%"]
 			},
 			images: {
-				card: require("../images/tdolls/1/1_card.png"),
-				card_damaged: require("../images/tdolls/1/1_card_damaged.png"),
-				full: require("../images/tdolls/1/1_full.png"),
-				full_damaged: require("../images/tdolls/1/1_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/1/animations/1_normal_attack.gif"),
-				die: require("../images/tdolls/1/animations/1_normal_die.gif"),
-				move: require("../images/tdolls/1/animations/1_normal_move.gif"),
-				victory: require("../images/tdolls/1/animations/1_normal_victory.gif"),
-				victory2: require("../images/tdolls/1/animations/1_normal_victory2.gif"),
-				victoryloop: require("../images/tdolls/1/animations/1_normal_victoryloop.gif"),
-				wait: require("../images/tdolls/1/animations/1_normal_wait.gif")
+				hasSkillAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victory2: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/1/animations/1_normal_dorm_lying.gif"),
-				move: require("../images/tdolls/1/animations/1_normal_dorm_move.gif"),
-				pick: require("../images/tdolls/1/animations/1_normal_dorm_pick.gif"),
-				sit: require("../images/tdolls/1/animations/1_normal_dorm_sit.gif"),
-				wait: require("../images/tdolls/1/animations/1_normal_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		mod: {
@@ -82,7 +85,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-				image_skill: require("../images/tdolls/1/1_skill1.png")
+				image_skill: undefined
 			},
 			skill2: {
 				name: "Duel Survivor",
@@ -91,7 +94,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["3%", "3%", "3%", "4%", "4%", "4%", "5%", "5%", "5%", "5%"],
 				stat2: [6, 5.8, 5.6, 5.3, 5.1, 4.9, 4.7, 4.4, 4.2, 4],
-				image_skill: require("../images/tdolls/1/1_skill2.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -103,57 +106,55 @@ const tdolls = [
 				stat2: ["24%", "60%"]
 			},
 			images: {
-				card: require("../images/tdolls/1/1_mod_card.png"),
-				card_damaged: require("../images/tdolls/1/1_mod_card_damaged.png"),
-				full: require("../images/tdolls/1/1_mod_full.png"),
-				full_damaged: require("../images/tdolls/1/1_mod_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/1/animations/1_mod_attack.gif"),
-				die: require("../images/tdolls/1/animations/1_mod_die.gif"),
-				move: require("../images/tdolls/1/animations/1_mod_move.gif"),
-				victory: require("../images/tdolls/1/animations/1_mod_victory.gif"),
-				victoryloop: require("../images/tdolls/1/animations/1_mod_victoryloop.gif"),
-				wait: require("../images/tdolls/1/animations/1_mod_wait.gif")
+				hasSkillAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/1/animations/1_mod_dorm_lying.gif"),
-				move: require("../images/tdolls/1/animations/1_mod_dorm_move.gif"),
-				pick: require("../images/tdolls/1/animations/1_mod_dorm_pick.gif"),
-				sit: require("../images/tdolls/1/animations/1_mod_dorm_sit.gif"),
-				wait: require("../images/tdolls/1/animations/1_mod_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		selected: {},
 		skins: {
 			number_of_skins: 2,
 			skin_names: ["Wish Upon A Star", "Queen of Miracle"],
-			skin_images: [
-				require("../images/tdolls/1/1_skin1_card.png"),
-				require("../images/tdolls/1/1_skin1_card_damaged.png"),
-				require("../images/tdolls/1/1_skin2_card.png"),
-				require("../images/tdolls/1/1_skin2_card_damaged.png")
-			],
-			skin_images_full: [
-				require("../images/tdolls/1/1_skin1_full.png"),
-				require("../images/tdolls/1/1_skin1_full_damaged.png"),
-				require("../images/tdolls/1/1_skin2_full.png"),
-				require("../images/tdolls/1/1_skin2_full_damaged.png")
-			],
+			skin_images: [],
+			skin_images_full: [],
 			animations: {
-				attack: [require("../images/tdolls/1/animations/1_skin1_attack.gif"), require("../images/tdolls/1/animations/1_skin2_attack.gif")],
-				die: [require("../images/tdolls/1/animations/1_skin1_die.gif"), require("../images/tdolls/1/animations/1_skin2_die.gif")],
-				move: [require("../images/tdolls/1/animations/1_skin1_move.gif"), require("../images/tdolls/1/animations/1_skin2_move.gif")],
-				victory: [require("../images/tdolls/1/animations/1_skin1_victory.gif"), require("../images/tdolls/1/animations/1_skin2_victory.gif")],
-				victoryloop: [require("../images/tdolls/1/animations/1_skin1_victoryloop.gif"), require("../images/tdolls/1/animations/1_skin2_victoryloop.gif")],
-				wait: [require("../images/tdolls/1/animations/1_skin1_wait.gif"), require("../images/tdolls/1/animations/1_skin2_wait.gif")]
+				hasSkillAnimation: [false, false],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
 			},
 			animations_dorm: {
-				lying: [require("../images/tdolls/1/animations/1_skin1_dorm_lying.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_lying.gif")],
-				move: [require("../images/tdolls/1/animations/1_skin1_dorm_move.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_move.gif")],
-				pick: [require("../images/tdolls/1/animations/1_skin1_dorm_pick.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_pick.gif")],
-				sit: [require("../images/tdolls/1/animations/1_skin1_dorm_sit.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_sit.gif")],
-				wait: [require("../images/tdolls/1/animations/1_skin1_dorm_wait.gif"), require("../images/tdolls/1/animations/1_skin2_dorm_wait.gif")]
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
 			}
 		}
 	},
@@ -179,7 +180,7 @@ const tdolls = [
 				stat1: ["20%", "22%", "24%", "25%", "27%", "29%", "31%", "32%", "34%", "36%"],
 				stat2: ["28%", "30%", "32%", "34%", "36%", "37%", "39%", "41%", "43%", "45%"],
 				stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
-				image_skill: require("../images/tdolls/2/2_skill1.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -191,26 +192,29 @@ const tdolls = [
 				stat2: ["20%", "50%"]
 			},
 			images: {
-				card: require("../images/tdolls/2/2_card.png"),
-				card_damaged: require("../images/tdolls/2/2_card_damaged.png"),
-				full: require("../images/tdolls/2/2_full.png"),
-				full_damaged: require("../images/tdolls/2/2_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/2/animations/2_normal_attack.gif"),
-				die: require("../images/tdolls/2/animations/2_normal_die.gif"),
-				move: require("../images/tdolls/2/animations/2_normal_move.gif"),
-				victory: require("../images/tdolls/2/animations/2_normal_victory.gif"),
-				skill: require("../images/tdolls/2/animations/2_normal_skill.gif"),
-				victoryloop: require("../images/tdolls/2/animations/2_normal_victoryloop.gif"),
-				wait: require("../images/tdolls/2/animations/2_normal_wait.gif")
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victory2: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/2/animations/2_normal_dorm_lying.gif"),
-				move: require("../images/tdolls/2/animations/2_normal_dorm_move.gif"),
-				pick: require("../images/tdolls/2/animations/2_normal_dorm_pick.gif"),
-				sit: require("../images/tdolls/2/animations/2_normal_dorm_sit.gif"),
-				wait: require("../images/tdolls/2/animations/2_normal_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		mod: {
@@ -232,7 +236,7 @@ const tdolls = [
 				stat1: ["20%", "22%", "24%", "25%", "27%", "29%", "31%", "32%", "34%", "36%"],
 				stat2: ["28%", "30%", "32%", "34%", "36%", "37%", "39%", "41%", "43%", "45%"],
 				stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
-				image_skill: require("../images/tdolls/2/2_skill1.png")
+				image_skill: undefined
 			},
 			skill2: {
 				name: "Desperate Sharpshooter",
@@ -240,7 +244,7 @@ const tdolls = [
 				description: "After launching a smoke grenade, the next 7 attacks will strike targets starting from the furthest to the closest. Every hit will deal #1 damage.",
 				number_of_stats: 1,
 				stat1: ["150%", "156%", "161%", "167%", "172%", "178%", "183%", "189%", "194%", "200%"],
-				image_skill: require("../images/tdolls/2/2_skill2.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -252,49 +256,56 @@ const tdolls = [
 				stat2: ["24%", "50%"]
 			},
 			images: {
-				card: require("../images/tdolls/2/2_mod_card.png"),
-				card_damaged: require("../images/tdolls/2/2_mod_card_damaged.png"),
-				full: require("../images/tdolls/2/2_mod_full.png"),
-				full_damaged: require("../images/tdolls/2/2_mod_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/2/animations/2_mod_attack.gif"),
-				die: require("../images/tdolls/2/animations/2_mod_die.gif"),
-				move: require("../images/tdolls/2/animations/2_mod_move.gif"),
-				victory: require("../images/tdolls/2/animations/2_mod_victory.gif"),
-				skill: require("../images/tdolls/2/animations/2_mod_skill.gif"),
-				victoryloop: require("../images/tdolls/2/animations/2_mod_victoryloop.gif"),
-				wait: require("../images/tdolls/2/animations/2_mod_wait.gif")
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/2/animations/2_mod_dorm_lying.gif"),
-				move: require("../images/tdolls/2/animations/2_mod_dorm_move.gif"),
-				pick: require("../images/tdolls/2/animations/2_mod_dorm_pick.gif"),
-				sit: require("../images/tdolls/2/animations/2_mod_dorm_sit.gif"),
-				wait: require("../images/tdolls/2/animations/2_mod_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		selected: {},
 		skins: {
 			number_of_skins: 1,
 			skin_names: ["Night Dancer"],
-			skin_images: [require("../images/tdolls/2/2_skin1_card.png"), require("../images/tdolls/2/2_skin1_card_damaged.png")],
-			skin_images_full: [require("../images/tdolls/2/2_skin1_full.png"), require("../images/tdolls/2/2_skin1_full_damaged.png")],
+			skin_images: [],
+			skin_images_full: [],
 			animations: {
-				attack: [require("../images/tdolls/2/animations/2_skin1_attack.gif")],
-				die: [require("../images/tdolls/2/animations/2_skin1_die.gif")],
-				move: [require("../images/tdolls/2/animations/2_skin1_move.gif")],
-				skill: [require("../images/tdolls/2/animations/2_skin1_skill.gif")],
-				victory: [require("../images/tdolls/2/animations/2_skin1_victory.gif")],
-				victoryloop: [require("../images/tdolls/2/animations/2_skin1_victoryloop.gif")],
-				wait: [require("../images/tdolls/2/animations/2_skin1_wait.gif")]
+				hasSkillAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
 			},
 			animations_dorm: {
-				lying: [require("../images/tdolls/2/animations/2_skin1_dorm_lying.gif")],
-				move: [require("../images/tdolls/2/animations/2_skin1_dorm_move.gif")],
-				pick: [require("../images/tdolls/2/animations/2_skin1_dorm_pick.gif")],
-				sit: [require("../images/tdolls/2/animations/2_skin1_dorm_sit.gif")],
-				wait: [require("../images/tdolls/2/animations/2_skin1_dorm_wait.gif")]
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
 			}
 		}
 	},
@@ -318,7 +329,7 @@ const tdolls = [
 				description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds",
 				number_of_stats: 1,
 				stat1: [1.6, 1.8, 2, 2.1, 2.3, 2.5, 2.7, 2.8, 3, 3.2],
-				image_skill: require("../images/tdolls/3/3_skill1.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 1],
@@ -330,25 +341,28 @@ const tdolls = [
 				stat2: ["20%", "20%"]
 			},
 			images: {
-				card: require("../images/tdolls/3/3_card.png"),
-				card_damaged: require("../images/tdolls/3/3_card_damaged.png"),
-				full: require("../images/tdolls/3/3_full.png"),
-				full_damaged: require("../images/tdolls/3/3_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/3/animations/3_normal_attack.gif"),
-				die: require("../images/tdolls/3/animations/3_normal_die.gif"),
-				move: require("../images/tdolls/3/animations/3_normal_move.gif"),
-				victory: require("../images/tdolls/3/animations/3_normal_victory.gif"),
-				skill: require("../images/tdolls/3/animations/3_normal_skill.gif"),
-				wait: require("../images/tdolls/3/animations/3_normal_wait.gif")
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/3/animations/3_normal_dorm_lying.gif"),
-				move: require("../images/tdolls/3/animations/3_normal_dorm_move.gif"),
-				pick: require("../images/tdolls/3/animations/3_normal_dorm_pick.gif"),
-				sit: require("../images/tdolls/3/animations/3_normal_dorm_sit.gif"),
-				wait: require("../images/tdolls/3/animations/3_normal_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		mod: null,
@@ -391,7 +405,7 @@ const tdolls = [
 				stat2: ["40%", "47%", "53%", "60%", "67%", "73%", "80%", "87%", "93%", "100%"],
 				stat3: ["15%", "17%", "18%", "20%", "22%", "23%", "25%", "27%", "28%", "30%"],
 				stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-				image_skill: require("../images/tdolls/4/4_skill1.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 1],
@@ -403,25 +417,28 @@ const tdolls = [
 				stat2: ["30%", "20%"]
 			},
 			images: {
-				card: require("../images/tdolls/4/4_card.png"),
-				card_damaged: require("../images/tdolls/4/4_card_damaged.png"),
-				full: require("../images/tdolls/4/4_full.png"),
-				full_damaged: require("../images/tdolls/4/4_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/4/animations/4_normal_attack.gif"),
-				die: require("../images/tdolls/4/animations/4_normal_die.gif"),
-				move: require("../images/tdolls/4/animations/4_normal_move.gif"),
-				victory: require("../images/tdolls/4/animations/4_normal_victory.gif"),
-				victoryloop: require("../images/tdolls/4/animations/4_normal_victoryloop.gif"),
-				wait: require("../images/tdolls/4/animations/4_normal_wait.gif")
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/4/animations/4_normal_dorm_lying.gif"),
-				move: require("../images/tdolls/4/animations/4_normal_dorm_move.gif"),
-				pick: require("../images/tdolls/4/animations/4_normal_dorm_pick.gif"),
-				sit: require("../images/tdolls/4/animations/4_normal_dorm_sit.gif"),
-				wait: require("../images/tdolls/4/animations/4_normal_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		mod: null,
@@ -451,7 +468,7 @@ const tdolls = [
 				stat2: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
 				stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
 				stat4: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-				image_skill: require("../images/tdolls/5/5_skill1.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -463,25 +480,28 @@ const tdolls = [
 				stat2: ["32%", "16%"]
 			},
 			images: {
-				card: require("../images/tdolls/5/5_card.png"),
-				card_damaged: require("../images/tdolls/5/5_card_damaged.png"),
-				full: require("../images/tdolls/5/5_full.png"),
-				full_damaged: require("../images/tdolls/5/5_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/5/animations/5_normal_attack.gif"),
-				die: require("../images/tdolls/5/animations/5_normal_die.gif"),
-				move: require("../images/tdolls/5/animations/5_normal_move.gif"),
-				victory: require("../images/tdolls/5/animations/5_normal_victory.gif"),
-				victoryloop: require("../images/tdolls/5/animations/5_normal_victoryloop.gif"),
-				wait: require("../images/tdolls/5/animations/5_normal_wait.gif")
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/5/animations/5_normal_dorm_lying.gif"),
-				move: require("../images/tdolls/5/animations/5_normal_dorm_move.gif"),
-				pick: require("../images/tdolls/5/animations/5_normal_dorm_pick.gif"),
-				sit: require("../images/tdolls/5/animations/5_normal_dorm_sit.gif"),
-				wait: require("../images/tdolls/5/animations/5_normal_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		mod: {
@@ -504,7 +524,7 @@ const tdolls = [
 				stat2: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
 				stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
 				stat4: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-				image_skill: require("../images/tdolls/5/5_skill1.png")
+				image_skill: undefined
 			},
 			skill2: {
 				name: "Seven Note Cadenza",
@@ -513,7 +533,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
 				stat2: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
-				image_skill: require("../images/tdolls/5/5_skill2.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 0],
@@ -525,48 +545,56 @@ const tdolls = [
 				stat2: ["36%", "20%"]
 			},
 			images: {
-				card: require("../images/tdolls/5/5_mod_card.png"),
-				card_damaged: require("../images/tdolls/5/5_mod_card_damaged.png"),
-				full: require("../images/tdolls/5/5_mod_full.png"),
-				full_damaged: require("../images/tdolls/5/5_mod_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/5/animations/5_mod_attack.gif"),
-				die: require("../images/tdolls/5/animations/5_mod_die.gif"),
-				move: require("../images/tdolls/5/animations/5_mod_move.gif"),
-				victory: require("../images/tdolls/5/animations/5_mod_victory.gif"),
-				victoryloop: require("../images/tdolls/5/animations/5_mod_victoryloop.gif"),
-				wait: require("../images/tdolls/5/animations/5_mod_wait.gif")
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/5/animations/5_mod_dorm_lying.gif"),
-				move: require("../images/tdolls/5/animations/5_mod_dorm_move.gif"),
-				pick: require("../images/tdolls/5/animations/5_mod_dorm_pick.gif"),
-				sit: require("../images/tdolls/5/animations/5_mod_dorm_sit.gif"),
-				wait: require("../images/tdolls/5/animations/5_mod_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		selected: {},
 		skins: {
 			number_of_skins: 1,
 			skin_names: ["Starry Reins"],
-			skin_images: [require("../images/tdolls/5/5_skin1_card.png"), require("../images/tdolls/5/5_skin1_card_damaged.png")],
-			skin_images_full: [require("../images/tdolls/5/5_skin1_full.png"), require("../images/tdolls/5/5_skin1_full_damaged.png")],
+			skin_images: [],
+			skin_images_full: [],
 			animations: {
-				attack: [require("../images/tdolls/5/animations/5_skin1_attack.gif")],
-				die: [require("../images/tdolls/5/animations/5_skin1_die.gif")],
-				move: [require("../images/tdolls/5/animations/5_skin1_move.gif")],
-				victory: [require("../images/tdolls/5/animations/5_skin1_victory.gif")],
-				victoryloop: [require("../images/tdolls/5/animations/5_skin1_victoryloop.gif")],
-				wait: [require("../images/tdolls/5/animations/5_skin1_wait.gif")]
+				hasSkillAnimation: [false],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
 			},
 			animations_dorm: {
-				lying: [require("../images/tdolls/5/animations/5_skin1_dorm_lying.gif")],
-				move: [require("../images/tdolls/5/animations/5_skin1_dorm_move.gif")],
-				pick: [require("../images/tdolls/5/animations/5_skin1_dorm_pick.gif")],
-				sit: [require("../images/tdolls/5/animations/5_skin1_dorm_sit.gif")],
-				wait: [require("../images/tdolls/5/animations/5_skin1_dorm_wait.gif")],
-				action: [require("../images/tdolls/5/animations/5_skin1_dorm_action.gif")]
+				hasActionAnimation: [true],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
 			}
 		}
 	},
@@ -591,7 +619,7 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-				image_skill: require("../images/tdolls/6/6_skill1.png")
+				image_skill: undefined
 			},
 			tile_set: {
 				row1: [0, 1, 1],
@@ -603,25 +631,28 @@ const tdolls = [
 				stat2: ["20%", "50%"]
 			},
 			images: {
-				card: require("../images/tdolls/6/6_card.png"),
-				card_damaged: require("../images/tdolls/6/6_card_damaged.png"),
-				full: require("../images/tdolls/6/6_full.png"),
-				full_damaged: require("../images/tdolls/6/6_full_damaged.png")
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
 			},
 			animations: {
-				attack: require("../images/tdolls/6/animations/6_normal_attack.gif"),
-				die: require("../images/tdolls/6/animations/6_normal_die.gif"),
-				move: require("../images/tdolls/6/animations/6_normal_move.gif"),
-				victory: require("../images/tdolls/6/animations/6_normal_victory.gif"),
-				victoryloop: require("../images/tdolls/6/animations/6_normal_victoryloop.gif"),
-				wait: require("../images/tdolls/6/animations/6_normal_wait.gif")
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
 			},
 			animations_dorm: {
-				lying: require("../images/tdolls/6/animations/6_normal_dorm_lying.gif"),
-				move: require("../images/tdolls/6/animations/6_normal_dorm_move.gif"),
-				pick: require("../images/tdolls/6/animations/6_normal_dorm_pick.gif"),
-				sit: require("../images/tdolls/6/animations/6_normal_dorm_sit.gif"),
-				wait: require("../images/tdolls/6/animations/6_normal_dorm_wait.gif")
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
 			}
 		},
 		mod: null,
@@ -629,38 +660,388 @@ const tdolls = [
 		skins: {
 			number_of_skins: 2,
 			skin_names: ["A Couple's Journey", "Griffon Dancer"],
-			skin_images: [
-				require("../images/tdolls/6/6_skin1_card.png"),
-				require("../images/tdolls/6/6_skin1_card_damaged.png"),
-				require("../images/tdolls/6/6_skin2_card.png"),
-				require("../images/tdolls/6/6_skin2_card_damaged.png")
-			],
-			skin_images_full: [
-				require("../images/tdolls/6/6_skin1_full.png"),
-				require("../images/tdolls/6/6_skin1_full_damaged.png"),
-				require("../images/tdolls/6/6_skin2_full.png"),
-				require("../images/tdolls/6/6_skin2_full_damaged.png")
-			],
+			skin_images: [],
+			skin_images_full: [],
 			animations: {
-				attack: [require("../images/tdolls/6/animations/6_skin1_attack.gif"), require("../images/tdolls/6/animations/6_skin2_attack.gif")],
-				die: [require("../images/tdolls/6/animations/6_skin1_die.gif"), require("../images/tdolls/6/animations/6_skin2_die.gif")],
-				move: [require("../images/tdolls/6/animations/6_skin1_move.gif"), require("../images/tdolls/6/animations/6_skin2_move.gif")],
-				victory: [require("../images/tdolls/6/animations/6_skin1_victory.gif"), require("../images/tdolls/6/animations/6_skin2_victory.gif")],
-				victoryloop: [require("../images/tdolls/6/animations/6_skin1_victoryloop.gif"), require("../images/tdolls/6/animations/6_skin2_victoryloop.gif")],
-				wait: [require("../images/tdolls/6/animations/6_skin1_wait.gif"), require("../images/tdolls/6/animations/6_skin2_wait.gif")]
+				hasSkillAnimation: [false, false],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
 			},
 			animations_dorm: {
-				lying: [require("../images/tdolls/6/animations/6_skin1_dorm_lying.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_lying.gif")],
-				move: [require("../images/tdolls/6/animations/6_skin1_dorm_move.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_move.gif")],
-				pick: [require("../images/tdolls/6/animations/6_skin1_dorm_pick.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_pick.gif")],
-				sit: [require("../images/tdolls/6/animations/6_skin1_dorm_sit.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_sit.gif")],
-				sit2: [null, require("../images/tdolls/6/animations/6_skin2_dorm_sit2.gif")],
-				wait: [require("../images/tdolls/6/animations/6_skin1_dorm_wait.gif"), require("../images/tdolls/6/animations/6_skin2_dorm_wait.gif")]
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, true],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 7,
+			name: "Stechkin",
+			type: "HG",
+			rarity: 4,
+			max_hp: 83,
+			max_dmg: 28,
+			max_acc: 44,
+			max_eva: 66,
+			max_rof: 65,
+			skill: {
+				name: "Assault Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				passive_active_description: true,
+				description:
+					"Passive: When equipped with \"Stechkin Exclusive Stock\", increases allies' damage by 4% for the same skill duration. Active: Increases all allies' rate of fire by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
+				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 0],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["12%", "24%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 7,
+			name: "Stechkin Mod",
+			type: "HG",
+			rarity: 5,
+			max_hp: 83,
+			max_dmg: 31,
+			max_acc: 49,
+			max_eva: 66,
+			max_rof: 65,
+			skill: {
+				name: "Assault Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				passive_active_description: true,
+				description:
+					"Passive: When equipped with \"Stechkin Exclusive Stock\", increases allies' damage by 4% for the same skill duration. Active: Increases all allies' rate of fire by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
+				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Percussion",
+				initial_cooldown: "Passive",
+				description:
+					'When "Assault Command" is active, increases own damage by #1, and critical rate by #2 for #3 seconds. For the duration of "Percussion", prioritise targeting enemies with the lowest health and reduces the evasion of enemies with less than 30% health by #4 for #5 seconds.',
+				number_of_stats: 5,
+				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
+				stat2: ["50%", "56%", "61%", "67%", "72%", "78%", "83%", "89%", "94%", "100%"],
+				stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				stat4: ["20%", "23%", "27%", "30%", "33%", "37%", "40%", "43%", "47%", "50%"],
+				stat5: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 0],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["16%", "24%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Miss Camellia's Special Service"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false, false],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 8,
+			name: "Makarov",
+			type: "HG",
+			rarity: 3,
+			max_hp: 63,
+			max_dmg: 26,
+			max_acc: 61,
+			max_eva: 96,
+			max_rof: 61,
+			skill: {
+				name: "Precision Suppression",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Decreases the enemy squads' accuracy by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["24%", "25%", "27%", "28%", "29%", "31%", "32%", "33%", "35%", "36%"],
+				stat2: [4, 4, 4, 5, 5, 5, 5, 6, 6, 6],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 0],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["12%", "24%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Pumpkin Mishka", "A Certain Unscientific Sunflower"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false, false],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
 			}
 		}
 	}
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////////////////////
 ];
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+console.log("Now processing images and animations for JSON.");
+
+// Programmatically populate the images and animation properties inside the JSON before exporting it.
+tdolls.forEach((tdoll) => {
+	var id = tdoll.normal.id;
+
+	//////////// Populate images for Normal. ////////////
+	tdoll.normal.skill.image_skill = require(`../images/tdolls/${id}/${id}_skill1.png`);
+	tdoll.normal.images.card = require(`../images/tdolls/${id}/${id}_card.png`);
+	tdoll.normal.images.card_damaged = require(`../images/tdolls/${id}/${id}_card_damaged.png`);
+	tdoll.normal.images.full = require(`../images/tdolls/${id}/${id}_full.png`);
+	tdoll.normal.images.full_damaged = require(`../images/tdolls/${id}/${id}_full_damaged.png`);
+
+	//////////// Populate animations for Normal. ////////////
+	tdoll.normal.animations.attack = require(`../images/tdolls/${id}/animations/${id}_normal_attack.gif`);
+	tdoll.normal.animations.die = require(`../images/tdolls/${id}/animations/${id}_normal_die.gif`);
+	tdoll.normal.animations.move = require(`../images/tdolls/${id}/animations/${id}_normal_move.gif`);
+	if (tdoll.normal.animations.hasSkillAnimation) {
+		// Some T-Dolls have skill animations, some do not.
+		tdoll.normal.animations.skill = require(`../images/tdolls/${id}/animations/${id}_normal_skill.gif`);
+	}
+	tdoll.normal.animations.victory = require(`../images/tdolls/${id}/animations/${id}_normal_victory.gif`);
+	if (id === 1) {
+		// So far, only SAA has the victory2 animation.
+		tdoll.normal.animations.victory2 = require(`../images/tdolls/${id}/animations/${id}_normal_victory2.gif`);
+	}
+	if (tdoll.normal.animations.hasVictoryLoopAnimation) {
+		// Certain older T-Dolls did not come with victoryloop animation as it was just the victory animation.
+		tdoll.normal.animations.victoryloop = require(`../images/tdolls/${id}/animations/${id}_normal_victoryloop.gif`);
+	}
+	tdoll.normal.animations.wait = require(`../images/tdolls/${id}/animations/${id}_normal_wait.gif`);
+
+	tdoll.normal.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_lying.gif`);
+	tdoll.normal.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_move.gif`);
+	tdoll.normal.animations_dorm.pick = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_pick.gif`);
+	tdoll.normal.animations_dorm.sit = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_sit.gif`);
+	tdoll.normal.animations_dorm.wait = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_wait.gif`);
+
+	if (tdoll.mod !== null) {
+		//////////// Populate images for Mod ////////////
+		tdoll.mod.skill.image_skill = require(`../images/tdolls/${id}/${id}_skill1.png`);
+		tdoll.mod.skill2.image_skill = require(`../images/tdolls/${id}/${id}_skill2.png`);
+		tdoll.mod.images.card = require(`../images/tdolls/${id}/${id}_mod_card.png`);
+		tdoll.mod.images.card_damaged = require(`../images/tdolls/${id}/${id}_mod_card_damaged.png`);
+		tdoll.mod.images.full = require(`../images/tdolls/${id}/${id}_mod_full.png`);
+		tdoll.mod.images.full_damaged = require(`../images/tdolls/${id}/${id}_mod_full_damaged.png`);
+
+		//////////// Populate animations for Mod ////////////
+		tdoll.mod.animations.attack = require(`../images/tdolls/${id}/animations/${id}_mod_attack.gif`);
+		tdoll.mod.animations.die = require(`../images/tdolls/${id}/animations/${id}_mod_die.gif`);
+		tdoll.mod.animations.move = require(`../images/tdolls/${id}/animations/${id}_mod_move.gif`);
+		if (tdoll.mod.animations.hasSkillAnimation) {
+			tdoll.mod.animations.skill = require(`../images/tdolls/${id}/animations/${id}_mod_skill.gif`);
+		}
+		tdoll.mod.animations.victory = require(`../images/tdolls/${id}/animations/${id}_mod_victory.gif`);
+		tdoll.mod.animations.victoryloop = require(`../images/tdolls/${id}/animations/${id}_mod_victoryloop.gif`);
+		tdoll.mod.animations.wait = require(`../images/tdolls/${id}/animations/${id}_mod_wait.gif`);
+
+		tdoll.mod.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_lying.gif`);
+		tdoll.mod.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_move.gif`);
+		tdoll.mod.animations_dorm.pick = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_pick.gif`);
+		tdoll.mod.animations_dorm.sit = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_sit.gif`);
+		tdoll.mod.animations_dorm.wait = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_wait.gif`);
+	}
+
+	if (tdoll.skins !== null) {
+		var skinSelected = 1;
+		for (var i = 0; skinSelected <= tdoll.skins.number_of_skins; i++) {
+			//////////// Populate images for Skin(s) ////////////
+			tdoll.skins.skin_images.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_card.png`));
+			tdoll.skins.skin_images.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_card_damaged.png`));
+
+			tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full.png`));
+			tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full_damaged.png`));
+
+			//////////// Populate animations for Skin(s) ////////////
+			tdoll.skins.animations.attack[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_attack.gif`);
+			tdoll.skins.animations.die[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_die.gif`);
+			tdoll.skins.animations.move[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_move.gif`);
+			if (tdoll.skins.animations.hasSkillAnimation[i]) {
+				// Some T-Dolls have skill animations, some do not.
+				tdoll.skins.animations.skill[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_skill.gif`);
+			}
+			tdoll.skins.animations.victory[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_victory.gif`);
+			tdoll.skins.animations.victoryloop[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_victoryloop.gif`);
+			tdoll.skins.animations.wait[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_wait.gif`);
+
+			tdoll.skins.animations_dorm.lying[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_lying.gif`);
+			tdoll.skins.animations_dorm.move[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_move.gif`);
+			if (tdoll.skins.animations_dorm.hasActionAnimation[i]) {
+				// Some T-Dolls have action animations for one of their skins, some do not.
+				tdoll.skins.animations_dorm.action[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_action.gif`);
+			}
+			tdoll.skins.animations_dorm.pick[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_pick.gif`);
+			tdoll.skins.animations_dorm.sit[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_sit.gif`);
+			if (tdoll.skins.animations_dorm.hasSit2Animation[i]) {
+				// Some T-Dolls have a second sit animation for one of their skins, some do not.
+				tdoll.skins.animations_dorm.sit2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_sit2.gif`);
+			}
+			tdoll.skins.animations_dorm.wait[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_wait.gif`);
+
+			skinSelected++;
+		}
+	}
+});
+
+console.log("Finished processing images and animations for JSON.");
 
 module.exports = tdolls;
