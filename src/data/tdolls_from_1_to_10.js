@@ -50,6 +50,7 @@ const tdolls = [
 			},
 			animations: {
 				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
 				attack: undefined,
 				die: undefined,
 				move: undefined,
@@ -113,6 +114,7 @@ const tdolls = [
 			},
 			animations: {
 				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
 				attack: undefined,
 				die: undefined,
 				move: undefined,
@@ -726,7 +728,7 @@ const tdolls = [
 				full_damaged: undefined
 			},
 			animations: {
-				hasSkillAnimation: false,
+				hasSkillAnimation: true,
 				hasVictoryLoopAnimation: true,
 				attack: undefined,
 				die: undefined,
