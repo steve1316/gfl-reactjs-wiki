@@ -897,7 +897,7 @@ export default function TDoll(props) {
 								{renderAnimationTabs()}
 
 								<Card className={classes.cardForAnimation} elevation={12}>
-									<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} />
+									<GifPlayer gif={animation} style={{ height: 200, width: 200, zIndex: 0 }} autoplay={true} />
 								</Card>
 							</Grid>
 
