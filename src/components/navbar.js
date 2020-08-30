@@ -138,7 +138,7 @@ export default function Navbar() {
 
 	return (
 		<div className={classes.root}>
-			<AppBar position="relative">
+			<AppBar position="fixed">
 				<Toolbar>
 					<IconButton edge="start" onClick={handleDrawerToggle} className={classes.menuButton} color="inherit" aria-label="menu">
 						<MenuIcon />
