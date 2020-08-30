@@ -609,6 +609,7 @@ export default function TDoll(props) {
 
 	// Render tabs for animation selection based on Normal or Dorm animation mode active.
 	const renderAnimationTabs = () => {
+		var tempSkinSelected = helperSkinSelected();
 		if (animationMode === 0) {
 			return (
 				<Tabs className={classes.tabs} value={animationTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
@@ -619,12 +620,14 @@ export default function TDoll(props) {
 					<Tab label="Die" value="die" />
 					<Tab label="Victory" value="victory" />
 					{"victory2" in tdoll.selected.animations && !showSkin ? <Tab label="Victory2" value="victory2" /> : ""}
-					{"victoryloop" in tdoll.selected.animations ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
+					{"victoryloop" in tdoll.selected.animations || (tdoll.skins && showSkin && tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected]) ? (
+						<Tab label="VictoryLoop" value="victoryloop" />
+					) : (
+						""
+					)}
 				</Tabs>
 			);
 		} else {
-			var tempSkinSelected = helperSkinSelected();
-
 			return (
 				<Tabs className={classes.tabs} value={animationDormTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
 					<Tab label="Wait" value="wait" />
