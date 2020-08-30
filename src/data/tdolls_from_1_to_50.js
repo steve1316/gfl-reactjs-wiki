@@ -139,6 +139,7 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true],
 				attack: [],
 				die: [],
 				move: [],
@@ -290,6 +291,7 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
 				attack: [],
 				die: [],
 				move: [],
@@ -579,6 +581,7 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
 				attack: [],
 				die: [],
 				move: [],
@@ -666,6 +669,7 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true],
 				attack: [],
 				die: [],
 				move: [],
@@ -822,7 +826,8 @@ const tdolls = [
 			skin_images: [],
 			skin_images_full: [],
 			animations: {
-				hasSkillAnimation: [false, false],
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
 				attack: [],
 				die: [],
 				move: [],
@@ -832,8 +837,8 @@ const tdolls = [
 				wait: []
 			},
 			animations_dorm: {
-				hasActionAnimation: [false, false],
-				hasSit2Animation: [false, false],
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
 				lying: [],
 				move: [],
 				action: [],
@@ -910,6 +915,7 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true],
 				attack: [],
 				die: [],
 				move: [],
@@ -997,6 +1003,7 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
 				attack: [],
 				die: [],
 				move: [],
@@ -1085,6 +1092,491 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 11,
+			name: "P08",
+			type: "HG",
+			rarity: 3,
+			max_hp: 70,
+			max_dmg: 31,
+			max_acc: 46,
+			max_eva: 80,
+			max_rof: 55,
+			skill: {
+				name: "Cover Command N",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "During nighttime, increases all allies' evasion by #1% (#2% during daytime) for #3 seconds (#4 seconds during day).",
+				number_of_stats: 4,
+				stat1: [50, 54, 58, 62, 66, 69, 73, 77, 81, 85],
+				stat2: [28, 28, 30, 30, 31, 32, 33, 33, 34, 35],
+				stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
+				stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 1],
+				row3: [0, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Damage by "],
+				stat2: ["70%", "14%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 12,
+			name: "C96",
+			type: "HG",
+			rarity: 3,
+			max_hp: 83,
+			max_dmg: 29,
+			max_acc: 41,
+			max_eva: 61,
+			max_rof: 62,
+			skill: {
+				name: "Flare",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases all allies' accuracy by #1% for #2 seconds (night battles only).",
+				number_of_stats: 2,
+				stat1: [55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
+				stat2: [8, 9, 10, 11, 12, 12, 13, 13, 14, 15],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 1],
+				row3: [1, 0, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["64%", "30%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 12,
+			name: "C96",
+			type: "HG",
+			rarity: 4,
+			max_hp: 85,
+			max_dmg: 32,
+			max_acc: 52,
+			max_eva: 71,
+			max_rof: 64,
+			skill: {
+				name: "Flare",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases all allies' accuracy by #1% for #2 seconds (night battles only).",
+				number_of_stats: 2,
+				stat1: [60, 67, 73, 80, 87, 93, 100, 107, 113, 120],
+				stat2: [8, 9, 10, 11, 12, 12, 13, 13, 14, 15],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Night Sky Pursuer",
+				initial_cooldown: "Passive",
+				description: 'When "Flare" has been launched, grants allies +#1 ammo to their current clip, additionally increases allies\' critical damage by #2% for #3 seconds.',
+				number_of_stats: 3,
+				stat1: [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
+				stat2: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
+				stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 1],
+				row3: [1, 0, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["80%", "40%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 13,
+			name: "Type 92",
+			type: "HG",
+			rarity: 3,
+			max_hp: 63,
+			max_dmg: 31,
+			max_acc: 46,
+			max_eva: 80,
+			max_rof: 61,
+			skill: {
+				name: "Charge Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increases all allies' damage and rate of fire by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [6, 6, 7, 7, 8, 8, 8, 9, 9, 10],
+				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 1, 1],
+				row2: [1, 2, 1],
+				row3: [1, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["50%", "40%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 14,
+			name: "Astra Revolver",
+			type: "HG",
+			rarity: 3,
+			max_hp: 80,
+			max_dmg: 33,
+			max_acc: 45,
+			max_eva: 68,
+			max_rof: 52,
+			skill: {
+				name: "Assault Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increases all allies' rate of fire by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 1],
+				row2: [0, 2, 0],
+				row3: [1, 0, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Evasion by "],
+				stat2: ["20%", "20%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Astra's Swimming Pool Float"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [true],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 15,
+			name: "Glock 19",
+			type: "HG",
+			rarity: 3,
+			max_hp: 63,
+			max_dmg: 29,
+			max_acc: 58,
+			max_eva: 87,
+			max_rof: 61,
+			skill: {
+				name: "Firepower Suppression",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Decreases all enemies' damage by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [15, 16, 17, 18, 19, 21, 22, 23, 24, 25],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 1],
+				row2: [0, 2, 1],
+				row3: [1, 0, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["64%", "30%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 16,
+			name: "Thompson",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 238,
+			max_dmg: 31,
+			max_acc: 12,
+			max_eva: 56,
+			max_rof: 82,
+			skill: {
+				name: "Force Shield",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Grants self a barrier with a Defense value of 9999 (Max value of 9999), reducing incoming damage by a percentage (100% if at max Defense value) for #1 seconds.",
+				number_of_stats: 1,
+				stat1: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Evasion by "],
+				stat2: ["12%", "15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Demon Huntress"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
 				attack: [],
 				die: [],
 				move: [],
@@ -1108,488 +1600,6 @@ const tdolls = [
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 11,
-	// 		name: "P08",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 70,
-	// 		max_dmg: 31,
-	// 		max_acc: 46,
-	// 		max_eva: 80,
-	// 		max_rof: 55,
-	// 		skill: {
-	// 			name: "Cover Command N",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "During nighttime, increases all allies' evasion by #1% (#2% during daytime) for #3 seconds (#4 seconds during day).",
-	// 			number_of_stats: 4,
-	// 			stat1: [50, 54, 58, 62, 66, 69, 73, 77, 81, 85],
-	// 			stat2: [28, 28, 30, 30, 31, 32, 33, 33, 34, 35],
-	// 			stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-	// 			stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Damage by "],
-	// 			stat2: ["70%", "14%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 12,
-	// 		name: "C96",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 83,
-	// 		max_dmg: 29,
-	// 		max_acc: 41,
-	// 		max_eva: 61,
-	// 		max_rof: 62,
-	// 		skill: {
-	// 			name: "Flare",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases all allies' accuracy by #1% for #2 seconds (night battles only).",
-	// 			number_of_stats: 2,
-	// 			stat1: [55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
-	// 			stat2: [8, 9, 10, 11, 12, 12, 13, 13, 14, 15],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["64%", "30%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 12,
-	// 		name: "C96",
-	// 		type: "HG",
-	// 		rarity: 4,
-	// 		max_hp: 85,
-	// 		max_dmg: 32,
-	// 		max_acc: 52,
-	// 		max_eva: 71,
-	// 		max_rof: 64,
-	// 		skill: {
-	// 			name: "Flare",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases all allies' accuracy by #1% for #2 seconds (night battles only).",
-	// 			number_of_stats: 2,
-	// 			stat1: [60, 67, 73, 80, 87, 93, 100, 107, 113, 120],
-	// 			stat2: [8, 9, 10, 11, 12, 12, 13, 13, 14, 15],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Night Sky Pursuer",
-	// 			initial_cooldown: "Passive",
-	// 			description: 'When "Flare" has been launched, grants allies +#1 ammo to their current clip, additionally increases allies\' critical damage by #2% for #3 seconds.',
-	// 			number_of_stats: 3,
-	// 			stat1: [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
-	// 			stat2: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
-	// 			stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["80%", "40%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 13,
-	// 		name: "Type 92",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 63,
-	// 		max_dmg: 31,
-	// 		max_acc: 46,
-	// 		max_eva: 80,
-	// 		max_rof: 61,
-	// 		skill: {
-	// 			name: "Charge Command",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Increases all allies' damage and rate of fire by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [6, 6, 7, 7, 8, 8, 8, 9, 9, 10],
-	// 			stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 1, 1],
-	// 			row2: [1, 2, 1],
-	// 			row3: [1, 1, 1],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["50%", "40%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 14,
-	// 		name: "Astra Revolver",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 80,
-	// 		max_dmg: 33,
-	// 		max_acc: 45,
-	// 		max_eva: 68,
-	// 		max_rof: 52,
-	// 		skill: {
-	// 			name: "Assault Command",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Increases all allies' rate of fire by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 1],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Evasion by "],
-	// 			stat2: ["20%", "20%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Astra's Swimming Pool Float"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 15,
-	// 		name: "Glock 19",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 63,
-	// 		max_dmg: 29,
-	// 		max_acc: 58,
-	// 		max_eva: 87,
-	// 		max_rof: 61,
-	// 		skill: {
-	// 			name: "Firepower Suppression",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Decreases all enemies' damage by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [15, 16, 17, 18, 19, 21, 22, 23, 24, 25],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 1],
-	// 			row2: [0, 2, 1],
-	// 			row3: [1, 0, 1],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["64%", "30%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 16,
-	// 		name: "Thompson",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 238,
-	// 		max_dmg: 31,
-	// 		max_acc: 12,
-	// 		max_eva: 56,
-	// 		max_rof: 82,
-	// 		skill: {
-	// 			name: "Force Shield",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Grants self a barrier with a Defense value of 9999 (Max value of 9999), reducing incoming damage by a percentage (100% if at max Defense value) for #1 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Evasion by "],
-	// 			stat2: ["12%", "15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Demon Huntress"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
 	// {
 	// 	normal: {
 	// 		id: 17,
