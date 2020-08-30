@@ -9,7 +9,7 @@ import DoneIcon from "@material-ui/icons/Done";
 import { useEffect } from "react";
 
 // T-Dolls JSON import
-const tdolls_from_1_to_10 = require("../../data/tdolls_from_1_to_10");
+const tdolls_from_1_to_50 = require("../../data/tdolls_from_1_to_50");
 
 const HtmlTooltip = withStyles((theme) => ({
 	tooltip: {
@@ -102,7 +102,7 @@ export default function TDoll_Index() {
 	// TODO: Revamp this logic for updating this when user selects any filters or types in Search Bar inside Navbar and
 	// watch out for infinite rerendering issue.
 	useEffect(() => {
-		setNumberOfSearchResults(tdolls_from_1_to_10.length);
+		setNumberOfSearchResults(tdolls_from_1_to_50.length);
 	}, []);
 
 	// The following handler functions below are setting the filters selected as active.
@@ -191,7 +191,7 @@ export default function TDoll_Index() {
 				<Divider className={classes.dividerForCards} />
 
 				<Grid container spacing={4}>
-					{tdolls_from_1_to_10.map((tdoll) => {
+					{tdolls_from_1_to_50.map((tdoll) => {
 						if (filterMOD) {
 							tdoll.selected = tdoll.mod;
 						} else {
