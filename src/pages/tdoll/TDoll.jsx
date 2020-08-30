@@ -37,6 +37,7 @@ import {
 // MaterialUI icon imports
 import StarIcon from "@material-ui/icons/Star";
 import ZoomOutMapIcon from "@material-ui/icons/ZoomOutMap";
+import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 
 // GifPlayer import and CSS styling for it.
 import GifPlayer from "react-gif-player";
@@ -153,7 +154,7 @@ export default function TDoll(props) {
 			display: "flex",
 			flexDirection: "column"
 		},
-		fab: {
+		fabExpand: {
 			display: "inline-flex",
 			transform: "translate(5px, -85px)",
 			height: 40,
@@ -173,6 +174,14 @@ export default function TDoll(props) {
 			height: 40,
 			width: 40,
 			opacity: "85%"
+		},
+		fab_clickThrough: {
+			display: "block",
+			transform: "translate(5px, -505px)",
+			height: 40,
+			width: 40,
+			opacity: "0%",
+			pointerEvents: "none"
 		},
 		fab_dorm: {
 			display: "block",
@@ -309,7 +318,7 @@ export default function TDoll(props) {
 		setShowSkin(false); // Prevent skin image to be rendered if it was selected.
 
 		// Perform check to see if the information shown should be Mod or not.
-		if (mode === 0) {
+		if (mode === 0 && hasMod) {
 			// Switch to Mod information.
 			tdoll_temp.selected = backup.mod;
 			setShowModSkill(true);
@@ -361,6 +370,23 @@ export default function TDoll(props) {
 			}
 
 			setAnimationMode(0);
+		}
+	};
+
+	// Function will render a floating button to go back to Normal art if a skin is selected. Assumes no Mod is available to T-Doll.
+	const renderNormalButton = () => {
+		if (showSkin) {
+			return (
+				<Fab color="primary" className={classes.fab_mod} onClick={switchToNormalArt}>
+					<ExitToAppIcon alt="Switch back to Normal" style={{ height: 40, width: 25 }} />
+				</Fab>
+			);
+		} else {
+			return (
+				<Fab color="primary" className={classes.fab_clickThrough}>
+					<></>
+				</Fab>
+			);
 		}
 	};
 
@@ -570,6 +596,11 @@ export default function TDoll(props) {
 				return <img src={tdoll.selected.images.full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Normal Full" />;
 			}
 		}
+	};
+
+	// Switch back to Normal information if user already selected a skin.
+	const switchToNormalArt = () => {
+		switchModes();
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -869,11 +900,14 @@ export default function TDoll(props) {
 											<img src={mod_button} alt="Switch between Normal/Mod" style={{ height: 32, width: 32 }} />
 										</Fab>
 									) : (
-										""
+										renderNormalButton()
 									)}
 
 									{/************** Floating Action Button overlayed over image at the bottom left **************/}
-									{hasMod ? (
+									<Fab color="primary" className={classes.fabExpand} onClick={handleToggle}>
+										<ZoomOutMapIcon />
+									</Fab>
+									{/* {hasMod ? (
 										<Fab color="primary" className={classes.fab} onClick={handleToggle}>
 											<ZoomOutMapIcon />
 										</Fab>
@@ -881,7 +915,7 @@ export default function TDoll(props) {
 										<Fab color="primary" className={classes.fabNoMod} onClick={handleToggle}>
 											<ZoomOutMapIcon />
 										</Fab>
-									)}
+									)} */}
 
 									{/************** Display full size images based on boolean **************/}
 									<Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
@@ -897,7 +931,7 @@ export default function TDoll(props) {
 								{renderAnimationTabs()}
 
 								<Card className={classes.cardForAnimation} elevation={12}>
-									<GifPlayer gif={animation} style={{ height: 200, width: 200, zIndex: 0 }} autoplay={true} />
+									<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} />
 								</Card>
 							</Grid>
 
