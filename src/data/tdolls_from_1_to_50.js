@@ -4550,9 +4550,9 @@ tdolls.forEach((tdoll) => {
 	//////////// Populate images for Normal. ////////////
 	tdoll.normal.skill.image_skill = require(`../images/tdolls/${id}/${id}_skill1.png`);
 	tdoll.normal.images.card = require(`../images/tdolls/${id}/${id}_card.png`);
-	tdoll.normal.images.card_damaged = require(`../images/tdolls/${id}/${id}_card_damaged.png`);
+	tdoll.normal.images.card_damaged = require(`../images/tdolls/${id}/${id}_card_d.png`);
 	tdoll.normal.images.full = require(`../images/tdolls/${id}/${id}_full.png`);
-	tdoll.normal.images.full_damaged = require(`../images/tdolls/${id}/${id}_full_damaged.png`);
+	tdoll.normal.images.full_damaged = require(`../images/tdolls/${id}/${id}_full_d.png`);
 
 	//////////// Populate animations for Normal. ////////////
 	tdoll.normal.animations.attack = require(`../images/tdolls/${id}/animations/${id}_normal_attack.gif`);
@@ -4584,9 +4584,9 @@ tdolls.forEach((tdoll) => {
 		tdoll.mod.skill.image_skill = require(`../images/tdolls/${id}/${id}_skill1.png`);
 		tdoll.mod.skill2.image_skill = require(`../images/tdolls/${id}/${id}_skill2.png`);
 		tdoll.mod.images.card = require(`../images/tdolls/${id}/${id}_mod_card.png`);
-		tdoll.mod.images.card_damaged = require(`../images/tdolls/${id}/${id}_mod_card_damaged.png`);
+		tdoll.mod.images.card_damaged = require(`../images/tdolls/${id}/${id}_mod_card_d.png`);
 		tdoll.mod.images.full = require(`../images/tdolls/${id}/${id}_mod_full.png`);
-		tdoll.mod.images.full_damaged = require(`../images/tdolls/${id}/${id}_mod_full_damaged.png`);
+		tdoll.mod.images.full_damaged = require(`../images/tdolls/${id}/${id}_mod_full_d.png`);
 
 		//////////// Populate animations for Mod ////////////
 		tdoll.mod.animations.attack = require(`../images/tdolls/${id}/animations/${id}_mod_attack.gif`);
@@ -4611,10 +4611,10 @@ tdolls.forEach((tdoll) => {
 		for (var i = 0; skinSelected <= tdoll.skins.number_of_skins; i++) {
 			//////////// Populate images for Skin(s) ////////////
 			tdoll.skins.skin_images.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_card.png`));
-			tdoll.skins.skin_images.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_card_damaged.png`));
+			tdoll.skins.skin_images.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_card_d.png`));
 
 			tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full.png`));
-			tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full_damaged.png`));
+			tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full_d.png`));
 
 			//////////// Populate animations for Skin(s) ////////////
 			tdoll.skins.animations.attack[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_attack.gif`);
