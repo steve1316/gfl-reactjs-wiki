@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
+// Component imports
+import ScrollToTop from "../../components/ScrollToTop";
+
 // MaterialUI imports
-import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Button, Tooltip, withStyles } from "@material-ui/core";
+import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Button, Tooltip, withStyles, Grow } from "@material-ui/core";
 
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
@@ -24,7 +27,7 @@ const HtmlTooltip = withStyles((theme) => ({
 export default function TDoll_Index() {
 	const useStyles = makeStyles((theme) => ({
 		root: {
-			marginTop: "5rem"
+			marginTop: "4rem"
 		},
 		paper: {
 			padding: theme.spacing(2)
@@ -121,7 +124,8 @@ export default function TDoll_Index() {
 	};
 
 	return (
-		<main>
+		<main className={classes.root}>
+			<ScrollToTop />
 			<Container>
 				<br />
 
@@ -200,37 +204,39 @@ export default function TDoll_Index() {
 
 						return (
 							<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
-								<Card className={classes.card} elevation={12}>
-									<Link
-										to={{
-											pathname: "/tdoll",
-											search: "?id=" + tdoll.selected.id,
-											state: {
-												tdoll: tdoll
-											}
-										}}
-										onClick={() => sessionStorage.setItem(tdoll.selected.id, JSON.stringify(tdoll))}
-									>
-										<HtmlTooltip
-											title={
-												<>
-													<Typography color="inherit">
-														{tdoll.selected.name}
-														<small>
-															<sup>[#{tdoll.selected.id}]</sup>
-														</small>
-													</Typography>
-													<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
-												</>
-											}
-											placement="right"
+								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1250}>
+									<Card className={classes.card} elevation={12}>
+										<Link
+											to={{
+												pathname: "/tdoll",
+												search: "?id=" + tdoll.selected.id,
+												state: {
+													tdoll: tdoll
+												}
+											}}
+											onClick={() => sessionStorage.setItem(tdoll.selected.id, JSON.stringify(tdoll))}
 										>
-											<CardActionArea>
-												<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
-											</CardActionArea>
-										</HtmlTooltip>
-									</Link>
-								</Card>
+											<HtmlTooltip
+												title={
+													<>
+														<Typography color="inherit">
+															{tdoll.selected.name}
+															<small>
+																<sup>[#{tdoll.selected.id}]</sup>
+															</small>
+														</Typography>
+														<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
+													</>
+												}
+												placement="right"
+											>
+												<CardActionArea>
+													<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
+												</CardActionArea>
+											</HtmlTooltip>
+										</Link>
+									</Card>
+								</Grow>
 							</Grid>
 						);
 					})}
