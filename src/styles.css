@@ -2,3 +2,33 @@
 	font-family: "Roboto";
 	font-size: 16px;
 }
+
+.scroll-to-top {
+	position: fixed;
+	bottom: 12px;
+	left: 50%;
+	width: 40px;
+	height: 40px;
+	border-radius: 100%;
+	background: #b80000;
+	color: #fff;
+	z-index: 1;
+}
+
+.cursor-pointer {
+	cursor: pointer;
+}
+
+.scroll-to-top .icon {
+	margin-top: 10px;
+	animation: scrollTop 0.5s alternate ease infinite;
+	margin-left: 13px;
+}
+@keyframes scrollTop {
+	from {
+		transform: translateY(2px);
+	}
+	to {
+		transform: translateY(-1px);
+	}
+}

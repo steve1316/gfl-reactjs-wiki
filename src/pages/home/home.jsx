@@ -2,9 +2,10 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
+import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography } from "@material-ui/core";
+import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Slide, Zoom } from "@material-ui/core";
 
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
@@ -19,7 +20,7 @@ import formation_logo from "../../images/formation_logo.jpg";
 export default function Home() {
 	const useStyles = makeStyles((theme) => ({
 		root: {
-			marginTop: "5rem"
+			marginTop: "4rem"
 		},
 		paper: {
 			padding: theme.spacing(2)
@@ -69,7 +70,8 @@ export default function Home() {
 	];
 
 	return (
-		<main>
+		<main className={classes.root}>
+			<ScrollToTop />
 			{/* Hero Unit */}
 			<div className={classes.heroContent}>
 				<Container maxWidth="sm">

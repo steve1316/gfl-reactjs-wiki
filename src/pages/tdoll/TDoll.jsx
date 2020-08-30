@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
 
 // Component imports
+import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
 import {
@@ -861,6 +862,7 @@ export default function TDoll(props) {
 
 	return (
 		<main>
+			<ScrollToTop />
 			<Container className={classes.cardGrid} maxWidth="md">
 				<br />
 
