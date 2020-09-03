@@ -1,33 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Link, Redirect, withRouter } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, withRouter } from "react-router-dom";
 
 // MaterialUI imports
-import {
-	AppBar,
-	Toolbar,
-	IconButton,
-	Typography,
-	InputBase,
-	Drawer,
-	List,
-	ListItem,
-	ListItemIcon,
-	ListItemText,
-	fade,
-	makeStyles,
-	Icon,
-	Divider,
-	Backdrop,
-	Grid,
-	Grow,
-	Card,
-	CardActionArea,
-	CardMedia,
-	CardContent,
-	CardActions,
-	Container,
-	TextField
-} from "@material-ui/core";
+import { AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, fade, makeStyles, Icon, Divider, TextField } from "@material-ui/core";
 
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import parse from "autosuggest-highlight/parse";
@@ -35,7 +10,6 @@ import match from "autosuggest-highlight/match";
 
 // MaterialUI icon imports
 import MenuIcon from "@material-ui/icons/Menu";
-import SearchIcon from "@material-ui/icons/Search";
 
 // Image imports
 import HomeIcon from "../images/home_icon.png";
@@ -80,28 +54,6 @@ function Navbar(props) {
 				width: "auto"
 			}
 		},
-		searchIcon: {
-			padding: theme.spacing(0, 2),
-			height: "100%",
-			position: "absolute",
-			pointerEvents: "none",
-			display: "flex",
-			alignItems: "center",
-			justifyContent: "center"
-		},
-		inputRoot: {
-			color: "inherit"
-		},
-		inputInput: {
-			padding: theme.spacing(1, 1, 1, 0),
-			// vertical padding + font size from searchIcon
-			paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-			transition: theme.transitions.create("width"),
-			width: "100%",
-			[theme.breakpoints.up("md")]: {
-				width: "20ch"
-			}
-		},
 		drawerPaper: {
 			width: "inherit"
 		},
@@ -138,11 +90,10 @@ function Navbar(props) {
 	const classes = useStyles();
 
 	const [drawerOpen, setDrawerOpen] = useState(false);
-	const [value, setValue] = useState("");
 	const [searchValue, setSearchValue] = useState("");
-	const [open, setOpen] = useState(false);
 	const [hasError, setHasError] = useState(false);
 
+	// Add a firstLetter property to every tdoll for categorization in the autocomplete component.
 	const options = tdolls.map((tdoll) => {
 		const firstLetter = tdoll.normal.name[0].toUpperCase();
 		return {
@@ -151,57 +102,44 @@ function Navbar(props) {
 		};
 	});
 
-	useEffect(() => {
-		console.log(options);
-	});
-
-	// useEffect(() => {
-	// 	console.log("Search: ", searchValue);
-	// }, [searchValue]);
-
 	const handleDrawerToggle = () => {
 		setDrawerOpen(!drawerOpen);
 	};
 
-	// The following 2 handle functions control the Backdrop component.
-	const handleToggle = () => {
-		setOpen(!open);
-	};
-	const handleClose = () => {
-		setOpen(false);
-	};
-
+	// This handleSubmit will take care of sending the user to the T-Doll page alongside its information.
 	const handleSubmit = () => {
 		var check = false;
 		tdolls.forEach((tdoll) => {
+			// Check each T-Doll's name and match it with the search value.
 			if (searchValue === tdoll.normal.name) {
-				console.log("FOUND MATCH");
+				sessionStorage.clear();
+				setHasError(false);
+				sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll));
+
+				if (props.history.location.pathname === "/tdoll") {
+					// If user is already at /tdoll, send the user to a null component and then to the /tdoll page, triggering a state reload.
+					// This unfortunately disables the ability to go back to the T-Doll that was previous as you will go back to the page before that, like Home or Index.
+					props.history.replace("/reload");
+					setTimeout(() => {
+						props.history.replace({
+							pathname: "/tdoll",
+							search: `?id=${tdoll.normal.id}`
+						});
+					}, 0);
+				} else {
+					props.history.push({
+						pathname: "/tdoll",
+						search: `?id=${tdoll.normal.id}`
+					});
+				}
+
 				check = true;
-				sessionStorage.setItem(tdoll.selected.id, JSON.stringify(tdoll));
-				props.history.push({
-					pathname: "/tdoll",
-					search: `?id=${tdoll.normal.id}`,
-					state: {
-						tdoll: tdoll
-					}
-				});
-				// return (
-				// 	<Redirect
-				// 		to={{
-				// 			pathname: "/tdoll",
-				// 			search: `?id=${tdoll.normal.id}`,
-				// 			state: {
-				// 				tdoll: tdoll
-				// 			}
-				// 		}}
-				// 	/>
-				// );
 			}
 		});
 
 		if (!check) {
 			console.log("did not find match");
-			return;
+			setHasError(true);
 		}
 	};
 
@@ -250,8 +188,6 @@ function Navbar(props) {
 		}
 	];
 
-	console.log("Navbar props: ", props);
-
 	return (
 		<div className={classes.root}>
 			<AppBar position="fixed">
@@ -264,46 +200,30 @@ function Navbar(props) {
 					</Typography>
 
 					<div className={classes.search}>
-						{/* <div className={classes.searchIcon}>
-							<SearchIcon />
-						</div>
-						<InputBase
-							placeholder="Search…"
-							classes={{
-								root: classes.inputRoot,
-								input: classes.inputInput
-							}}
-							inputProps={{ "aria-label": "search" }}
-							value={searchValue}
-							onChange={(e) => setSearchValue(e.target.value)}
-							onBlur={() => setSearchValue("")}
-							onClick={() => handleToggle()}
-						/> */}
 						<form onSubmit={handleSubmit}>
 							<Autocomplete
-								id="grouped-demo"
 								options={options.sort((a, b) => -b.firstLetter.localeCompare(a.firstLetter))}
 								groupBy={(option) => option.firstLetter}
 								getOptionLabel={(option) => option.normal.name}
 								size="small"
-								style={{ width: 300 }}
+								style={{ minWidth: 300, width: "auto" }}
 								inputValue={searchValue}
 								onInputChange={(e, newInputValue) => {
 									setSearchValue(newInputValue);
 								}}
+								clearOnEscape
 								renderInput={(params) => (
 									<TextField
 										{...params}
 										color="secondary"
-										label="Search..."
+										label={hasError ? "Does not match any T-Doll" : "Search..."}
 										value={searchValue}
-										error={hasError ? true : false}
-										helperText={hasError ? "Does not match any T-Doll" : ""}
+										//error={hasError ? true : false}
+										//helperText={hasError ? "Does not match any T-Doll" : ""}
 										variant="outlined"
 									/>
 								)}
 								renderOption={(option, { inputValue }) => {
-									setSearchValue(inputValue);
 									const matches = match(option.normal.name, inputValue);
 									const parts = parse(option.normal.name, matches);
 
@@ -344,24 +264,6 @@ function Navbar(props) {
 					})}
 				</List>
 			</Drawer>
-
-			{/* <Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
-				<Container className={classes.cardGrid} maxWidth="md">
-					{tdollArray.map((tdoll) => {
-						return (
-							<Grid item key={tdoll.normal.name} xs={6} sm={4} md={2}>
-								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1250}>
-									<Card className={classes.card} elevation={12}>
-										<CardActionArea>
-											<CardMedia component="img" className={classes.cardMedia} image={tdoll.normal.images.card} title={tdoll.normal.name} />
-										</CardActionArea>
-									</Card>
-								</Grow>
-							</Grid>
-						);
-					})}
-				</Container>
-			</Backdrop> */}
 		</div>
 	);
 }
