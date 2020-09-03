@@ -1,8 +1,37 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, Redirect, withRouter } from "react-router-dom";
 
 // MaterialUI imports
-import { AppBar, Toolbar, IconButton, Typography, InputBase, Drawer, List, ListItem, ListItemIcon, ListItemText, fade, makeStyles, Icon, Divider } from "@material-ui/core";
+import {
+	AppBar,
+	Toolbar,
+	IconButton,
+	Typography,
+	InputBase,
+	Drawer,
+	List,
+	ListItem,
+	ListItemIcon,
+	ListItemText,
+	fade,
+	makeStyles,
+	Icon,
+	Divider,
+	Backdrop,
+	Grid,
+	Grow,
+	Card,
+	CardActionArea,
+	CardMedia,
+	CardContent,
+	CardActions,
+	Container,
+	TextField
+} from "@material-ui/core";
+
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import parse from "autosuggest-highlight/parse";
+import match from "autosuggest-highlight/match";
 
 // MaterialUI icon imports
 import MenuIcon from "@material-ui/icons/Menu";
@@ -16,7 +45,9 @@ import HOCIcon from "../images/hoc_icon.png";
 import FairyIcon from "../images/fairy_icon.png";
 import FormationIcon from "../images/formation_icon.png";
 
-export default function Navbar() {
+const tdolls = require("../data/tdolls_from_1_to_50");
+
+function Navbar(props) {
 	const useStyles = makeStyles((theme) => ({
 		root: {
 			flexGrow: 1
@@ -80,15 +111,98 @@ export default function Navbar() {
 		},
 		listIcon: {
 			marginRight: -5
+		},
+		backdrop: {
+			zIndex: theme.zIndex.drawer + 1,
+			color: "#fff",
+			marginTop: "4rem",
+			backdropFilter: "blur(5px)"
+		},
+		cardGrid: {
+			paddingTop: theme.spacing(8),
+			paddingBottom: theme.spacing(8)
+		},
+		card: {
+			display: "flex",
+			flexDirection: "column",
+			maxWidth: 200,
+			maxHeight: 500
+		},
+		cardMedia: {
+			height: "100%",
+			width: "100%",
+			objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
 		}
 	}));
 
 	const classes = useStyles();
 
 	const [drawerOpen, setDrawerOpen] = useState(false);
+	const [value, setValue] = useState("");
+	const [searchValue, setSearchValue] = useState("");
+	const [open, setOpen] = useState(false);
+	const [hasError, setHasError] = useState(false);
+
+	const options = tdolls.map((tdoll) => {
+		const firstLetter = tdoll.normal.name[0].toUpperCase();
+		return {
+			firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter,
+			...tdoll
+		};
+	});
+
+	useEffect(() => {
+		console.log(options);
+	});
+
+	// useEffect(() => {
+	// 	console.log("Search: ", searchValue);
+	// }, [searchValue]);
 
 	const handleDrawerToggle = () => {
 		setDrawerOpen(!drawerOpen);
+	};
+
+	// The following 2 handle functions control the Backdrop component.
+	const handleToggle = () => {
+		setOpen(!open);
+	};
+	const handleClose = () => {
+		setOpen(false);
+	};
+
+	const handleSubmit = () => {
+		var check = false;
+		tdolls.forEach((tdoll) => {
+			if (searchValue === tdoll.normal.name) {
+				console.log("FOUND MATCH");
+				check = true;
+				sessionStorage.setItem(tdoll.selected.id, JSON.stringify(tdoll));
+				props.history.push({
+					pathname: "/tdoll",
+					search: `?id=${tdoll.normal.id}`,
+					state: {
+						tdoll: tdoll
+					}
+				});
+				// return (
+				// 	<Redirect
+				// 		to={{
+				// 			pathname: "/tdoll",
+				// 			search: `?id=${tdoll.normal.id}`,
+				// 			state: {
+				// 				tdoll: tdoll
+				// 			}
+				// 		}}
+				// 	/>
+				// );
+			}
+		});
+
+		if (!check) {
+			console.log("did not find match");
+			return;
+		}
 	};
 
 	const listItems = [
@@ -136,6 +250,8 @@ export default function Navbar() {
 		}
 	];
 
+	console.log("Navbar props: ", props);
+
 	return (
 		<div className={classes.root}>
 			<AppBar position="fixed">
@@ -148,7 +264,7 @@ export default function Navbar() {
 					</Typography>
 
 					<div className={classes.search}>
-						<div className={classes.searchIcon}>
+						{/* <div className={classes.searchIcon}>
 							<SearchIcon />
 						</div>
 						<InputBase
@@ -158,7 +274,51 @@ export default function Navbar() {
 								input: classes.inputInput
 							}}
 							inputProps={{ "aria-label": "search" }}
-						/>
+							value={searchValue}
+							onChange={(e) => setSearchValue(e.target.value)}
+							onBlur={() => setSearchValue("")}
+							onClick={() => handleToggle()}
+						/> */}
+						<form onSubmit={handleSubmit}>
+							<Autocomplete
+								id="grouped-demo"
+								options={options.sort((a, b) => -b.firstLetter.localeCompare(a.firstLetter))}
+								groupBy={(option) => option.firstLetter}
+								getOptionLabel={(option) => option.normal.name}
+								size="small"
+								style={{ width: 300 }}
+								inputValue={searchValue}
+								onInputChange={(e, newInputValue) => {
+									setSearchValue(newInputValue);
+								}}
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										color="secondary"
+										label="Search..."
+										value={searchValue}
+										error={hasError ? true : false}
+										helperText={hasError ? "Does not match any T-Doll" : ""}
+										variant="outlined"
+									/>
+								)}
+								renderOption={(option, { inputValue }) => {
+									setSearchValue(inputValue);
+									const matches = match(option.normal.name, inputValue);
+									const parts = parse(option.normal.name, matches);
+
+									return (
+										<div>
+											{parts.map((part, index) => (
+												<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
+													{part.text}
+												</span>
+											))}
+										</div>
+									);
+								}}
+							/>
+						</form>
 					</div>
 				</Toolbar>
 			</AppBar>
@@ -184,6 +344,26 @@ export default function Navbar() {
 					})}
 				</List>
 			</Drawer>
+
+			{/* <Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
+				<Container className={classes.cardGrid} maxWidth="md">
+					{tdollArray.map((tdoll) => {
+						return (
+							<Grid item key={tdoll.normal.name} xs={6} sm={4} md={2}>
+								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1250}>
+									<Card className={classes.card} elevation={12}>
+										<CardActionArea>
+											<CardMedia component="img" className={classes.cardMedia} image={tdoll.normal.images.card} title={tdoll.normal.name} />
+										</CardActionArea>
+									</Card>
+								</Grow>
+							</Grid>
+						);
+					})}
+				</Container>
+			</Backdrop> */}
 		</div>
 	);
 }
+
+export default withRouter(Navbar);
