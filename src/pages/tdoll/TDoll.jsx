@@ -623,7 +623,7 @@ export default function TDoll(props) {
 					<Tab label="Wait" value="wait" />
 					<Tab label="Move" value="move" />
 					<Tab label="Attack" value="attack" />
-					{"skill" in tdoll.selected.animations && tdoll.selected.animations.skill !== undefined ? <Tab label="Skill" value="skill" /> : ""}
+					{"skill" in tdoll.selected.animations && tdoll.selected.animations.skill !== undefined && !showSkin ? <Tab label="Skill" value="skill" /> : ""}
 					<Tab label="Die" value="die" />
 					<Tab label="Victory" value="victory" />
 					{"victory2" in tdoll.selected.animations && !showSkin ? <Tab label="Victory2" value="victory2" /> : ""}
