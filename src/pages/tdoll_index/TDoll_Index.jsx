@@ -11,6 +11,9 @@ import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionAre
 import DoneIcon from "@material-ui/icons/Done";
 import { useEffect } from "react";
 
+// Image imports
+import mod_button from "../../images/mod.png";
+
 // T-Dolls JSON import
 const tdolls_from_1_to_50 = require("../../data/tdolls_from_1_to_50");
 
@@ -78,14 +81,14 @@ export default function TDoll_Index() {
 	const classes = useStyles();
 
 	const [numberOfSearchResults, setNumberOfSearchResults] = useState(0);
-	const [filterMOD, setFilterMOD] = useState(false);
+	const [searchResults, setSearchResults] = useState([]);
 
 	const [rarityFilter, setRarityFilter] = useState([
-		{ key: 0, label: "General", rarity: "2*", selected: false },
-		{ key: 1, label: "Rare", rarity: "3*", selected: false },
-		{ key: 2, label: "Epochal", rarity: "4*", selected: false },
-		{ key: 3, label: "Legendary", rarity: "5*", selected: false },
-		{ key: 4, label: "Extra", rarity: "1*", selected: false }
+		{ key: 0, label: "General", rarity: 2, selected: false },
+		{ key: 1, label: "Rare", rarity: 3, selected: false },
+		{ key: 2, label: "Epochal", rarity: 4, selected: false },
+		{ key: 3, label: "Legendary", rarity: 5, selected: false },
+		{ key: 4, label: "Extra", rarity: 1, selected: false }
 	]);
 
 	const [typeFilter, setTypeFilter] = useState([
@@ -97,6 +100,12 @@ export default function TDoll_Index() {
 		{ key: 5, label: "SG", selected: false }
 	]);
 
+	const [modFilter, setModFilter] = useState({
+		key: 0,
+		label: "Mod",
+		selected: false
+	});
+
 	const handleDelete = () => {
 		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
 	};
@@ -105,8 +114,14 @@ export default function TDoll_Index() {
 	// TODO: Revamp this logic for updating this when user selects any filters or types in Search Bar inside Navbar and
 	// watch out for infinite rerendering issue.
 	useEffect(() => {
+		setSearchResults(renderTDolls());
 		setNumberOfSearchResults(tdolls_from_1_to_50.length);
 	}, []);
+
+	// Update the search results every time the filters change.
+	useEffect(() => {
+		setSearchResults(renderTDolls());
+	}, [modFilter, rarityFilter, typeFilter]);
 
 	// The following handler functions below are setting the filters selected as active.
 	const handleOnClickRarity = (rarityToBeUpdated) => () => {
@@ -123,6 +138,88 @@ export default function TDoll_Index() {
 		setTypeFilter((type) => type.map((type) => (type.key === key ? { ...type, selected: newSelected } : type)));
 	};
 
+	const handleOnClickMod = () => {
+		setModFilter({
+			...modFilter,
+			selected: !modFilter.selected
+		});
+	};
+
+	// Render the Cards of T-Dolls based on filters selected.
+	const renderTDolls = () => {
+		var tempArray = [];
+		tdolls_from_1_to_50
+			.filter((data) => {
+				// Filter if T-Dolls have Mod or not.
+				if (modFilter.selected) {
+					if (data.mod === null) {
+						return;
+					}
+					data.selected = data.mod;
+				} else {
+					data.selected = data.normal;
+				}
+
+				// Filter for rarity.
+				for (var i = 0; i < rarityFilter.length; i++) {
+					if (rarityFilter[i].selected && rarityFilter[i].rarity !== data.selected.rarity) {
+						return;
+					}
+				}
+
+				// Filter for type.
+				for (var i = 0; i < typeFilter.length; i++) {
+					if (typeFilter[i].selected && typeFilter[i].label !== data.selected.type) {
+						return;
+					}
+				}
+
+				// If passed all filters, then return this T-Doll.
+				return data;
+			})
+			.map((tdoll) => {
+				tempArray.push(
+					<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
+						<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}>
+							<Card className={classes.card} elevation={12}>
+								<Link
+									to={{
+										pathname: "/tdoll",
+										search: "?id=" + tdoll.normal.id
+									}}
+									onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
+								>
+									<HtmlTooltip
+										title={
+											<>
+												<Typography color="inherit">
+													{tdoll.selected.name}
+													<small>
+														<sup>[#{tdoll.normal.id}]</sup>
+													</small>
+												</Typography>
+												<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
+											</>
+										}
+										placement="right"
+									>
+										<CardActionArea>
+											<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
+										</CardActionArea>
+									</HtmlTooltip>
+								</Link>
+							</Card>
+						</Grow>
+					</Grid>
+				);
+			});
+
+		// Update number of search results.
+		setNumberOfSearchResults(tempArray.length);
+
+		return tempArray;
+	};
+
 	return (
 		<main className={classes.root}>
 			<ScrollToTop />
@@ -136,7 +233,7 @@ export default function TDoll_Index() {
 							<li key={rarity.key}>
 								<Chip
 									className={classes.chip}
-									avatar={<Avatar>{rarity.rarity}</Avatar>}
+									avatar={<Avatar>{rarity.rarity}*</Avatar>}
 									clickable
 									color={rarity.selected ? "primary" : "secondary"}
 									label={rarity.label}
@@ -179,6 +276,31 @@ export default function TDoll_Index() {
 						);
 					})}
 				</div>
+
+				<Divider className={classes.dividerForChips} />
+
+				<div className={classes.chipList}>
+					<Chip
+						className={classes.chip}
+						avatar={
+							<Avatar>
+								<img src={mod_button} style={{ width: 20, height: 20 }} />
+							</Avatar>
+						}
+						clickable
+						color={modFilter.selected ? "primary" : "secondary"}
+						label={modFilter.label}
+						onClick={() => handleOnClickMod()}
+						onDelete={modFilter.selected ? handleDelete : null}
+						deleteIcon={
+							<>
+								<Divider orientation="vertical" flexItem />
+								<DoneIcon />
+							</>
+						}
+					/>
+				</div>
+
 				{/* End of Chips List */}
 			</Container>
 
@@ -188,55 +310,10 @@ export default function TDoll_Index() {
 					Now showing {numberOfSearchResults} search results.
 				</Typography>
 
-				<Button variant="contained" onClick={() => setFilterMOD(!filterMOD)}>
-					MOD HERE
-				</Button>
-
 				<Divider className={classes.dividerForCards} />
 
 				<Grid container spacing={4}>
-					{tdolls_from_1_to_50.map((tdoll) => {
-						if (filterMOD) {
-							tdoll.selected = tdoll.mod;
-						} else {
-							tdoll.selected = tdoll.normal;
-						}
-
-						return (
-							<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
-								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1250}>
-									<Card className={classes.card} elevation={12}>
-										<Link
-											to={{
-												pathname: "/tdoll",
-												search: "?id=" + tdoll.normal.id
-											}}
-											onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
-										>
-											<HtmlTooltip
-												title={
-													<>
-														<Typography color="inherit">
-															{tdoll.selected.name}
-															<small>
-																<sup>[#{tdoll.normal.id}]</sup>
-															</small>
-														</Typography>
-														<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
-													</>
-												}
-												placement="right"
-											>
-												<CardActionArea>
-													<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
-												</CardActionArea>
-											</HtmlTooltip>
-										</Link>
-									</Card>
-								</Grow>
-							</Grid>
-						);
-					})}
+					{searchResults}
 				</Grid>
 			</Container>
 
