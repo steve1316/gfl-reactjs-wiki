@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/gfl-database/static/css/main.f11d9c67.chunk.css",
-    "main.js": "/gfl-database/static/js/main.95248e98.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.95248e98.chunk.js.map",
+    "main.js": "/gfl-database/static/js/main.6771d77d.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.6771d77d.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.5721d095.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.5721d095.js.map",
     "static/js/2.8544851d.chunk.js": "/gfl-database/static/js/2.8544851d.chunk.js",
     "static/js/2.8544851d.chunk.js.map": "/gfl-database/static/js/2.8544851d.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.43e5479fc48008aadcb08d0d76668ca9.js": "/gfl-database/precache-manifest.43e5479fc48008aadcb08d0d76668ca9.js",
+    "precache-manifest.db07e1e28a9c97233856fdaefa6622e1.js": "/gfl-database/precache-manifest.db07e1e28a9c97233856fdaefa6622e1.js",
     "service-worker.js": "/gfl-database/service-worker.js",
     "static/css/main.f11d9c67.chunk.css.map": "/gfl-database/static/css/main.f11d9c67.chunk.css.map",
     "static/js/2.8544851d.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.8544851d.chunk.js.LICENSE.txt",
@@ -73,8 +73,8 @@
     "static/media/12_mod_full_d.png": "/gfl-database/static/media/12_mod_full_d.51be75f4.png",
     "static/media/12_mod_move.gif": "/gfl-database/static/media/12_mod_move.4f1f1598.gif",
     "static/media/12_mod_skill.gif": "/gfl-database/static/media/12_mod_skill.dbc00a0e.gif",
-    "static/media/12_mod_victory.gif": "/gfl-database/static/media/12_mod_victory.87d2a24a.gif",
-    "static/media/12_mod_victoryloop.gif": "/gfl-database/static/media/12_mod_victoryloop.12532e3a.gif",
+    "static/media/12_mod_victory.gif": "/gfl-database/static/media/12_mod_victory.5ab8cace.gif",
+    "static/media/12_mod_victoryloop.gif": "/gfl-database/static/media/12_mod_victoryloop.af382b79.gif",
     "static/media/12_mod_wait.gif": "/gfl-database/static/media/12_mod_wait.d76cdced.gif",
     "static/media/12_normal_attack.gif": "/gfl-database/static/media/12_normal_attack.43e0d9cf.gif",
     "static/media/12_normal_die.gif": "/gfl-database/static/media/12_normal_die.5f95239c.gif",
@@ -546,6 +546,6 @@
     "static/js/runtime-main.5721d095.js",
     "static/js/2.8544851d.chunk.js",
     "static/css/main.f11d9c67.chunk.css",
-    "static/js/main.95248e98.chunk.js"
+    "static/js/main.6771d77d.chunk.js"
   ]
 }

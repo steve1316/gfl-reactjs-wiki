@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "a29485555898905484abfa0ddb4a9e97",
+    "revision": "c70650b66c58c59294d27a93b09f169c",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "92d9a1e1696410dbfe37",
+    "revision": "1c875ae5b2a415ca6895",
     "url": "/gfl-database/static/css/main.f11d9c67.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/gfl-database/static/js/2.8544851d.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "92d9a1e1696410dbfe37",
-    "url": "/gfl-database/static/js/main.95248e98.chunk.js"
+    "revision": "1c875ae5b2a415ca6895",
+    "url": "/gfl-database/static/js/main.6771d77d.chunk.js"
   },
   {
     "revision": "38c96f5f938d1942dc93",
@@ -268,12 +268,12 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/gfl-database/static/media/12_mod_skill.dbc00a0e.gif"
   },
   {
-    "revision": "87d2a24aafd82492577a93b70d0c695a",
-    "url": "/gfl-database/static/media/12_mod_victory.87d2a24a.gif"
+    "revision": "5ab8cace82fc4cedd74ff6fc4c55b332",
+    "url": "/gfl-database/static/media/12_mod_victory.5ab8cace.gif"
   },
   {
-    "revision": "12532e3ad97a6496b4a1a71a15cc8e63",
-    "url": "/gfl-database/static/media/12_mod_victoryloop.12532e3a.gif"
+    "revision": "af382b79fa9f726f2c3723e0d9a84533",
+    "url": "/gfl-database/static/media/12_mod_victoryloop.af382b79.gif"
   },
   {
     "revision": "d76cdced262982d48da9774ac5027e9c",
