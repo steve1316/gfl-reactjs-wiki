@@ -42,6 +42,7 @@ export default function App() {
 				{/* Switch is needed to make sure that the error from ErrorBoundary does not propagate up the component tree. */}
 				<Switch>
 					<Route exact path="/" component={Home} />
+					<Route path="/reload" component={null} />
 					<Route path="/index" component={TDoll_Index} />
 					<ErrorBoundary>
 						<Route path="/tdoll" component={TDoll} />
