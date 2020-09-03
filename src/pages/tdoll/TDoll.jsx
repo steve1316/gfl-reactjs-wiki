@@ -892,11 +892,17 @@ export default function TDoll(props) {
 							<Grid item key="T-Doll image" xs={12} sm={6}>
 								{/* {window.innerWidth > 600 ? } */}
 								{tdoll.skins !== null ? (
-									<Tabs className={classes.tabs} value={false} onChange={switchSkinSelected} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="on">
-										{renderSkinsTabs()}
-									</Tabs>
+									tdoll.skins.number_of_skins === 1 ? (
+										<Tabs className={classes.tabs} value={false} onChange={switchSkinSelected} indicatorColor="primary" textColor="primary" variant="fullWidth" scrollButtons="on">
+											{renderSkinsTabs()}
+										</Tabs>
+									) : (
+										<Tabs className={classes.tabs} value={false} onChange={switchSkinSelected} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="on">
+											{renderSkinsTabs()}
+										</Tabs>
+									)
 								) : (
-									<Tabs className={classes.tabs} value={false} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
+									<Tabs className={classes.tabs} value={false} indicatorColor="primary" textColor="primary" variant="fullWidth" scrollButtons="auto" centered>
 										<Tab label="No skins" />
 									</Tabs>
 								)}
