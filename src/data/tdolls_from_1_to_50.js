@@ -1236,7 +1236,7 @@ const tdolls = [
 		},
 		mod: {
 			id: 12,
-			name: "C96",
+			name: "C96 Mod",
 			type: "HG",
 			rarity: 4,
 			max_hp: 85,
