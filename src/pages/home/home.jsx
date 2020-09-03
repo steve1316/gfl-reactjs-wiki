@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Slide, Zoom } from "@material-ui/core";
+import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography } from "@material-ui/core";
 
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
