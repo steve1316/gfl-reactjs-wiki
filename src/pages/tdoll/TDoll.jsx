@@ -209,6 +209,12 @@ export default function TDoll(props) {
 	const [tdoll, setTDoll] = useState(JSON.parse(sessionStorage.getItem(id)));
 	const backup = JSON.parse(sessionStorage.getItem(id));
 
+	const [check, setCheck] = useState(true);
+	if (check) {
+		tdoll.selected = tdoll.normal;
+		setCheck(false);
+	}
+
 	// Set initial states for the Normal/Mod modes.
 	const [hasMod, setHasMod] = useState(false);
 	const [mode, setMode] = useState(0); // 0 for Normal, 1 for MOD.
