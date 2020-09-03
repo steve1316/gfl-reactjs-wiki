@@ -209,12 +209,9 @@ export default function TDoll_Index() {
 										<Link
 											to={{
 												pathname: "/tdoll",
-												search: "?id=" + tdoll.selected.id,
-												state: {
-													tdoll: tdoll
-												}
+												search: "?id=" + tdoll.normal.id
 											}}
-											onClick={() => sessionStorage.setItem(tdoll.selected.id, JSON.stringify(tdoll))}
+											onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
 										>
 											<HtmlTooltip
 												title={
@@ -222,7 +219,7 @@ export default function TDoll_Index() {
 														<Typography color="inherit">
 															{tdoll.selected.name}
 															<small>
-																<sup>[#{tdoll.selected.id}]</sup>
+																<sup>[#{tdoll.normal.id}]</sup>
 															</small>
 														</Typography>
 														<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
