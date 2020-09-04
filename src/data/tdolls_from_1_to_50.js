@@ -1848,6 +1848,7 @@ const tdolls = [
 			skin_images_full: [],
 			animations: {
 				hasSkillAnimation: [true, true],
+				hasVictoryLoopAnimation: [true, true],
 				attack: [],
 				die: [],
 				move: [],
