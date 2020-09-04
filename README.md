@@ -1,7 +1,5 @@
 # Girls Frontline Database
 
-<a id="top"></a>
-
 ![Girls' Frontline](/src/images/logo.png)
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/steve1316/gfl-database?logo=GitHub) ![GitHub issues](https://img.shields.io/github/issues/steve1316/gfl-database?logo=GitHub) ![GitHub pull requests](https://img.shields.io/github/issues-pr/steve1316/gfl-database?logo=GitHub) ![GitHub](https://img.shields.io/github/license/steve1316/gfl-database?logo=GitHub)
@@ -29,9 +27,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - Formation Simulator that can help you plan out your formations with tile buffs, equipment, and Fairies showing updated T-Doll stats.
 
-<div style="text-align: right">
-    <sup><a href="#girls-frontline-database">Go back to top</a></sup>
-</div>
+<sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
 # TODO (Subject to change)
 
@@ -69,9 +65,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [ ] ...
 
-<div style="text-align: right">
-    <sup><a href="#girls-frontline-database">Go back to top</a></sup>
-</div>
+<sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
 # Installation
 
@@ -83,9 +77,7 @@ npm install
 yarn install
 ```
 
-<div style="text-align: right">
-    <sup><a href="#girls-frontline-database">Go back to top</a></sup>
-</div>
+<sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
 # How to host locally
 
@@ -96,9 +88,7 @@ npm run start
 yarn start
 ```
 
-<div style="text-align: right">
-    <sup><a href="#girls-frontline-database">Go back to top</a></sup>
-</div>
+<sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
 # How to build and deploy to your GitHub Pages
 
@@ -109,14 +99,10 @@ npm run deploy
 yarn deploy
 ```
 
-<div style="text-align: right">
-    <sup><a href="#girls-frontline-database">Go back to top</a></sup>
-</div>
+<sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
 # License
 
 [GNU GPL 3.0](https://choosealicense.com/licenses/gpl-3.0/)
 
-<div style="text-align: right">
-    <sup><a href="#girls-frontline-database">Go back to top</a></sup>
-</div>
+<sup><a href="#girls-frontline-database">Go back to top</a></sup>
