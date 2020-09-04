@@ -26,13 +26,15 @@ export default class ErrorBoundary extends React.Component {
 		if (this.state.hasError) {
 			//console.clear();
 			return (
-				<h2 style={{ textAlign: "center" }}>
-					404 T-Doll Not Found! Please go to the{" "}
-					<Link to="/index" style={{ color: "cyan" }}>
-						T-Doll Index
-					</Link>{" "}
-					Page and try again.
-				</h2>
+				<main style={{ marginTop: "5rem" }}>
+					<h2 style={{ textAlign: "center" }}>
+						404 T-Doll Not Found! Please go to the{" "}
+						<Link to="/index" style={{ color: "cyan" }}>
+							T-Doll Index
+						</Link>{" "}
+						Page and try again.
+					</h2>
+				</main>
 			);
 		}
 
