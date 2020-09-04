@@ -9,13 +9,17 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import Home from "./pages/home/Home";
 import TDoll_Index from "./pages/tdoll_index/TDoll_Index";
 import TDoll from "./pages/tdoll/TDoll";
+import Equipment_Index from "./pages/equipment_index/Equipment_Index";
+import HOC_Index from "./pages/hoc_index/HOC_Index";
+import Fairy_Index from "./pages/fairy_index/Fairy_Index";
+import Formation_Simulator from "./pages/formation_simulator/Formation_Simulator";
 
 // styles.css import
 import "./styles.css";
 
 // Components import
 import Navbar from "./components/Navbar";
-import ErrorBoundary from "./components/ErrorBoundry";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Theme Provider import
 import { ThemeProvider, createMuiTheme } from "@material-ui/core";
@@ -44,6 +48,10 @@ export default function App() {
 					<Route exact path="/" component={Home} />
 					<Route path="/reload" component={null} />
 					<Route path="/index" component={TDoll_Index} />
+					<Route path="/equipment-index" component={Equipment_Index} />
+					<Route path="/hoc-index" component={HOC_Index} />
+					<Route path="/fairy-index" component={Fairy_Index} />
+					<Route path="/formation" component={Formation_Simulator} />
 					<ErrorBoundary>
 						<Route path="/tdoll" component={TDoll} />
 					</ErrorBoundary>
