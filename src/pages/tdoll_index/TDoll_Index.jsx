@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Button, Tooltip, withStyles, Grow } from "@material-ui/core";
+import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, withStyles, Grow } from "@material-ui/core";
 
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
@@ -168,7 +168,7 @@ export default function TDoll_Index() {
 				}
 
 				// Filter for type.
-				for (var i = 0; i < typeFilter.length; i++) {
+				for (i = 0; i < typeFilter.length; i++) {
 					if (typeFilter[i].selected && typeFilter[i].label !== data.selected.type) {
 						return;
 					}
@@ -284,7 +284,7 @@ export default function TDoll_Index() {
 						className={classes.chip}
 						avatar={
 							<Avatar>
-								<img src={mod_button} style={{ width: 20, height: 20 }} />
+								<img src={mod_button} alt="Mod" style={{ width: 20, height: 20 }} />
 							</Avatar>
 						}
 						clickable
