@@ -1281,7 +1281,7 @@ const tdolls = [
 			},
 			animations: {
 				hasSkillAnimation: true,
-				hasVictoryLoopAnimation: false,
+				hasVictoryLoopAnimation: true,
 				attack: undefined,
 				die: undefined,
 				move: undefined,
@@ -1597,280 +1597,280 @@ const tdolls = [
 				wait: []
 			}
 		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 17,
+			name: "M3",
+			type: "SMG",
+			rarity: 2,
+			max_hp: 185,
+			max_dmg: 30,
+			max_acc: 13,
+			max_eva: 67,
+			max_rof: 68,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["40%", "30%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 18,
+			name: "MAC-10",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 176,
+			max_dmg: 28,
+			max_acc: 11,
+			max_eva: 68,
+			max_rof: 91,
+			skill: {
+				name: "Smoke Grenade",
+				initial_cooldown: "1s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a smoke grenade that decreases the enemy's rate of fire by #1% and movement speed by #2% within a radius of 2.5 units for #3 seconds.",
+				number_of_stats: 3,
+				stat1: [20, 22, 24, 25, 27, 29, 31, 32, 34, 36],
+				stat2: [30, 32, 34, 37, 39, 41, 43, 46, 48, 50],
+				stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 19,
+			name: "FMG-9",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 141,
+			max_dmg: 26,
+			max_acc: 13,
+			max_eva: 90,
+			max_rof: 92,
+			skill: {
+				name: "Cover Focus",
+				initial_cooldown: "6s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases evasion by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [65, 71, 77, 83, 89, 96, 102, 108, 114, 120],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Evasion by "],
+				stat2: ["10%", "12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 20,
+			name: "Vector",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 185,
+			max_dmg: 30,
+			max_acc: 11,
+			max_eva: 71,
+			max_rof: 101,
+			skill: {
+				name: "Incendiary Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				number_of_stats: 3,
+				stat1: [3.5, 3.9, 4.3, 4.7, 5.1, 5.4, 5.8, 6.2, 6.6, 7],
+				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 1,
+				stat1: ["Rate of Fire by "],
+				stat2: ["25%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Kitty Paws", "Love is Blind"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true, true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 17,
-	// 		name: "M3",
-	// 		type: "SMG",
-	// 		rarity: 2,
-	// 		max_hp: 185,
-	// 		max_dmg: 30,
-	// 		max_acc: 13,
-	// 		max_eva: 67,
-	// 		max_rof: 68,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["40%", "30%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 18,
-	// 		name: "MAC-10",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 176,
-	// 		max_dmg: 28,
-	// 		max_acc: 11,
-	// 		max_eva: 68,
-	// 		max_rof: 91,
-	// 		skill: {
-	// 			name: "Smoke Grenade",
-	// 			initial_cooldown: "1s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a smoke grenade that decreases the enemy's rate of fire by #1% and movement speed by #2% within a radius of 2.5 units for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: [20, 22, 24, 25, 27, 29, 31, 32, 34, 36],
-	// 			stat2: [30, 32, 34, 37, 39, 41, 43, 46, 48, 50],
-	// 			stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 19,
-	// 		name: "FMG-9",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 141,
-	// 		max_dmg: 26,
-	// 		max_acc: 13,
-	// 		max_eva: 90,
-	// 		max_rof: 92,
-	// 		skill: {
-	// 			name: "Cover Focus",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases evasion by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [65, 71, 77, 83, 89, 96, 102, 108, 114, 120],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Evasion by "],
-	// 			stat2: ["10%", "12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 20,
-	// 		name: "Vector",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 185,
-	// 		max_dmg: 30,
-	// 		max_acc: 11,
-	// 		max_eva: 71,
-	// 		max_rof: 101,
-	// 		skill: {
-	// 			name: "Incendiary Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: [3.5, 3.9, 4.3, 4.7, 5.1, 5.4, 5.8, 6.2, 6.6, 7],
-	// 			stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
-	// 			stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Rate of Fire by "],
-	// 			stat2: ["25%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Kitty Paws", "Love is Blind"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true, true],
-	// 			hasSit2Animation: [true, true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
 	// {
 	// 	normal: {
 	// 		id: 21,
