@@ -37,7 +37,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [x] Set up filters and searching functionality for T-Dolls.
 
-  - [ ] Finalize the Chip components.
+  - [x] Finalize the Chip components.
 
 - [x] Add T-Dolls #1 to #10 to JSON data object.
 
