@@ -259,7 +259,7 @@ export default function TDoll_Index() {
 							<li key={type.key}>
 								<Chip
 									className={classes.chip}
-									avatar={<Avatar>{type.label}</Avatar>}
+									avatar={<Avatar style={{ width: 30 }}>{type.label}</Avatar>}
 									clickable
 									color={type.selected ? "primary" : "secondary"}
 									label={type.label}
