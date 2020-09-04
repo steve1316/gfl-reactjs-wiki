@@ -628,7 +628,7 @@ export default function TDoll(props) {
 						<Tab label="Die" value="die" />
 						<Tab label="Victory" value="victory" />
 						{"victory2" in tdoll.selected.animations ? <Tab label="Victory2" value="victory2" /> : ""}
-						{tdoll.selected.animations.hasVictoryLoopAnimation ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
+						{tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected] ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
 					</Tabs>
 				);
 			} else {
