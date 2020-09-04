@@ -160,21 +160,21 @@ function Navbar(props) {
 		},
 		{
 			title: "Equipment Index",
-			link: "/equipment",
+			link: "/equipment-index",
 			image: EquipmentIcon,
 			height: 25,
 			width: 25
 		},
 		{
 			title: "HOC Index",
-			link: "/hoc",
+			link: "/hoc-index",
 			image: HOCIcon,
 			height: 25,
 			width: 24 // This is 24 because of the icon getting its right side cut off if it was set to 25 width.
 		},
 		{
 			title: "Fairy Index",
-			link: "/fairy",
+			link: "/fairy-index",
 			image: FairyIcon,
 			height: 25,
 			width: 25
