@@ -180,7 +180,7 @@ export default function TDoll_Index() {
 			.map((tdoll) => {
 				tempArray.push(
 					<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
-						<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}>
+						<Grow in={true} style={{ transformOrigin: "0 5 0" }} timeout={1000}>
 							<Card className={classes.card} elevation={12}>
 								<Link
 									to={{
