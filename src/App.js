@@ -43,16 +43,17 @@ export default function App() {
 	// to the transform style property
 	function mapStyles(styles) {
 		return {
-			opacity: styles.opacity,
-			transform: `scale(${styles.scale})`
+			opacity: styles.opacity
+			//transform: "translate(100px, 0px)"
+			//transform: `scale(${styles.scale})`
 		};
 	}
 
 	// wrap the `spring` helper to use a bouncy config
 	function bounce(val) {
 		return spring(val, {
-			stiffness: 100,
-			damping: 15
+			stiffness: 330,
+			damping: 22
 		});
 	}
 
@@ -61,12 +62,14 @@ export default function App() {
 		// start in a transparent, upscaled state
 		atEnter: {
 			opacity: 0,
-			scale: 0.5
+			scale: 1.2
 		},
 		// leave in a transparent, downscaled state
 		atLeave: {
-			opacity: bounce(0),
-			scale: bounce(2)
+			//opacity: bounce(0),
+			opacity: 0,
+			scale: 0.8
+			//scale: bounce(0.8)
 		},
 		// and rest at an opaque, normally-scaled state
 		atActive: {
