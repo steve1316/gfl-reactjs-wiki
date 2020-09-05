@@ -22,7 +22,7 @@ export default function ScrollToTop() {
 		return false;
 	} else {
 		return (
-			<div className="scroll-to-top cursor-pointer text-center" onClick={scrollToTop}>
+			<div className="scroll-to-top cursor-pointer" onClick={scrollToTop}>
 				<i className="icon fas fa-chevron-up"></i>
 			</div>
 		);
