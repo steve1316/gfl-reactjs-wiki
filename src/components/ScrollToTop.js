@@ -8,6 +8,7 @@ export default function ScrollToTop() {
 	const { y: pageYOffset } = useWindowScroll();
 	const [visible, setVisible] = useState(false);
 
+	// If user scrolls down past 600 pixels, reveal the ScrollToTop button.
 	useEffect(() => {
 		if (pageYOffset > 600) {
 			setVisible(true);
@@ -16,6 +17,7 @@ export default function ScrollToTop() {
 		}
 	}, [pageYOffset]);
 
+	// The behavior when the button is pressed.
 	const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
 	if (!visible) {

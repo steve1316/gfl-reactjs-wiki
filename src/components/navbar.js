@@ -4,6 +4,7 @@ import { Link, withRouter } from "react-router-dom";
 // MaterialUI imports
 import { AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, fade, makeStyles, Icon, Divider, TextField } from "@material-ui/core";
 
+// Autocomplete imports
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import parse from "autosuggest-highlight/parse";
 import match from "autosuggest-highlight/match";
@@ -19,14 +20,12 @@ import HOCIcon from "../images/hoc_icon.png";
 import FairyIcon from "../images/fairy_icon.png";
 import FormationIcon from "../images/formation_icon.png";
 
+// Import T-Dolls JSON
 const tdolls = require("../data/tdolls_from_1_to_50");
 
 function Navbar(props) {
 	const useStyles = makeStyles((theme) => ({
 		root: {
-			flexGrow: 1
-		},
-		grow: {
 			flexGrow: 1
 		},
 		menuButton: {
@@ -61,29 +60,11 @@ function Navbar(props) {
 			textDecoration: "none",
 			color: theme.palette.text.primary
 		},
-		listIcon: {
-			marginRight: -5
-		},
 		backdrop: {
 			zIndex: theme.zIndex.drawer + 1,
 			color: "#fff",
 			marginTop: "4rem",
 			backdropFilter: "blur(5px)"
-		},
-		cardGrid: {
-			paddingTop: theme.spacing(8),
-			paddingBottom: theme.spacing(8)
-		},
-		card: {
-			display: "flex",
-			flexDirection: "column",
-			maxWidth: 200,
-			maxHeight: 500
-		},
-		cardMedia: {
-			height: "100%",
-			width: "100%",
-			objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
 		}
 	}));
 
@@ -93,7 +74,7 @@ function Navbar(props) {
 	const [searchValue, setSearchValue] = useState("");
 	const [hasError, setHasError] = useState(false);
 
-	// Add a firstLetter property to every tdoll for categorization in the autocomplete component.
+	// Add a firstLetter property to every T-Doll for categorization in the autocomplete component.
 	const options = tdolls.map((tdoll) => {
 		const firstLetter = tdoll.normal.name[0].toUpperCase();
 		return {
@@ -102,6 +83,7 @@ function Navbar(props) {
 		};
 	});
 
+	// Controls opening and closing the Drawer.
 	const handleDrawerToggle = () => {
 		setDrawerOpen(!drawerOpen);
 	};
@@ -199,6 +181,7 @@ function Navbar(props) {
 						Girls' Frontline Database
 					</Typography>
 
+					{/* Search Bar with Autocomplete */}
 					<div className={classes.search}>
 						<form onSubmit={handleSubmit}>
 							<Autocomplete
@@ -212,17 +195,7 @@ function Navbar(props) {
 									setSearchValue(newInputValue);
 								}}
 								clearOnEscape
-								renderInput={(params) => (
-									<TextField
-										{...params}
-										color="secondary"
-										label={hasError ? "Does not match any T-Doll" : "Search..."}
-										value={searchValue}
-										//error={hasError ? true : false}
-										//helperText={hasError ? "Does not match any T-Doll" : ""}
-										variant="outlined"
-									/>
-								)}
+								renderInput={(params) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} value={searchValue} variant="outlined" />}
 								renderOption={(option, { inputValue }) => {
 									const matches = match(option.normal.name, inputValue);
 									const parts = parse(option.normal.name, matches);
@@ -240,9 +213,11 @@ function Navbar(props) {
 							/>
 						</form>
 					</div>
+					{/* End of Search Bar with Autocomplete */}
 				</Toolbar>
 			</AppBar>
 
+			{/* Drawer */}
 			<Drawer style={{ width: "200px" }} anchor="left" open={drawerOpen} onClose={handleDrawerToggle} variant="temporary" classes={{ paper: classes.drawerPaper }}>
 				<List>
 					{listItems.map((item) => {
@@ -264,8 +239,9 @@ function Navbar(props) {
 					})}
 				</List>
 			</Drawer>
+			{/* End of Drawer */}
 		</div>
 	);
 }
 
-export default withRouter(Navbar);
+export default withRouter(Navbar); // Wrap Navbar in withRouter to allow access to props.history for navigation.
