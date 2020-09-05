@@ -48,6 +48,7 @@ import "./styles.css";
 //import rarity_star from "../../images/rarity_star.png";
 import mod_button from "../../images/mod.png";
 import dorm_button from "../../images/dorm_button.png";
+import combat_button from "../../images/combat_button.png";
 
 export default function TDoll(props) {
 	const useStyles = makeStyles((theme) => ({
@@ -72,10 +73,25 @@ export default function TDoll(props) {
 			minWidth: 256,
 			backgroundColor: theme.palette.grey[700]
 		},
-		cardForAnimation: {
+		cardForCombatAnimations: {
 			display: "flex",
 			justifyContent: "center",
 			width: 256,
+			// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
+			backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
+			backgroundSize: "5.66px 5.66px",
+			backgroundColor: theme.palette.grey[700]
+		},
+		cardForDormAnimations: {
+			display: "flex",
+			justifyContent: "center",
+			width: 256,
+			// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
+			backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
+			backgroundSize: "5.66px 5.66px",
+			// backgroundImage:
+			// 	"linear-gradient(45deg, #000000 5.56%, #292929 5.56%, #292929 33.33%, #424242 33.33%, #424242 50%, #000000 50%, #000000 55.56%, #292929 55.56%, #292929 83.33%, #424242 83.33%, #424242 100%)",
+			// backgroundSize: "12.73px 12.73px",
 			backgroundColor: theme.palette.grey[700]
 		},
 		cardMedia: {
@@ -322,6 +338,7 @@ export default function TDoll(props) {
 		var tdoll_temp = backup;
 
 		setShowSkin(false); // Prevent skin image to be rendered if it was selected.
+		setSkinSelected(undefined);
 
 		// Perform check to see if the information shown should be Mod or not.
 		if (mode === 0 && hasMod) {
@@ -619,40 +636,63 @@ export default function TDoll(props) {
 		if (animationMode === 0) {
 			if (showSkin) {
 				return (
-					<Tabs className={classes.tabs} value={animationTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+					<Tabs
+						className={classes.tabs}
+						value={animationTabSelected}
+						onChange={(e, value) => switchAnimations(value)}
+						indicatorColor="primary"
+						textColor="primary"
+						scrollButtons="on"
+						variant="scrollable"
+					>
 						<Tab label="Wait" value="wait" />
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
 						{tdoll.skins.animations.hasSkillAnimation[tempSkinSelected] ? <Tab label="Skill" value="skill" /> : ""}
 						<Tab label="Die" value="die" />
 						<Tab label="Victory" value="victory" />
-						{"victory2" in tdoll.selected.animations ? <Tab label="Victory2" value="victory2" /> : ""}
 						{tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected] ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
 					</Tabs>
 				);
 			} else {
 				return (
-					<Tabs className={classes.tabs} value={animationTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+					<Tabs
+						className={classes.tabs}
+						value={animationTabSelected}
+						onChange={(e, value) => switchAnimations(value)}
+						indicatorColor="primary"
+						textColor="primary"
+						scrollButtons="on"
+						variant="scrollable"
+					>
 						<Tab label="Wait" value="wait" />
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
 						{tdoll.selected.animations.hasSkillAnimation ? <Tab label="Skill" value="skill" /> : ""}
 						<Tab label="Die" value="die" />
 						<Tab label="Victory" value="victory" />
-						{"victory2" in tdoll.selected.animations ? <Tab label="Victory2" value="victory2" /> : ""}
+						{"victory2" in tdoll.selected.animations && !showSkin ? <Tab label="Victory2" value="victory2" /> : ""}
 						{tdoll.selected.animations.hasVictoryLoopAnimation ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
 					</Tabs>
 				);
 			}
 		} else {
 			return (
-				<Tabs className={classes.tabs} value={animationDormTabSelected} onChange={switchAnimations} indicatorColor="primary" textColor="primary" scrollButtons="on" variant="scrollable">
+				<Tabs
+					className={classes.tabs}
+					value={animationDormTabSelected}
+					onChange={(e, value) => switchAnimations(value)}
+					indicatorColor="primary"
+					textColor="primary"
+					scrollButtons="on"
+					variant="scrollable"
+				>
 					<Tab label="Wait" value="wait" />
 					<Tab label="Move" value="move" />
-					{tdoll.skins && showSkin && "action" in tdoll.skins.animations_dorm && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected] ? <Tab label="Action" value="action" /> : ""}
+					{tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected] ? <Tab label="Action" value="action" /> : ""}
 					<Tab label="Pick" value="pick" />
 					<Tab label="Sit" value="sit" />
-					{tdoll.skins && showSkin && "sit2" in tdoll.skins.animations_dorm && tdoll.skins.animations_dorm.hasSit2Animation[tempSkinSelected] ? <Tab label="Sit2" value="sit2" /> : ""}
+					{tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasSit2Animation[tempSkinSelected] ? <Tab label="Sit2" value="sit2" /> : ""}
 					<Tab label="Lying" value="lying" />
 				</Tabs>
 			);
@@ -676,7 +716,7 @@ export default function TDoll(props) {
 	};
 
 	// Switch animations based on Tab selected.
-	const switchAnimations = (event, newValue) => {
+	const switchAnimations = (newValue) => {
 		var tempSkinSelected = helperSkinSelected();
 
 		if (animationMode === 0) {
@@ -803,6 +843,60 @@ export default function TDoll(props) {
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for Tileset functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
+
+	// Switch the animation playing to the next one when you click on the GIF Player.
+	const playerSwitchAnimations = () => {
+		var currentAnimation = "";
+		var animationArray = [];
+		var tempSkinSelected = helperSkinSelected();
+
+		// Populate array with animations based on checks in sequential order.
+		if (animationMode === 0) {
+			// For Normal Animations
+			currentAnimation = animationTabSelected;
+
+			animationArray.push("wait");
+			animationArray.push("move");
+			animationArray.push("attack");
+			if (tdoll.selected.animations.hasSkillAnimation || (showSkin && tdoll.skins.animations.hasSkillAnimation[tempSkinSelected])) {
+				animationArray.push("skill");
+			}
+			animationArray.push("die");
+			animationArray.push("victory");
+			if ("victory2" in tdoll.selected.animations && !showSkin) {
+				animationArray.push("victory2");
+			}
+			if (tdoll.selected.animations.hasVictoryLoopAnimation || (showSkin && tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected])) {
+				animationArray.push("victoryloop");
+			}
+		} else {
+			// For Dorm Animations
+			currentAnimation = animationDormTabSelected;
+
+			animationArray.push("wait");
+			animationArray.push("move");
+			if (tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected]) {
+				animationArray.push("action");
+			}
+			animationArray.push("pick");
+			animationArray.push("sit");
+			if (tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasSit2Animation[tempSkinSelected]) {
+				animationArray.push("sit2");
+			}
+			animationArray.push("lying");
+		}
+
+		// Now determine the index of the current animation and set the new animation to the one after it. If current animation
+		// is already the last, set the new animation to the first animation in the array.
+		var tempIndex = animationArray.findIndex((animation) => animation === currentAnimation);
+		if (tempIndex + 1 > animationArray.length - 1) {
+			tempIndex = 0;
+		} else {
+			tempIndex += 1;
+		}
+
+		switchAnimations(animationArray[tempIndex]);
+	};
 
 	// This function will return tiles depending on the tile set information in the JSON.
 	const createTileSetRow = (tile, index) => {
@@ -959,14 +1053,24 @@ export default function TDoll(props) {
 
 									{/************** T-Doll's animations **************/}
 									<Fab color="primary" className={classes.fab_dorm} onClick={switchAnimationMode}>
-										<img src={dorm_button} alt="Switch between Normal/Dorm" style={{ height: 28, width: 28 }} />
+										{animationMode === 0 ? (
+											<img src={combat_button} alt="Switch to Dorm Animations" style={{ height: 32, width: 32, paddingTop: 3 }} />
+										) : (
+											<img src={dorm_button} alt="Switch to Normal Animations" style={{ height: 29, width: 29, paddingTop: 3 }} />
+										)}
 									</Fab>
 
 									{renderAnimationTabs()}
 
-									<Card className={classes.cardForAnimation} elevation={12}>
-										<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} />
-									</Card>
+									{animationMode === 0 ? (
+										<Card className={classes.cardForCombatAnimations} elevation={12}>
+											<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
+										</Card>
+									) : (
+										<Card className={classes.cardForDormAnimations} elevation={12}>
+											<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
+										</Card>
+									)}
 								</Grid>
 
 								<Grid item key="T-Doll stat table and skill card" xs={12} sm={6}>
