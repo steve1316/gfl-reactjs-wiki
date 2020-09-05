@@ -223,7 +223,7 @@ export default function TDoll(props) {
 	const [switchImage, setSwitchImage] = useState(false); // If true, show Damaged version.
 	const [tdollImage, setTDollImage] = useState(undefined);
 	const [showSkin, setShowSkin] = useState(false);
-	const [skinSelected, setSkinSelected] = useState(0); // The value of this is dependent on how many skins a T-Doll has.
+	const [skinSelected, setSkinSelected] = useState(undefined); // The value of this is dependent on how many skins a T-Doll has.
 
 	// Set initial states for the skills. Set Skill 2 to the description of Skill 1 in case T-Doll does not have a Neural Upgrade.
 	const [showModSkill, setShowModSkill] = useState(false);
@@ -299,13 +299,7 @@ export default function TDoll(props) {
 	const helperSkinSelected = () => {
 		var tempSkinSelected = skinSelected;
 
-		if (tempSkinSelected - 1 > 0) {
-			tempSkinSelected -= 1;
-		} else {
-			tempSkinSelected = 0;
-		}
-
-		return tempSkinSelected;
+		return tempSkinSelected / 2;
 	};
 
 	// Helper function to reset selected animation tab back to the default tab.
@@ -660,7 +654,7 @@ export default function TDoll(props) {
 		}
 	};
 
-	// Render tabs for skin selection
+	// Render tabs for skin selection.
 	const renderSkinsTabs = () => {
 		var tempTabs = [];
 
@@ -669,8 +663,8 @@ export default function TDoll(props) {
 		}
 
 		tdoll.skins.skin_names.map((name, index) => {
-			// Index is incremented by 1 such that the Damaged versions are not selected.
-			return tempTabs.push(<Tab className={classes.tabForSkin} label={name} key={index} wrapped value={index === 0 ? 0 : index + 1} />);
+			// Index is doubled for the value such that the Damaged versions are not selected.
+			return tempTabs.push(<Tab className={classes.tabForSkin} label={name} key={index} wrapped value={index * 2} />);
 		});
 
 		return tempTabs;
@@ -904,11 +898,27 @@ export default function TDoll(props) {
 								{/* {window.innerWidth > 600 ? } */}
 								{tdoll.skins !== null ? (
 									tdoll.skins.number_of_skins === 1 ? (
-										<Tabs className={classes.tabs} value={false} onChange={switchSkinSelected} indicatorColor="primary" textColor="primary" variant="fullWidth" scrollButtons="on">
+										<Tabs
+											className={classes.tabs}
+											value={skinSelected !== undefined ? skinSelected : false}
+											onChange={switchSkinSelected}
+											indicatorColor="primary"
+											textColor="primary"
+											variant="fullWidth"
+											scrollButtons="on"
+										>
 											{renderSkinsTabs()}
 										</Tabs>
 									) : (
-										<Tabs className={classes.tabs} value={false} onChange={switchSkinSelected} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="on">
+										<Tabs
+											className={classes.tabs}
+											value={skinSelected !== undefined ? skinSelected : false}
+											onChange={switchSkinSelected}
+											indicatorColor="primary"
+											textColor="primary"
+											variant="scrollable"
+											scrollButtons="on"
+										>
 											{renderSkinsTabs()}
 										</Tabs>
 									)
