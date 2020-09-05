@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/gfl-database/static/css/main.f11d9c67.chunk.css",
-    "main.js": "/gfl-database/static/js/main.16084d69.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.16084d69.chunk.js.map",
+    "main.css": "/gfl-database/static/css/main.93cddbc1.chunk.css",
+    "main.js": "/gfl-database/static/js/main.437c879f.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.437c879f.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.5721d095.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.5721d095.js.map",
     "static/js/2.6d7290a0.chunk.js": "/gfl-database/static/js/2.6d7290a0.chunk.js",
     "static/js/2.6d7290a0.chunk.js.map": "/gfl-database/static/js/2.6d7290a0.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.cdeecde017f059fdcbd2dd83e12b80aa.js": "/gfl-database/precache-manifest.cdeecde017f059fdcbd2dd83e12b80aa.js",
+    "precache-manifest.f289503ee571f348e8a341c5465a18c3.js": "/gfl-database/precache-manifest.f289503ee571f348e8a341c5465a18c3.js",
     "service-worker.js": "/gfl-database/service-worker.js",
-    "static/css/main.f11d9c67.chunk.css.map": "/gfl-database/static/css/main.f11d9c67.chunk.css.map",
+    "static/css/main.93cddbc1.chunk.css.map": "/gfl-database/static/css/main.93cddbc1.chunk.css.map",
     "static/js/2.6d7290a0.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.6d7290a0.chunk.js.LICENSE.txt",
     "static/media/10_card.png": "/gfl-database/static/media/10_card.eb309552.png",
     "static/media/10_card_d.png": "/gfl-database/static/media/10_card_d.53a88de5.png",
@@ -839,7 +839,7 @@
   "entrypoints": [
     "static/js/runtime-main.5721d095.js",
     "static/js/2.6d7290a0.chunk.js",
-    "static/css/main.f11d9c67.chunk.css",
-    "static/js/main.16084d69.chunk.js"
+    "static/css/main.93cddbc1.chunk.css",
+    "static/js/main.437c879f.chunk.js"
   ]
 }
