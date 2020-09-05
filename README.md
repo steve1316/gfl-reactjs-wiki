@@ -2,7 +2,7 @@
 
 ![Girls' Frontline](/src/images/logo.png)
 
-![GitHub last commit](https://img.shields.io/github/last-commit/steve1316/gfl-database?logo=GitHub) ![GitHub issues](https://img.shields.io/github/issues/steve1316/gfl-database?logo=GitHub) ![GitHub pull requests](https://img.shields.io/github/issues-pr/steve1316/gfl-database?logo=GitHub) ![GitHub](https://img.shields.io/github/license/steve1316/gfl-database?logo=GitHub)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/steve1316/gfl-database?logo=GitHub) ![GitHub last commit](https://img.shields.io/github/last-commit/steve1316/gfl-database?logo=GitHub) ![GitHub issues](https://img.shields.io/github/issues/steve1316/gfl-database?logo=GitHub) ![GitHub pull requests](https://img.shields.io/github/issues-pr/steve1316/gfl-database?logo=GitHub) ![GitHub repo size](https://img.shields.io/github/repo-size/steve1316/gfl-database?logo=GitHub) ![GitHub](https://img.shields.io/github/license/steve1316/gfl-database?logo=GitHub)
 
 This project serves to provide a mobile-friendly web application of a database featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
 
@@ -45,11 +45,11 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [x] Add images and animations (GIFs, not Spine unfortunately).
 
-  - [ ] Rework the logic such that clicking on the GIF plays the next animation and loops back around when you reach the last animation.
+  - [x] Rework the logic such that clicking on the GIF plays the next animation and loops back around when you reach the last animation.
 
 - [ ] Add T-Dolls #11 to #50.
 
-- [ ] Redo each Normal Card image to get rid of ghosting on the left side of each image.
+- [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ Doing so will mess up the image resolution and make it too blurry.
 
 - [ ] Create initial structure of JSON data object that will hold all equipment.
 
