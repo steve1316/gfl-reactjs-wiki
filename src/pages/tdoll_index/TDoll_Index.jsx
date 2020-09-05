@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, withStyles, Grow } from "@material-ui/core";
+import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, withStyles, Grow, Zoom } from "@material-ui/core";
 
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
@@ -32,9 +32,6 @@ export default function TDoll_Index() {
 		root: {
 			marginTop: "4rem"
 		},
-		paper: {
-			padding: theme.spacing(2)
-		},
 		cardGrid: {
 			paddingTop: theme.spacing(8),
 			paddingBottom: theme.spacing(8)
@@ -49,14 +46,6 @@ export default function TDoll_Index() {
 			height: "100%",
 			width: "100%",
 			objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
-		},
-		cardContent: {
-			flexGrow: 1
-		},
-		cardButton: {
-			display: "flex",
-			margin: 10,
-			justifyContent: "flex-end"
 		},
 		chip: {
 			margin: theme.spacing(0.5)
@@ -111,8 +100,6 @@ export default function TDoll_Index() {
 	};
 
 	// Set the number of search results to the length of the T-Doll JSON. Runs once for now.
-	// TODO: Revamp this logic for updating this when user selects any filters or types in Search Bar inside Navbar and
-	// watch out for infinite rerendering issue.
 	useEffect(() => {
 		setSearchResults(renderTDolls());
 		setNumberOfSearchResults(tdolls_from_1_to_50.length);
@@ -148,6 +135,7 @@ export default function TDoll_Index() {
 	// Render the Cards of T-Dolls based on filters selected.
 	const renderTDolls = () => {
 		var tempArray = [];
+		var stagger = 100;
 		tdolls_from_1_to_50
 			.filter((data) => {
 				// Filter if T-Dolls have Mod or not.
@@ -180,7 +168,7 @@ export default function TDoll_Index() {
 			.map((tdoll) => {
 				tempArray.push(
 					<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
-						<Grow in={true} style={{ transformOrigin: "0 5 0" }} timeout={1000}>
+						<Grow in={true} style={{ transformOrigin: "0 5 0" }} timeout={400 + stagger}>
 							<Card className={classes.card} elevation={12}>
 								<Link
 									to={{
@@ -212,6 +200,7 @@ export default function TDoll_Index() {
 						</Grow>
 					</Grid>
 				);
+				stagger += 100;
 			});
 
 		// Update number of search results.
@@ -231,21 +220,23 @@ export default function TDoll_Index() {
 					{rarityFilter.map((rarity) => {
 						return (
 							<li key={rarity.key}>
-								<Chip
-									className={classes.chip}
-									avatar={<Avatar>{rarity.rarity}*</Avatar>}
-									clickable
-									color={rarity.selected ? "primary" : "secondary"}
-									label={rarity.label}
-									onClick={handleOnClickRarity(rarity)}
-									onDelete={rarity.selected ? handleDelete : null}
-									deleteIcon={
-										<>
-											<Divider orientation="vertical" flexItem />
-											<DoneIcon />
-										</>
-									}
-								/>
+								<Zoom in={true} timeout={400}>
+									<Chip
+										className={classes.chip}
+										avatar={<Avatar>{rarity.rarity}*</Avatar>}
+										clickable
+										color={rarity.selected ? "primary" : "secondary"}
+										label={rarity.label}
+										onClick={handleOnClickRarity(rarity)}
+										onDelete={rarity.selected ? handleDelete : null}
+										deleteIcon={
+											<>
+												<Divider orientation="vertical" flexItem />
+												<DoneIcon />
+											</>
+										}
+									/>
+								</Zoom>
 							</li>
 						);
 					})}
@@ -257,21 +248,23 @@ export default function TDoll_Index() {
 					{typeFilter.map((type) => {
 						return (
 							<li key={type.key}>
-								<Chip
-									className={classes.chip}
-									avatar={<Avatar style={{ width: 30 }}>{type.label}</Avatar>}
-									clickable
-									color={type.selected ? "primary" : "secondary"}
-									label={type.label}
-									onClick={handleOnClickType(type)}
-									onDelete={type.selected ? handleDelete : null}
-									deleteIcon={
-										<>
-											<Divider orientation="vertical" flexItem />
-											<DoneIcon />
-										</>
-									}
-								/>
+								<Zoom in={true} timeout={600}>
+									<Chip
+										className={classes.chip}
+										avatar={<Avatar style={{ width: 30 }}>{type.label}</Avatar>}
+										clickable
+										color={type.selected ? "primary" : "secondary"}
+										label={type.label}
+										onClick={handleOnClickType(type)}
+										onDelete={type.selected ? handleDelete : null}
+										deleteIcon={
+											<>
+												<Divider orientation="vertical" flexItem />
+												<DoneIcon />
+											</>
+										}
+									/>
+								</Zoom>
 							</li>
 						);
 					})}
@@ -280,25 +273,27 @@ export default function TDoll_Index() {
 				<Divider className={classes.dividerForChips} />
 
 				<div className={classes.chipList}>
-					<Chip
-						className={classes.chip}
-						avatar={
-							<Avatar>
-								<img src={mod_button} alt="Mod" style={{ width: 20, height: 20 }} />
-							</Avatar>
-						}
-						clickable
-						color={modFilter.selected ? "primary" : "secondary"}
-						label={modFilter.label}
-						onClick={() => handleOnClickMod()}
-						onDelete={modFilter.selected ? handleDelete : null}
-						deleteIcon={
-							<>
-								<Divider orientation="vertical" flexItem />
-								<DoneIcon />
-							</>
-						}
-					/>
+					<Zoom in={true} timeout={800}>
+						<Chip
+							className={classes.chip}
+							avatar={
+								<Avatar>
+									<img src={mod_button} alt="Mod" style={{ width: 20, height: 20 }} />
+								</Avatar>
+							}
+							clickable
+							color={modFilter.selected ? "primary" : "secondary"}
+							label={modFilter.label}
+							onClick={() => handleOnClickMod()}
+							onDelete={modFilter.selected ? handleDelete : null}
+							deleteIcon={
+								<>
+									<Divider orientation="vertical" flexItem />
+									<DoneIcon />
+								</>
+							}
+						/>
+					</Zoom>
 				</div>
 
 				{/* End of Chips List */}

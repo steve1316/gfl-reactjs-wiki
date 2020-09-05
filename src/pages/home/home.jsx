@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography } from "@material-ui/core";
+import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Grow } from "@material-ui/core";
 
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
@@ -51,14 +51,11 @@ export default function Home() {
 			display: "flex",
 			margin: 10,
 			justifyContent: "flex-end"
-		},
-		footer: {
-			backgroundColor: theme.palette.background.paper,
-			padding: theme.spacing(6)
 		}
 	}));
 
 	const classes = useStyles();
+	var stagger = 100;
 
 	// This contains the information to be rendered into cards. The link attribute is tied to the Route in App.js.
 	const cards = [
@@ -72,6 +69,7 @@ export default function Home() {
 	return (
 		<main className={classes.root}>
 			<ScrollToTop />
+
 			{/* Hero Unit */}
 			<div className={classes.heroContent}>
 				<Container maxWidth="sm">
@@ -103,26 +101,29 @@ export default function Home() {
 			<Container className={classes.cardGrid} maxWidth="md">
 				<Grid container spacing={4}>
 					{cards.map((card) => {
+						stagger += 100;
 						return (
 							<Grid item key={card.title} xs={12} sm={6} md={4}>
-								<Card className={classes.card} elevation={12}>
-									<CardActionArea>
-										<CardMedia className={classes.cardMedia} image={card.image} title={card.title} />
-									</CardActionArea>
-									<CardContent className={classes.cardContent}>
-										<Typography component="h2" variant="h5" gutterBottom>
-											{card.title}
-										</Typography>
-										<Typography color="textSecondary">{card.description}</Typography>
-									</CardContent>
-									<CardActions className={classes.cardButton}>
-										<Link to={card.link}>
-											<Button size="small" variant="contained" color="primary">
-												<ArrowForwardIcon />
-											</Button>
-										</Link>
-									</CardActions>
-								</Card>
+								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={400 + stagger}>
+									<Card className={classes.card} elevation={12}>
+										<CardActionArea>
+											<CardMedia className={classes.cardMedia} image={card.image} title={card.title} />
+										</CardActionArea>
+										<CardContent className={classes.cardContent}>
+											<Typography component="h2" variant="h5" gutterBottom>
+												{card.title}
+											</Typography>
+											<Typography color="textSecondary">{card.description}</Typography>
+										</CardContent>
+										<CardActions className={classes.cardButton}>
+											<Link to={card.link}>
+												<Button size="small" variant="contained" color="primary">
+													<ArrowForwardIcon />
+												</Button>
+											</Link>
+										</CardActions>
+									</Card>
+								</Grow>
 							</Grid>
 						);
 					})}
