@@ -1869,511 +1869,514 @@ const tdolls = [
 				wait: []
 			}
 		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 21,
+			name: "PPSh-41",
+			type: "SMG",
+			rarity: 2,
+			max_hp: 194,
+			max_dmg: 26,
+			max_acc: 11,
+			max_eva: 56,
+			max_rof: 93,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["10%", "5%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Moment of Vows"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [false],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 22,
+			name: "PPS-43",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 176,
+			max_dmg: 33,
+			max_acc: 13,
+			max_eva: 65,
+			max_rof: 74,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: [2, 2.4, 2.9, 3.3, 3.8, 4.2, 4.7, 5.1, 5.6, 6],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 23,
+			name: "PP-90",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 159,
+			max_dmg: 25,
+			max_acc: 13,
+			max_eva: 86,
+			max_rof: 96,
+			skill: {
+				name: "Cover Focus T",
+				initial_cooldown: "4s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases evasion by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [25, 27, 29, 32, 34, 36, 38, 41, 43, 45],
+				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Evasion by "],
+				stat2: ["8%", "20%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 24,
+			name: "PP-2000",
+			type: "SMG",
+			rarity: 2,
+			max_hp: 159,
+			max_dmg: 30,
+			max_acc: 11,
+			max_eva: 74,
+			max_rof: 80,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["10%", "25%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 25,
+			name: "MP-40",
+			type: "SMG",
+			rarity: 2,
+			max_hp: 185,
+			max_dmg: 29,
+			max_acc: 13,
+			max_eva: 58,
+			max_rof: 76,
+			skill: {
+				name: "Incendiary Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				number_of_stats: 3,
+				stat1: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
+				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["25%", "20%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Thumbelina"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 26,
+			name: "MP5",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 168,
+			max_dmg: 30,
+			max_acc: 13,
+			max_eva: 68,
+			max_rof: 89,
+			skill: {
+				name: "Force Shield",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Grants self a barrier with a Defense value of 9999 (Max value of 9999), reducing incoming damage by a percentage (100% if at max Defense value) for #1 seconds.",
+				number_of_stats: 1,
+				stat1: [1.5, 1.7, 1.8, 2, 2.2, 2.3, 2.5, 2.7, 2.8, 3],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Critical Hit Rate by "],
+				stat2: ["40%", "20%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 26,
+			name: "MP5 Mod",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 181,
+			max_dmg: 32,
+			max_acc: 14,
+			max_eva: 71,
+			max_rof: 90,
+			skill: {
+				name: "Force Shield",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Grants self a barrier with a Defense value of 9999 (Max value of 9999), reducing incoming damage by a percentage (100% if at max Defense value) for #1 seconds.",
+				number_of_stats: 1,
+				stat1: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Immaterial Defense",
+				initial_cooldown: "Passive",
+				description: 'When "Force Shield" expires, increases evasion by #1% for #2 seconds for every enemy group present, up to 3 layers.',
+				number_of_stats: 2,
+				stat1: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
+				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR and RF",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Critical Hit Rate by "],
+				stat2: ["45%", "20%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 4,
+			skin_names: ["Nocturnal Familiar", "Sleepless Begonias", "A Small Step", "Vietnamese Balm"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false, false, false, false],
+				hasVictoryLoopAnimation: [true, true, true, true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, true, false, false],
+				hasSit2Animation: [false, false, false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 21,
-	// 		name: "PPSh-41",
-	// 		type: "SMG",
-	// 		rarity: 2,
-	// 		max_hp: 194,
-	// 		max_dmg: 26,
-	// 		max_acc: 11,
-	// 		max_eva: 56,
-	// 		max_rof: 93,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Rate of Fire by "],
-	// 			stat2: ["10%", "5%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Moment of Vows"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 22,
-	// 		name: "PPS-43",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 176,
-	// 		max_dmg: 33,
-	// 		max_acc: 13,
-	// 		max_eva: 65,
-	// 		max_rof: 74,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2, 2.4, 2.9, 3.3, 3.8, 4.2, 4.7, 5.1, 5.6, 6],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 23,
-	// 		name: "PP-90",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 159,
-	// 		max_dmg: 25,
-	// 		max_acc: 13,
-	// 		max_eva: 86,
-	// 		max_rof: 96,
-	// 		skill: {
-	// 			name: "Cover Focus T",
-	// 			initial_cooldown: "4s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases evasion by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [25, 27, 29, 32, 34, 36, 38, 41, 43, 45],
-	// 			stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Evasion by "],
-	// 			stat2: ["8%", "20%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 24,
-	// 		name: "PP-2000",
-	// 		type: "SMG",
-	// 		rarity: 2,
-	// 		max_hp: 159,
-	// 		max_dmg: 30,
-	// 		max_acc: 11,
-	// 		max_eva: 74,
-	// 		max_rof: 80,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["10%", "25%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 25,
-	// 		name: "MP-40",
-	// 		type: "SMG",
-	// 		rarity: 2,
-	// 		max_hp: 185,
-	// 		max_dmg: 29,
-	// 		max_acc: 13,
-	// 		max_eva: 58,
-	// 		max_rof: 76,
-	// 		skill: {
-	// 			name: "Incendiary Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
-	// 			stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
-	// 			stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["25%", "20%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Thumbelina"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 26,
-	// 		name: "MP5",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 168,
-	// 		max_dmg: 30,
-	// 		max_acc: 13,
-	// 		max_eva: 68,
-	// 		max_rof: 89,
-	// 		skill: {
-	// 			name: "Force Shield",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Grants self a barrier with a Defense value of 9999 (Max value of 9999), reducing incoming damage by a percentage (100% if at max Defense value) for #1 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: [1.5, 1.7, 1.8, 2, 2.2, 2.3, 2.5, 2.7, 2.8, 3],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Critical Hit Rate by "],
-	// 			stat2: ["40%", "20%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 26,
-	// 		name: "MP5 Mod",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 181,
-	// 		max_dmg: 32,
-	// 		max_acc: 14,
-	// 		max_eva: 71,
-	// 		max_rof: 90,
-	// 		skill: {
-	// 			name: "Force Shield",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Grants self a barrier with a Defense value of 9999 (Max value of 9999), reducing incoming damage by a percentage (100% if at max Defense value) for #1 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Immaterial Defense",
-	// 			initial_cooldown: "Passive",
-	// 			description: 'When "Force Shield" expires, increases evasion by #1% for #2 seconds for every enemy group present, up to 3 layers.',
-	// 			number_of_stats: 2,
-	// 			stat1: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
-	// 			stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR and RF",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Critical Hit Rate by "],
-	// 			stat2: ["45%", "20%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 4,
-	// 		skin_names: ["Nocturnal Familiar", "Sleepless Begonias", "A Small Step", "Vietnamese Balm"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true, true, true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true, true, true, true],
-	// 			hasSit2Animation: [true, true, true, true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
 	// {
 	// 	normal: {
 	// 		id: 27,
@@ -2438,6 +2441,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -2526,6 +2530,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -2674,6 +2679,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -2948,6 +2954,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3036,6 +3043,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3124,6 +3132,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3299,6 +3308,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true, true, true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3448,6 +3458,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3536,6 +3547,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3688,6 +3700,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3899,6 +3912,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -3986,6 +4000,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4139,6 +4154,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4227,6 +4243,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4376,6 +4393,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true, true, true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4524,6 +4542,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true, true],
+	// hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4558,14 +4577,14 @@ console.log("Now processing images and animations for #1-#50 T-Doll Index JSON."
 tdolls.forEach((tdoll) => {
 	var id = tdoll.normal.id;
 
-	//////////// Populate images for Normal. ////////////
+	//////////// Images for Normal. ////////////
 	tdoll.normal.skill.image_skill = require(`../images/tdolls/${id}/${id}_skill1.png`);
 	tdoll.normal.images.card = require(`../images/tdolls/${id}/${id}_card.png`);
 	tdoll.normal.images.card_damaged = require(`../images/tdolls/${id}/${id}_card_d.png`);
 	tdoll.normal.images.full = require(`../images/tdolls/${id}/${id}_full.png`);
 	tdoll.normal.images.full_damaged = require(`../images/tdolls/${id}/${id}_full_d.png`);
 
-	//////////// Populate animations for Normal. ////////////
+	//////////// Animations for Normal. ////////////
 	tdoll.normal.animations.attack = require(`../images/tdolls/${id}/animations/${id}_normal_attack.gif`);
 	tdoll.normal.animations.die = require(`../images/tdolls/${id}/animations/${id}_normal_die.gif`);
 	tdoll.normal.animations.move = require(`../images/tdolls/${id}/animations/${id}_normal_move.gif`);
@@ -4584,6 +4603,7 @@ tdolls.forEach((tdoll) => {
 	}
 	tdoll.normal.animations.wait = require(`../images/tdolls/${id}/animations/${id}_normal_wait.gif`);
 
+	// Dorm animations
 	tdoll.normal.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_lying.gif`);
 	tdoll.normal.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_move.gif`);
 	tdoll.normal.animations_dorm.pick = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_pick.gif`);
@@ -4591,7 +4611,7 @@ tdolls.forEach((tdoll) => {
 	tdoll.normal.animations_dorm.wait = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_wait.gif`);
 
 	if (tdoll.mod !== null) {
-		//////////// Populate images for Mod ////////////
+		//////////// Images for Mod ////////////
 		tdoll.mod.skill.image_skill = require(`../images/tdolls/${id}/${id}_skill1.png`);
 		tdoll.mod.skill2.image_skill = require(`../images/tdolls/${id}/${id}_skill2.png`);
 		tdoll.mod.images.card = require(`../images/tdolls/${id}/${id}_mod_card.png`);
@@ -4599,7 +4619,7 @@ tdolls.forEach((tdoll) => {
 		tdoll.mod.images.full = require(`../images/tdolls/${id}/${id}_mod_full.png`);
 		tdoll.mod.images.full_damaged = require(`../images/tdolls/${id}/${id}_mod_full_d.png`);
 
-		//////////// Populate animations for Mod ////////////
+		//////////// Animations for Mod ////////////
 		tdoll.mod.animations.attack = require(`../images/tdolls/${id}/animations/${id}_mod_attack.gif`);
 		tdoll.mod.animations.die = require(`../images/tdolls/${id}/animations/${id}_mod_die.gif`);
 		tdoll.mod.animations.move = require(`../images/tdolls/${id}/animations/${id}_mod_move.gif`);
@@ -4610,6 +4630,7 @@ tdolls.forEach((tdoll) => {
 		tdoll.mod.animations.victoryloop = require(`../images/tdolls/${id}/animations/${id}_mod_victoryloop.gif`);
 		tdoll.mod.animations.wait = require(`../images/tdolls/${id}/animations/${id}_mod_wait.gif`);
 
+		// Dorm animations
 		tdoll.mod.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_lying.gif`);
 		tdoll.mod.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_move.gif`);
 		tdoll.mod.animations_dorm.pick = require(`../images/tdolls/${id}/animations/${id}_mod_dorm_pick.gif`);
@@ -4620,14 +4641,14 @@ tdolls.forEach((tdoll) => {
 	if (tdoll.skins !== null) {
 		var skinSelected = 1;
 		for (var i = 0; skinSelected <= tdoll.skins.number_of_skins; i++) {
-			//////////// Populate images for Skin(s) ////////////
+			//////////// Images for Skin(s) ////////////
 			tdoll.skins.skin_images.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_card.png`));
 			tdoll.skins.skin_images.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_card_d.png`));
 
 			tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full.png`));
 			tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full_d.png`));
 
-			//////////// Populate animations for Skin(s) ////////////
+			//////////// Animations for Skin(s) ////////////
 			tdoll.skins.animations.attack[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_attack.gif`);
 			tdoll.skins.animations.die[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_die.gif`);
 			tdoll.skins.animations.move[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_move.gif`);
@@ -4636,24 +4657,28 @@ tdolls.forEach((tdoll) => {
 				tdoll.skins.animations.skill[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_skill.gif`);
 			}
 			tdoll.skins.animations.victory[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_victory.gif`);
-			tdoll.skins.animations.victoryloop[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_victoryloop.gif`);
+			if (tdoll.skins.animations.hasVictoryLoopAnimation[i]) {
+				// Some skins do not have victoryloop animations.
+				tdoll.skins.animations.victoryloop[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_victoryloop.gif`);
+			}
 			tdoll.skins.animations.wait[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_wait.gif`);
 
+			// Dorm animations
 			tdoll.skins.animations_dorm.lying[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_lying.gif`);
 			tdoll.skins.animations_dorm.move[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_move.gif`);
 			if (tdoll.skins.animations_dorm.hasActionAnimation[i]) {
-				// Some T-Dolls have action animations for one of their skins, some do not.
+				// Some T-Dolls have action animations for their skins, some do not.
 				tdoll.skins.animations_dorm.action[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_action.gif`);
 			}
 			tdoll.skins.animations_dorm.pick[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_pick.gif`);
 			tdoll.skins.animations_dorm.sit[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_sit.gif`);
 			if (tdoll.skins.animations_dorm.hasSit2Animation[i]) {
-				// Some T-Dolls have a second sit animation for one of their skins, some do not.
+				// Some T-Dolls have a second sit animation for their skins, some do not.
 				tdoll.skins.animations_dorm.sit2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_sit2.gif`);
 			}
 			tdoll.skins.animations_dorm.wait[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_dorm_wait.gif`);
 
-			skinSelected++;
+			skinSelected++; // Increment and loop through all available skins for this T-Doll.
 		}
 	}
 });
