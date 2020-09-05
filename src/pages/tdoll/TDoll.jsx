@@ -195,6 +195,11 @@ export default function TDoll(props) {
 		backdrop: {
 			zIndex: theme.zIndex.drawer + 1,
 			color: "#fff"
+		},
+		fullImage: {
+			height: "100%",
+			width: "100%",
+			objectFit: "contain"
 		}
 	}));
 
@@ -586,15 +591,15 @@ export default function TDoll(props) {
 	const renderImage = () => {
 		if (showSkin) {
 			if (switchImage) {
-				return <img src={tdoll.skins.skin_images_full[skinSelected + 1]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Damaged Full Skin" />;
+				return <img src={tdoll.skins.skin_images_full[skinSelected + 1]} className={classes.fullImage} alt="Damaged Full Skin" />;
 			} else {
-				return <img src={tdoll.skins.skin_images_full[skinSelected]} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Normal Full Skin" />;
+				return <img src={tdoll.skins.skin_images_full[skinSelected]} className={classes.fullImage} alt="Normal Full Skin" />;
 			}
 		} else {
 			if (switchImage) {
-				return <img src={tdoll.selected.images.full_damaged} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Damaged Full" />;
+				return <img src={tdoll.selected.images.full_damaged} className={classes.fullImage} alt="Damaged Full" />;
 			} else {
-				return <img src={tdoll.selected.images.full} style={{ transform: "translate(0px, 50px)", minWidth: 400, maxWidth: "100%" }} alt="Normal Full" />;
+				return <img src={tdoll.selected.images.full} className={classes.fullImage} alt="Normal Full" />;
 			}
 		}
 	};
