@@ -17,8 +17,8 @@ export default class ErrorBoundary extends React.Component {
 
 	componentDidCatch(error, errorInfo) {
 		// Console log the error when this catches an error.
-		console.log("Error encountered: ", error);
-		console.log("Error info: ", errorInfo);
+		console.log("ErrorBoundary - error: ", error);
+		console.log("ErrorBoundary - error info: ", errorInfo);
 	}
 
 	// Render the <h2> error message tag with a link to go back to the T-Doll Index or if no error,
