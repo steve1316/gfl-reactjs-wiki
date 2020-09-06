@@ -3066,728 +3066,729 @@ const tdolls = [
 				wait: []
 			}
 		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 34,
+			name: "M1 Garand",
+			type: "RF",
+			rarity: 3,
+			max_hp: 88,
+			max_dmg: 120,
+			max_acc: 62,
+			max_eva: 28,
+			max_rof: 37,
+			skill: {
+				name: "Locked Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the current enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
+				stat2: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Beach Princess"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [true],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 35,
+			name: "M1A1",
+			type: "RF",
+			rarity: 3,
+			max_hp: 84,
+			max_dmg: 95,
+			max_acc: 77,
+			max_eva: 42,
+			max_rof: 38,
+			skill: {
+				name: "Assault Focus T",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases rate of fire by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [22, 24, 26, 28, 30, 32, 34, 36, 38, 40],
+				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Red Plums and White Snow"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 36,
+			name: "Springfield",
+			type: "RF",
+			rarity: 4,
+			max_hp: 84,
+			max_dmg: 128,
+			max_acc: 72,
+			max_eva: 40,
+			max_rof: 32,
+			skill: {
+				name: "Designated Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
+				stat2: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 4,
+			skin_names: ["Classic Witch", "O Holy Night", "Queen in Radiance", "Stirring Mermaid"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false, true, false, false],
+				hasVictoryLoopAnimation: [true, true, true, true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, false, false],
+				hasSit2Animation: [false, false, false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 37,
+			name: "M14",
+			type: "RF",
+			rarity: 3,
+			max_hp: 84,
+			max_dmg: 108,
+			max_acc: 71,
+			max_eva: 27,
+			max_rof: 43,
+			skill: {
+				name: "Damage Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [35, 38, 41, 43, 46, 49, 52, 54, 57, 60],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 37,
+			name: "M14 Mod",
+			type: "RF",
+			rarity: 4,
+			max_hp: 86,
+			max_dmg: 111,
+			max_acc: 74,
+			max_eva: 28,
+			max_rof: 44,
+			skill: {
+				name: "Damage Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1% for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [40, 43, 46, 49, 52, 55, 57, 60, 63, 65],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Clear Fighting Spirit",
+				initial_cooldown: "Passive",
+				description: 'When "Damage Focus" is active, increases critical damage by #1% for #2 seconds.',
+				number_of_stats: 2,
+				stat1: [5, 6, 6, 7, 7, 8, 8, 9, 9, 10],
+				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Xmas Parade"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 38,
+			name: "M21",
+			type: "RF",
+			rarity: 3,
+			max_hp: 93,
+			max_dmg: 118,
+			max_acc: 74,
+			max_eva: 27,
+			max_rof: 35,
+			skill: {
+				name: "Locked Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to a specific enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
+				stat2: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Xmas At Home"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 39,
+			name: "Mosin-Nagant",
+			type: "RF",
+			rarity: 4,
+			max_hp: 88,
+			max_dmg: 131,
+			max_acc: 85,
+			max_eva: 38,
+			max_rof: 30,
+			skill: {
+				name: "Designated Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
+				stat2: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 39,
+			name: "Mosin-Nagant Mod",
+			type: "RF",
+			rarity: 5,
+			max_hp: 91,
+			max_dmg: 136,
+			max_acc: 89,
+			max_eva: 40,
+			max_rof: 31,
+			skill: {
+				name: "Designated Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3],
+				stat2: [3.2, 3.6, 3.9, 4.3, 4.7, 5, 5.4, 5.8, 6.1, 6.5],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Pure White Reaper",
+				initial_cooldown: "Passive",
+				description:
+					'Every enemy unit that she kills, increases her damage by #1% for 3 seconds (kills refresh this effect). Every enemy unit killed by her "Designated Shot" skill increases her rate of fire by #2% for 5 seconds.',
+				number_of_stats: 2,
+				stat1: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
+				stat2: [15, 17, 18, 20, 22, 23, 25, 27, 28, 30],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["18%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Moonlit Ocean", "White Steel Edge"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 40,
+			name: "SVT-38",
+			type: "RF",
+			rarity: 2,
+			max_hp: 84,
+			max_dmg: 110,
+			max_acc: 59,
+			max_eva: 34,
+			max_rof: 34,
+			skill: {
+				name: "Aimed Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.6, 1.7, 1.8, 1.9, 2, 2, 2.1, 2.2, 2.3, 2.4],
+				stat2: [2.5, 2.3, 2.6, 2.8, 3.1, 3.4, 3.7, 3.9, 4.2, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["10%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 34,
-	// 		name: "M1 Garand",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 88,
-	// 		max_dmg: 120,
-	// 		max_acc: 62,
-	// 		max_eva: 28,
-	// 		max_rof: 37,
-	// 		skill: {
-	// 			name: "Locked Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the current enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
-	// 			stat2: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Beach Princess"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 35,
-	// 		name: "M1A1",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 84,
-	// 		max_dmg: 95,
-	// 		max_acc: 77,
-	// 		max_eva: 42,
-	// 		max_rof: 38,
-	// 		skill: {
-	// 			name: "Assault Focus T",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases rate of fire by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [22, 24, 26, 28, 30, 32, 34, 36, 38, 40],
-	// 			stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Red Plums and White Snow"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 36,
-	// 		name: "Springfield",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 84,
-	// 		max_dmg: 128,
-	// 		max_acc: 72,
-	// 		max_eva: 40,
-	// 		max_rof: 32,
-	// 		skill: {
-	// 			name: "Designated Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
-	// 			stat2: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 4,
-	// 		skin_names: ["Classic Witch", "O Holy Night", "Queen in Radiance", "Stirring Mermaid"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true, true, true, true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true, true, true, true],
-	// 			hasSit2Animation: [true, true, true, true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 37,
-	// 		name: "M14",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 84,
-	// 		max_dmg: 108,
-	// 		max_acc: 71,
-	// 		max_eva: 27,
-	// 		max_rof: 43,
-	// 		skill: {
-	// 			name: "Damage Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [35, 38, 41, 43, 46, 49, 52, 54, 57, 60],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 37,
-	// 		name: "M14 Mod",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 86,
-	// 		max_dmg: 111,
-	// 		max_acc: 74,
-	// 		max_eva: 28,
-	// 		max_rof: 44,
-	// 		skill: {
-	// 			name: "Damage Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1% for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [40, 43, 46, 49, 52, 55, 57, 60, 63, 65],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Clear Fighting Spirit",
-	// 			initial_cooldown: "Passive",
-	// 			description: 'When "Damage Focus" is active, increases critical damage by #1% for #2 seconds.',
-	// 			number_of_stats: 2,
-	// 			stat1: [5, 6, 6, 7, 7, 8, 8, 9, 9, 10],
-	// 			stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Xmas Parade"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 38,
-	// 		name: "M21",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 93,
-	// 		max_dmg: 118,
-	// 		max_acc: 74,
-	// 		max_eva: 27,
-	// 		max_rof: 35,
-	// 		skill: {
-	// 			name: "Locked Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to a specific enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
-	// 			stat2: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Xmas At Home"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 39,
-	// 		name: "Mosin-Nagant",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 88,
-	// 		max_dmg: 131,
-	// 		max_acc: 85,
-	// 		max_eva: 38,
-	// 		max_rof: 30,
-	// 		skill: {
-	// 			name: "Designated Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
-	// 			stat2: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 39,
-	// 		name: "Mosin-Nagant Mod",
-	// 		type: "RF",
-	// 		rarity: 5,
-	// 		max_hp: 91,
-	// 		max_dmg: 136,
-	// 		max_acc: 89,
-	// 		max_eva: 40,
-	// 		max_rof: 31,
-	// 		skill: {
-	// 			name: "Designated Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3],
-	// 			stat2: [3.2, 3.6, 3.9, 4.3, 4.7, 5, 5.4, 5.8, 6.1, 6.5],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Pure White Reaper",
-	// 			initial_cooldown: "Passive",
-	// 			description:
-	// 				'Every enemy unit that she kills, increases her damage by #1% for 3 seconds (kills refresh this effect). Every enemy unit killed by her "Designated Shot" skill increases her rate of fire by #2% for 5 seconds.',
-	// 			number_of_stats: 2,
-	// 			stat1: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
-	// 			stat2: [15, 17, 18, 20, 22, 23, 25, 27, 28, 30],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Moonlit Ocean", "White Steel Edge"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true, true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true, true],
-	// 			hasSit2Animation: [true, true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 40,
-	// 		name: "SVT-38",
-	// 		type: "RF",
-	// 		rarity: 2,
-	// 		max_hp: 84,
-	// 		max_dmg: 110,
-	// 		max_acc: 59,
-	// 		max_eva: 34,
-	// 		max_rof: 34,
-	// 		skill: {
-	// 			name: "Aimed Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.6, 1.7, 1.8, 1.9, 2, 2, 2.1, 2.2, 2.3, 2.4],
-	// 			stat2: [2.5, 2.3, 2.6, 2.8, 3.1, 3.4, 3.7, 3.9, 4.2, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["10%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
 	// {
 	// 	normal: {
 	// 		id: 41,
