@@ -31,8 +31,8 @@ import {
 	Tab,
 	Fab,
 	Backdrop,
-	Divider,
-	Grow
+	Divider
+	//Grow
 } from "@material-ui/core";
 
 // MaterialUI icon imports
