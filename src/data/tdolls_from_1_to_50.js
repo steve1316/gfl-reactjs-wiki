@@ -2374,699 +2374,701 @@ const tdolls = [
 				wait: []
 			}
 		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 27,
+			name: "Skorpion",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 159,
+			max_dmg: 24,
+			max_acc: 13,
+			max_eva: 83,
+			max_rof: 95,
+			skill: {
+				name: "Incendiary Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				number_of_stats: 3,
+				stat1: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
+				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Accuracy by "],
+				stat2: ["15%", "50%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Crimson Starlet"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 28,
+			name: "MP7",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 198,
+			max_dmg: 30,
+			max_acc: 13,
+			max_eva: 69,
+			max_rof: 91,
+			skill: {
+				name: "Moon Dancer",
+				initial_cooldown: "6s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Decreases accuracy and rate of fire by #1% but increases evasion by #2% and movement speed by #3% for #4 seconds.",
+				number_of_stats: 4,
+				stat1: [40, 38, 36, 33, 31, 29, 27, 24, 22, 20],
+				stat2: [100, 109, 118, 127, 136, 144, 153, 162, 171, 180],
+				stat3: [30, 32, 34, 37, 39, 41, 43, 46, 48, 50],
+				stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Rate of Fire by "],
+				stat2: ["25%", "15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Lollipop Ammo"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [true],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 29,
+			name: "Sten MkII",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 185,
+			max_dmg: 26,
+			max_acc: 15,
+			max_eva: 75,
+			max_rof: 78,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: [2, 2.4, 2.9, 3.3, 3.8, 4.2, 4.7, 5.1, 5.6, 6],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["10%", "30%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 29,
+			name: "Sten MkII Mod",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 195,
+			max_dmg: 29,
+			max_acc: 17,
+			max_eva: 79,
+			max_rof: 86,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: [2.2, 2.7, 3.2, 3.6, 4.1, 4.6, 5.1, 5.5, 6, 6.5],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Valiant Shield",
+				initial_cooldown: "6s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "6 seconds after the battle begins, deploys a damage reducing shield in front of her that reduces all incoming damage by #1%, lasting for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [20, 22, 23, 25, 27, 28, 30, 31, 33, 35],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["30%", "40%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Reciprocated Love"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 31,
+			name: "Beretta Model 38",
+			type: "SMG",
+			rarity: 2,
+			max_hp: 203,
+			max_dmg: 32,
+			max_acc: 12,
+			max_eva: 52,
+			max_rof: 75,
+			skill: {
+				name: "Stun Grenade",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
+				number_of_stats: 1,
+				stat1: [1.8, 2, 2.1, 2.3, 2.4, 2.6, 2.7, 2.9, 3, 3.2],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["5%", "10%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 31,
+			name: "Beretta Model 38 Mod",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 217,
+			max_dmg: 33,
+			max_acc: 13,
+			max_eva: 61,
+			max_rof: 79,
+			skill: {
+				name: "Stun Grenade",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
+				number_of_stats: 1,
+				stat1: [2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 4],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Scarlet Flame Pursuit",
+				initial_cooldown: "Passive",
+				description:
+					"When a flashbang has been tossed, throw an additional incendiary grenade that deals #1x damage to enemies within a radius of 2.5 units and ignites them, dealing #2x continuous damage to them every 0.33 seconds for #3 seconds.",
+				number_of_stats: 3,
+				stat1: [1.4, 1.56, 1.71, 1.87, 2.02, 2.18, 2.33, 2.49, 2.64, 2.8],
+				stat2: [0.3, 0.33, 0.37, 0.4, 0.43, 0.47, 0.5, 0.53, 0.57, 0.6],
+				stat3: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR and RF",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["8%", "10%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 32,
+			name: "Micro Uzi",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 159,
+			max_dmg: 24,
+			max_acc: 11,
+			max_eva: 79,
+			max_rof: 104,
+			skill: {
+				name: "Incendiary Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				number_of_stats: 3,
+				stat1: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
+				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs AR",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["18%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: false,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 32,
+			name: "Micro Uzi Mod",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 177,
+			max_dmg: 26,
+			max_acc: 13,
+			max_eva: 83,
+			max_rof: 104,
+			skill: {
+				name: "Incendiary Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				number_of_stats: 3,
+				stat1: [3.2, 3.6, 3.9, 4.3, 4.7, 5, 5.4, 5.8, 6.1, 6.5],
+				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Burning Chain",
+				initial_cooldown: "Passive",
+				description:
+					"Incendiary grenade deals an additional #1x damage every 1.5 seconds to burned enemies and will spread around the burned enemy, causing a new burning area with a radius of 1 unit. This lasts until the effect of the incendiary grenade ends. Burn damage will take effect against enemies in an extremely small area.",
+				number_of_stats: 1,
+				stat1: [0.4, 0.44, 0.49, 0.53, 0.58, 0.62, 0.67, 0.71, 0.76, 0.8],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["18%", "15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Woken-up Idiot"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 33,
+			name: "m45",
+			type: "SMG",
+			rarity: 2,
+			max_hp: 185,
+			max_dmg: 30,
+			max_acc: 12,
+			max_eva: 62,
+			max_rof: 74,
+			skill: {
+				name: "Smoke Grenade",
+				initial_cooldown: "1s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Throws a smoke grenade which decreases the enemy's rate of fire by #1 and movement speed by #2 within a radius of 2.5 units for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["20%", "22%", "24%", "25%", "27%", "29%", "31%", "32%", "34%", "36%"],
+				stat2: ["28%", "30%", "32%", "34%", "36%", "37%", "39%", "41%", "43%", "45%"],
+				stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Evasion by "],
+				stat2: ["10%", "10%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Candy Express"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 27,
-	// 		name: "Skorpion",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 159,
-	// 		max_dmg: 24,
-	// 		max_acc: 13,
-	// 		max_eva: 83,
-	// 		max_rof: 95,
-	// 		skill: {
-	// 			name: "Incendiary Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
-	// 			stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
-	// 			stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Accuracy by "],
-	// 			stat2: ["15%", "50%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Crimson Starlet"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 28,
-	// 		name: "MP7",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 198,
-	// 		max_dmg: 30,
-	// 		max_acc: 13,
-	// 		max_eva: 69,
-	// 		max_rof: 91,
-	// 		skill: {
-	// 			name: "Moon Dancer",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Decreases accuracy and rate of fire by #1% but increases evasion by #2% and movement speed by #3% for #4 seconds.",
-	// 			number_of_stats: 4,
-	// 			stat1: [40, 38, 36, 33, 31, 29, 27, 24, 22, 20],
-	// 			stat2: [100, 109, 118, 127, 136, 144, 153, 162, 171, 180],
-	// 			stat3: [30, 32, 34, 37, 39, 41, 43, 46, 48, 50],
-	// 			stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Rate of Fire by "],
-	// 			stat2: ["25%", "15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Lollipop Ammo"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 29,
-	// 		name: "Sten MkII",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 185,
-	// 		max_dmg: 26,
-	// 		max_acc: 15,
-	// 		max_eva: 75,
-	// 		max_rof: 78,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2, 2.4, 2.9, 3.3, 3.8, 4.2, 4.7, 5.1, 5.6, 6],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["10%", "30%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 29,
-	// 		name: "Sten MkII Mod",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 195,
-	// 		max_dmg: 29,
-	// 		max_acc: 17,
-	// 		max_eva: 79,
-	// 		max_rof: 86,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2.2, 2.7, 3.2, 3.6, 4.1, 4.6, 5.1, 5.5, 6, 6.5],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Valiant Shield",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "6 seconds after the battle begins, deploys a damage reducing shield in front of her that reduces all incoming damage by #1%, lasting for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [20, 22, 23, 25, 27, 28, 30, 31, 33, 35],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["30%", "40%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Reciprocated Love"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 31,
-	// 		name: "Beretta Model 38",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 203,
-	// 		max_dmg: 32,
-	// 		max_acc: 12,
-	// 		max_eva: 52,
-	// 		max_rof: 75,
-	// 		skill: {
-	// 			name: "Stun Grenade",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: [1.8, 2, 2.1, 2.3, 2.4, 2.6, 2.7, 2.9, 3, 3.2],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Rate of Fire by "],
-	// 			stat2: ["5%", "10%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 31,
-	// 		name: "Beretta Model 38 Mod",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 217,
-	// 		max_dmg: 33,
-	// 		max_acc: 13,
-	// 		max_eva: 61,
-	// 		max_rof: 79,
-	// 		skill: {
-	// 			name: "Stun Grenade",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 4],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Scarlet Flame Pursuit",
-	// 			initial_cooldown: "Passive",
-	// 			description:
-	// 				"When a flashbang has been tossed, throw an additional incendiary grenade that deals #1x damage to enemies within a radius of 2.5 units and ignites them, dealing #2x continuous damage to them every 0.33 seconds for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: [1.4, 1.56, 1.71, 1.87, 2.02, 2.18, 2.33, 2.49, 2.64, 2.8],
-	// 			stat2: [0.3, 0.33, 0.37, 0.4, 0.43, 0.47, 0.5, 0.53, 0.57, 0.6],
-	// 			stat3: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR and RF",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Rate of Fire by "],
-	// 			stat2: ["8%", "10%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 32,
-	// 		name: "Micro Uzi",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 159,
-	// 		max_dmg: 24,
-	// 		max_acc: 11,
-	// 		max_eva: 79,
-	// 		max_rof: 104,
-	// 		skill: {
-	// 			name: "Incendiary Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
-	// 			stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
-	// 			stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 32,
-	// 		name: "Micro Uzi Mod",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 177,
-	// 		max_dmg: 26,
-	// 		max_acc: 13,
-	// 		max_eva: 83,
-	// 		max_rof: 104,
-	// 		skill: {
-	// 			name: "Incendiary Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: [3.2, 3.6, 3.9, 4.3, 4.7, 5, 5.4, 5.8, 6.1, 6.5],
-	// 			stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
-	// 			stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Burning Chain",
-	// 			initial_cooldown: "Passive",
-	// 			description:
-	// 				"Incendiary grenade deals an additional #1x damage every 1.5 seconds to burned enemies and will spread around the burned enemy, causing a new burning area with a radius of 1 unit. This lasts until the effect of the incendiary grenade ends. Burn damage will take effect against enemies in an extremely small area.",
-	// 			number_of_stats: 1,
-	// 			stat1: [0.4, 0.44, 0.49, 0.53, 0.58, 0.62, 0.67, 0.71, 0.76, 0.8],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["18%", "15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Woken-up Idiot"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 33,
-	// 		name: "m45",
-	// 		type: "SMG",
-	// 		rarity: 2,
-	// 		max_hp: 185,
-	// 		max_dmg: 30,
-	// 		max_acc: 12,
-	// 		max_eva: 62,
-	// 		max_rof: 74,
-	// 		skill: {
-	// 			name: "Smoke Grenade",
-	// 			initial_cooldown: "1s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Throws a smoke grenade which decreases the enemy's rate of fire by #1 and movement speed by #2 within a radius of 2.5 units for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["20%", "22%", "24%", "25%", "27%", "29%", "31%", "32%", "34%", "36%"],
-	// 			stat2: ["28%", "30%", "32%", "34%", "36%", "37%", "39%", "41%", "43%", "45%"],
-	// 			stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Evasion by "],
-	// 			stat2: ["10%", "10%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Candy Express"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
 	// {
 	// 	normal: {
 	// 		id: 34,
@@ -4576,6 +4578,8 @@ console.log("Now processing images and animations for #1-#50 T-Doll Index JSON."
 // Programmatically populate the images and animation properties inside the JSON before exporting it.
 tdolls.forEach((tdoll) => {
 	var id = tdoll.normal.id;
+
+	//console.log("Processing ", tdoll.normal.name);
 
 	//////////// Images for Normal. ////////////
 	tdoll.normal.skill.image_skill = require(`../images/tdolls/${id}/${id}_skill1.png`);
