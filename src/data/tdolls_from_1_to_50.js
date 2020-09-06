@@ -1131,10 +1131,10 @@ const tdolls = [
 				name: "Cover Command N",
 				initial_cooldown: "6s",
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-				description: "During nighttime, increases all allies' evasion by #1% (#2% during daytime) for #3 seconds (#4 seconds during day).",
+				description: "During nighttime, increases all allies' evasion by #1 (#2 during daytime) for #3 seconds (#4 seconds during day).",
 				number_of_stats: 4,
-				stat1: [50, 54, 58, 62, 66, 69, 73, 77, 81, 85],
-				stat2: [28, 28, 30, 30, 31, 32, 33, 33, 34, 35],
+				stat1: ["50%", "54%", "58%", "62%", "66%", "69%", "73%", "77%", "81%", "85%"],
+				stat2: ["28%", "28%", "30%", "30%", "31%", "32%", "33%", "33%", "34%", "35%"],
 				stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
 				stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 				image_skill: undefined
@@ -1194,9 +1194,9 @@ const tdolls = [
 				name: "Flare",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Increases all allies' accuracy by #1% for #2 seconds (night battles only).",
+				description: "Increases all allies' accuracy by #1 for #2 seconds (night battles only).",
 				number_of_stats: 2,
-				stat1: [55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
+				stat1: ["55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%"],
 				stat2: [8, 9, 10, 11, 12, 12, 13, 13, 14, 15],
 				image_skill: undefined
 			},
@@ -1248,19 +1248,19 @@ const tdolls = [
 				name: "Flare",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Increases all allies' accuracy by #1% for #2 seconds (night battles only).",
+				description: "Increases all allies' accuracy by #1 for #2 seconds (night battles only).",
 				number_of_stats: 2,
-				stat1: [60, 67, 73, 80, 87, 93, 100, 107, 113, 120],
+				stat1: ["60%", "67%", "73%", "80%", "87%", "93%", "100%", "107%", "113%", "120%"],
 				stat2: [8, 9, 10, 11, 12, 12, 13, 13, 14, 15],
 				image_skill: undefined
 			},
 			skill2: {
 				name: "Night Sky Pursuer",
 				initial_cooldown: "Passive",
-				description: 'When "Flare" has been launched, grants allies +#1 ammo to their current clip, additionally increases allies\' critical damage by #2% for #3 seconds.',
+				description: 'When "Flare" has been launched, grants allies #1 ammo to their current clip, additionally increases allies\' critical damage by #2 for #3 seconds.',
 				number_of_stats: 3,
-				stat1: [1, 1, 1, 1, 1, 2, 2, 2, 2, 2],
-				stat2: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
+				stat1: ["+1", "+1", "+1", "+1", "+1", "+2", "+2", "+2", "+2", "+2"],
+				stat2: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
 				stat3: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
 				image_skill: undefined
 			},
@@ -1318,9 +1318,9 @@ const tdolls = [
 				name: "Charge Command",
 				initial_cooldown: "6s",
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-				description: "Increases all allies' damage and rate of fire by #1% for #2 seconds.",
+				description: "Increases all allies' damage and rate of fire by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [6, 6, 7, 7, 8, 8, 8, 9, 9, 10],
+				stat1: ["6%", "6%", "7%", "7%", "8%", "8%", "8%", "9%", "9%", "10%"],
 				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
 				image_skill: undefined
 			},
@@ -1379,9 +1379,9 @@ const tdolls = [
 				name: "Assault Command",
 				initial_cooldown: "6s",
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-				description: "Increases all allies' rate of fire by #1% for #2 seconds.",
+				description: "Increases all allies' rate of fire by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+				stat1: ["11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "19%", "20%"],
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
 				image_skill: undefined
 			},
@@ -1467,9 +1467,9 @@ const tdolls = [
 				name: "Firepower Suppression",
 				initial_cooldown: "6s",
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-				description: "Decreases all enemies' damage by #1% for #2 seconds.",
+				description: "Decreases all enemies' damage by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [15, 16, 17, 18, 19, 21, 22, 23, 24, 25],
+				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
 				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
 				image_skill: undefined
 			},
@@ -1615,9 +1615,9 @@ const tdolls = [
 				name: "Hand Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
 				number_of_stats: 1,
-				stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
+				stat1: ["1.8x", "2.2x", "2.6x", "3x", "3.4x", "3.9x", "4.3x", "4.7x", "5.1x", "5.5x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -1675,10 +1675,10 @@ const tdolls = [
 				name: "Smoke Grenade",
 				initial_cooldown: "1s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws a smoke grenade that decreases the enemy's rate of fire by #1% and movement speed by #2% within a radius of 2.5 units for #3 seconds.",
+				description: "Throws a smoke grenade that decreases the enemy's rate of fire by #1 and movement speed by #2 within a radius of 2.5 units for #3 seconds.",
 				number_of_stats: 3,
-				stat1: [20, 22, 24, 25, 27, 29, 31, 32, 34, 36],
-				stat2: [30, 32, 34, 37, 39, 41, 43, 46, 48, 50],
+				stat1: ["20%", "22%", "24%", "25%", "27%", "29%", "31%", "32%", "34%", "36%"],
+				stat2: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
 				stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
 				image_skill: undefined
 			},
@@ -1737,9 +1737,9 @@ const tdolls = [
 				name: "Cover Focus",
 				initial_cooldown: "6s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-				description: "Increases evasion by #1% for #2 seconds.",
+				description: "Increases evasion by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [65, 71, 77, 83, 89, 96, 102, 108, 114, 120],
+				stat1: ["65%", "71%", "77%", "83%", "89%", "96%", "102%", "108%", "114%", "120%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 				image_skill: undefined
 			},
@@ -1798,10 +1798,10 @@ const tdolls = [
 				name: "Incendiary Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				description: "Throws an incendiary grenade that deals #1 damage within a radius of 1.5 units and ignites them, dealing #2 continuous damage every 0.33 seconds for #3 seconds.",
 				number_of_stats: 3,
-				stat1: [3.5, 3.9, 4.3, 4.7, 5.1, 5.4, 5.8, 6.2, 6.6, 7],
-				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat1: ["3.5x", "3.9x", "4.3x", "4.7x", "5.1x", "5.4x", "5.8x", "6.2x", "6.6x", "7x"],
+				stat2: ["0.5x", "0.6x", "0.6x", "0.7x", "0.7x", "0.8x", "0.8x", "0.9x", "0.9x", "1x"],
 				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
 				image_skill: undefined
 			},
@@ -1887,9 +1887,9 @@ const tdolls = [
 				name: "Hand Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
 				number_of_stats: 1,
-				stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
+				stat1: ["1.8x", "2.2x", "2.6x", "3x", "3.4x", "3.9x", "4.3x", "4.7x", "5.1x", "5.5x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -1974,9 +1974,9 @@ const tdolls = [
 				name: "Hand Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
 				number_of_stats: 1,
-				stat1: [2, 2.4, 2.9, 3.3, 3.8, 4.2, 4.7, 5.1, 5.6, 6],
+				stat1: ["2x", "2.4x", "2.9x", "3.3x", "3.8x", "4.2x", "4.7x", "5.1x", "5.6x", "6x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -2034,9 +2034,9 @@ const tdolls = [
 				name: "Cover Focus T",
 				initial_cooldown: "4s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Increases evasion by #1% for #2 seconds.",
+				description: "Increases evasion by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [25, 27, 29, 32, 34, 36, 38, 41, 43, 45],
+				stat1: ["25%", "27%", "29%", "32%", "34%", "36%", "38%", "41%", "43%", "45%"],
 				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15],
 				image_skill: undefined
 			},
@@ -2095,9 +2095,9 @@ const tdolls = [
 				name: "Hand Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
 				number_of_stats: 1,
-				stat1: [1.8, 2.2, 2.6, 3, 3.4, 3.9, 4.3, 4.7, 5.1, 5.5],
+				stat1: ["1.8x", "2.2x", "2.6x", "3x", "3.4x", "3.9x", "4.3x", "4.7x", "5.1x", "5.5x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -2155,10 +2155,10 @@ const tdolls = [
 				name: "Incendiary Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				description: "Throws an incendiary grenade that deals #1 damage within a radius of 1.5 units and ignites them, dealing #2 continuous damage every 0.33 seconds for #3 seconds.",
 				number_of_stats: 3,
-				stat1: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
-				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat1: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"],
+				stat2: ["0.5x", "0.6x", "0.6x", "0.7x", "0.7x", "0.8x", "0.8x", "0.9x", "0.9x", "1x"],
 				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
 				image_skill: undefined
 			},
@@ -2305,9 +2305,9 @@ const tdolls = [
 			skill2: {
 				name: "Immaterial Defense",
 				initial_cooldown: "Passive",
-				description: 'When "Force Shield" expires, increases evasion by #1% for #2 seconds for every enemy group present, up to 3 layers.',
+				description: 'When "Force Shield" expires, increases evasion by #1 for #2 seconds for every enemy group present, up to 3 layers.',
 				number_of_stats: 2,
-				stat1: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
+				stat1: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
 				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
 				image_skill: undefined
 			},
@@ -2392,10 +2392,10 @@ const tdolls = [
 				name: "Incendiary Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				description: "Throws an incendiary grenade that deals #1 damage within a radius of 1.5 units and ignites them, dealing #2 continuous damage every 0.33 seconds for #3 seconds.",
 				number_of_stats: 3,
-				stat1: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
-				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat1: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"],
+				stat2: ["0.5x", "0.6x", "0.6x", "0.7x", "0.7x", "0.8x", "0.8x", "0.9x", "0.9x", "1x"],
 				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
 				image_skill: undefined
 			},
@@ -2481,11 +2481,11 @@ const tdolls = [
 				name: "Moon Dancer",
 				initial_cooldown: "6s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-				description: "Decreases accuracy and rate of fire by #1% but increases evasion by #2% and movement speed by #3% for #4 seconds.",
+				description: "Decreases accuracy and rate of fire by #1 but increases evasion by #2 and movement speed by #3 for #4 seconds.",
 				number_of_stats: 4,
-				stat1: [40, 38, 36, 33, 31, 29, 27, 24, 22, 20],
-				stat2: [100, 109, 118, 127, 136, 144, 153, 162, 171, 180],
-				stat3: [30, 32, 34, 37, 39, 41, 43, 46, 48, 50],
+				stat1: ["40%", "38%", "36%", "33%", "31%", "29%", "27%", "24%", "22%", "20%"],
+				stat2: ["100%", "109%", "118%", "127%", "136%", "144%", "153%", "162%", "171%", "180%"],
+				stat3: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
 				stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 				image_skill: undefined
 			},
@@ -2571,9 +2571,9 @@ const tdolls = [
 				name: "Hand Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
 				number_of_stats: 1,
-				stat1: [2, 2.4, 2.9, 3.3, 3.8, 4.2, 4.7, 5.1, 5.6, 6],
+				stat1: ["2x", "2.4x", "2.9x", "3.3x", "3.8x", "4.2x", "4.7x", "5.1x", "5.6x", "6x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -2624,18 +2624,18 @@ const tdolls = [
 				name: "Hand Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws a grenade that deals #1x damage to enemies within a 2.5 unit radius.",
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
 				number_of_stats: 1,
-				stat1: [2.2, 2.7, 3.2, 3.6, 4.1, 4.6, 5.1, 5.5, 6, 6.5],
+				stat1: ["2.2x", "2.7x", "3.2x", "3.6x", "4.1x", "4.6x", "5.1x", "5.5x", "6x", "6.5x"],
 				image_skill: undefined
 			},
 			skill2: {
 				name: "Valiant Shield",
 				initial_cooldown: "6s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "6 seconds after the battle begins, deploys a damage reducing shield in front of her that reduces all incoming damage by #1%, lasting for #2 seconds.",
+				description: "6 seconds after the battle begins, deploys a damage reducing shield in front of her that reduces all incoming damage by #1, lasting for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [20, 22, 23, 25, 27, 28, 30, 31, 33, 35],
+				stat1: ["20%", "22%", "23%", "25%", "27%", "28%", "30%", "31%", "33%", "35%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 				image_skill: undefined
 			},
@@ -2782,10 +2782,10 @@ const tdolls = [
 				name: "Scarlet Flame Pursuit",
 				initial_cooldown: "Passive",
 				description:
-					"When a flashbang has been tossed, throw an additional incendiary grenade that deals #1x damage to enemies within a radius of 2.5 units and ignites them, dealing #2x continuous damage to them every 0.33 seconds for #3 seconds.",
+					"When a flashbang has been tossed, throw an additional incendiary grenade that deals #1 damage to enemies within a radius of 2.5 units and ignites them, dealing #2 continuous damage to them every 0.33 seconds for #3 seconds.",
 				number_of_stats: 3,
-				stat1: [1.4, 1.56, 1.71, 1.87, 2.02, 2.18, 2.33, 2.49, 2.64, 2.8],
-				stat2: [0.3, 0.33, 0.37, 0.4, 0.43, 0.47, 0.5, 0.53, 0.57, 0.6],
+				stat1: ["1.4x", "1.56x", "1.71x", "1.87x", "2.02x", "2.18x", "2.33x", "2.49x", "2.64x", "2.8x"],
+				stat2: ["0.3x", "0.33x", "0.37x", "0.4x", "0.43x", "0.47x", "0.5x", "0.53x", "0.57x", "0.6x"],
 				stat3: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4],
 				image_skill: undefined
 			},
@@ -2843,10 +2843,10 @@ const tdolls = [
 				name: "Incendiary Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				description: "Throws an incendiary grenade that deals #1 damage within a radius of 1.5 units and ignites them, dealing #2 continuous damage every 0.33 seconds for #3 seconds.",
 				number_of_stats: 3,
-				stat1: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
-				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat1: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"],
+				stat2: ["0.5x", "0.6x", "0.6x", "0.7x", "0.7x", "0.8x", "0.8x", "0.9x", "0.9x", "1x"],
 				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
 				image_skill: undefined
 			},
@@ -2898,10 +2898,10 @@ const tdolls = [
 				name: "Incendiary Grenade",
 				initial_cooldown: "3s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Throws an incendiary grenade that deals #1x damage within a radius of 1.5 units and ignites them, dealing #2x continuous damage every 0.33 seconds for #3 seconds.",
+				description: "Throws an incendiary grenade that deals #1 damage within a radius of 1.5 units and ignites them, dealing #2 continuous damage every 0.33 seconds for #3 seconds.",
 				number_of_stats: 3,
-				stat1: [3.2, 3.6, 3.9, 4.3, 4.7, 5, 5.4, 5.8, 6.1, 6.5],
-				stat2: [0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1],
+				stat1: ["3.2x", "3.6x", "3.9x", "4.3x", "4.7x", "5x", "5.4x", "5.8x", "6.1x", "6.5x"],
+				stat2: ["0.5x", "0.6x", "0.6x", "0.7x", "0.7x", "0.8x", "0.8x", "0.9x", "0.9x", "1x"],
 				stat3: [2, 2.4, 2.7, 3, 3.4, 3.7, 4, 4.3, 4.7, 5],
 				image_skill: undefined
 			},
@@ -2909,9 +2909,9 @@ const tdolls = [
 				name: "Burning Chain",
 				initial_cooldown: "Passive",
 				description:
-					"Incendiary grenade deals an additional #1x damage every 1.5 seconds to burned enemies and will spread around the burned enemy, causing a new burning area with a radius of 1 unit. This lasts until the effect of the incendiary grenade ends. Burn damage will take effect against enemies in an extremely small area.",
+					"Incendiary grenade deals an additional #1 damage every 1.5 seconds to burned enemies and will spread around the burned enemy, causing a new burning area with a radius of 1 unit. This lasts until the effect of the incendiary grenade ends. Burn damage will take effect against enemies in an extremely small area.",
 				number_of_stats: 1,
-				stat1: [0.4, 0.44, 0.49, 0.53, 0.58, 0.62, 0.67, 0.71, 0.76, 0.8],
+				stat1: ["0.4x", "0.44x", "0.49x", "0.53x", "0.58x", "0.62x", "0.67x", "0.71x", "0.76x", "0.8x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -3085,10 +3085,10 @@ const tdolls = [
 				initial_cooldown: "5s",
 				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 				description:
-					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the current enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the current enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 				number_of_stats: 2,
 				stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
-				stat2: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
+				stat2: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -3173,9 +3173,9 @@ const tdolls = [
 				name: "Assault Focus T",
 				initial_cooldown: "5s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description: "Increases rate of fire by #1% for #2 seconds.",
+				description: "Increases rate of fire by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [22, 24, 26, 28, 30, 32, 34, 36, 38, 40],
+				stat1: ["22%", "24%", "26%", "28%", "30%", "32%", "34%", "36%", "38%", "40%"],
 				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15],
 				image_skill: undefined
 			},
@@ -3262,10 +3262,10 @@ const tdolls = [
 				initial_cooldown: "5s",
 				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 				description:
-					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 				number_of_stats: 2,
 				stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
-				stat2: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
+				stat2: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -3350,9 +3350,9 @@ const tdolls = [
 				name: "Damage Focus",
 				initial_cooldown: "5s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-				description: "Increases damage by #1% for #2 seconds.",
+				description: "Increases damage by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [35, 38, 41, 43, 46, 49, 52, 54, 57, 60],
+				stat1: ["35%", "38%", "41%", "43%", "46%", "49%", "52%", "54%", "57%", "60%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 				image_skill: undefined
 			},
@@ -3404,18 +3404,18 @@ const tdolls = [
 				name: "Damage Focus",
 				initial_cooldown: "5s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-				description: "Increases damage by #1% for #2 seconds.",
+				description: "Increases damage by #1 for #2 seconds.",
 				number_of_stats: 2,
-				stat1: [40, 43, 46, 49, 52, 55, 57, 60, 63, 65],
+				stat1: ["40%", "43%", "46%", "49%", "52%", "55%", "57%", "60%", "63%", "65%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 				image_skill: undefined
 			},
 			skill2: {
 				name: "Clear Fighting Spirit",
 				initial_cooldown: "Passive",
-				description: 'When "Damage Focus" is active, increases critical damage by #1% for #2 seconds.',
+				description: 'When "Damage Focus" is active, increases critical damage by #1 for #2 seconds.',
 				number_of_stats: 2,
-				stat1: [5, 6, 6, 7, 7, 8, 8, 9, 9, 10],
+				stat1: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
 				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6],
 				image_skill: undefined
 			},
@@ -3501,10 +3501,10 @@ const tdolls = [
 				initial_cooldown: "5s",
 				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 				description:
-					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to a specific enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to a specific enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 				number_of_stats: 2,
 				stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
-				stat2: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
+				stat2: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -3590,10 +3590,10 @@ const tdolls = [
 				initial_cooldown: "5s",
 				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 				description:
-					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 				number_of_stats: 2,
 				stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
-				stat2: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
+				stat2: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -3645,20 +3645,20 @@ const tdolls = [
 				initial_cooldown: "5s",
 				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 				description:
-					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 				number_of_stats: 2,
 				stat1: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3],
-				stat2: [3.2, 3.6, 3.9, 4.3, 4.7, 5, 5.4, 5.8, 6.1, 6.5],
+				stat2: ["3.2x", "3.6x", "3.9x", "4.3x", "4.7x", "5x", "5.4x", "5.8x", "6.1x", "6.5x"],
 				image_skill: undefined
 			},
 			skill2: {
 				name: "Pure White Reaper",
 				initial_cooldown: "Passive",
 				description:
-					'Every enemy unit that she kills, increases her damage by #1% for 3 seconds (kills refresh this effect). Every enemy unit killed by her "Designated Shot" skill increases her rate of fire by #2% for 5 seconds.',
+					'Every enemy unit that she kills, increases her damage by #1 for 3 seconds (kills refresh this effect). Every enemy unit killed by her "Designated Shot" skill increases her rate of fire by #2 for 5 seconds.',
 				number_of_stats: 2,
-				stat1: [10, 11, 12, 13, 14, 16, 17, 18, 19, 20],
-				stat2: [15, 17, 18, 20, 22, 23, 25, 27, 28, 30],
+				stat1: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
+				stat2: ["15%", "17%", "18%", "20%", "22%", "23%", "25%", "27%", "28%", "30%"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -3743,10 +3743,10 @@ const tdolls = [
 				initial_cooldown: "5s",
 				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 				description:
-					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2x damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 				number_of_stats: 2,
 				stat1: [1.6, 1.7, 1.8, 1.9, 2, 2, 2.1, 2.2, 2.3, 2.4],
-				stat2: [2.5, 2.3, 2.6, 2.8, 3.1, 3.4, 3.7, 3.9, 4.2, 5],
+				stat2: ["2.5x", "2.3x", "2.6x", "2.8x", "3.1x", "3.4x", "3.7x", "3.9x", "4.2x", "5x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -3804,9 +3804,9 @@ const tdolls = [
 	// 			name: "Assault Focus",
 	// 			initial_cooldown: "5s",
 	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases rate of fire by #1% for #2 seconds.",
+	// 			description: "Increases rate of fire by #1 for #2 seconds.",
 	// 			number_of_stats: 2,
-	// 			stat1: [32, 35, 37, 40, 42, 45, 47, 50, 52, 55],
+	// 			stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
 	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 	// 			image_skill: undefined
 	// 		},
@@ -3866,10 +3866,10 @@ const tdolls = [
 	// 			initial_cooldown: "8s",
 	// 			cooldown: [13, 12.6, 12.1, 11.7, 11.2, 10.8, 10.3, 9.9, 9.4, 9],
 	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 7 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2x damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 7 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 	// 			number_of_stats: 2,
 	// 			stat1: [2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8, 2.9, 3, 3.1],
-	// 			stat2: [3.2, 3.6, 4, 4.5, 4.9, 5.3, 5.7, 6.2, 6.6, 7],
+	// 			stat2: ["3.2x", "3.6x", "4x", "4.5x", "4.9x", "5.3x", "5.7x", "6.2x", "6.6x", "7x"],
 	// 			image_skill: undefined
 	// 		},
 	// 		tile_set: {
@@ -3954,9 +3954,9 @@ const tdolls = [
 	// 			name: "Assault Focus",
 	// 			initial_cooldown: "5s",
 	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases rate of fire by #1% for #2 seconds.",
+	// 			description: "Increases rate of fire by #1 for #2 seconds.",
 	// 			number_of_stats: 2,
-	// 			stat1: [40, 43, 46, 48, 51, 54, 57, 59, 62, 65],
+	// 			stat1: ["40%", "43%", "46%", "48%", "51%", "54%", "57%", "59%", "62%", "65%"],
 	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 	// 			image_skill: undefined
 	// 		},
@@ -4003,7 +4003,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
+	// 			hasVictoryLoopAnimation: [true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4043,10 +4043,10 @@ const tdolls = [
 	// 			initial_cooldown: "5s",
 	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2x damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 	// 			number_of_stats: 2,
 	// 			stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
-	// 			stat2: [2.8, 3.1, 3.4, 3.7, 4, 4.3, 4.6, 4.9, 5.2, 5.5],
+	// 			stat2: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"],
 	// 			image_skill: undefined
 	// 		},
 	// 		tile_set: {
@@ -4098,10 +4098,10 @@ const tdolls = [
 	// 			initial_cooldown: "5s",
 	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2x damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
 	// 			number_of_stats: 2,
 	// 			stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
-	// 			stat2: [3, 3.3, 3.7, 4, 4.3, 4.7, 5, 5.3, 5.7, 6],
+	// 			stat2: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"],
 	// 			image_skill: undefined
 	// 		},
 	// 		skill2: {
@@ -4109,10 +4109,10 @@ const tdolls = [
 	// 			initial_cooldown: "Passive",
 	// 			passive_active_description: true,
 	// 			description:
-	// 				'Passive: Enter camouflage mode after staying still for 3 seconds, and increases self accuracy and rate of fire by #1%. Active: Using "Interdiction Shot" when in camouflage mode increases skill damage by #2% and removes camouflage.',
+	// 				'Passive: Enter camouflage mode after staying still for 3 seconds, and increases self accuracy and rate of fire by #1. Active: Using "Interdiction Shot" when in camouflage mode increases skill damage by #2 and removes camouflage.',
 	// 			number_of_stats: 2,
-	// 			stat1: [5, 5, 6, 6, 6, 7, 7, 7, 8, 8],
-	// 			stat2: [10, 11, 12, 13, 14, 14, 15, 16, 17, 18],
+	// 			stat1: ["5%", "5%", "6%", "6%", "6%", "7%", "7%", "7%", "8%", "8%"],
+	// 			stat2: ["10%", "11%", "12%", "13%", "14%", "14%", "15%", "16%", "17%", "18%"],
 	// 			image_skill: undefined
 	// 		},
 	// 		tile_set: {
@@ -4157,7 +4157,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true],
-	// hasVictoryLoopAnimation: [true, true],
+	// 			hasVictoryLoopAnimation: [true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4197,10 +4197,10 @@ const tdolls = [
 	// 			initial_cooldown: "4s",
 	// 			cooldown: [16, 15.6, 15.1, 14.7, 14.2, 13.8, 13.3, 12.9, 12.4, 12],
 	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 4 stacks. When skill is used, shoot the current target twice, dealing #1 ~ #2x damage per shot based on the current number of charge stacks, taking 0.5 seconds to aim before each shot. All stacks will be consumed on skill use.",
+	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 4 stacks. When skill is used, shoot the current target twice, dealing #1 ~ #2 damage per shot based on the current number of charge stacks, taking 0.5 seconds to aim before each shot. All stacks will be consumed on skill use.",
 	// 			number_of_stats: 2,
 	// 			stat1: [0.7, 0.9, 1.2, 1.4, 1.6, 1.9, 2.1, 2.3, 2.6, 2.8],
-	// 			stat2: [1.5, 1.7, 1.9, 2.2, 2.4, 2.6, 2.8, 3.1, 3.3, 3.5],
+	// 			stat2: ["1.5x", "1.7x", "1.9x", "2.2x", "2.4x", "2.6x", "2.8x", "3.1x", "3.3x", "3.5x"],
 	// 			image_skill: undefined
 	// 		},
 	// 		tile_set: {
@@ -4246,7 +4246,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
+	// 			hasVictoryLoopAnimation: [true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4285,10 +4285,10 @@ const tdolls = [
 	// 			name: "Assault Focus N",
 	// 			initial_cooldown: "8s",
 	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "During nighttime, increases rate of fire by #1% (#2% during day) for #3 seconds.",
+	// 			description: "During nighttime, increases rate of fire by #1 (#2 during day) for #3 seconds.",
 	// 			number_of_stats: 3,
-	// 			stat1: [45, 49, 54, 58, 63, 67, 72, 76, 81, 85],
-	// 			stat2: [15, 16, 18, 19, 21, 22, 24, 25, 27, 28],
+	// 			stat1: ["45%", "49%", "54%", "58%", "63%", "67%", "72%", "76%", "81%", "85%"],
+	// 			stat2: ["15%", "16%", "18%", "19%", "21%", "22%", "24%", "25%", "27%", "28%"],
 	// 			stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 	// 			image_skill: undefined
 	// 		},
@@ -4347,9 +4347,9 @@ const tdolls = [
 	// 			name: "Assault Focus",
 	// 			initial_cooldown: "5s",
 	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases rate of fire by #1% for #2 seconds.",
+	// 			description: "Increases rate of fire by #1 for #2 seconds.",
 	// 			number_of_stats: 2,
-	// 			stat1: [45, 48, 52, 55, 58, 62, 65, 68, 72, 75],
+	// 			stat1: ["45%", "48%", "52%", "55%", "58%", "62%", "65%", "68%", "72%", "75%"],
 	// 			stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 	// 			image_skill: undefined
 	// 		},
@@ -4396,7 +4396,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true, true, true],
-	// hasVictoryLoopAnimation: [true, true],
+	// 			hasVictoryLoopAnimation: [true, true, true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
@@ -4435,9 +4435,9 @@ const tdolls = [
 	// 			name: "Damage Focus",
 	// 			initial_cooldown: "5s",
 	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1% for #2 seconds.",
+	// 			description: "Increases damage by #1 for #2 seconds.",
 	// 			number_of_stats: 2,
-	// 			stat1: [35, 38, 41, 43, 46, 49, 52, 54, 57, 60],
+	// 			stat1: ["35%", "38%", "41%", "43%", "46%", "49%", "52%", "54%", "57%", "60%"],
 	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 	// 			image_skill: undefined
 	// 		},
@@ -4496,9 +4496,9 @@ const tdolls = [
 	// 			name: "Damage Focus",
 	// 			initial_cooldown: "5s",
 	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1% for #2 seconds.",
+	// 			description: "Increases damage by #1 for #2 seconds.",
 	// 			number_of_stats: 2,
-	// 			stat1: [45, 48, 52, 55, 58, 62, 65, 68, 72, 75],
+	// 			stat1: ["45%", "48%", "52%", "55%", "58%", "62%", "65%", "68%", "72%", "75%"],
 	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
 	// 			image_skill: undefined
 	// 		},
@@ -4545,7 +4545,7 @@ const tdolls = [
 	// 		skin_images_full: [],
 	// 		animations: {
 	// 			hasSkillAnimation: [true, true, true],
-	// hasVictoryLoopAnimation: [true, true],
+	// 			hasVictoryLoopAnimation: [true, true, true],
 	// 			attack: [],
 	// 			die: [],
 	// 			move: [],
