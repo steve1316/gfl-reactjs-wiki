@@ -80,6 +80,7 @@ export default function TDoll(props) {
 			// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
 			backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
 			backgroundSize: "5.66px 5.66px",
+			cursor: "pointer",
 			backgroundColor: theme.palette.grey[700]
 		},
 		cardForDormAnimations: {
@@ -92,6 +93,7 @@ export default function TDoll(props) {
 			// backgroundImage:
 			// 	"linear-gradient(45deg, #000000 5.56%, #292929 5.56%, #292929 33.33%, #424242 33.33%, #424242 50%, #000000 50%, #000000 55.56%, #292929 55.56%, #292929 83.33%, #424242 83.33%, #424242 100%)",
 			// backgroundSize: "12.73px 12.73px",
+			cursor: "pointer",
 			backgroundColor: theme.palette.grey[700]
 		},
 		cardMedia: {
@@ -858,7 +860,7 @@ export default function TDoll(props) {
 			animationArray.push("wait");
 			animationArray.push("move");
 			animationArray.push("attack");
-			if (tdoll.selected.animations.hasSkillAnimation || (showSkin && tdoll.skins.animations.hasSkillAnimation[tempSkinSelected])) {
+			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && tdoll.skins.animations.hasSkillAnimation[tempSkinSelected])) {
 				animationArray.push("skill");
 			}
 			animationArray.push("die");
@@ -866,7 +868,7 @@ export default function TDoll(props) {
 			if ("victory2" in tdoll.selected.animations && !showSkin) {
 				animationArray.push("victory2");
 			}
-			if (tdoll.selected.animations.hasVictoryLoopAnimation || (showSkin && tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected])) {
+			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected])) {
 				animationArray.push("victoryloop");
 			}
 		} else {
