@@ -975,277 +975,277 @@ export default function TDoll(props) {
 	return (
 		<main>
 			<ScrollToTop />
-			<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}>
-				<Container className={classes.cardGrid} maxWidth="md">
-					<br />
+			{/* <Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}> */}
+			<Container className={classes.cardGrid} maxWidth="md">
+				<br />
 
-					<Card className={classes.card}>
-						<CardContent>
-							{/************** T-Doll's Name, Rarity in stars, type, and Index Number **************/}
-							<Typography className={classes.rarityStars} color="textSecondary" gutterBottom>
-								{tdoll.selected.type}
-								{renderStars(tdoll.selected.rarity)}
+				<Card className={classes.card}>
+					<CardContent>
+						{/************** T-Doll's Name, Rarity in stars, type, and Index Number **************/}
+						<Typography className={classes.rarityStars} color="textSecondary" gutterBottom>
+							{tdoll.selected.type}
+							{renderStars(tdoll.selected.rarity)}
+						</Typography>
+						<Typography variant="h3" component="h2">
+							{tdoll.selected.name}
+							<Typography display="inline" color="textSecondary">
+								{" "}
+								#{tdoll.selected.id}
 							</Typography>
-							<Typography variant="h3" component="h2">
-								{tdoll.selected.name}
-								<Typography display="inline" color="textSecondary">
-									{" "}
-									#{tdoll.selected.id}
-								</Typography>
-							</Typography>
+						</Typography>
 
-							{/************** T-Doll image and skin images (Card/Full) **************/}
-							<Grid container direction="row" spacing={2}>
-								<Grid item key="T-Doll image" xs={12} sm={6}>
-									{tdoll.skins !== null ? (
-										tdoll.skins.number_of_skins === 1 ? (
-											<Tabs
-												className={classes.tabs}
-												value={skinSelected !== undefined ? skinSelected : false}
-												onChange={switchSkinSelected}
-												indicatorColor="primary"
-												textColor="primary"
-												variant="fullWidth"
-												scrollButtons="on"
-											>
-												{renderSkinsTabs()}
-											</Tabs>
-										) : (
-											<Tabs
-												className={classes.tabs}
-												value={skinSelected !== undefined ? skinSelected : false}
-												onChange={switchSkinSelected}
-												indicatorColor="primary"
-												textColor="primary"
-												variant="scrollable"
-												scrollButtons="on"
-											>
-												{renderSkinsTabs()}
-											</Tabs>
-										)
-									) : (
-										<Tabs className={classes.tabs} value={false} indicatorColor="primary" textColor="primary" variant="fullWidth" scrollButtons="auto" centered>
-											<Tab label="No skins" />
+						{/************** T-Doll image and skin images (Card/Full) **************/}
+						<Grid container direction="row" spacing={2}>
+							<Grid item key="T-Doll image" xs={12} sm={6}>
+								{tdoll.skins !== null ? (
+									tdoll.skins.number_of_skins === 1 ? (
+										<Tabs
+											className={classes.tabs}
+											value={skinSelected !== undefined ? skinSelected : false}
+											onChange={switchSkinSelected}
+											indicatorColor="primary"
+											textColor="primary"
+											variant="fullWidth"
+											scrollButtons="on"
+										>
+											{renderSkinsTabs()}
 										</Tabs>
+									) : (
+										<Tabs
+											className={classes.tabs}
+											value={skinSelected !== undefined ? skinSelected : false}
+											onChange={switchSkinSelected}
+											indicatorColor="primary"
+											textColor="primary"
+											variant="scrollable"
+											scrollButtons="on"
+										>
+											{renderSkinsTabs()}
+										</Tabs>
+									)
+								) : (
+									<Tabs className={classes.tabs} value={false} indicatorColor="primary" textColor="primary" variant="fullWidth" scrollButtons="auto" centered>
+										<Tab label="No skins" />
+									</Tabs>
+								)}
+
+								<Card className={classes.cardForImage} elevation={12}>
+									<CardActionArea onClick={switchBetweenNormalDamagedCardImages}>
+										<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
+									</CardActionArea>
+									{/************** Floating Action Button overlayed over image at the top left **************/}
+									{hasMod ? (
+										<Fab color="primary" className={classes.fab_mod} onClick={switchModes}>
+											<img src={mod_button} alt="Switch between Normal/Mod" style={{ height: 32, width: 32 }} />
+										</Fab>
+									) : (
+										renderNormalButton()
 									)}
 
-									<Card className={classes.cardForImage} elevation={12}>
-										<CardActionArea onClick={switchBetweenNormalDamagedCardImages}>
-											<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
-										</CardActionArea>
-										{/************** Floating Action Button overlayed over image at the top left **************/}
-										{hasMod ? (
-											<Fab color="primary" className={classes.fab_mod} onClick={switchModes}>
-												<img src={mod_button} alt="Switch between Normal/Mod" style={{ height: 32, width: 32 }} />
-											</Fab>
-										) : (
-											renderNormalButton()
-										)}
-
-										{/************** Floating Action Button overlayed over image at the bottom left **************/}
-										<Fab color="primary" className={classes.fabExpand} onClick={handleToggle}>
-											<ZoomOutMapIcon />
-										</Fab>
-
-										{/************** Display full size images based on boolean **************/}
-										<Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
-											{renderImage()}
-										</Backdrop>
-									</Card>
-
-									{/************** T-Doll's animations **************/}
-									<Fab color="primary" className={classes.fab_dorm} onClick={switchAnimationMode}>
-										{animationMode === 0 ? (
-											<img src={combat_button} alt="Switch to Dorm Animations" style={{ height: 32, width: 32, paddingTop: 3 }} />
-										) : (
-											<img src={dorm_button} alt="Switch to Normal Animations" style={{ height: 29, width: 29, paddingTop: 3 }} />
-										)}
+									{/************** Floating Action Button overlayed over image at the bottom left **************/}
+									<Fab color="primary" className={classes.fabExpand} onClick={handleToggle}>
+										<ZoomOutMapIcon />
 									</Fab>
 
-									{renderAnimationTabs()}
+									{/************** Display full size images based on boolean **************/}
+									<Backdrop className={classes.backdrop} open={open} onClick={handleClose}>
+										{renderImage()}
+									</Backdrop>
+								</Card>
 
+								{/************** T-Doll's animations **************/}
+								<Fab color="primary" className={classes.fab_dorm} onClick={switchAnimationMode}>
 									{animationMode === 0 ? (
-										<Card className={classes.cardForCombatAnimations} elevation={12}>
-											<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
-										</Card>
+										<img src={combat_button} alt="Switch to Dorm Animations" style={{ height: 32, width: 32, paddingTop: 3 }} />
 									) : (
-										<Card className={classes.cardForDormAnimations} elevation={12}>
-											<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
-										</Card>
+										<img src={dorm_button} alt="Switch to Normal Animations" style={{ height: 29, width: 29, paddingTop: 3 }} />
 									)}
-								</Grid>
+								</Fab>
 
-								<Grid item key="T-Doll stat table and skill card" xs={12} sm={6}>
-									{/************** T-Doll's skill information **************/}
-									{showModSkill ? (
-										<Tabs className={classes.tabsForSkills} value={selectedSkill} onChange={handleChangeSkills} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
-											<Tab label="Skill 1" />
-											<Tab label="Skill 2" />
-										</Tabs>
-									) : (
-										<Tabs className={classes.tabsForSkills} value={0} indicatorColor="primary" textColor="primary" centered>
-											<Tab label="Skill 1" />
-										</Tabs>
-									)}
+								{renderAnimationTabs()}
 
-									<Card className={classes.cardForSkill} elevation={12}>
-										<CardContent>
-											<CardHeader
-												avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.image_skill : tdoll.selected.skill.image_skill} />}
-												title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
-												subheader={
-													selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? "Initial CD: " + tdoll.selected.skill2.initial_cooldown : "Initial CD: " + tdoll.selected.skill.initial_cooldown
-												}
-												action={
-													<FormControl>
-														<InputLabel id="skill-level-select-label">Level</InputLabel>
-
-														<Select
-															id="skill-level-select"
-															className={classes.skillLevel}
-															value={skillLevel}
-															onChange={(e) => {
-																setSkillLevel(e.target.value);
-															}}
-															// MenuProps will shift the drop down menu to the right.
-															MenuProps={{
-																anchorOrigin: {
-																	vertical: "top",
-																	horizontal: "right"
-																},
-																transformOrigin: {
-																	vertical: "top",
-																	horizontal: "left"
-																},
-																getContentAnchorEl: null
-															}}
-														>
-															<MenuItem value={1}>1</MenuItem>
-															<MenuItem value={2}>2</MenuItem>
-															<MenuItem value={3}>3</MenuItem>
-															<MenuItem value={4}>4</MenuItem>
-															<MenuItem value={5}>5</MenuItem>
-															<MenuItem value={6}>6</MenuItem>
-															<MenuItem value={7}>7</MenuItem>
-															<MenuItem value={8}>8</MenuItem>
-															<MenuItem value={9}>9</MenuItem>
-															<MenuItem value={10}>10</MenuItem>
-														</Select>
-													</FormControl>
-												}
-											/>
-
-											<Divider />
-
-											{/************** This will render the span tags inserted into the skill description and will color the numbers. **************/}
-											<Typography className={classes.title} color="textSecondary" gutterBottom>
-												{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
-											</Typography>
-											{selectedSkill === 0 ? (
-												<>
-													<Divider />
-													<Typography className={classes.cooldownText} color="textSecondary">
-														Cooldown:{" "}
-														{
-															<span style={{ color: "cyan" }}>
-																<ins>{tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
-															</span>
-														}
-													</Typography>
-												</>
-											) : (
-												""
-											)}
-										</CardContent>
+								{animationMode === 0 ? (
+									<Card className={classes.cardForCombatAnimations} elevation={12}>
+										<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
 									</Card>
-
-									<br />
-
-									{/************** T-Doll's tileset information **************/}
-									<Card className={classes.cardForTileSet} elevation={12}>
-										<div className={classes.tileSetDiv}>
-											<CardContent className={classes.content}>
-												<table className={classes.tableTileSet} id="tdoll-tileset">
-													<tbody>
-														<tr>
-															{tdoll.selected.tile_set.row1.map((tile, index) => {
-																return createTileSetRow(tile, index);
-															})}
-														</tr>
-														<tr>
-															{tdoll.selected.tile_set.row2.map((tile, index) => {
-																return createTileSetRow(tile, index);
-															})}
-														</tr>
-														<tr>
-															{tdoll.selected.tile_set.row3.map((tile, index) => {
-																return createTileSetRow(tile, index);
-															})}
-														</tr>
-													</tbody>
-												</table>
-											</CardContent>
-
-											<CardContent className={classes.tileSetInformation}>
-												<Typography className={classes.title} color="textPrimary" gutterBottom>
-													{tdoll.selected.tile_set.targets}
-												</Typography>
-												<Typography color="textSecondary">{parse(renderTileSetInformation())}</Typography>
-											</CardContent>
-										</div>
+								) : (
+									<Card className={classes.cardForDormAnimations} elevation={12}>
+										<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
 									</Card>
-
-									<br />
-
-									{/************** T-Doll's stats in table format **************/}
-									<TableContainer className={classes.tableContainer} component={Paper} elevation={12}>
-										<Table className={classes.table} size="small">
-											<TableHead>
-												<TableRow>
-													<TableCell>Stats</TableCell>
-													<TableCell align="right">At Max Level</TableCell>
-												</TableRow>
-											</TableHead>
-											<TableBody>
-												<TableRow>
-													<TableCell component="th" scope="row">
-														HP
-													</TableCell>
-													<TableCell align="right">{tdoll.selected.max_hp}</TableCell>
-												</TableRow>
-												<TableRow>
-													<TableCell component="th" scope="row">
-														DMG
-													</TableCell>
-													<TableCell align="right">{tdoll.selected.max_dmg}</TableCell>
-												</TableRow>
-												<TableRow>
-													<TableCell component="th" scope="row">
-														ACC
-													</TableCell>
-													<TableCell align="right">{tdoll.selected.max_acc}</TableCell>
-												</TableRow>
-												<TableRow>
-													<TableCell component="th" scope="row">
-														EVA
-													</TableCell>
-													<TableCell align="right">{tdoll.selected.max_eva}</TableCell>
-												</TableRow>
-												<TableRow>
-													<TableCell component="th" scope="row">
-														ROF
-													</TableCell>
-													<TableCell align="right">{tdoll.selected.max_rof}</TableCell>
-												</TableRow>
-											</TableBody>
-										</Table>
-									</TableContainer>
-								</Grid>
+								)}
 							</Grid>
-						</CardContent>
-					</Card>
-				</Container>
-			</Grow>
+
+							<Grid item key="T-Doll stat table and skill card" xs={12} sm={6}>
+								{/************** T-Doll's skill information **************/}
+								{showModSkill ? (
+									<Tabs className={classes.tabsForSkills} value={selectedSkill} onChange={handleChangeSkills} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
+										<Tab label="Skill 1" />
+										<Tab label="Skill 2" />
+									</Tabs>
+								) : (
+									<Tabs className={classes.tabsForSkills} value={0} indicatorColor="primary" textColor="primary" centered>
+										<Tab label="Skill 1" />
+									</Tabs>
+								)}
+
+								<Card className={classes.cardForSkill} elevation={12}>
+									<CardContent>
+										<CardHeader
+											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.image_skill : tdoll.selected.skill.image_skill} />}
+											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
+											subheader={
+												selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? "Initial CD: " + tdoll.selected.skill2.initial_cooldown : "Initial CD: " + tdoll.selected.skill.initial_cooldown
+											}
+											action={
+												<FormControl>
+													<InputLabel id="skill-level-select-label">Level</InputLabel>
+
+													<Select
+														id="skill-level-select"
+														className={classes.skillLevel}
+														value={skillLevel}
+														onChange={(e) => {
+															setSkillLevel(e.target.value);
+														}}
+														// MenuProps will shift the drop down menu to the right.
+														MenuProps={{
+															anchorOrigin: {
+																vertical: "top",
+																horizontal: "right"
+															},
+															transformOrigin: {
+																vertical: "top",
+																horizontal: "left"
+															},
+															getContentAnchorEl: null
+														}}
+													>
+														<MenuItem value={1}>1</MenuItem>
+														<MenuItem value={2}>2</MenuItem>
+														<MenuItem value={3}>3</MenuItem>
+														<MenuItem value={4}>4</MenuItem>
+														<MenuItem value={5}>5</MenuItem>
+														<MenuItem value={6}>6</MenuItem>
+														<MenuItem value={7}>7</MenuItem>
+														<MenuItem value={8}>8</MenuItem>
+														<MenuItem value={9}>9</MenuItem>
+														<MenuItem value={10}>10</MenuItem>
+													</Select>
+												</FormControl>
+											}
+										/>
+
+										<Divider />
+
+										{/************** This will render the span tags inserted into the skill description and will color the numbers. **************/}
+										<Typography className={classes.title} color="textSecondary" gutterBottom>
+											{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
+										</Typography>
+										{selectedSkill === 0 ? (
+											<>
+												<Divider />
+												<Typography className={classes.cooldownText} color="textSecondary">
+													Cooldown:{" "}
+													{
+														<span style={{ color: "cyan" }}>
+															<ins>{tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
+														</span>
+													}
+												</Typography>
+											</>
+										) : (
+											""
+										)}
+									</CardContent>
+								</Card>
+
+								<br />
+
+								{/************** T-Doll's tileset information **************/}
+								<Card className={classes.cardForTileSet} elevation={12}>
+									<div className={classes.tileSetDiv}>
+										<CardContent className={classes.content}>
+											<table className={classes.tableTileSet} id="tdoll-tileset">
+												<tbody>
+													<tr>
+														{tdoll.selected.tile_set.row1.map((tile, index) => {
+															return createTileSetRow(tile, index);
+														})}
+													</tr>
+													<tr>
+														{tdoll.selected.tile_set.row2.map((tile, index) => {
+															return createTileSetRow(tile, index);
+														})}
+													</tr>
+													<tr>
+														{tdoll.selected.tile_set.row3.map((tile, index) => {
+															return createTileSetRow(tile, index);
+														})}
+													</tr>
+												</tbody>
+											</table>
+										</CardContent>
+
+										<CardContent className={classes.tileSetInformation}>
+											<Typography className={classes.title} color="textPrimary" gutterBottom>
+												{tdoll.selected.tile_set.targets}
+											</Typography>
+											<Typography color="textSecondary">{parse(renderTileSetInformation())}</Typography>
+										</CardContent>
+									</div>
+								</Card>
+
+								<br />
+
+								{/************** T-Doll's stats in table format **************/}
+								<TableContainer className={classes.tableContainer} component={Paper} elevation={12}>
+									<Table className={classes.table} size="small">
+										<TableHead>
+											<TableRow>
+												<TableCell>Stats</TableCell>
+												<TableCell align="right">At Max Level</TableCell>
+											</TableRow>
+										</TableHead>
+										<TableBody>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													HP
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_hp}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													DMG
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_dmg}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													ACC
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_acc}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													EVA
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_eva}</TableCell>
+											</TableRow>
+											<TableRow>
+												<TableCell component="th" scope="row">
+													ROF
+												</TableCell>
+												<TableCell align="right">{tdoll.selected.max_rof}</TableCell>
+											</TableRow>
+										</TableBody>
+									</Table>
+								</TableContainer>
+							</Grid>
+						</Grid>
+					</CardContent>
+				</Card>
+			</Container>
+			{/* </Grow> */}
 		</main>
 	);
 }
