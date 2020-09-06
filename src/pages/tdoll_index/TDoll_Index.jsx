@@ -202,7 +202,7 @@ export default function TDoll_Index() {
 				);
 
 				// Stagger timeout will never be more than 1.5 seconds.
-				stagger += 100;
+				stagger += 200;
 				if (stagger >= 1500) {
 					stagger = 0;
 				}
