@@ -38,6 +38,8 @@ This project serves to provide a mobile-friendly web application of a database f
 - [x] Set up filters and searching functionality for T-Dolls.
 
   - [x] Finalize the Chip components.
+  - [ ] Save filters when moving to and from T-Doll Index page for persistence. Maybe have a "Clear Filters" button.
+  - [ ] Add 6* rarity filter to depict the Mod of 5*'s. Make it only show up by clicking on the Mod Filter Button.
 
 - [x] Add T-Dolls #1 to #10 to JSON data object.
 
@@ -62,6 +64,8 @@ This project serves to provide a mobile-friendly web application of a database f
   - [ ] Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
 
 - [ ] Add functionality to see the stats of equipped T-Dolls.
+
+- [ ] Add Pagination Component to T-Doll Index page.
 
 - [ ] ...
 
