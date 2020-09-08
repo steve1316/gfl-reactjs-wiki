@@ -3786,787 +3786,787 @@ const tdolls = [
 		mod: null,
 		selected: {},
 		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 41,
+			name: "SKS",
+			type: "RF",
+			rarity: 2,
+			max_hp: 93,
+			max_dmg: 100,
+			max_acc: 59,
+			max_eva: 34,
+			max_rof: 34,
+			skill: {
+				name: "Assault Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases rate of fire by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["10%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 42,
+			name: "PTRD",
+			type: "RF",
+			rarity: 4,
+			max_hp: 93,
+			max_dmg: 159,
+			max_acc: 75,
+			max_eva: 29,
+			max_rof: 28,
+			skill: {
+				name: "Interdiction Shot",
+				initial_cooldown: "8s",
+				cooldown: [13, 12.6, 12.1, 11.7, 11.2, 10.8, 10.3, 9.9, 9.4, 9],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 7 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8, 2.9, 3, 3.1],
+				stat2: ["3.2x", "3.6x", "4x", "4.5x", "4.9x", "5.3x", "5.7x", "6.2x", "6.6x", "7x"],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Romantic Mission"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 43,
+			name: "SVD",
+			type: "RF",
+			rarity: 4,
+			max_hp: 80,
+			max_dmg: 130,
+			max_acc: 80,
+			max_eva: 33,
+			max_rof: 37,
+			skill: {
+				name: "Assault Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases rate of fire by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["40%", "43%", "46%", "48%", "51%", "54%", "57%", "59%", "62%", "65%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Winter Fairy"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [true],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 44,
+			name: "SV-98",
+			type: "RF",
+			rarity: 3,
+			max_hp: 84,
+			max_dmg: 122,
+			max_acc: 74,
+			max_eva: 28,
+			max_rof: 37,
+			skill: {
+				name: "Interdiction Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
+				stat2: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: {
+			id: 44,
+			name: "SV-98 Mod",
+			type: "RF",
+			rarity: 4,
+			max_hp: 86,
+			max_dmg: 128,
+			max_acc: 81,
+			max_eva: 29,
+			max_rof: 37,
+			skill: {
+				name: "True Interdiction Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
+				stat2: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Shadowy Savior",
+				initial_cooldown: "Passive",
+				passive_active_description: true,
+				description:
+					'Passive: Enter camouflage mode after staying still for 3 seconds, and increases self accuracy and rate of fire by #1. Active: Using "Interdiction Shot" when in camouflage mode increases skill damage by #2 and removes camouflage.',
+				number_of_stats: 2,
+				stat1: ["5%", "5%", "6%", "6%", "6%", "7%", "7%", "7%", "8%", "8%"],
+				stat2: ["10%", "11%", "12%", "13%", "14%", "14%", "15%", "16%", "17%", "18%"],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		selected: {},
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Waitress", "Piercing the Heart"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true, true],
+				hasVictoryLoopAnimation: [true, true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 46,
+			name: "Kar98k",
+			type: "RF",
+			rarity: 5,
+			max_hp: 84,
+			max_dmg: 135,
+			max_acc: 78,
+			max_eva: 41,
+			max_rof: 34,
+			skill: {
+				name: "Chain Shot",
+				initial_cooldown: "4s",
+				cooldown: [16, 15.6, 15.1, 14.7, 14.2, 13.8, 13.3, 12.9, 12.4, 12],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 4 stacks. When skill is used, shoot the current target twice, dealing #1 ~ #2 damage per shot based on the current number of charge stacks, taking 0.5 seconds to aim before each shot. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [0.7, 0.9, 1.2, 1.4, 1.6, 1.9, 2.1, 2.3, 2.6, 2.8],
+				stat2: ["1.5x", "1.7x", "1.9x", "2.2x", "2.4x", "2.6x", "2.8x", "3.1x", "3.3x", "3.5x"],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["18%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Roses in Hand"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 47,
+			name: "G43",
+			type: "RF",
+			rarity: 2,
+			max_hp: 80,
+			max_dmg: 111,
+			max_acc: 58,
+			max_eva: 28,
+			max_rof: 40,
+			skill: {
+				name: "Assault Focus N",
+				initial_cooldown: "8s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "During nighttime, increases rate of fire by #1 (#2 during day) for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["45%", "49%", "54%", "58%", "63%", "67%", "72%", "76%", "81%", "85%"],
+				stat2: ["15%", "16%", "18%", "19%", "21%", "22%", "24%", "25%", "27%", "28%"],
+				stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["10%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 48,
+			name: "WA2000",
+			type: "RF",
+			rarity: 5,
+			max_hp: 88,
+			max_dmg: 130,
+			max_acc: 82,
+			max_eva: 30,
+			max_rof: 39,
+			skill: {
+				name: "Assault Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases rate of fire by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["45%", "48%", "52%", "55%", "58%", "62%", "65%", "68%", "72%", "75%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["18%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 4,
+			skin_names: ["Haunted Castle", "Date in the Snow", "Ballroom Interlude", "Op. Manta Ray"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false, false, false, false],
+				hasVictoryLoopAnimation: [true, true, true, true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, false, true],
+				hasSit2Animation: [false, false, false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 49,
+			name: "Type 56",
+			type: "RF",
+			rarity: 3,
+			max_hp: 93,
+			max_dmg: 103,
+			max_acc: 65,
+			max_eva: 36,
+			max_rof: 36,
+			skill: {
+				name: "Damage Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["35%", "38%", "41%", "43%", "46%", "49%", "52%", "54%", "57%", "60%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 50,
+			name: "Lee-Enfield",
+			type: "RF",
+			rarity: 5,
+			max_hp: 80,
+			max_dmg: 135,
+			max_acc: 78,
+			max_eva: 40,
+			max_rof: 36,
+			skill: {
+				name: "Damage Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["45%", "48%", "52%", "55%", "58%", "62%", "65%", "68%", "72%", "75%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				image_skill: undefined
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["18%"]
+			},
+			images: {
+				card: undefined,
+				card_damaged: undefined,
+				full: undefined,
+				full_damaged: undefined
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				attack: undefined,
+				die: undefined,
+				move: undefined,
+				skill: undefined,
+				victory: undefined,
+				victoryloop: undefined,
+				wait: undefined
+			},
+			animations_dorm: {
+				lying: undefined,
+				move: undefined,
+				pick: undefined,
+				sit: undefined,
+				wait: undefined
+			}
+		},
+		mod: null,
+		selected: {},
+		skins: {
+			number_of_skins: 3,
+			skin_names: ["Huntress' Frock", "Lifelong Protector", "Onion Shooter"],
+			skin_images: [],
+			skin_images_full: [],
+			animations: {
+				hasSkillAnimation: [false, false, false],
+				hasVictoryLoopAnimation: [true, true, true],
+				attack: [],
+				die: [],
+				move: [],
+				skill: [],
+				victory: [],
+				victoryloop: [],
+				wait: []
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, false],
+				hasSit2Animation: [false, false, false],
+				lying: [],
+				move: [],
+				action: [],
+				pick: [],
+				sit: [],
+				sit2: [],
+				wait: []
+			}
+		}
 	}
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 41,
-	// 		name: "SKS",
-	// 		type: "RF",
-	// 		rarity: 2,
-	// 		max_hp: 93,
-	// 		max_dmg: 100,
-	// 		max_acc: 59,
-	// 		max_eva: 34,
-	// 		max_rof: 34,
-	// 		skill: {
-	// 			name: "Assault Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases rate of fire by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["10%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 42,
-	// 		name: "PTRD",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 93,
-	// 		max_dmg: 159,
-	// 		max_acc: 75,
-	// 		max_eva: 29,
-	// 		max_rof: 28,
-	// 		skill: {
-	// 			name: "Interdiction Shot",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [13, 12.6, 12.1, 11.7, 11.2, 10.8, 10.3, 9.9, 9.4, 9],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 7 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [2.1, 2.2, 2.3, 2.4, 2.5, 2.7, 2.8, 2.9, 3, 3.1],
-	// 			stat2: ["3.2x", "3.6x", "4x", "4.5x", "4.9x", "5.3x", "5.7x", "6.2x", "6.6x", "7x"],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Romantic Mission"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 43,
-	// 		name: "SVD",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 80,
-	// 		max_dmg: 130,
-	// 		max_acc: 80,
-	// 		max_eva: 33,
-	// 		max_rof: 37,
-	// 		skill: {
-	// 			name: "Assault Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases rate of fire by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["40%", "43%", "46%", "48%", "51%", "54%", "57%", "59%", "62%", "65%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Winter Fairy"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// 			hasVictoryLoopAnimation: [true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 44,
-	// 		name: "SV-98",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 84,
-	// 		max_dmg: 122,
-	// 		max_acc: 74,
-	// 		max_eva: 28,
-	// 		max_rof: 37,
-	// 		skill: {
-	// 			name: "Interdiction Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
-	// 			stat2: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 44,
-	// 		name: "SV-98 Mod",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 86,
-	// 		max_dmg: 128,
-	// 		max_acc: 81,
-	// 		max_eva: 29,
-	// 		max_rof: 37,
-	// 		skill: {
-	// 			name: "True Interdiction Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
-	// 			stat2: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"],
-	// 			image_skill: undefined
-	// 		},
-	// 		skill2: {
-	// 			name: "Shadowy Savior",
-	// 			initial_cooldown: "Passive",
-	// 			passive_active_description: true,
-	// 			description:
-	// 				'Passive: Enter camouflage mode after staying still for 3 seconds, and increases self accuracy and rate of fire by #1. Active: Using "Interdiction Shot" when in camouflage mode increases skill damage by #2 and removes camouflage.',
-	// 			number_of_stats: 2,
-	// 			stat1: ["5%", "5%", "6%", "6%", "6%", "7%", "7%", "7%", "8%", "8%"],
-	// 			stat2: ["10%", "11%", "12%", "13%", "14%", "14%", "15%", "16%", "17%", "18%"],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Waitress", "Piercing the Heart"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true, true],
-	// 			hasVictoryLoopAnimation: [true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true, true],
-	// 			hasSit2Animation: [true, true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 46,
-	// 		name: "Kar98k",
-	// 		type: "RF",
-	// 		rarity: 5,
-	// 		max_hp: 84,
-	// 		max_dmg: 135,
-	// 		max_acc: 78,
-	// 		max_eva: 41,
-	// 		max_rof: 34,
-	// 		skill: {
-	// 			name: "Chain Shot",
-	// 			initial_cooldown: "4s",
-	// 			cooldown: [16, 15.6, 15.1, 14.7, 14.2, 13.8, 13.3, 12.9, 12.4, 12],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 4 stacks. When skill is used, shoot the current target twice, dealing #1 ~ #2 damage per shot based on the current number of charge stacks, taking 0.5 seconds to aim before each shot. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [0.7, 0.9, 1.2, 1.4, 1.6, 1.9, 2.1, 2.3, 2.6, 2.8],
-	// 			stat2: ["1.5x", "1.7x", "1.9x", "2.2x", "2.4x", "2.6x", "2.8x", "3.1x", "3.3x", "3.5x"],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Roses in Hand"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true],
-	// 			hasVictoryLoopAnimation: [true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 47,
-	// 		name: "G43",
-	// 		type: "RF",
-	// 		rarity: 2,
-	// 		max_hp: 80,
-	// 		max_dmg: 111,
-	// 		max_acc: 58,
-	// 		max_eva: 28,
-	// 		max_rof: 40,
-	// 		skill: {
-	// 			name: "Assault Focus N",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "During nighttime, increases rate of fire by #1 (#2 during day) for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["45%", "49%", "54%", "58%", "63%", "67%", "72%", "76%", "81%", "85%"],
-	// 			stat2: ["15%", "16%", "18%", "19%", "21%", "22%", "24%", "25%", "27%", "28%"],
-	// 			stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["10%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 48,
-	// 		name: "WA2000",
-	// 		type: "RF",
-	// 		rarity: 5,
-	// 		max_hp: 88,
-	// 		max_dmg: 130,
-	// 		max_acc: 82,
-	// 		max_eva: 30,
-	// 		max_rof: 39,
-	// 		skill: {
-	// 			name: "Assault Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases rate of fire by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["45%", "48%", "52%", "55%", "58%", "62%", "65%", "68%", "72%", "75%"],
-	// 			stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 4,
-	// 		skin_names: ["Haunted Castle", "Date in the Snow", "Ballroom Interlude", "Op. Manta Ray"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true, true, true, true],
-	// 			hasVictoryLoopAnimation: [true, true, true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true, true, true, true],
-	// 			hasSit2Animation: [true, true, true, true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 49,
-	// 		name: "Type 56",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 93,
-	// 		max_dmg: 103,
-	// 		max_acc: 65,
-	// 		max_eva: 36,
-	// 		max_rof: 36,
-	// 		skill: {
-	// 			name: "Damage Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["35%", "38%", "41%", "43%", "46%", "49%", "52%", "54%", "57%", "60%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 50,
-	// 		name: "Lee-Enfield",
-	// 		type: "RF",
-	// 		rarity: 5,
-	// 		max_hp: 80,
-	// 		max_dmg: 135,
-	// 		max_acc: 78,
-	// 		max_eva: 40,
-	// 		max_rof: 36,
-	// 		skill: {
-	// 			name: "Damage Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["45%", "48%", "52%", "55%", "58%", "62%", "65%", "68%", "72%", "75%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-	// 			image_skill: undefined
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		images: {
-	// 			card: undefined,
-	// 			card_damaged: undefined,
-	// 			full: undefined,
-	// 			full_damaged: undefined
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: true,
-	// 			hasVictoryLoopAnimation: true,
-	// 			attack: undefined,
-	// 			die: undefined,
-	// 			move: undefined,
-	// 			skill: undefined,
-	// 			victory: undefined,
-	// 			victoryloop: undefined,
-	// 			wait: undefined
-	// 		},
-	// 		animations_dorm: {
-	// 			lying: undefined,
-	// 			move: undefined,
-	// 			pick: undefined,
-	// 			sit: undefined,
-	// 			wait: undefined
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	selected: {},
-	// 	skins: {
-	// 		number_of_skins: 3,
-	// 		skin_names: ["Huntress' Frock", "Lifelong Protector", "Onion Shooter"],
-	// 		skin_images: [],
-	// 		skin_images_full: [],
-	// 		animations: {
-	// 			hasSkillAnimation: [true, true, true],
-	// 			hasVictoryLoopAnimation: [true, true, true],
-	// 			attack: [],
-	// 			die: [],
-	// 			move: [],
-	// 			skill: [],
-	// 			victory: [],
-	// 			victoryloop: [],
-	// 			wait: []
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true, true, true],
-	// 			hasSit2Animation: [true, true, true],
-	// 			lying: [],
-	// 			move: [],
-	// 			action: [],
-	// 			pick: [],
-	// 			sit: [],
-	// 			sit2: [],
-	// 			wait: []
-	// 		}
-	// 	}
-	// }
 ];
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
