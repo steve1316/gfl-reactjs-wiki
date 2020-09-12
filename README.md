@@ -38,8 +38,8 @@ This project serves to provide a mobile-friendly web application of a database f
 - [x] Set up filters and searching functionality for T-Dolls.
 
   - [x] Finalize the Chip components.
-  - [ ] Save filters when moving to and from T-Doll Index page for persistence. Maybe have a "Clear Filters" button.
-  - [ ] Add 6* rarity filter to depict the Mod of 5*'s. Make it only show up by clicking on the Mod Filter Button.
+  - [x] Save filters when moving to and from T-Doll Index page for persistence. ~~Maybe have a "Clear Filters" button.~~
+  - [x] ~~Add 6* rarity filter to depict the Mod of 5*'s. Make it only show up by clicking on the Mod Filter Button.~~ Did not add a 6* rarity filter but rather had the 5* rarity filter show the 6* Mods instead.
 
 - [x] Add T-Dolls #1 to #10 to JSON data object.
 
@@ -49,7 +49,19 @@ This project serves to provide a mobile-friendly web application of a database f
 
   - [x] Rework the logic such that clicking on the GIF plays the next animation and loops back around when you reach the last animation.
 
-- [ ] Add T-Dolls #11 to #50.
+- [x] Add T-Dolls #11 to #50.
+
+- [ ] Add T-Dolls #51 to #100.
+
+- [ ] Add T-Dolls #101 to #150.
+
+- [ ] Add T-Dolls #151 to #200.
+
+- [ ] Add T-Dolls #201 to #250.
+
+- [ ] Add T-Dolls #251 to #300.
+
+- [ ] Add T-Dolls #301 to #319 (currently as of September 09, 2020).
 
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ Doing so will mess up the image resolution and make it too blurry.
 
