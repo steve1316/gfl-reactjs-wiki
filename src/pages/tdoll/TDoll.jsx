@@ -515,6 +515,11 @@ export default function TDoll(props) {
 				tempSkillDescription2 = tempSkillDescription2.replace("Active: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Active:</ins></span> ');
 			}
 
+			if ("passive_passive_description" in tdollTemp.selected.skill2) {
+				tempSkillDescription2 = tempSkillDescription2.replace("Passive 1: ", '<span style="color: orange; font-size: 110%;"><ins>Passive 1:</ins></span> ');
+				tempSkillDescription2 = tempSkillDescription2.replace("Passive 2: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Passive 2:</ins></span> ');
+			}
+
 			setSkillDescription1(tempSkillDescription1);
 			setSkillDescription2(tempSkillDescription2);
 		} else {
