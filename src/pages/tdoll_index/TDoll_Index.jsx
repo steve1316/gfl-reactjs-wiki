@@ -16,6 +16,9 @@ import mod_button from "../../images/mod.png";
 
 // T-Dolls JSON import
 const tdolls_from_1_to_50 = require("../../data/tdolls_from_1_to_50");
+const tdolls_from_51_to_100 = require("../../data/tdolls_from_51_to_100");
+
+const tdolls_array = tdolls_from_1_to_50.concat(tdolls_from_51_to_100);
 
 const HtmlTooltip = withStyles((theme) => ({
 	tooltip: {
@@ -99,15 +102,30 @@ export default function TDoll_Index() {
 		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
 	};
 
-	// Set the number of search results to the length of the T-Doll JSON. Runs once for now.
+	// Checks for filters in sessionStorage. Set the number of search results to the length of the T-Doll JSON. Runs once for now.
 	useEffect(() => {
+		if (sessionStorage.getItem("filters")) {
+			var temp = JSON.parse(sessionStorage.getItem("filters"))
+			setRarityFilter(temp.rarityFilter)
+			setTypeFilter(temp.typeFilter)
+			setModFilter(temp.modFilter)
+		}
+
 		setSearchResults(renderTDolls());
 		setNumberOfSearchResults(tdolls_from_1_to_50.length);
 	}, []);
 
-	// Update the search results every time the filters change.
+	// Update the search results every time the filters change. Save the filters in sessionStorage.
 	useEffect(() => {
 		setSearchResults(renderTDolls());
+
+		var tempFilters = {
+			rarityFilter: rarityFilter,
+			typeFilter: typeFilter,
+			modFilter: modFilter
+		}
+
+		sessionStorage.setItem("filters", JSON.stringify(tempFilters))
 	}, [modFilter, rarityFilter, typeFilter]);
 
 	// The following handler functions below are setting the filters selected as active.
@@ -136,7 +154,7 @@ export default function TDoll_Index() {
 	const renderTDolls = () => {
 		var tempArray = [];
 		var stagger = 100;
-		tdolls_from_1_to_50
+		tdolls_array
 			.filter((data) => {
 				// Filter if T-Dolls have Mod or not.
 				if (modFilter.selected) {
@@ -151,7 +169,14 @@ export default function TDoll_Index() {
 				// Filter for rarity.
 				for (var i = 0; i < rarityFilter.length; i++) {
 					if (rarityFilter[i].selected && rarityFilter[i].rarity !== data.selected.rarity) {
-						return;
+						// Now check to see if rarity selected is 5* and the selected T-Doll is 6*. This is only possible for T-Dolls that have Mods so far.
+						// Thus, 6* Mods will appear when you select the 5* rarity filter and the Mod Filter is also selected.
+						if (rarityFilter[i].rarity === 5 && data.selected.rarity === 6) {
+							// This is intentionally empty to include the 6* Mods in the results.
+						 }
+						else {
+							return;
+						}
 					}
 				}
 
@@ -312,9 +337,11 @@ export default function TDoll_Index() {
 
 				<Divider className={classes.dividerForCards} />
 
+				{/* Search Results */}
 				<Grid container spacing={4}>
 					{searchResults}
 				</Grid>
+				{/* End of Search Results */}
 			</Container>
 
 			{/* End of T-Dolls List */}
