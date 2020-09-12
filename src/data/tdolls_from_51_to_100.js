@@ -150,7 +150,7 @@ const tdolls = [
 				wait: []
 			},
 			animations_dorm: {
-				hasActionAnimation: [false],
+				hasActionAnimation: [true],
 				hasSit2Animation: [false],
 				lying: [],
 				move: [],
@@ -264,7 +264,7 @@ const tdolls = [
 				full_damaged: undefined
 			},
 			animations: {
-				hasSkillAnimation: false,
+				hasSkillAnimation: true,
 				hasVictoryLoopAnimation: true,
 				attack: undefined,
 				die: undefined,
@@ -294,7 +294,7 @@ const tdolls = [
 			max_eva: 31,
 			max_rof: 32,
 			skill: {
-				name: "Burning Hunting Spirit",
+				name: "Hunter's Mania",
 				initial_cooldown: "7s",
 				cooldown: [13, 12.6, 12.1, 11.7, 11.2, 10.8, 10.3, 9.9, 9.4, 9],
 				description:
@@ -302,6 +302,16 @@ const tdolls = [
 				number_of_stats: 2,
 				stat1: [2.7, 3, 3.3, 3.5, 3.8, 4, 4.3, 4.5, 4.8, 5],
 				stat2: ["5x", "5.6x", "6.2x", "6.7x", "7.3x", "7.8x", "8.4x", "8.9x", "9.5x", "10x"],
+				image_skill: undefined
+			},
+			skill2: {
+				name: "Chain Reaction",
+				initial_cooldown: "Passive",
+				passive_passive_description: true,
+				description:
+					"Passive 1: When \"Hunter's Mania\" kills an enemy, activate skill again and gain 3 charge stacks. Can activate up to 3 times. The additional skill uses incurs no aiming time and do not gain bonus DMG from charge stacks, dealing #1 damage that can miss. Priorities enemy with the lowest HP that can be killed in one shot. Passive 2: Increases DMG of normal attacks and skill by 10% when attacking enemies with more than 50% HP.",
+				number_of_stats: 1,
+				stat1: ["2.5x", "2.7x", "2.9x", "3x", "3.2x", "3.4x", "3.5x", "3.7x", "3.9x", "4x"],
 				image_skill: undefined
 			},
 			tile_set: {
@@ -346,7 +356,7 @@ const tdolls = [
 			skin_images: [],
 			skin_images_full: [],
 			animations: {
-				hasSkillAnimation: [false, false, false, false],
+				hasSkillAnimation: [false, true, false, false],
 				hasVictoryLoopAnimation: [true, true, true, true],
 				attack: [],
 				die: [],
@@ -357,7 +367,7 @@ const tdolls = [
 				wait: []
 			},
 			animations_dorm: {
-				hasActionAnimation: [false, false, false, false],
+				hasActionAnimation: [false, true, false, false],
 				hasSit2Animation: [false, false, false, false],
 				lying: [],
 				move: [],
