@@ -1,23 +1,23 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "9b669c33e67fffa0ea9d26576256be46",
+    "revision": "51265922b05f10366608c938c14d8f36",
     "url": "/gfl-database/index.html"
   },
   {
-    "revision": "121777e2cc680547f47e",
+    "revision": "a2d2151bca84d4c12de9",
     "url": "/gfl-database/static/css/main.57f5c29f.chunk.css"
   },
   {
-    "revision": "4282ef1e84898dd4a299",
-    "url": "/gfl-database/static/js/2.b10ce926.chunk.js"
+    "revision": "5f63ae5aa7653af29d50",
+    "url": "/gfl-database/static/js/2.27f7b58e.chunk.js"
   },
   {
     "revision": "0e87c5f5c0a2624c658902770de0ebad",
-    "url": "/gfl-database/static/js/2.b10ce926.chunk.js.LICENSE.txt"
+    "url": "/gfl-database/static/js/2.27f7b58e.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "121777e2cc680547f47e",
-    "url": "/gfl-database/static/js/main.c53bd32a.chunk.js"
+    "revision": "a2d2151bca84d4c12de9",
+    "url": "/gfl-database/static/js/main.e4d5beeb.chunk.js"
   },
   {
     "revision": "f981cdd4b98d9256df7d",
@@ -6368,8 +6368,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/gfl-database/static/media/53_skin3_move.5892b174.gif"
   },
   {
-    "revision": "bc28eab8b67325c5afccdfb3ce2eb49b",
-    "url": "/gfl-database/static/media/53_skin3_victory.bc28eab8.gif"
+    "revision": "1eaab04744cc2bfa86ff80f5bff7d52d",
+    "url": "/gfl-database/static/media/53_skin3_victory.1eaab047.gif"
   },
   {
     "revision": "fd97a6643ffbb13f86f569fdd702ebd3",

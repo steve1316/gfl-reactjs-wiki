@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "/gfl-database/static/css/main.57f5c29f.chunk.css",
-    "main.js": "/gfl-database/static/js/main.c53bd32a.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.c53bd32a.chunk.js.map",
+    "main.js": "/gfl-database/static/js/main.e4d5beeb.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.e4d5beeb.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.378b0504.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.378b0504.js.map",
-    "static/js/2.b10ce926.chunk.js": "/gfl-database/static/js/2.b10ce926.chunk.js",
-    "static/js/2.b10ce926.chunk.js.map": "/gfl-database/static/js/2.b10ce926.chunk.js.map",
+    "static/js/2.27f7b58e.chunk.js": "/gfl-database/static/js/2.27f7b58e.chunk.js",
+    "static/js/2.27f7b58e.chunk.js.map": "/gfl-database/static/js/2.27f7b58e.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.9f3be497eebb7a3ad38607f1e18f9ba6.js": "/gfl-database/precache-manifest.9f3be497eebb7a3ad38607f1e18f9ba6.js",
+    "precache-manifest.1780e3efdd71bbb774d3c866a7b4cf50.js": "/gfl-database/precache-manifest.1780e3efdd71bbb774d3c866a7b4cf50.js",
     "service-worker.js": "/gfl-database/service-worker.js",
     "static/css/main.57f5c29f.chunk.css.map": "/gfl-database/static/css/main.57f5c29f.chunk.css.map",
-    "static/js/2.b10ce926.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.b10ce926.chunk.js.LICENSE.txt",
+    "static/js/2.27f7b58e.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.27f7b58e.chunk.js.LICENSE.txt",
     "static/media/10_card.png": "/gfl-database/static/media/10_card.eb309552.png",
     "static/media/10_card_d.png": "/gfl-database/static/media/10_card_d.53a88de5.png",
     "static/media/10_full.png": "/gfl-database/static/media/10_full.b12164c2.png",
@@ -1598,7 +1598,7 @@
     "static/media/53_skin3_full.png": "/gfl-database/static/media/53_skin3_full.fde36bfa.png",
     "static/media/53_skin3_full_d.png": "/gfl-database/static/media/53_skin3_full_d.759842b8.png",
     "static/media/53_skin3_move.gif": "/gfl-database/static/media/53_skin3_move.5892b174.gif",
-    "static/media/53_skin3_victory.gif": "/gfl-database/static/media/53_skin3_victory.bc28eab8.gif",
+    "static/media/53_skin3_victory.gif": "/gfl-database/static/media/53_skin3_victory.1eaab047.gif",
     "static/media/53_skin3_victoryloop.gif": "/gfl-database/static/media/53_skin3_victoryloop.fd97a664.gif",
     "static/media/53_skin3_wait.gif": "/gfl-database/static/media/53_skin3_wait.2c4d1489.gif",
     "static/media/53_skin4_attack.gif": "/gfl-database/static/media/53_skin4_attack.2819228f.gif",
@@ -1844,8 +1844,8 @@
   },
   "entrypoints": [
     "static/js/runtime-main.378b0504.js",
-    "static/js/2.b10ce926.chunk.js",
+    "static/js/2.27f7b58e.chunk.js",
     "static/css/main.57f5c29f.chunk.css",
-    "static/js/main.c53bd32a.chunk.js"
+    "static/js/main.e4d5beeb.chunk.js"
   ]
 }
