@@ -21,7 +21,10 @@ import FairyIcon from "../images/fairy_icon.png";
 import FormationIcon from "../images/formation_icon.png";
 
 // Import T-Dolls JSON
-const tdolls = require("../data/tdolls_from_1_to_50");
+const tdolls_from_1_to_50 = require("../data/tdolls_from_1_to_50").default;
+const tdolls_from_51_to_100 = require("../data/tdolls_from_51_to_100").default;
+
+const tdolls = tdolls_from_1_to_50.concat(tdolls_from_51_to_100);
 
 function Navbar(props) {
 	const useStyles = makeStyles((theme) => ({
