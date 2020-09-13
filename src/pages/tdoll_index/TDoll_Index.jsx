@@ -105,10 +105,10 @@ export default function TDoll_Index() {
 	// Checks for filters in sessionStorage. Set the number of search results to the length of the T-Doll JSON. Runs once for now.
 	useEffect(() => {
 		if (sessionStorage.getItem("filters")) {
-			var temp = JSON.parse(sessionStorage.getItem("filters"))
-			setRarityFilter(temp.rarityFilter)
-			setTypeFilter(temp.typeFilter)
-			setModFilter(temp.modFilter)
+			var temp = JSON.parse(sessionStorage.getItem("filters"));
+			setRarityFilter(temp.rarityFilter);
+			setTypeFilter(temp.typeFilter);
+			setModFilter(temp.modFilter);
 		}
 
 		setSearchResults(renderTDolls());
@@ -123,9 +123,9 @@ export default function TDoll_Index() {
 			rarityFilter: rarityFilter,
 			typeFilter: typeFilter,
 			modFilter: modFilter
-		}
+		};
 
-		sessionStorage.setItem("filters", JSON.stringify(tempFilters))
+		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
 	}, [modFilter, rarityFilter, typeFilter]);
 
 	// The following handler functions below are setting the filters selected as active.
@@ -173,8 +173,7 @@ export default function TDoll_Index() {
 						// Thus, 6* Mods will appear when you select the 5* rarity filter and the Mod Filter is also selected.
 						if (rarityFilter[i].rarity === 5 && data.selected.rarity === 6) {
 							// This is intentionally empty to include the 6* Mods in the results.
-						 }
-						else {
+						} else {
 							return;
 						}
 					}
