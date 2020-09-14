@@ -11,9 +11,10 @@
 
 import processData from "./processData";
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// START OF #51-#100 JSON DATA //////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
 var tdolls = [
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////////////////////
 	{
 		normal: {
 			id: 51,
@@ -89,7 +90,6 @@ var tdolls = [
 				hasVictoryLoopAnimation: true
 			}
 		},
-		selected: {},
 		skins: {
 			number_of_skins: 1,
 			skin_names: ["Umbrella Daydream"],
@@ -140,7 +140,6 @@ var tdolls = [
 			}
 		},
 		mod: null,
-		selected: {},
 		skins: null
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -223,7 +222,6 @@ var tdolls = [
 				hasVictoryLoopAnimation: true
 			}
 		},
-		selected: {},
 		skins: {
 			number_of_skins: 4,
 			skin_names: ["Reindeer", "Op. Blazing Sun", "Aristocraft Experience Service", "Black Iron Heart"],
@@ -273,7 +271,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["One Who Shows the Way", "One-Eyed Rabbit Knight"],
@@ -315,7 +312,7 @@ var tdolls = [
 	// 			row3: [0, 1, 1],
 	// 			targets: "Buffs AR",
 	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Critical Hit Rate by "],
+	// 			stat1: ["Damage by ", "Critical Rate by "],
 	// 			stat2: ["18%", "30%"]
 	// 		},
 	// 		animations: {
@@ -356,7 +353,7 @@ var tdolls = [
 	// 			row3: [0, 1, 1],
 	// 			targets: "Buffs AR",
 	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Critical Hit Rate by "],
+	// 			stat1: ["Damage by ", "Critical Rate by "],
 	// 			stat2: ["20%", "32%"]
 	// 		},
 	// 		animations: {
@@ -364,7 +361,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Determiner of Time", "A Girl's Hot Air Balloon Adventure"],
@@ -454,7 +450,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Cocktail Party Exterminator", "The Guarded Beloved"],
@@ -545,7 +540,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 3,
 	// 		skin_names: ["Literary Girl", "Dreamscape Prisoner", "Top Hat Drifting to the Flowers"],
@@ -597,7 +591,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Lord of War"],
@@ -650,7 +643,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Lily of the Valley"],
@@ -742,7 +734,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Fireworks of Dreams"],
@@ -831,7 +822,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -871,7 +861,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Beach Punk 2062"],
@@ -961,7 +950,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Battlefield Patissier"],
@@ -1055,7 +1043,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 6,
 	// 		skin_names: ["Petit Waitress", "Bartender", "Pure White Cornflower", "Fifty Days with G36", "Every Child's Christmas Dream", "Moonlit Wishes"],
@@ -1146,7 +1133,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 3,
 	// 		skin_names: ["Starry Cocoon", "Black Cat's Gift", "Primrose-Flavored Foil Candy"],
@@ -1196,7 +1182,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Scarlet Sage", "As One, Forever Entwined"],
@@ -1248,7 +1233,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1287,7 +1271,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Guns N' Side Boxes", "Bird and Forest Whisperer"],
@@ -1338,7 +1321,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Steal the Precious Candy", "Strawberry Cake and Cosmos Flower"],
@@ -1389,7 +1371,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1430,7 +1411,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Night at the Bar"],
@@ -1481,7 +1461,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Funeral Array"],
@@ -1532,7 +1511,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1612,7 +1590,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 3,
 	// 		skin_names: ["Bunny Girl", "Tender Nocturne", "The Christmas You Wished For"],
@@ -1661,7 +1638,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Blazing Tarmac"],
@@ -1713,7 +1689,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1755,7 +1730,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Arctic Fox", "Oborozukuyo"],
@@ -1806,7 +1780,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Carmilla", "Partying Sweetheart"],
@@ -1899,7 +1872,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Yellow Star-thistle", "My Lie in December"],
@@ -1951,7 +1923,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1991,7 +1962,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2029,7 +1999,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2069,7 +2038,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2109,7 +2077,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Jade Peach Fairy"],
@@ -2161,7 +2128,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 3,
 	// 		skin_names: ["Urban Holiday", "Full Moon's Gaze", "Springtime Lion Dance"],
@@ -2253,7 +2219,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Jack o'Three"],
@@ -2304,7 +2269,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2384,7 +2348,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Boisterous Rogue", "Sunflower"],
@@ -2435,7 +2398,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: null
 	// },
 	// /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2509,7 +2471,7 @@ var tdolls = [
 	// 			row3: [1, 0, 0],
 	// 			targets: "Buffs AR",
 	// 			number_of_stats: 2,
-	// 			stat1: ["Evasion by ", "Critical Hit Rate by "],
+	// 			stat1: ["Evasion by ", "Critical Rate by "],
 	// 			stat2: ["20%", "10%"]
 	// 		},
 	// 		animations: {
@@ -2517,7 +2479,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 3,
 	// 		skin_names: ["Cat in the Box", "Cloak and Cat Ears", "Daruma Cat Samurai"],
@@ -2606,7 +2567,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Witch from Afar", "Water Gown"],
@@ -2702,7 +2662,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 1,
 	// 		skin_names: ["Lotus of the East Lake"],
@@ -2753,7 +2712,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 4,
 	// 		skin_names: ["Weekend Cop", "Transform! Teddy Bear!", "Starry Night Prom", "Rainy Starry Night"],
@@ -2848,7 +2806,6 @@ var tdolls = [
 	// 			hasVictoryLoopAnimation: true
 	// 		}
 	// 	},
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 4,
 	// 		skin_names: ["Ace on Duty", "Concert Diva", "Housework Training", "The Warbler And The Rose"],
@@ -2899,7 +2856,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Embracing Snowflakes", "Blue Lotus Night"],
@@ -2952,7 +2908,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 4,
 	// 		skin_names: ["Impish Sweetheart", "Honey Sweet Flower", "Conveyed Feelings", "The Cats Song Announcement"],
@@ -3003,7 +2958,6 @@ var tdolls = [
 	// 		}
 	// 	},
 	// 	mod: null,
-	// 	selected: {},
 	// 	skins: {
 	// 		number_of_skins: 2,
 	// 		skin_names: ["Pinky Swear", "Demonic Gunslinger"],
@@ -3017,13 +2971,9 @@ var tdolls = [
 	// 		}
 	// 	}
 	// }
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
 ];
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////// END OF #51-#100 JSON DATA ////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 console.log("Now processing images and animations for #51-#100 T-Doll Index JSON.");
