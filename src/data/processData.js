@@ -106,6 +106,11 @@ export default function processData(tdolls) {
 			// Create new properties inside the JSON in advance.
 			tdoll.skins.skin_images = [];
 			tdoll.skins.skin_images_full = [];
+
+			if (tdoll.mod !== null) {
+				tdoll.skins.mod_skin_images = [];
+			}
+
 			tdoll.skins.animations.attack = [];
 			tdoll.skins.animations.die = [];
 			tdoll.skins.animations.move = [];
@@ -125,6 +130,11 @@ export default function processData(tdolls) {
 
 				tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full.png`));
 				tdoll.skins.skin_images_full.push(require(`../images/tdolls/${id}/${id}_skin${skinSelected}_full_d.png`));
+
+				if (tdoll.mod !== null) {
+					tdoll.skins.mod_skin_images.push(require(`../images/tdolls/${id}/${id}_mod_skin${skinSelected}_card.png`));
+					tdoll.skins.mod_skin_images.push(require(`../images/tdolls/${id}/${id}_mod_skin${skinSelected}_card_d.png`));
+				}
 
 				//////////// Normal Animations for Skin(s) ////////////
 				tdoll.skins.animations.attack[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_attack.gif`);

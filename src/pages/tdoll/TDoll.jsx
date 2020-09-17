@@ -571,11 +571,19 @@ export default function TDoll(props) {
 		if (showSkin) {
 			if (switchImage) {
 				// Normal Skin image
-				setTDollImage(tdoll.skins.skin_images[skinSelected]);
+				if (mode === 1) {
+					setTDollImage(tdoll.skins.mod_skin_images[skinSelected]);
+				} else {
+					setTDollImage(tdoll.skins.skin_images[skinSelected]);
+				}
 				setSwitchImage(false);
 			} else {
 				// Damaged Skin image
-				setTDollImage(tdoll.skins.skin_images[skinSelected + 1]);
+				if (mode === 1) {
+					setTDollImage(tdoll.skins.mod_skin_images[skinSelected + 1]);
+				} else {
+					setTDollImage(tdoll.skins.skin_images[skinSelected + 1]);
+				}
 				setSwitchImage(true);
 			}
 		} else {
@@ -597,7 +605,12 @@ export default function TDoll(props) {
 		setShowSkin(true);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
-		setTDollImage(tdoll.skins.skin_images[newValue]);
+		// Switch to the modded Skin image cards when currently displaying Mod information.
+		if (mode === 1) {
+			setTDollImage(tdoll.skins.mod_skin_images[newValue]);
+		} else {
+			setTDollImage(tdoll.skins.skin_images[newValue]);
+		}
 
 		// Switch animations based on the animation mode selected, Normal or Dorm.
 		var tempSkinSelected = helperSkinSelected();
