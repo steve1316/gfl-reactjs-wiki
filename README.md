@@ -39,7 +39,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
   - [x] Finalize the Chip components.
   - [x] Save filters when moving to and from T-Doll Index page for persistence. ~~Maybe have a "Clear Filters" button.~~
-  - [x] ~~Add 6* rarity filter to depict the Mod of 5*'s. Make it only show up by clicking on the Mod Filter Button.~~ Did not add a 6* rarity filter but rather had the 5* rarity filter show the 6* Mods instead.
+  - [x] ~~Add 6* rarity filter to depict the Mod of 5*'s. Make it only show up by clicking on the Mod Filter Button.~~ Did not add a 6* rarity filter but rather had the 5* rarity filter show the 6\* Mods instead.
 
 - [x] Add T-Dolls #1 to #10 to JSON data object.
 
@@ -51,7 +51,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [x] Add T-Dolls #11 to #50.
 
-- [ ] Add T-Dolls #51 to #100.
+- [x] Add T-Dolls #51 to #100.
 
 - [ ] Add T-Dolls #101 to #150.
 
