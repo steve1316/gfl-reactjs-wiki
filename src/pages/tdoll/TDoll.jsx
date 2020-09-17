@@ -656,6 +656,8 @@ export default function TDoll(props) {
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
 						{tdoll.skins.animations.hasSkillAnimation[tempSkinSelected] ? <Tab label="Skill" value="skill" /> : ""}
+						{"hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[tempSkinSelected] ? <Tab label="Attack2" value="attack2" /> : ""}
+						{tdoll.selected.type === "MG" ? <Tab label="Reload" value="reload" /> : ""}
 						<Tab label="Die" value="die" />
 						<Tab label="Victory" value="victory" />
 						{tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected] ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
@@ -676,6 +678,12 @@ export default function TDoll(props) {
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
 						{tdoll.selected.animations.hasSkillAnimation ? <Tab label="Skill" value="skill" /> : ""}
+						{"skill2" in tdoll.selected.animations ? <Tab label="Skill2" value="skill2" /> : ""}
+						{"hasAttack2Animation" in tdoll.selected.animations ? <Tab label="Attack2" value="attack2" /> : ""}
+						{"spattack" in tdoll.selected.animations ? <Tab label="Special Attack" value="spattack" /> : ""}
+						{"spattack2" in tdoll.selected.animations ? <Tab label="Special Attack2" value="spattack2" /> : ""}
+						{"landing" in tdoll.selected.animations ? <Tab label="Landing" value="landing" /> : ""}
+						{tdoll.selected.type === "MG" ? <Tab label="Reload" value="reload" /> : ""}
 						<Tab label="Die" value="die" />
 						<Tab label="Victory" value="victory" />
 						{"victory2" in tdoll.selected.animations && !showSkin ? <Tab label="Victory2" value="victory2" /> : ""}
@@ -751,6 +759,32 @@ export default function TDoll(props) {
 						setAnimation(tdoll.selected.animations.attack);
 					}
 					break;
+				case "attack2":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.attack2[tempSkinSelected]);
+					} else {
+						setAnimation(tdoll.selected.animations.attack2);
+					}
+					break;
+				case "spattack":
+					setAnimation(tdoll.selected.animations.spattack);
+
+					break;
+				case "spattack2":
+					setAnimation(tdoll.selected.animations.spattack2);
+
+					break;
+				case "reload":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.reload[tempSkinSelected]);
+					} else {
+						setAnimation(tdoll.selected.animations.reload);
+					}
+					break;
+				case "landing":
+					setAnimation(tdoll.selected.animations.landing);
+
+					break;
 				case "die":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.die[tempSkinSelected]);
@@ -764,6 +798,10 @@ export default function TDoll(props) {
 					} else {
 						setAnimation(tdoll.selected.animations.skill);
 					}
+					break;
+				case "skill2":
+					setAnimation(tdoll.selected.animations.skill2);
+
 					break;
 				case "victory":
 					if (showSkin) {
@@ -867,6 +905,27 @@ export default function TDoll(props) {
 			animationArray.push("attack");
 			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && tdoll.skins.animations.hasSkillAnimation[tempSkinSelected])) {
 				animationArray.push("skill");
+			}
+			if (!showSkin && "skill2" in tdoll.selected.animations) {
+				animationArray.push("skill2");
+			}
+			if (
+				(!showSkin && "hasAttack2Animation" in tdoll.selected.animations) ||
+				(showSkin && "hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[tempSkinSelected])
+			) {
+				animationArray.push("attack2");
+			}
+			if (!showSkin && "spattack" in tdoll.selected.animations) {
+				animationArray.push("spattack");
+			}
+			if (!showSkin && "spattack2" in tdoll.selected.animations) {
+				animationArray.push("spattack2");
+			}
+			if (!showSkin && "landing" in tdoll.selected.animations) {
+				animationArray.push("landing");
+			}
+			if (tdoll.selected.type === "MG") {
+				animationArray.push("reload");
 			}
 			animationArray.push("die");
 			animationArray.push("victory");
@@ -1146,7 +1205,7 @@ export default function TDoll(props) {
 										<Typography className={classes.title} color="textSecondary" gutterBottom>
 											{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
 										</Typography>
-										{selectedSkill === 0 ? (
+										{selectedSkill === 0 && tdoll.selected.skill.initial_cooldown !== "Passive" ? (
 											<>
 												<Divider />
 												<Typography className={classes.cooldownText} color="textSecondary">

@@ -38,6 +38,14 @@ export default function processData(tdolls) {
 			tdoll.normal.animations.victoryloop = require(`../images/tdolls/${id}/animations/${id}_normal_victoryloop.gif`);
 		}
 
+		if ("hasAttack2Animation" in tdoll.normal.animations) {
+			tdoll.normal.animations.attack2 = require(`../images/tdolls/${id}/animations/${id}_normal_attack2.gif`);
+		}
+
+		if (tdoll.normal.type === "MG") {
+			tdoll.normal.animations.reload = require(`../images/tdolls/${id}/animations/${id}_normal_reload.gif`);
+		}
+
 		//////////// Dorm Animations for Normal ////////////
 		tdoll.normal.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_lying.gif`);
 		tdoll.normal.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_move.gif`);
@@ -68,6 +76,22 @@ export default function processData(tdolls) {
 
 			if (tdoll.mod.animations.hasSkillAnimation) {
 				tdoll.mod.animations.skill = require(`../images/tdolls/${id}/animations/${id}_mod_skill.gif`);
+			}
+
+			if ("hasAttack2Animation" in tdoll.mod.animations) {
+				tdoll.mod.animations.attack2 = require(`../images/tdolls/${id}/animations/${id}_mod_attack2.gif`);
+			}
+
+			if (tdoll.mod.type === "MG") {
+				tdoll.mod.animations.reload = require(`../images/tdolls/${id}/animations/${id}_mod_reload.gif`);
+			}
+
+			if (tdoll.normal.id === 95) {
+				// Takes care of the additional animations for Hanyang Type 88 Mod.
+				tdoll.mod.animations.landing = require(`../images/tdolls/${id}/animations/${id}_mod_landing.gif`);
+				tdoll.mod.animations.skill2 = require(`../images/tdolls/${id}/animations/${id}_mod_skill2.gif`);
+				tdoll.mod.animations.spattack = require(`../images/tdolls/${id}/animations/${id}_mod_spattack.gif`);
+				tdoll.mod.animations.spattack2 = require(`../images/tdolls/${id}/animations/${id}_mod_spattack2.gif`);
 			}
 
 			//////////// Dorm Animations for Mod ////////////
@@ -121,6 +145,20 @@ export default function processData(tdolls) {
 						tdoll.skins.animations.victoryloop = [];
 					}
 					tdoll.skins.animations.victoryloop[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_victoryloop.gif`);
+				}
+
+				if ("hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[i]) {
+					if (tdoll.skins.animations.attack2 === undefined) {
+						tdoll.skins.animations.attack2 = [];
+					}
+					tdoll.skins.animations.attack2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_attack2.gif`);
+				}
+
+				if (tdoll.normal.type === "MG") {
+					if (tdoll.skins.animations.reload === undefined) {
+						tdoll.skins.animations.reload = [];
+					}
+					tdoll.skins.animations.reload[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_reload.gif`);
 				}
 
 				//////////// Dorm Animations for Skin(s) ////////////
