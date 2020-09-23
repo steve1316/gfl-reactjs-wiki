@@ -1,5 +1,5 @@
 /*
-    This array of T-Dolls will contain information about index #101 to #150 in JSON format. Some things to note:
+    This array of T-Dolls will contain information about index #101 to #200 in JSON format. Some things to note:
     - All stats are considered at max rank. For skill stats, I'm separating them for now.
 	- If T-Doll has Mod, mod property will be populated. If not, mod property will be set to null.
 	- Likewise, if T-Doll has no skins, skins property will be set to null.
@@ -12,7 +12,7 @@
 import processData from "./processData";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////// START OF #101-#150 JSON DATA ///////////////////////////////////////
+//////////////////////////// START OF #101-#200 JSON DATA ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 var tdolls = [
 	// {
@@ -2580,13 +2580,115 @@ var tdolls = [
 	// 	mod: null,
 	// 	skins: null
 	// }
+	// {
+	// 	normal: {
+	// 		id: 151,
+	// 		name: "M1887",
+	// 		type: "SG",
+	// 		rarity: 5,
+	// 		max_hp: 275,
+	// 		max_dmg: 39,
+	// 		max_acc: 12,
+	// 		max_eva: 12,
+	// 		max_rof: 22,
+	// 		max_armor: 22,
+	// 		skill: {
+	// 			name: "Terminating Shot",
+	// 			initial_cooldown: "15s",
+	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+	// 			description: "Inflicts #1 damage to a single target and knocks them back by #2 units.",
+	// 			number_of_stats: 2,
+	// 			stat1: [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+	// 			stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
+	// 		},
+	// 		tile_set: {
+	// 			row1: [0, 0, 0],
+	// 			row2: [1, 0, 2],
+	// 			row3: [0, 0, 0],
+	// 			targets: "Buffs MG",
+	// 			number_of_stats: 2,
+	// 			stat1: ["Damage by ", "Accuracy by "],
+	// 			stat2: ["20%", "20%"]
+	// 		},
+	// 		animations: {
+	// 			hasSkillAnimation: false,
+	// 			hasVictoryLoopAnimation: true
+	// 		}
+	// 	},
+	// 	mod: null,
+	// 	skins: {
+	// 		number_of_skins: 1,
+	// 		skin_names: ["Law of Exorcism"],
+	// 		animations: {
+	// 			hasSkillAnimation: [false],
+	// 			hasVictoryLoopAnimation: [true]
+	// 		},
+	// 		animations_dorm: {
+	// 			hasActionAnimation: [true],
+	// 			hasSit2Animation: [false]
+	// 		}
+	// 	}
+	// },
+	// /////////////////////////////////////////////////////////////////////////////////////////////////
+	// /////////////////////////////////////////////////////////////////////////////////////////////////
+	// {
+	// 	normal: {
+	// 		id: 152,
+	// 		name: "M1897",
+	// 		type: "SG",
+	// 		rarity: 3,
+	// 		max_hp: 253,
+	// 		max_dmg: 35,
+	// 		max_acc: 11,
+	// 		max_eva: 11,
+	// 		max_rof: 26,
+	// 		max_armor: 21,
+	// 		skill: {
+	// 			name: "Burst Impact",
+	// 			initial_cooldown: "8s",
+	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+	// 			description: "Performs an additional attack which deals #1 damage and pushes targets back by #2 units.",
+	// 			number_of_stats: 2,
+	// 			stat1: ["1x", "1.1x", "1.2x", "1.3x", "1.4x", "1.6x", "1.7x", "1.8x", "1.9x", "2x"],
+	// 			stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
+	// 		},
+	// 		tile_set: {
+	// 			row1: [0, 0, 0],
+	// 			row2: [1, 0, 2],
+	// 			row3: [1, 0, 0],
+	// 			targets: "Buffs MG",
+	// 			number_of_stats: 1,
+	// 			stat1: ["Accuracy by "],
+	// 			stat2: ["50%"]
+	// 		},
+	// 		animations: {
+	// 			hasSkillAnimation: false,
+	// 			hasVictoryLoopAnimation: true
+	// 		}
+	// 	},
+	// 	mod: null,
+	// 	skins: {
+	// 		number_of_skins: 2,
+	// 		skin_names: ["Electronic Witch", "Blue Sky Patroller"],
+	// 		animations: {
+	// 			hasSkillAnimation: [false, false],
+	// 			hasVictoryLoopAnimation: [true, true]
+	// 		},
+	// 		animations_dorm: {
+	// 			hasActionAnimation: [false, false],
+	// 			hasSit2Animation: [false, false]
+	// 		}
+	// 	}
+	// }
+	// /////////////////////////////////////////////////////////////////////////////////////////////////
+	// /////////////////////////////////////////////////////////////////////////////////////////////////
 ];
 /////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// END OF #101-#150 JSON DATA ///////////////////////////////////////
+////////////////////////////// END OF #101-#200 JSON DATA ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-console.log("Now processing images and animations for #101-#150 T-Doll Index JSON.");
+console.log("Now processing images and animations for #101-#200 T-Doll Index JSON.");
 tdolls = processData(tdolls);
-console.log("Finished processing images and animations for #101-#150 T-Doll Index JSON.");
+console.log("Finished processing images and animations for #101-#200 T-Doll Index JSON.");
 
 export default tdolls;
