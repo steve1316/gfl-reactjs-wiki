@@ -227,13 +227,26 @@ export default function TDoll(props) {
 	// Initialization of States
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Grab the T-Doll's information from the sessionStorage and create an unchangeable backup.
+	// Grab the T-Doll's information from the JSONs.
 	const id = props.location.search.substring(4);
-	const [tdoll, setTDoll] = useState(JSON.parse(sessionStorage.getItem(id)));
-	const backup = JSON.parse(sessionStorage.getItem(id));
+	var tdolls = undefined;
+	if (id <= 100) {
+		tdolls = require("../../data/tdolls_from_1_to_100").default;
+	} else if (id > 100 && id <= 200) {
+		tdolls = require("../../data/tdolls_from_101_to_200").default;
+	} else if (id > 200 && id <= 300) {
+		tdolls = require("../../data/tdolls_from_201_to_300").default;
+	} else if (id > 300 && id <= 400) {
+		tdolls = require("../../data/tdolls_from_301_to_400").default;
+	} else if (id >= 1000 && id <= 1050) {
+		tdolls = require("../../data/tdolls_from_1000_to_1050").default;
+	}
+
+	const [tdoll, setTDoll] = useState(tdolls.find((element) => element.normal.id === parseInt(id)));
 
 	const [check, setCheck] = useState(true);
 	if (check) {
+		console.clear();
 		tdoll.selected = tdoll.normal;
 		setCheck(false);
 	}
@@ -251,8 +264,8 @@ export default function TDoll(props) {
 	// Set initial states for the skills. Set Skill 2 to the description of Skill 1 in case T-Doll does not have a Neural Upgrade.
 	const [showModSkill, setShowModSkill] = useState(false);
 	const [skillLevel, setSkillLevel] = useState(10);
-	const [skillDescription1, setSkillDescription1] = useState(backup.normal.skill.description);
-	const [skillDescription2, setSkillDescription2] = useState(backup.normal.skill.description);
+	const [skillDescription1, setSkillDescription1] = useState(tdoll.normal.skill.description);
+	const [skillDescription2, setSkillDescription2] = useState(tdoll.normal.skill.description);
 	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Normal skill, 1 for MOD skill if it exists.
 
 	// Set initial states for animations.
@@ -337,7 +350,7 @@ export default function TDoll(props) {
 
 	// Switch information/images/animations displayed between Normal or Mod. Will reset skin selected.
 	const switchModes = (event) => {
-		var tdoll_temp = backup;
+		var tdoll_temp = tdoll;
 
 		setShowSkin(false); // Prevent skin image to be rendered if it was selected.
 		setSkinSelected(undefined);
@@ -345,12 +358,12 @@ export default function TDoll(props) {
 		// Perform check to see if the information shown should be Mod or not.
 		if (mode === 0 && hasMod) {
 			// Switch to Mod information.
-			tdoll_temp.selected = backup.mod;
+			tdoll_temp.selected = tdoll.mod;
 			setShowModSkill(true);
 			setMode(1);
 		} else {
 			// Switch to Normal information.
-			tdoll_temp.selected = backup.normal;
+			tdoll_temp.selected = tdoll.normal;
 			setShowModSkill(false);
 			setMode(0);
 		}
@@ -434,12 +447,12 @@ export default function TDoll(props) {
 		var tdollTemp = tdoll;
 
 		// Reset the descriptions to have it include the delimiters again and set variables to be used.
-		tdollTemp.selected.skill.description = backup.normal.skill.description;
+		tdollTemp.selected.skill.description = tdoll.normal.skill.description;
 		var tempSkillDescription1 = tdollTemp.selected.skill.description;
 		var numberOfStats1 = tdollTemp.selected.skill.number_of_stats;
 
 		if ("skill2" in tdollTemp.selected) {
-			tdollTemp.selected.skill2.description = backup.mod.skill2.description;
+			tdollTemp.selected.skill2.description = tdoll.mod.skill2.description;
 			var tempSkillDescription2 = tdollTemp.selected.skill2.description;
 			var numberOfStats2 = tdollTemp.selected.skill2.number_of_stats;
 		}

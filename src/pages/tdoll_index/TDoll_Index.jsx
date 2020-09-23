@@ -15,10 +15,10 @@ import { useEffect } from "react";
 import mod_button from "../../images/mod.png";
 
 // T-Dolls JSON import
-const tdolls_from_1_to_50 = require("../../data/tdolls_from_1_to_50").default;
-const tdolls_from_51_to_100 = require("../../data/tdolls_from_51_to_100").default;
+const tdolls_from_1_to_100 = require("../../data/tdolls_from_1_to_100").default;
+const tdolls_from_101_to_200 = require("../../data/tdolls_from_101_to_200").default;
 
-const tdolls_array = tdolls_from_1_to_50.concat(tdolls_from_51_to_100);
+const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200);
 
 const HtmlTooltip = withStyles((theme) => ({
 	tooltip: {
@@ -112,7 +112,7 @@ export default function TDoll_Index() {
 		}
 
 		setSearchResults(renderTDolls());
-		setNumberOfSearchResults(tdolls_from_1_to_50.length);
+		setNumberOfSearchResults(tdolls_from_1_to_100.length);
 	}, []);
 
 	// Update the search results every time the filters change. Save the filters in sessionStorage.

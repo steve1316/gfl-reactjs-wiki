@@ -1,5 +1,5 @@
 /*
-    This array of T-Dolls will contain information about index #201 to #250 in JSON format. Some things to note:
+    This array of T-Dolls will contain information about index #301 to #400 in JSON format. Some things to note:
     - All stats are considered at max rank. For skill stats, I'm separating them for now.
 	- If T-Doll has Mod, mod property will be populated. If not, mod property will be set to null.
 	- Likewise, if T-Doll has no skins, skins property will be set to null.
@@ -12,15 +12,15 @@
 import processData from "./processData";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////// START OF #201-#250 JSON DATA ///////////////////////////////////////
+//////////////////////////// START OF #301-#400 JSON DATA ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 var tdolls = [];
 /////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////// END OF #201-#250 JSON DATA ///////////////////////////////////////
+////////////////////////////// END OF #301-#400 JSON DATA ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-console.log("Now processing images and animations for #201-#250 T-Doll Index JSON.");
+console.log("Now processing images and animations for #301-#400 T-Doll Index JSON.");
 tdolls = processData(tdolls);
-console.log("Finished processing images and animations for #201-#250 T-Doll Index JSON.");
+console.log("Finished processing images and animations for #301-#400 T-Doll Index JSON.");
 
 export default tdolls;
