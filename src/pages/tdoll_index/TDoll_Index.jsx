@@ -74,6 +74,7 @@ export default function TDoll_Index() {
 
 	const [numberOfSearchResults, setNumberOfSearchResults] = useState(0);
 	const [searchResults, setSearchResults] = useState([]);
+	const [searchResultPages, setSearchResultPages] = useState([]);
 
 	const [rarityFilter, setRarityFilter] = useState([
 		{ key: 0, label: "General", rarity: 2, selected: false },
@@ -110,9 +111,6 @@ export default function TDoll_Index() {
 			setTypeFilter(temp.typeFilter);
 			setModFilter(temp.modFilter);
 		}
-
-		setSearchResults(renderTDolls());
-		setNumberOfSearchResults(tdolls_from_1_to_100.length);
 	}, []);
 
 	// Update the search results every time the filters change. Save the filters in sessionStorage.
@@ -150,87 +148,116 @@ export default function TDoll_Index() {
 		});
 	};
 
+	// Create and return an array of T-Dolls that match filters.
+	const createSearchResults = () => {
+		var tempArray = [];
+
+		tempArray = tdolls_array.filter((data) => {
+			// Filter if T-Dolls have Mod or not.
+			if (modFilter.selected) {
+				if (data.mod === null) {
+					return null;
+				}
+				data.selected = data.mod;
+			} else {
+				data.selected = data.normal;
+			}
+
+			// Filter for rarity.
+			for (var i = 0; i < rarityFilter.length; i++) {
+				if (rarityFilter[i].selected && rarityFilter[i].rarity !== data.selected.rarity) {
+					// Now check to see if rarity selected is 5* and the selected T-Doll is 6*. This is only possible for T-Dolls that have Mods so far.
+					// Thus, 6* Mods will appear when you select the 5* rarity filter and the Mod Filter is also selected.
+					if (rarityFilter[i].rarity === 5 && data.selected.rarity === 6) {
+						// This is intentionally empty to include the 6* Mods in the results.
+					} else {
+						return null;
+					}
+				}
+			}
+
+			// Filter for type.
+			for (i = 0; i < typeFilter.length; i++) {
+				if (typeFilter[i].selected && typeFilter[i].label !== data.selected.type) {
+					return null;
+				}
+			}
+
+			// If passed all filters, then return this T-Doll.
+			return data;
+		});
+
+		// Partition search results by 30 at a time (static for now).
+		var tempSearchResultPages = [];
+
+		for (var i = 0, j = 0; i < tempArray.length; i += 30, j++) {
+			var temp = [];
+			if (i + 30 > tempArray.length) {
+				temp = tempArray.slice(i, tempArray.length);
+			} else {
+				temp = tempArray.slice(i, i + 30);
+			}
+
+			tempSearchResultPages[j] = temp;
+		}
+
+		console.log("Partitions: ", tempSearchResultPages);
+
+		// Update the pages of search results.
+		setSearchResultPages(tempSearchResultPages);
+
+		return tempArray;
+	};
+
 	// Render the Cards of T-Dolls based on filters selected.
 	const renderTDolls = () => {
+		var tempArrayOfSearchResults = createSearchResults();
 		var tempArray = [];
 		var stagger = 100;
-		tdolls_array
-			.filter((data) => {
-				// Filter if T-Dolls have Mod or not.
-				if (modFilter.selected) {
-					if (data.mod === null) {
-						return;
-					}
-					data.selected = data.mod;
-				} else {
-					data.selected = data.normal;
-				}
 
-				// Filter for rarity.
-				for (var i = 0; i < rarityFilter.length; i++) {
-					if (rarityFilter[i].selected && rarityFilter[i].rarity !== data.selected.rarity) {
-						// Now check to see if rarity selected is 5* and the selected T-Doll is 6*. This is only possible for T-Dolls that have Mods so far.
-						// Thus, 6* Mods will appear when you select the 5* rarity filter and the Mod Filter is also selected.
-						if (rarityFilter[i].rarity === 5 && data.selected.rarity === 6) {
-							// This is intentionally empty to include the 6* Mods in the results.
-						} else {
-							return;
-						}
-					}
-				}
-
-				// Filter for type.
-				for (i = 0; i < typeFilter.length; i++) {
-					if (typeFilter[i].selected && typeFilter[i].label !== data.selected.type) {
-						return;
-					}
-				}
-
-				// If passed all filters, then return this T-Doll.
-				return data;
-			})
-			.map((tdoll) => {
-				tempArray.push(
-					<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
-						<Grow in={true} style={{ transformOrigin: "0 5 0" }} timeout={stagger}>
-							<Card className={classes.card} elevation={12}>
-								<Link
-									to={{
-										pathname: "/tdoll",
-										search: "?id=" + tdoll.normal.id
-									}}
-									onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
+		// Go through the Search Results array from createSearchResults() and push 30 at a time until the remainder is left.
+		tempArrayOfSearchResults.map((tdoll) => {
+			tempArray.push(
+				<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
+					<Grow in={true} style={{ transformOrigin: "0 5 0" }} timeout={stagger}>
+						<Card className={classes.card} elevation={12}>
+							<Link
+								to={{
+									pathname: "/tdoll",
+									search: "?id=" + tdoll.normal.id
+								}}
+								onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
+							>
+								<HtmlTooltip
+									title={
+										<>
+											<Typography color="inherit">
+												{tdoll.selected.name}
+												<small>
+													<sup>[#{tdoll.normal.id}]</sup>
+												</small>
+											</Typography>
+											<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
+										</>
+									}
+									placement="right"
 								>
-									<HtmlTooltip
-										title={
-											<>
-												<Typography color="inherit">
-													{tdoll.selected.name}
-													<small>
-														<sup>[#{tdoll.normal.id}]</sup>
-													</small>
-												</Typography>
-												<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
-											</>
-										}
-										placement="right"
-									>
-										<CardActionArea>
-											<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
-										</CardActionArea>
-									</HtmlTooltip>
-								</Link>
-							</Card>
-						</Grow>
-					</Grid>
-				);
+									<CardActionArea>
+										<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
+									</CardActionArea>
+								</HtmlTooltip>
+							</Link>
+						</Card>
+					</Grow>
+				</Grid>
+			);
 
-				// Stagger timeout will never be more than 1.5 seconds.
-				stagger += 200;
-				if (stagger >= 1500) {
-					stagger = 0;
-				}
-			});
+			// Stagger timeout will never be more than 1.5 seconds.
+			stagger += 200;
+			if (stagger >= 1500) {
+				stagger = 0;
+			}
+		});
 
 		// Update number of search results.
 		setNumberOfSearchResults(tempArray.length);
