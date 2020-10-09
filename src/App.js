@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Switch } from "react-router-dom";
+import { Route, Switch, Redirect } from "react-router-dom";
 
 // MaterialUI imports
 import { orange, deepOrange } from "@material-ui/core/colors";
@@ -13,13 +13,14 @@ import Equipment_Index from "./pages/equipment_index/Equipment_Index";
 import HOC_Index from "./pages/hoc_index/HOC_Index";
 import Fairy_Index from "./pages/fairy_index/Fairy_Index";
 import Formation_Simulator from "./pages/formation_simulator/Formation_Simulator";
+import NotFound404 from "./NotFound404";
 
 // styles.css import
 import "./styles.css";
 
 // Components import
 import Navbar from "./components/Navbar";
-import ErrorBoundary from "./components/ErrorBoundary";
+//import ErrorBoundary from "./components/ErrorBoundary";
 
 // Theme Provider import
 import { ThemeProvider, createMuiTheme } from "@material-ui/core";
@@ -52,9 +53,11 @@ export default function App() {
 					<Route path="/hoc-index" component={HOC_Index} />
 					<Route path="/fairy-index" component={Fairy_Index} />
 					<Route path="/formation" component={Formation_Simulator} />
-					<ErrorBoundary>
-						<Route path="/tdoll" component={TDoll} />
-					</ErrorBoundary>
+					{/* <ErrorBoundary> */}
+					<Route path="/tdoll" component={TDoll} />
+					{/* </ErrorBoundary> */}
+					<Route path="/404" component={NotFound404} />
+					<Redirect to="/404" />
 				</Switch>
 			</div>
 		</ThemeProvider>
