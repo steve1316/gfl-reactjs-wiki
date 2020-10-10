@@ -53,15 +53,17 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [x] Add T-Dolls #51 to #100.
 
-- [ ] Add T-Dolls #101 to #150.
+- [x] Add T-Dolls #101 to #150.
 
-- [ ] Add T-Dolls #151 to #200.
+- [x] Add T-Dolls #151 to #200.
 
-- [ ] Add T-Dolls #201 to #250.
+- [x] Add T-Dolls #201 to #250.
 
-- [ ] Add T-Dolls #251 to #300.
+- [x] Add T-Dolls #251 to #300.
 
-- [ ] Add T-Dolls #301 to #319 (currently as of September 09, 2020).
+- [x] Add T-Dolls #301 to #320 (currently as of October 10, 2020).
+
+- [ ] Add all Special T-Dolls as of October 10, 2020.
 
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ Doing so will mess up the image resolution and make it too blurry.
 
@@ -77,7 +79,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [ ] Add functionality to see the stats of equipped T-Dolls.
 
-- [ ] Add Pagination Component to T-Doll Index page.
+- [ ] Add Pagination Component to T-Doll Index page (made the algorithm already).
 
 - [ ] ...
 
