@@ -4049,9 +4049,9 @@ var tdolls = [
 	// 			description:
 	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 7 stacks. When skill is used, aim for 1.5 seconds, then deal #1 ~ #2 damage to the highest HP enemy based on the current number of charge stacks. All stacks will be consumed on skill use. If the enemy is armored, deal #3 ~ #4 damage instead.",
 	// 			number_of_stats: 4,
-	// 			stat1: ["1.8x", "1.9x", "2x", "2.1x", "2.2x", "2.4x", "2.5x", "2.6x", "2.7x", "2.8x"],
+	// 			stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
 	// 			stat2: ["2.5x", "2.9x", "3.3x", "3.7x", "4.1x", "4.4x", "4.8x", "5.2x", "5.6x", "6x"],
-	// 			stat3: ["2.5x", "2.7x", "2.8x", "3x", "3.2x", "3.3x", "3.5x", "3.7x", "3.8x", "4x"],
+	// 			stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4],
 	// 			stat4: ["4.5x", "5.1x", "5.7x", "6.3x", "6.9x", "7.6x", "8.2x", "8.8x", "9.4x", "10x"]
 	// 		},
 	// 		tile_set: {
@@ -4102,7 +4102,7 @@ var tdolls = [
 	// 			description:
 	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 4 stacks. When skill is used, aim for 1.5 seconds, then shoot the furthest target, dealing #1 ~ #2 damage based on the current number of charge stacks to all enemies in its path and again to the target. All stacks will be consumed on skill use.",
 	// 			number_of_stats: 2,
-	// 			stat1: ["0.5x", "0.5x", "0.6x", "0.6x", "0.7x", "0.7x", "0.8x", "0.8x", "0.9x", "0.9x"],
+	// 			stat1: [0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9],
 	// 			stat2: ["0.8x", "0.9x", "1x", "1.1x", "1.2x", "1.3x", "1.4x", "1.5x", "1.6x", "1.8x"]
 	// 		},
 	// 		tile_set: {
@@ -4693,7 +4693,7 @@ var tdolls = [
 	// 			description:
 	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 4 stacks. When skill is used, aim for 1.5 seconds, then shoot the furthest target, dealing #1 ~ #2 damage based on the current number of charge stacks to all enemies in its path and again to the target. All stacks will be consumed on skill use.",
 	// 			number_of_stats: 2,
-	// 			stat1: ["0.6x", "0.6x", "0.7x", "0.7x", "0.8x", "0.8x", "0.9x", "0.9x", "1x", "1x"],
+	// 			stat1: [0.6, 0.6, 0.7, 0.7, 0.8, 0.8, 0.9, 0.9, 1, 1],
 	// 			stat2: ["0.9x", "1x", "1.1x", "1.3x", "1.4x", "1.5x", "1.6x", "1.8x", "1.9x", "2x"]
 	// 		},
 	// 		tile_set: {
