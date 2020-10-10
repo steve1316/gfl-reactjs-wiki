@@ -1978,7 +1978,7 @@ var tdolls = [
 				description:
 					"Upon skill activation, if there are more than 5 groups of enemies, increases rate of fire and accuracy by #1, otherwise increases damage by #2, duration 3 seconds. After 3 seconds, if there are more than 2 groups of enemies, grant a #3 HP shield to allies on her tiles, otherwise increases damage of self and allies on her tiles by #4, duration 5 seconds.",
 				number_of_stats: 4,
-				stat1: ["30%", "36%", "41%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
+				stat1: ["30%", "36%", "41%", "47%", "52%", "58%", "63%", "69%", "74%", "80%"],
 				stat2: ["40%", "46%", "51%", "56%", "62%", "68%", "74%", "79%", "85%", "90%"],
 				stat3: [16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
 				stat4: ["25%", "28%", "32%", "35%", "38%", "42%", "45%", "48%", "52%", "55%"]
