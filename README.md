@@ -63,7 +63,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [x] Add T-Dolls #301 to #320 (currently as of October 10, 2020).
 
-- [ ] Add all Special T-Dolls as of October 10, 2020.
+- [x] Add all Special T-Dolls as of October 10, 2020.
 
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ Doing so will mess up the image resolution and make it too blurry.
 
