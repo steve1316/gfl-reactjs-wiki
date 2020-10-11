@@ -17,7 +17,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 # Planned Features (Subject to change)
 
-- Stats and animations of all T-Dolls (Tactical Dolls) in the game as of September 09, 2020.
+- Stats and animations of all T-Dolls (Tactical Dolls) in the game as of October 10, 2020.
 
 - Information on equipment and their effects when equipped on T-Dolls.
 
