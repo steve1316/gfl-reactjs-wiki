@@ -42,7 +42,7 @@ export default function processData(tdolls) {
 			tdoll.normal.animations.attack2 = require(`../images/tdolls/${id}/animations/${id}_normal_attack2.gif`);
 		}
 
-		if (tdoll.normal.type === "MG") {
+		if (tdoll.normal.type === "MG" || tdoll.normal.type === "SG") {
 			tdoll.normal.animations.reload = require(`../images/tdolls/${id}/animations/${id}_normal_reload.gif`);
 		}
 
@@ -82,7 +82,7 @@ export default function processData(tdolls) {
 				tdoll.mod.animations.attack2 = require(`../images/tdolls/${id}/animations/${id}_mod_attack2.gif`);
 			}
 
-			if (tdoll.mod.type === "MG") {
+			if (tdoll.mod.type === "MG" || tdoll.mod.type === "SG") {
 				tdoll.mod.animations.reload = require(`../images/tdolls/${id}/animations/${id}_mod_reload.gif`);
 			}
 
@@ -164,7 +164,7 @@ export default function processData(tdolls) {
 					tdoll.skins.animations.attack2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_attack2.gif`);
 				}
 
-				if (tdoll.normal.type === "MG") {
+				if (tdoll.normal.type === "MG" || tdoll.normal.type === "SG") {
 					if (tdoll.skins.animations.reload === undefined) {
 						tdoll.skins.animations.reload = [];
 					}
