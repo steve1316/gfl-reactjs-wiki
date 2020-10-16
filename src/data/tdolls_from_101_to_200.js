@@ -1041,2075 +1041,2086 @@ var tdolls = [
 		},
 		mod: null,
 		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 121,
+			name: "Mk48",
+			type: "MG",
+			rarity: 4,
+			max_hp: 174,
+			max_dmg: 90,
+			max_acc: 25,
+			max_eva: 26,
+			max_rof: 112,
+			skill: {
+				name: "Hunting Impulse",
+				initial_cooldown: "3s",
+				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
+				description: "Increases accuracy by #1 and all hits will be criticals for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["30%", "34%", "39%", "43%", "48%", "52%", "57%", "61%", "66%", "70%"],
+				stat2: [1, 1.6, 2.1, 2.7, 3.2, 3.8, 4.3, 4.9, 5.4, 6]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Damage by "],
+				stat2: ["50%", "25%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Smoke Signal"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 122,
+			name: "G11",
+			type: "AR",
+			rarity: 5,
+			max_hp: 121,
+			max_dmg: 43,
+			max_acc: 44,
+			max_eva: 41,
+			max_rof: 95,
+			skill: {
+				name: "Eye of the Assaulter",
+				initial_cooldown: "6s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Each attack will deal #1 hits on the target for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [2, 2, 2, 2, 2, 2, 2, 2, 3, 3],
+				stat2: [3, 3.2, 3.3, 3.5, 3.7, 3.8, 4, 4.2, 4.3, 4.5]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Evasion by ", "Damage by "],
+				stat2: ["10%", "30%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: {
+			id: 122,
+			name: "G11 Mod",
+			type: "AR",
+			rarity: 6,
+			max_hp: 124,
+			max_dmg: 48,
+			max_acc: 48,
+			max_eva: 44,
+			max_rof: 97,
+			skill: {
+				name: "Eye of the Assaulter",
+				initial_cooldown: "6s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Each attack will deal #1 hits on the target for #2 seconds.",
+				number_of_stats: 2,
+				stat1: [2, 2, 2, 2, 2, 2, 2, 2, 3, 3],
+				stat2: [3.5, 3.7, 3.9, 4, 4.2, 4.3, 4.5, 4.7, 4.8, 5]
+			},
+			skill2: {
+				name: "Stance of the Assaulter",
+				initial_cooldown: "Passive",
+				description:
+					"For every 3 hits on the same enemy, deal an extra hit that does damage equal to #1 of the enemy's max HP. The extra hit is affected by armor but ignores HP shields, and cannot exceed #2 of self damage.",
+				number_of_stats: 2,
+				stat1: ["1%", "1.1%", "1.2%", "1.3%", "1.4%", "1.5%", "1.7%", "1.8%", "1.9%", "2%"],
+				stat2: ["120%", "140%", "160%", "180%", "200%", "220%", "240%", "260%", "280%", "300%"]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 1],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Evasion by ", "Damage by "],
+				stat2: ["12%", "35%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		skins: {
+			number_of_skins: 5,
+			skin_names: ["Neet Zombie", "Most Beautiful Gift of Mine", "Dragon Jr.", "Lucky Mouse's Sleepy New Year", "Courage-Seeking Rex Bunny"],
+			animations: {
+				hasSkillAnimation: [, false, false, false, false],
+				hasVictoryLoopAnimation: [true, true, true, true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, true, false, false],
+				hasSit2Animation: [false, false, false, false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 123,
+			name: "P99",
+			type: "HG",
+			rarity: 3,
+			max_hp: 60,
+			max_dmg: 31,
+			max_acc: 56,
+			max_eva: 87,
+			max_rof: 61,
+			skill: {
+				name: "Cover Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increase all allies' evasion by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 1],
+				row3: [0, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Evasion by "],
+				stat2: ["12%", "36%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 124,
+			name: "Super SASS",
+			type: "RF",
+			rarity: 3,
+			max_hp: 88,
+			max_dmg: 115,
+			max_acc: 65,
+			max_eva: 27,
+			max_rof: 39,
+			skill: {
+				name: "Aimed Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
+				stat2: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: {
+			id: 124,
+			name: "Super SASS Mod",
+			type: "RF",
+			rarity: 4,
+			max_hp: 91,
+			max_dmg: 125,
+			max_acc: 73,
+			max_eva: 31,
+			max_rof: 40,
+			skill: {
+				name: "Aimed Snipe",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to an enemy with the highest HP based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
+				stat2: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"]
+			},
+			skill2: {
+				name: "Sniper's Pursuit",
+				initial_cooldown: "Passive",
+				passive_passive_description: true,
+				description:
+					'Passive: When "Aimed Snipe" fails to kill an enemy, repeatedly snipe the target based on the number of charge stacks, until the target dies or the charges run out. The additional snipes are strengthened auto-attacks, dealing 1x damage with perfect accuracy. This shot can do critical damage, but doesn\'t ignore armor. Passive: Increases damage of normal attacks and skills by #1 when attacking enemies with less than 50% HP.',
+				number_of_stats: 1,
+				stat1: ["5%", "5.5%", "6%", "6.5%", "7%", "7.5%", "8%", "8.5%", "9%", "10%"]
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Wolfwalker"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 125,
+			name: "MG4",
+			type: "MG",
+			rarity: 5,
+			max_hp: 182,
+			max_dmg: 84,
+			max_acc: 34,
+			max_eva: 34,
+			max_rof: 139,
+			skill: {
+				name: "Lock and Load",
+				initial_cooldown: "8s",
+				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
+				description: "Increases damage by #1 and grants #2 ammo to current salvo for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["20%", "22%", "23%", "25%", "27%", "28%", "30%", "32%", "33%", "35%"],
+				stat3: ["+1", "+2", "+2", "+2", "+2", "+3", "+3", "+3", "+3", "+4"],
+				stat4: [6, 6.2, 6.4, 6.7, 6.9, 7.1, 7.3, 7.6, 7.8, 8]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [2, 0, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs SG",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Armor by "],
+				stat2: ["12%", "15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Survival Club Member"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 126,
+			name: "NZ75",
+			type: "HG",
+			rarity: 5,
+			max_hp: 73,
+			max_dmg: 33,
+			max_acc: 62,
+			max_eva: 74,
+			max_rof: 63,
+			skill: {
+				name: "Assault Suppression",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Decrease all enemies' rate of fire by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["18%", "19%", "21%", "22%", "23%", "25%", "26%", "27%", "29%", "30%"],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [1, 2, 1],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Evasion by "],
+				stat2: ["20%", "30%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Golden Coreopsis", "ThanX! and Go2Hell!"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 127,
+			name: "Type 79",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 194,
+			max_dmg: 32,
+			max_acc: 12,
+			max_eva: 70,
+			max_rof: 88,
+			skill: {
+				name: "Stun Grenade",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
+				number_of_stats: 1,
+				stat1: [2.5, 2.7, 2.9, 3.2, 3.4, 3.6, 3.8, 4.1, 4.3, 4.5]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["20%"]
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Fox of Green Hill", "Fox Steps in a Starry Evening"],
+			animations: {
+				hasSkillAnimation: [true, true],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, true],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 128,
+			name: "M99",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 88,
+			max_dmg: 157,
+			max_acc: 81,
+			max_eva: 32,
+			max_rof: 32,
+			skill: {
+				name: "Designated Shot",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [2.2, 2.3, 2.5, 2.6, 2.7, 2.9, 3, 3.1, 3.3, 3.4],
+				stat2: ["3.5x", "4x", "4.5x", "5x", "5.5x", "6x", "6.5x", "7x", "7.5x", "8x"]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 3,
+			skin_names: ["Cyclamen", "Rabbit Squad", "White Rabbit's Summer Party"],
+			animations: {
+				hasSkillAnimation: [false, false, false],
+				hasVictoryLoopAnimation: [true, true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, true],
+				hasSit2Animation: [false, false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 129,
+			name: "Type 95",
+			type: "AR",
+			rarity: 5,
+			max_hp: 116,
+			max_dmg: 55,
+			max_acc: 52,
+			max_eva: 46,
+			max_rof: 71,
+			skill: {
+				name: "Damage Focus T",
+				initial_cooldown: "2s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
+				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Evasion by "],
+				stat2: ["10%", "18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 3,
+			skin_names: ["Jade Noisette Rose", "Summer Cicada", "Pure White Graduation"],
+			animations: {
+				hasSkillAnimation: [false, false, false],
+				hasVictoryLoopAnimation: [true, true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, false],
+				hasSit2Animation: [false, false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 130,
+			name: "Type 97",
+			type: "AR",
+			rarity: 5,
+			max_hp: 116,
+			max_dmg: 54,
+			max_acc: 51,
+			max_eva: 46,
+			max_rof: 72,
+			skill: {
+				name: "Damage Focus T",
+				initial_cooldown: "2s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
+				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Evasion by "],
+				stat2: ["10%", "18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Peony Chief", "The 'Late to School' Performance"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 131,
+			name: "EVO 3",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 194,
+			max_dmg: 23,
+			max_acc: 13,
+			max_eva: 68,
+			max_rof: 93,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: ["2x", "2.4x", "2.9x", "3.3x", "3.8x", "4.2x", "4.7x", "5.1x", "5.6x", "6x"]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 1,
+				stat1: ["Accuracy by "],
+				stat2: ["55%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["White Night Star Whispers", "EVO 3's Dawn"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 132,
+			name: "Type 59",
+			type: "HG",
+			rarity: 3,
+			max_hp: 60,
+			max_dmg: 28,
+			max_acc: 61,
+			max_eva: 96,
+			max_rof: 61,
+			skill: {
+				name: "Cover Suppression N",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "During nighttime, decrease all enemies' evasion by #1 (#2 during the day) for #3 seconds (#4 seconds during the day).",
+				number_of_stats: 4,
+				stat1: ["55%", "57%", "59%", "62%", "64%", "66%", "68%", "71%", "73%", "75%"],
+				stat2: ["30%", "31%", "32%", "33%", "34%", "36%", "37%", "38%", "39%", "40%"],
+				stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
+				stat4: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 1],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["20%", "50%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Fairy Primrose"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 133,
+			name: "Type 63",
+			type: "AR",
+			rarity: 2,
+			max_hp: 99,
+			max_dmg: 51,
+			max_acc: 40,
+			max_eva: 40,
+			max_rof: 73,
+			skill: {
+				name: "Precision Focus",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases accuracy by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["200%", "233%", "267%", "300%", "333%", "367%", "400%", "433%", "467%", "500%"],
+				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["10%", "20%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Yellow Phoenix"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 134,
+			name: "AR70",
+			type: "AR",
+			rarity: 3,
+			max_hp: 110,
+			max_dmg: 50,
+			max_acc: 44,
+			max_eva: 41,
+			max_rof: 71,
+			skill: {
+				name: "Anti-Personnel Grenade",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Launches a grenade that deals #1 damage to enemies within a radius of 1.5 unit.",
+				number_of_stats: 1,
+				stat1: ["4.5x", "5.2x", "5.9x", "6.7x", "7.4x", "8.1x", "8.8x", "9.6x", "10.3x", "11x"]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Accuracy by "],
+				stat2: ["16%", "75%"]
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 135,
+			name: "SR-3MP",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 194,
+			max_dmg: 31,
+			max_acc: 12,
+			max_eva: 67,
+			max_rof: 90,
+			skill: {
+				name: "Damage Focus",
+				initial_cooldown: "4s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["160%", "171%", "182%", "193%", "204%", "216%", "227%", "238%", "249%", "260%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Critical Rate by "],
+				stat2: ["18%", "30%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 3,
+			skin_names: ["Black Rabbit Macchiato", "Special Attack Squad Leader Bunny", "Shrine Maidens Super Lucky Draw"],
+			animations: {
+				hasSkillAnimation: [false, false, false],
+				hasVictoryLoopAnimation: [true, true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, false],
+				hasSit2Animation: [false, false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 136,
+			name: "PP-19",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 176,
+			max_dmg: 26,
+			max_acc: 14,
+			max_eva: 74,
+			max_rof: 91,
+			skill: {
+				name: "Hand Grenade",
+				initial_cooldown: "3s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
+				number_of_stats: 1,
+				stat1: ["2.2x", "2.7x", "3.2x", "3.6x", "4.1x", "4.6x", "5.1x", "5.5x", "6x", "6.5x"]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 2, 0],
+				row3: [0, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["24%"]
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Little Frog Princess", "Freezing Summer"],
+			animations: {
+				hasSkillAnimation: [true, true],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, true],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 137,
+			name: "PP-19-01",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 194,
+			max_dmg: 27,
+			max_acc: 13,
+			max_eva: 68,
+			max_rof: 85,
+			skill: {
+				name: "Smoke Grenade",
+				initial_cooldown: "1s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Throws a smoke grenade which decreases the enemy's rate of fire by #1 and movement speed by #2 within a radius of 2.5 units for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["25%", "27%", "28%", "30%", "32%", "33%", "35%", "37%", "38%", "40%"],
+				stat2: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
+				stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Accuracy by "],
+				stat2: ["12%", "30%"]
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Carbonated Fizzy Candy"],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 138,
+			name: "6P62",
+			type: "AR",
+			rarity: 3,
+			max_hp: 121,
+			max_dmg: 69,
+			max_acc: 37,
+			max_eva: 33,
+			max_rof: 54,
+			skill: {
+				name: "Raid Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1 and accuracy by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["15%", "17%", "19%", "22%", "24%", "26%", "28%", "31%", "33%", "35%"],
+				stat2: ["50%", "56%", "61%", "67%", "72%", "78%", "83%", "89%", "94%", "100%"],
+				stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs SMG",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["35%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Battle Sailor"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 139,
+			name: "Bren Ten",
+			type: "HG",
+			rarity: 2,
+			max_hp: 70,
+			max_dmg: 31,
+			max_acc: 51,
+			max_eva: 63,
+			max_rof: 58,
+			skill: {
+				name: "Fire Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increase all allies' damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["10%", "11%", "12%", "13%", "14%", "14%", "15%", "16%", "17%", "18%"],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [1, 2, 1],
+				row3: [0, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["16%", "10%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: false
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 140,
+			name: "PSM",
+			type: "HG",
+			rarity: 3,
+			max_hp: 57,
+			max_dmg: 24,
+			max_acc: 67,
+			max_eva: 112,
+			max_rof: 65,
+			skill: {
+				name: "Conceal Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increase all allies' accuracy by #1 and evasion by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
+				stat1: ["16%", "17%", "19%", "20%", "21%", "23%", "24%", "25%", "27%", "28%"],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [1, 2, 1],
+				row3: [0, 0, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Accuracy by ", "Evasion by "],
+				stat2: ["56%", "36%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 141,
+			name: "USP Compact",
+			type: "HG",
+			rarity: 2,
+			max_hp: 66,
+			max_dmg: 24,
+			max_acc: 60,
+			max_eva: 86,
+			max_rof: 64,
+			skill: {
+				name: "Precision Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increases all allies' accuracy by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["50%", "56%", "61%", "67%", "72%", "78%", "83%", "89%", "94%", "100%"],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 1],
+				row3: [1, 0, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 1,
+				stat1: ["Rate of Fire by "],
+				stat2: ["28%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 142,
+			name: "Five-seveN",
+			type: "HG",
+			rarity: 5,
+			max_hp: 63,
+			max_dmg: 31,
+			max_acc: 57,
+			max_eva: 97,
+			max_rof: 66,
+			skill: {
+				name: "Piercing Command",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Increases all allies' rate of fire by #1 and critical rate by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
+				stat1: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
+				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+			},
+			tile_set: {
+				row1: [0, 1, 1],
+				row2: [0, 2, 0],
+				row3: [0, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Critical Rate by "],
+				stat2: ["30%", "20%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 4,
+			skin_names: ["Cruise Queen", "Smile of Acceptance", "Fenfen's Adventures", "A Blue Christmas"],
+			animations: {
+				hasSkillAnimation: [false, false, false, false],
+				hasVictoryLoopAnimation: [true, true, true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false, false, false],
+				hasSit2Animation: [false, false, false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 143,
+			name: "RO635",
+			type: "SMG",
+			rarity: 5,
+			max_hp: 194,
+			max_dmg: 27,
+			max_acc: 14,
+			max_eva: 71,
+			max_rof: 97,
+			skill: {
+				name: "Mental Deterrence",
+				initial_cooldown: "3s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Decrease all enemies' damage by #1 and increase self evasion by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
+				stat2: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
+				stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [1, 1, 0],
+				row2: [1, 2, 0],
+				row3: [1, 1, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Accuracy by "],
+				stat2: ["10%", "35%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: {
+			id: 143,
+			name: "RO635 Mod",
+			type: "SMG",
+			rarity: 6,
+			max_hp: 208,
+			max_dmg: 29,
+			max_acc: 15,
+			max_eva: 77,
+			max_rof: 97,
+			skill: {
+				name: "Mental Deterrence",
+				initial_cooldown: "3s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "Decrease all enemies' damage by #1 and accuracy by #2 and increase self evasion by #3 for #4 seconds.",
+				number_of_stats: 4,
+				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
+				stat2: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
+				stat3: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
+				stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			skill2: {
+				name: "Righteous Judgement",
+				initial_cooldown: "Passive",
+				description:
+					'When receiving damage lower than the HP of a dummy link, there is #1 chance to check evasion again. If the check succeeds, no damage is taken. For every layer of DMG/ACC/ROF/MS reduction effects or "Seal of the Avenger" on the attacker, the activation chance of the evasion check increases by an additional #2. When "Mental Deterrence" is active, self attacks will inflict "Seal of the Avenger" on the target.',
+				number_of_stats: 2,
+				stat1: ["10%", "11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "20%"],
+				stat2: ["5%", "5.5%", "6%", "6.5%", "7%", "7.5%", "8%", "8.5%", "9%", "10%"]
+			},
+			tile_set: {
+				row1: [1, 1, 0],
+				row2: [1, 2, 0],
+				row3: [1, 1, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Accuracy by "],
+				stat2: ["15%", "40%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Rule Enforcer", "Defender in the Rye"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 144,
+			name: "MT-9",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 203,
+			max_dmg: 25,
+			max_acc: 13,
+			max_eva: 60,
+			max_rof: 88,
+			skill: {
+				name: "Stun Grenade",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
+				number_of_stats: 1,
+				stat1: [2, 2.2, 2.3, 2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Evasion by ", "Damage by "],
+				stat2: ["12%", "10%"]
+			},
+			animations: {
+				hasSkillAnimation: true,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 145,
+			name: "OTs-44",
+			type: "RF",
+			rarity: 3,
+			max_hp: 80,
+			max_dmg: 157,
+			max_acc: 67,
+			max_eva: 32,
+			max_rof: 32,
+			skill: {
+				name: "Locked Shot",
+				initial_cooldown: "8s",
+				cooldown: [13, 12.6, 12.1, 11.7, 11.2, 10.8, 10.3, 9.9, 9.4, 9],
+				description:
+					"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 7 stacks. When skill is used, aim for 1.5 second, then deal #1 ~ #2 damage to the current enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
+				number_of_stats: 2,
+				stat1: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3],
+				stat2: ["3x", "3.4x", "3.8x", "4.2x", "4.6x", "4.9x", "5.3x", "5.7x", "6.1x", "6.5x"]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Little Reindeer in the Forest", "Super Pig Girl"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 146,
+			name: "G28",
+			type: "RF",
+			rarity: 4,
+			max_hp: 88,
+			max_dmg: 119,
+			max_acc: 80,
+			max_eva: 29,
+			max_rof: 39,
+			skill: {
+				name: "Damage Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["40%", "43%", "46%", "49%", "52%", "55%", "57%", "60%", "63%", "65%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 3,
+			skin_names: ["Tropical Storm", "Wiesnbier", "Moonlit Emerald"],
+			animations: {
+				hasSkillAnimation: [false, false, false],
+				hasVictoryLoopAnimation: [true, true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [true, false, true],
+				hasSit2Animation: [false, false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 147,
+			name: "SSG 69",
+			type: "RF",
+			rarity: 3,
+			max_hp: 80,
+			max_dmg: 130,
+			max_acc: 82,
+			max_eva: 39,
+			max_rof: 30,
+			skill: {
+				name: "Damage Focus",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases damage by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["35%", "38%", "41%", "43%", "46%", "49%", "52%", "54%", "57%", "60%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["12%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 148,
+			name: "IWS 2000",
+			type: "RF",
+			rarity: 5,
+			max_hp: 88,
+			max_dmg: 162,
+			max_acc: 78,
+			max_eva: 29,
+			max_rof: 32,
+			skill: {
+				name: "Giant Eagle Assault",
+				initial_cooldown: "6s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "In return for decreasing rate of fire by #1, increase damage by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["20%", "22%", "23%", "25%", "27%", "28%", "30%", "32%", "33%", "35%"],
+				stat2: ["80%", "91%", "102%", "113%", "124%", "136%", "147%", "158%", "169%", "180%"],
+				stat3: [6, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.4, 10]
+			},
+			tile_set: {
+				row1: [0, 1, 0],
+				row2: [0, 2, 0],
+				row3: [0, 1, 0],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["The Seventh Banisher", "Edelweiss"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 149,
+			name: "AEK-999",
+			type: "MG",
+			rarity: 4,
+			max_hp: 165,
+			max_dmg: 89,
+			max_acc: 29,
+			max_eva: 28,
+			max_rof: 120,
+			skill: {
+				name: "Hunting Impulse N",
+				initial_cooldown: "8s",
+				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
+				description: "During nighttime, increases damage by #1 (no increase during daytime), accuracy by #2 (#3 during daytime) and causes all hits to be guaranteed critical hits for #4 seconds.",
+				number_of_stats: 4,
+				stat1: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
+				stat2: ["30%", "34%", "39%", "43%", "48%", "52%", "57%", "61%", "66%", "70%"],
+				stat3: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
+				stat4: [1, 1.6, 2.1, 2.7, 3.2, 3.8, 4.3, 4.9, 5.4, 6]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [2, 0, 0],
+				row3: [0, 0, 1],
+				targets: "Buffs SG",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Armor by "],
+				stat2: ["15%", "10%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Peerless Yakuza Rider"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 150,
+			name: "Shipka",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 168,
+			max_dmg: 24,
+			max_acc: 14,
+			max_eva: 79,
+			max_rof: 95,
+			skill: {
+				name: "Cover Focus",
+				initial_cooldown: "6s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				description: "Increases evasion by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["70%", "77%", "83%", "90%", "97%", "103%", "110%", "117%", "123%", "130%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Rate of Fire by ", "Evasion by "],
+				stat2: ["15%", "10%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 151,
+			name: "M1887",
+			type: "SG",
+			rarity: 5,
+			max_hp: 275,
+			max_dmg: 39,
+			max_acc: 12,
+			max_eva: 12,
+			max_rof: 22,
+			max_armor: 22,
+			skill: {
+				name: "Terminating Shot",
+				initial_cooldown: "15s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Inflicts #1 damage to a single target and knocks them back by #2 units.",
+				number_of_stats: 2,
+				stat1: [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
+				stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 0, 2],
+				row3: [0, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["20%", "20%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Law of Exorcism"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [true],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 152,
+			name: "M1897",
+			type: "SG",
+			rarity: 3,
+			max_hp: 253,
+			max_dmg: 35,
+			max_acc: 11,
+			max_eva: 11,
+			max_rof: 26,
+			max_armor: 21,
+			skill: {
+				name: "Burst Impact",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Performs an additional attack which deals #1 damage and pushes targets back by #2 units.",
+				number_of_stats: 2,
+				stat1: ["1x", "1.1x", "1.2x", "1.3x", "1.4x", "1.6x", "1.7x", "1.8x", "1.9x", "2x"],
+				stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 0, 2],
+				row3: [1, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 1,
+				stat1: ["Accuracy by "],
+				stat2: ["50%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Electronic Witch", "Blue Sky Patroller"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [true, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 153,
+			name: "M37",
+			type: "SG",
+			rarity: 4,
+			max_hp: 253,
+			max_dmg: 33,
+			max_acc: 12,
+			max_eva: 12,
+			max_rof: 26,
+			max_armor: 22,
+			skill: {
+				name: "Burst Impact",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Performs an additional attack which deals #1 damage and pushes targets back by #2 units.",
+				number_of_stats: 2,
+				stat1: ["1.2x", "1.3x", "1.5x", "1.6x", "1.8x", "1.9x", "2.1x", "2.2x", "2.4x", "2.5x"],
+				stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 0, 2],
+				row3: [1, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Summer Parader"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [true],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 154,
+			name: "M500",
+			type: "SG",
+			rarity: 3,
+			max_hp: 264,
+			max_dmg: 31,
+			max_acc: 11,
+			max_eva: 10,
+			max_rof: 29,
+			max_armor: 21,
+			skill: {
+				name: "Protection Focus",
+				initial_cooldown: "10s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases own armor rating by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["30%", "33%", "37%", "40%", "43%", "47%", "50%", "53%", "57%", "60%"],
+				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
+			},
+			tile_set: {
+				row1: [1, 0, 2],
+				row2: [0, 0, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: {
+			id: 154,
+			name: "M500 Mod",
+			type: "SG",
+			rarity: 4,
+			max_hp: 271,
+			max_dmg: 33,
+			max_acc: 12,
+			max_eva: 11,
+			max_rof: 30,
+			max_armor: 22,
+			skill: {
+				name: "Protection Focus",
+				initial_cooldown: "10s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases own armor rating by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
+				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
+			},
+			skill2: {
+				name: "Hunting Instinct",
+				initial_cooldown: "Passive",
+				description:
+					"When receiving DMG/ROF/EVA/ACC/CRIT/ARMOR increasing effects from skills (including fairy talents), if there is another ally in the same column, grants a #1 HP shield to self and allies in the same column for #2 seconds. Stacks up to 3 times.",
+				number_of_stats: 2,
+				stat1: ["12", "13", "15", "16", "18", "19", "21", "22", "23", "25"],
+				stat2: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+			},
+			tile_set: {
+				row1: [1, 0, 2],
+				row2: [0, 0, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["18%", "10%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Classroom Daydream"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 155,
+			name: "M590",
+			type: "SG",
+			rarity: 4,
+			max_hp: 264,
+			max_dmg: 32,
+			max_acc: 11,
+			max_eva: 10,
+			max_rof: 31,
+			max_armor: 22,
+			skill: {
+				name: "Protection Focus",
+				initial_cooldown: "10s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases own armor rating by #1 for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
+				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 0, 0],
+				row3: [1, 0, 2],
+				targets: "Buffs MG",
+				number_of_stats: 1,
+				stat1: ["Accuracy by "],
+				stat2: ["55%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Snowy Nil", "After-school Pastime"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 156,
+			name: "Super Shorty",
+			type: "SG",
+			rarity: 4,
+			max_hp: 242,
+			max_dmg: 28,
+			max_acc: 14,
+			max_eva: 19,
+			max_rof: 20,
+			max_armor: 20,
+			skill: {
+				name: "Survival Instinct",
+				initial_cooldown: "10s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases evasion by #1 and armor rating by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["28%", "31%", "34%", "37%", "40%", "43%", "46%", "49%", "52%", "55%"],
+				stat2: ["25%", "28%", "31%", "33%", "36%", "39%", "42%", "44%", "47%", "50%"],
+				stat3: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 0, 2],
+				row3: [0, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["15%", "20%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Crossing in Labyrinth"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 157,
+			name: "KSG",
+			type: "SG",
+			rarity: 5,
+			max_hp: 253,
+			max_dmg: 29,
+			max_acc: 13,
+			max_eva: 12,
+			max_rof: 30,
+			max_armor: 24,
+			skill: {
+				name: "Survival Instinct",
+				initial_cooldown: "10s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases evasion by #1 and armor rating by #2 for #3 seconds.",
+				number_of_stats: 3,
+				stat1: ["30%", "33%", "37%", "40%", "43%", "47%", "50%", "53%", "57%", "60%"],
+				stat2: ["30%", "33%", "37%", "40%", "43%", "47%", "50%", "53%", "57%", "60%"],
+				stat3: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 0, 2],
+				row3: [0, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["15%", "20%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 158,
+			name: "KS-23",
+			type: "SG",
+			rarity: 3,
+			max_hp: 275,
+			max_dmg: 40,
+			max_acc: 9,
+			max_eva: 10,
+			max_rof: 25,
+			max_armor: 21,
+			skill: {
+				name: "Damage Focus SG",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases damage by #1, and increases the amount of targets hit per attack to 5 (overwrites the effect of Slugs), lasts for 8 seconds.",
+				number_of_stats: 1,
+				stat1: ["30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%", "110%", "120%"]
+			},
+			tile_set: {
+				row1: [0, 0, 2],
+				row2: [0, 0, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["12%", "30%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 159,
+			name: "RMB-93",
+			type: "SG",
+			rarity: 3,
+			max_hp: 242,
+			max_dmg: 30,
+			max_acc: 11,
+			max_eva: 13,
+			max_rof: 28,
+			max_armor: 22,
+			skill: {
+				name: "Burst Impact",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Performs an additional attack which deals #1 damage and pushes targets back by #2 units.",
+				number_of_stats: 2,
+				stat1: ["1x", "1.1x", "1.2x", "1.3x", "1.4x", "1.6x", "1.7x", "1.8x", "1.9x", "2x"],
+				stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 0, 0],
+				row3: [0, 0, 2],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["12%", "30%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Cross the Milky Way", "Untouchable Moonlit Lover"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 160,
+			name: "Saiga-12",
+			type: "SG",
+			rarity: 5,
+			max_hp: 264,
+			max_dmg: 29,
+			max_acc: 12,
+			max_eva: 11,
+			max_rof: 35,
+			max_armor: 23,
+			skill: {
+				name: "Big Antelopes Horn",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Attacks thrice with increased damage after each successive hit, dealing #1 damage to each target.",
+				number_of_stats: 1,
+				stat1: ["0.8x/1.2x/1.6x", "0.9x/1.3x/1.7x", "0.9x/1.5x/2x", "1.0x/1.6x/2.2x", "1.1x/1.7x/2.5x", "1.2x/1.8x/2.8x", "1.3x/2.0x/3.0x", "1.3x/2.1x/3.2x", "1.4x/2.3x/3.3x", "1.5x/2.5x/3.5x"]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 0, 2],
+				row3: [1, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 2,
+			skin_names: ["Crimson Cruise", "Daylight Judge"],
+			animations: {
+				hasSkillAnimation: [false, false],
+				hasVictoryLoopAnimation: [true, true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false, false],
+				hasSit2Animation: [false, false]
+			}
+		}
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 121,
-	// 		name: "Mk48",
-	// 		type: "MG",
-	// 		rarity: 4,
-	// 		max_hp: 174,
-	// 		max_dmg: 90,
-	// 		max_acc: 25,
-	// 		max_eva: 26,
-	// 		max_rof: 112,
-	// 		skill: {
-	// 			name: "Hunting Impulse",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
-	// 			description: "Increases accuracy by #1 and all hits will be criticals for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["30%", "34%", "39%", "43%", "48%", "52%", "57%", "61%", "66%", "70%"],
-	// 			stat2: [1, 1.6, 2.1, 2.7, 3.2, 3.8, 4.3, 4.9, 5.4, 6]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Damage by "],
-	// 			stat2: ["50%", "25%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Smoke Signal"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 122,
-	// 		name: "G11",
-	// 		type: "AR",
-	// 		rarity: 5,
-	// 		max_hp: 121,
-	// 		max_dmg: 43,
-	// 		max_acc: 44,
-	// 		max_eva: 41,
-	// 		max_rof: 95,
-	// 		skill: {
-	// 			name: "Eye of the Assaulter",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Each attack will deal #1 hits on the target for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [2, 2, 2, 2, 2, 2, 2, 2, 3, 3],
-	// 			stat2: [3, 3.2, 3.3, 3.5, 3.7, 3.8, 4, 4.2, 4.3, 4.5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Evasion by ", "Damage by "],
-	// 			stat2: ["10%", "30%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 122,
-	// 		name: "G11 Mod",
-	// 		type: "AR",
-	// 		rarity: 6,
-	// 		max_hp: 124,
-	// 		max_dmg: 48,
-	// 		max_acc: 48,
-	// 		max_eva: 44,
-	// 		max_rof: 97,
-	// 		skill: {
-	// 			name: "Eye of the Assaulter",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Each attack will deal #1 hits on the target for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: [2, 2, 2, 2, 2, 2, 2, 2, 3, 3],
-	// 			stat2: [3.5, 3.7, 3.9, 4, 4.2, 4.3, 4.5, 4.7, 4.8, 5]
-	// 		},
-	// 		skill2: {
-	// 			name: "Stance of the Assaulter",
-	// 			initial_cooldown: "Passive",
-	// 			description:
-	// 				"For every 3 hits on the same enemy, deal an extra hit that does damage equal to #1 of the enemy's max HP. The extra hit is affected by armor but ignores HP shields, and cannot exceed #2 of self damage.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["1%", "1.1%", "1.2%", "1.3%", "1.4%", "1.5%", "1.7%", "1.8%", "1.9%", "2%"],
-	// 			stat2: ["120%", "140%", "160%", "180%", "200%", "220%", "240%", "260%", "280%", "300%"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Evasion by ", "Damage by "],
-	// 			stat2: ["12%", "35%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	skins: {
-	// 		number_of_skins: 5,
-	// 		skin_names: ["Neet Zombie", "Most Beautiful Gift of Mine", "Dragon Jr.", "Lucky Mouse's Sleepy New Year", "Courage-Seeking Rex Bunny"],
-	// 		animations: {
-	// 			hasSkillAnimation: [, false, false, false, false],
-	// 			hasVictoryLoopAnimation: [true, true, true, true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false, false, false, false],
-	// 			hasSit2Animation: [false, false, false, false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 123,
-	// 		name: "P99",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 60,
-	// 		max_dmg: 31,
-	// 		max_acc: 56,
-	// 		max_eva: 87,
-	// 		max_rof: 61,
-	// 		skill: {
-	// 			name: "Cover Command",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Increase all allies' evasion by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Evasion by "],
-	// 			stat2: ["12%", "36%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 124,
-	// 		name: "Super SASS",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 88,
-	// 		max_dmg: 115,
-	// 		max_acc: 65,
-	// 		max_eva: 27,
-	// 		max_rof: 39,
-	// 		skill: {
-	// 			name: "Aimed Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the nearest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6],
-	// 			stat2: ["2.8x", "3.1x", "3.4x", "3.7x", "4x", "4.3x", "4.6x", "4.9x", "5.2x", "5.5x"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 124,
-	// 		name: "Super SASS Mod",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 91,
-	// 		max_dmg: 125,
-	// 		max_acc: 73,
-	// 		max_eva: 31,
-	// 		max_rof: 40,
-	// 		skill: {
-	// 			name: "Aimed Snipe",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to an enemy with the highest HP based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [1.8, 1.9, 2, 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8],
-	// 			stat2: ["3x", "3.3x", "3.7x", "4x", "4.3x", "4.7x", "5x", "5.3x", "5.7x", "6x"]
-	// 		},
-	// 		skill: {
-	// 			name: "Sniper's Pursuit",
-	// 			initial_cooldown: "Passive",
-	// 			passive_passive_description: true,
-	// 			description:
-	// 				'Passive: When "Aimed Snipe" fails to kill an enemy, repeatedly snipe the target based on the number of charge stacks, until the target dies or the charges run out. The additional snipes are strengthened auto-attacks, dealing 1x damage with perfect accuracy. This shot can do critical damage, but doesn\'t ignore armor. Passive: Increases damage of normal attacks and skills by #1 when attacking enemies with less than 50% HP.',
-	// 			number_of_stats: 1,
-	// 			stat1: ["5%", "5.5%", "6%", "6.5%", "7%", "7.5%", "8%", "8.5%", "9%", "10%"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Wolfwalker"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 125,
-	// 		name: "MG4",
-	// 		type: "MG",
-	// 		rarity: 5,
-	// 		max_hp: 182,
-	// 		max_dmg: 84,
-	// 		max_acc: 34,
-	// 		max_eva: 34,
-	// 		max_rof: 139,
-	// 		skill: {
-	// 			name: "Lock and Load",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
-	// 			description: "Increases damage by #1 and grants #2 ammo to current salvo for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["20%", "22%", "23%", "25%", "27%", "28%", "30%", "32%", "33%", "35%"],
-	// 			stat3: ["+1", "+2", "+2", "+2", "+2", "+3", "+3", "+3", "+3", "+4"],
-	// 			stat4: [6, 6.2, 6.4, 6.7, 6.9, 7.1, 7.3, 7.6, 7.8, 8]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [2, 0, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs SG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Armor by "],
-	// 			stat2: ["12%", "15%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Survival Club Member"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 126,
-	// 		name: "NZ75",
-	// 		type: "HG",
-	// 		rarity: 5,
-	// 		max_hp: 73,
-	// 		max_dmg: 33,
-	// 		max_acc: 62,
-	// 		max_eva: 74,
-	// 		max_rof: 63,
-	// 		skill: {
-	// 			name: "Assault Suppression",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Decrease all enemies' rate of fire by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["18%", "19%", "21%", "22%", "23%", "25%", "26%", "27%", "29%", "30%"],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 1],
-	// 			row2: [1, 2, 1],
-	// 			row3: [0, 1, 1],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Evasion by "],
-	// 			stat2: ["20%", "30%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Golden Coreopsis", "ThanX! and Go2Hell!"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 127,
-	// 		name: "Type 79",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 194,
-	// 		max_dmg: 32,
-	// 		max_acc: 12,
-	// 		max_eva: 70,
-	// 		max_rof: 88,
-	// 		skill: {
-	// 			name: "Stun Grenade",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2.5, 2.7, 2.9, 3.2, 3.4, 3.6, 3.8, 4.1, 4.3, 4.5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["20%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Fox of Green Hill", "Fox Steps in a Starry Evening"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 128,
-	// 		name: "M99",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 88,
-	// 		max_dmg: 157,
-	// 		max_acc: 81,
-	// 		max_eva: 32,
-	// 		max_rof: 32,
-	// 		skill: {
-	// 			name: "Designated Shot",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the furthest enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [2.2, 2.3, 2.5, 2.6, 2.7, 2.9, 3, 3.1, 3.3, 3.4],
-	// 			stat2: ["3.5x", "4x", "4.5x", "5x", "5.5x", "6x", "6.5x", "7x", "7.5x", "8x"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 3,
-	// 		skin_names: ["Cyclamen", "Rabbit Squad", "White Rabbit's Summer Party"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false, false],
-	// 			hasVictoryLoopAnimation: [true, true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false, false],
-	// 			hasSit2Animation: [false, false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 129,
-	// 		name: "Type 95",
-	// 		type: "AR",
-	// 		rarity: 5,
-	// 		max_hp: 116,
-	// 		max_dmg: 55,
-	// 		max_acc: 52,
-	// 		max_eva: 46,
-	// 		max_rof: 71,
-	// 		skill: {
-	// 			name: "Damage Focus T",
-	// 			initial_cooldown: "2s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
-	// 			stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Evasion by "],
-	// 			stat2: ["10%", "18%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 3,
-	// 		skin_names: ["Jade Noisette Rose", "Summer Cicada", "Pure White Graduation"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false, false],
-	// 			hasVictoryLoopAnimation: [true, true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false, false],
-	// 			hasSit2Animation: [false, false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 130,
-	// 		name: "Type 97",
-	// 		type: "AR",
-	// 		rarity: 5,
-	// 		max_hp: 116,
-	// 		max_dmg: 54,
-	// 		max_acc: 51,
-	// 		max_eva: 46,
-	// 		max_rof: 72,
-	// 		skill: {
-	// 			name: "Damage Focus T",
-	// 			initial_cooldown: "2s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
-	// 			stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Evasion by "],
-	// 			stat2: ["10%", "18%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Peony Chief", "The 'Late to School' Performance"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 131,
-	// 		name: "EVO 3",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 194,
-	// 		max_dmg: 23,
-	// 		max_acc: 13,
-	// 		max_eva: 68,
-	// 		max_rof: 93,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: ["2x", "2.4x", "2.9x", "3.3x", "3.8x", "4.2x", "4.7x", "5.1x", "5.6x", "6x"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Accuracy by "],
-	// 			stat2: ["55%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["White Night Star Whispers", "EVO 3's Dawn"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 132,
-	// 		name: "Type 59",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 60,
-	// 		max_dmg: 28,
-	// 		max_acc: 61,
-	// 		max_eva: 96,
-	// 		max_rof: 61,
-	// 		skill: {
-	// 			name: "Cover Suppression N",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "During nighttime, decrease all enemies' evasion by #1 (#2 during the day) for #3 seconds (#4 seconds during the day).",
-	// 			number_of_stats: 4,
-	// 			stat1: ["55%", "57%", "59%", "62%", "64%", "66%", "68%", "71%", "73%", "75%"],
-	// 			stat2: ["30%", "31%", "32%", "33%", "34%", "36%", "37%", "38%", "39%", "40%"],
-	// 			stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8],
-	// 			stat4: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 1],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 1, 1],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["20%", "50%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Fairy Primrose"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 133,
-	// 		name: "Type 63",
-	// 		type: "AR",
-	// 		rarity: 2,
-	// 		max_hp: 99,
-	// 		max_dmg: 51,
-	// 		max_acc: 40,
-	// 		max_eva: 40,
-	// 		max_rof: 73,
-	// 		skill: {
-	// 			name: "Precision Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases accuracy by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["200%", "233%", "267%", "300%", "333%", "367%", "400%", "433%", "467%", "500%"],
-	// 			stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Rate of Fire by "],
-	// 			stat2: ["10%", "20%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Yellow Phoenix"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 134,
-	// 		name: "AR70",
-	// 		type: "AR",
-	// 		rarity: 3,
-	// 		max_hp: 110,
-	// 		max_dmg: 50,
-	// 		max_acc: 44,
-	// 		max_eva: 41,
-	// 		max_rof: 71,
-	// 		skill: {
-	// 			name: "Anti-Personnel Grenade",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Launches a grenade that deals #1 damage to enemies within a radius of 1.5 unit.",
-	// 			number_of_stats: 1,
-	// 			stat1: ["4.5x", "5.2x", "5.9x", "6.7x", "7.4x", "8.1x", "8.8x", "9.6x", "10.3x", "11x"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Accuracy by "],
-	// 			stat2: ["16%", "75%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 135,
-	// 		name: "SR-3MP",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 194,
-	// 		max_dmg: 31,
-	// 		max_acc: 12,
-	// 		max_eva: 67,
-	// 		max_rof: 90,
-	// 		skill: {
-	// 			name: "Damage Focus",
-	// 			initial_cooldown: "4s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["160%", "171%", "182%", "193%", "204%", "216%", "227%", "238%", "249%", "260%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Critical Rate by "],
-	// 			stat2: ["18%", "30%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 3,
-	// 		skin_names: ["Black Rabbit Macchiato", "Special Attack Squad Leader Bunny", "Shrine Maidens Super Lucky Draw"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false, false],
-	// 			hasVictoryLoopAnimation: [true, true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false, false],
-	// 			hasSit2Animation: [false, false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 136,
-	// 		name: "PP-19",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 176,
-	// 		max_dmg: 26,
-	// 		max_acc: 14,
-	// 		max_eva: 74,
-	// 		max_rof: 91,
-	// 		skill: {
-	// 			name: "Hand Grenade",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a grenade that deals #1 damage to enemies within a 2.5 unit radius.",
-	// 			number_of_stats: 1,
-	// 			stat1: ["2.2x", "2.7x", "3.2x", "3.6x", "4.1x", "4.6x", "5.1x", "5.5x", "6x", "6.5x"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["24%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Little Frog Princess", "Freezing Summer"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 137,
-	// 		name: "PP-19-01",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 194,
-	// 		max_dmg: 27,
-	// 		max_acc: 13,
-	// 		max_eva: 68,
-	// 		max_rof: 85,
-	// 		skill: {
-	// 			name: "Smoke Grenade",
-	// 			initial_cooldown: "1s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Throws a smoke grenade which decreases the enemy's rate of fire by #1 and movement speed by #2 within a radius of 2.5 units for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["25%", "27%", "28%", "30%", "32%", "33%", "35%", "37%", "38%", "40%"],
-	// 			stat2: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
-	// 			stat3: [2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5, 3.7, 3.8, 4]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Accuracy by "],
-	// 			stat2: ["12%", "30%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Carbonated Fizzy Candy"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 138,
-	// 		name: "6P62",
-	// 		type: "AR",
-	// 		rarity: 3,
-	// 		max_hp: 121,
-	// 		max_dmg: 69,
-	// 		max_acc: 37,
-	// 		max_eva: 33,
-	// 		max_rof: 54,
-	// 		skill: {
-	// 			name: "Raid Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1 and accuracy by #2 for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["15%", "17%", "19%", "22%", "24%", "26%", "28%", "31%", "33%", "35%"],
-	// 			stat2: ["50%", "56%", "61%", "67%", "72%", "78%", "83%", "89%", "94%", "100%"],
-	// 			stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs SMG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["35%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Battle Sailor"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 139,
-	// 		name: "Bren Ten",
-	// 		type: "HG",
-	// 		rarity: 2,
-	// 		max_hp: 70,
-	// 		max_dmg: 31,
-	// 		max_acc: 51,
-	// 		max_eva: 63,
-	// 		max_rof: 58,
-	// 		skill: {
-	// 			name: "Fire Command",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Increase all allies' damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["10%", "11%", "12%", "13%", "14%", "14%", "15%", "16%", "17%", "18%"],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [1, 2, 1],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Rate of Fire by "],
-	// 			stat2: ["16%", "10%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 140,
-	// 		name: "PSM",
-	// 		type: "HG",
-	// 		rarity: 3,
-	// 		max_hp: 57,
-	// 		max_dmg: 24,
-	// 		max_acc: 67,
-	// 		max_eva: 112,
-	// 		max_rof: 65,
-	// 		skill: {
-	// 			name: "Conceal Command",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Increase all allies' accuracy by #1 and evasion by #2 for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
-	// 			stat1: ["16%", "17%", "19%", "20%", "21%", "23%", "24%", "25%", "27%", "28%"],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [1, 2, 1],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Accuracy by ", "Evasion by "],
-	// 			stat2: ["56%", "36%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 141,
-	// 		name: "USP Compact",
-	// 		type: "HG",
-	// 		rarity: 2,
-	// 		max_hp: 66,
-	// 		max_dmg: 24,
-	// 		max_acc: 60,
-	// 		max_eva: 86,
-	// 		max_rof: 64,
-	// 		skill: {
-	// 			name: "Precision Command",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Increases all allies' accuracy by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["50%", "56%", "61%", "67%", "72%", "78%", "83%", "89%", "94%", "100%"],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Rate of Fire by "],
-	// 			stat2: ["28%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 142,
-	// 		name: "Five-seveN",
-	// 		type: "HG",
-	// 		rarity: 5,
-	// 		max_hp: 63,
-	// 		max_dmg: 31,
-	// 		max_acc: 57,
-	// 		max_eva: 97,
-	// 		max_rof: 66,
-	// 		skill: {
-	// 			name: "Piercing Command",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Increases all allies' rate of fire by #1 and critical rate by #2 for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
-	// 			stat1: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
-	// 			stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 1],
-	// 			targets: "Buffs All Types",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Critical Rate by "],
-	// 			stat2: ["30%", "20%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 4,
-	// 		skin_names: ["Cruise Queen", "Smile of Acceptance", "Fenfen's Adventures", "A Blue Christmas"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false, false, false],
-	// 			hasVictoryLoopAnimation: [true, true, true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false, false, false],
-	// 			hasSit2Animation: [false, false, false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 143,
-	// 		name: "RO635",
-	// 		type: "SMG",
-	// 		rarity: 5,
-	// 		max_hp: 194,
-	// 		max_dmg: 27,
-	// 		max_acc: 14,
-	// 		max_eva: 71,
-	// 		max_rof: 97,
-	// 		skill: {
-	// 			name: "Mental Deterrence",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Decrease all enemies' damage by #1 and increase self evasion by #2 for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
-	// 			stat2: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
-	// 			stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 1, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 1, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Accuracy by "],
-	// 			stat2: ["10%", "35%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 143,
-	// 		name: "RO635 Mod",
-	// 		type: "SMG",
-	// 		rarity: 6,
-	// 		max_hp: 208,
-	// 		max_dmg: 29,
-	// 		max_acc: 15,
-	// 		max_eva: 77,
-	// 		max_rof: 97,
-	// 		skill: {
-	// 			name: "Mental Deterrence",
-	// 			initial_cooldown: "3s",
-	// 			cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
-	// 			description: "Decrease all enemies' damage by #1 and accuracy by #2 and increase self evasion by #3 for #4 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
-	// 			stat2: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
-	// 			stat3: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
-	// 			stat4: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 1, 0],
-	// 			row2: [1, 2, 0],
-	// 			row3: [1, 1, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Accuracy by "],
-	// 			stat2: ["15%", "40%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Rule Enforcer", "Defender in the Rye"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 144,
-	// 		name: "MT-9",
-	// 		type: "SMG",
-	// 		rarity: 3,
-	// 		max_hp: 203,
-	// 		max_dmg: 25,
-	// 		max_acc: 13,
-	// 		max_eva: 60,
-	// 		max_rof: 88,
-	// 		skill: {
-	// 			name: "Stun Grenade",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Throws a flashbang that stuns enemies within a 2.5 unit radius for #1 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: [2, 2.2, 2.3, 2.5, 2.7, 2.8, 3, 3.2, 3.3, 3.5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Evasion by ", "Damage by "],
-	// 			stat2: ["12%", "10%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 145,
-	// 		name: "OTs-44",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 80,
-	// 		max_dmg: 157,
-	// 		max_acc: 67,
-	// 		max_eva: 32,
-	// 		max_rof: 32,
-	// 		skill: {
-	// 			name: "Locked Shot",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [13, 12.6, 12.1, 11.7, 11.2, 10.8, 10.3, 9.9, 9.4, 9],
-	// 			description:
-	// 				"Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 7 stacks. When skill is used, aim for 1.5 second, then deal #1 ~ #2 damage to the current enemy based on the current number of charge stacks. All stacks will be consumed on skill use.",
-	// 			number_of_stats: 2,
-	// 			stat1: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3],
-	// 			stat2: ["3x", "3.4x", "3.8x", "4.2x", "4.6x", "4.9x", "5.3x", "5.7x", "6.1x", "6.5x"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Little Reindeer in the Forest", "Super Pig Girl"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 146,
-	// 		name: "G28",
-	// 		type: "RF",
-	// 		rarity: 4,
-	// 		max_hp: 88,
-	// 		max_dmg: 119,
-	// 		max_acc: 80,
-	// 		max_eva: 29,
-	// 		max_rof: 39,
-	// 		skill: {
-	// 			name: "Damage Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["40%", "43%", "46%", "49%", "52%", "55%", "57%", "60%", "63%", "65%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 3,
-	// 		skin_names: ["Tropical Storm", "Wiesnbier", "Moonlit Emerald"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false, false],
-	// 			hasVictoryLoopAnimation: [true, true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false, false],
-	// 			hasSit2Animation: [false, false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 147,
-	// 		name: "SSG 69",
-	// 		type: "RF",
-	// 		rarity: 3,
-	// 		max_hp: 80,
-	// 		max_dmg: 130,
-	// 		max_acc: 82,
-	// 		max_eva: 39,
-	// 		max_rof: 30,
-	// 		skill: {
-	// 			name: "Damage Focus",
-	// 			initial_cooldown: "5s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases damage by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["35%", "38%", "41%", "43%", "46%", "49%", "52%", "54%", "57%", "60%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [0, 2, 1],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["12%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 148,
-	// 		name: "IWS 2000",
-	// 		type: "RF",
-	// 		rarity: 5,
-	// 		max_hp: 88,
-	// 		max_dmg: 162,
-	// 		max_acc: 78,
-	// 		max_eva: 29,
-	// 		max_rof: 32,
-	// 		skill: {
-	// 			name: "Giant Eagle Assault",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "In return for decreasing rate of fire by #1, increase damage by #2 for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["20%", "22%", "23%", "25%", "27%", "28%", "30%", "32%", "33%", "35%"],
-	// 			stat2: ["80%", "91%", "102%", "113%", "124%", "136%", "147%", "158%", "169%", "180%"],
-	// 			stat3: [6, 6.4, 6.8, 7.2, 7.6, 8, 8.4, 8.8, 9.4, 10]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 1, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [0, 1, 0],
-	// 			targets: "Buffs HG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Reduces Skill CD by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["The Seventh Banisher", "Edelweiss"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 149,
-	// 		name: "AEK-999",
-	// 		type: "MG",
-	// 		rarity: 4,
-	// 		max_hp: 165,
-	// 		max_dmg: 89,
-	// 		max_acc: 29,
-	// 		max_eva: 28,
-	// 		max_rof: 120,
-	// 		skill: {
-	// 			name: "Hunting Impulse N",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
-	// 			description: "During nighttime, increases damage by #1 (no increase during daytime), accuracy by #2 (#3 during daytime) and causes all hits to be guaranteed critical hits for #4 seconds.",
-	// 			number_of_stats: 4,
-	// 			stat1: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
-	// 			stat2: ["30%", "34%", "39%", "43%", "48%", "52%", "57%", "61%", "66%", "70%"],
-	// 			stat3: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
-	// 			stat4: [1, 1.6, 2.1, 2.7, 3.2, 3.8, 4.3, 4.9, 5.4, 6]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 1],
-	// 			row2: [2, 0, 0],
-	// 			row3: [0, 0, 1],
-	// 			targets: "Buffs SG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Armor by "],
-	// 			stat2: ["15%", "10%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Peerless Yakuza Rider"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 150,
-	// 		name: "Shipka",
-	// 		type: "SMG",
-	// 		rarity: 4,
-	// 		max_hp: 168,
-	// 		max_dmg: 24,
-	// 		max_acc: 14,
-	// 		max_eva: 79,
-	// 		max_rof: 95,
-	// 		skill: {
-	// 			name: "Cover Focus",
-	// 			initial_cooldown: "6s",
-	// 			cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
-	// 			description: "Increases evasion by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["70%", "77%", "83%", "90%", "97%", "103%", "110%", "117%", "123%", "130%"],
-	// 			stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 2, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs AR",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Rate of Fire by ", "Evasion by "],
-	// 			stat2: ["15%", "10%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// }
-	// {
-	// 	normal: {
-	// 		id: 151,
-	// 		name: "M1887",
-	// 		type: "SG",
-	// 		rarity: 5,
-	// 		max_hp: 275,
-	// 		max_dmg: 39,
-	// 		max_acc: 12,
-	// 		max_eva: 12,
-	// 		max_rof: 22,
-	// 		max_armor: 22,
-	// 		skill: {
-	// 			name: "Terminating Shot",
-	// 			initial_cooldown: "15s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Inflicts #1 damage to a single target and knocks them back by #2 units.",
-	// 			number_of_stats: 2,
-	// 			stat1: [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
-	// 			stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 0, 2],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["20%", "20%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Law of Exorcism"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [true],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 152,
-	// 		name: "M1897",
-	// 		type: "SG",
-	// 		rarity: 3,
-	// 		max_hp: 253,
-	// 		max_dmg: 35,
-	// 		max_acc: 11,
-	// 		max_eva: 11,
-	// 		max_rof: 26,
-	// 		max_armor: 21,
-	// 		skill: {
-	// 			name: "Burst Impact",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Performs an additional attack which deals #1 damage and pushes targets back by #2 units.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["1x", "1.1x", "1.2x", "1.3x", "1.4x", "1.6x", "1.7x", "1.8x", "1.9x", "2x"],
-	// 			stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 0, 2],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Accuracy by "],
-	// 			stat2: ["50%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Electronic Witch", "Blue Sky Patroller"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// }
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 153,
-	// 		name: "M37",
-	// 		type: "SG",
-	// 		rarity: 4,
-	// 		max_hp: 253,
-	// 		max_dmg: 33,
-	// 		max_acc: 12,
-	// 		max_eva: 12,
-	// 		max_rof: 26,
-	// 		max_armor: 22,
-	// 		skill: {
-	// 			name: "Burst Impact",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Performs an additional attack which deals #1 damage and pushes targets back by #2 units.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["1.2x", "1.3x", "1.5x", "1.6x", "1.8x", "1.9x", "2.1x", "2.2x", "2.4x", "2.5x"],
-	// 			stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 0, 2],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Summer Parader"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 154,
-	// 		name: "M500",
-	// 		type: "SG",
-	// 		rarity: 3,
-	// 		max_hp: 264,
-	// 		max_dmg: 31,
-	// 		max_acc: 11,
-	// 		max_eva: 10,
-	// 		max_rof: 29,
-	// 		max_armor: 21,
-	// 		skill: {
-	// 			name: "Protection Focus",
-	// 			initial_cooldown: "10s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases own armor rating by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["30%", "33%", "37%", "40%", "43%", "47%", "50%", "53%", "57%", "60%"],
-	// 			stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 2],
-	// 			row2: [0, 0, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["18%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: {
-	// 		id: 154,
-	// 		name: "M500 Mod",
-	// 		type: "SG",
-	// 		rarity: 4,
-	// 		max_hp: 271,
-	// 		max_dmg: 33,
-	// 		max_acc: 12,
-	// 		max_eva: 11,
-	// 		max_rof: 30,
-	// 		max_armor: 22,
-	// 		skill: {
-	// 			name: "Protection Focus",
-	// 			initial_cooldown: "10s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases own armor rating by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
-	// 			stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
-	// 		},
-	// 		skill2: {
-	// 			name: "Hunting Instinct",
-	// 			initial_cooldown: "Passive",
-	// 			description:
-	// 				"When receiving DMG/ROF/EVA/ACC/CRIT/ARMOR increasing effects from skills (including fairy talents), if there is another ally in the same column, grants a #1 HP shield to self and allies in the same column for #2 seconds. Stacks up to 3 times.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["12", "13", "15", "16", "18", "19", "21", "22", "23", "25"],
-	// 			stat2: [3, 3.2, 3.4, 3.6, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 2],
-	// 			row2: [0, 0, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["18%", "10%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Classroom Daydream"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 155,
-	// 		name: "M590",
-	// 		type: "SG",
-	// 		rarity: 4,
-	// 		max_hp: 264,
-	// 		max_dmg: 32,
-	// 		max_acc: 11,
-	// 		max_eva: 10,
-	// 		max_rof: 31,
-	// 		max_armor: 22,
-	// 		skill: {
-	// 			name: "Protection Focus",
-	// 			initial_cooldown: "10s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases own armor rating by #1 for #2 seconds.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["40%", "43%", "47%", "50%", "53%", "57%", "60%", "63%", "67%", "70%"],
-	// 			stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 0, 0],
-	// 			row3: [1, 0, 2],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Accuracy by "],
-	// 			stat2: ["55%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Snowy Nil", "After-school Pastime"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 156,
-	// 		name: "Super Shorty",
-	// 		type: "SG",
-	// 		rarity: 4,
-	// 		max_hp: 242,
-	// 		max_dmg: 28,
-	// 		max_acc: 14,
-	// 		max_eva: 19,
-	// 		max_rof: 20,
-	// 		max_armor: 20,
-	// 		skill: {
-	// 			name: "Survival Instinct",
-	// 			initial_cooldown: "10s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases evasion by #1 and armor rating by #2 for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["28%", "31%", "34%", "37%", "40%", "43%", "46%", "49%", "52%", "55%"],
-	// 			stat2: ["25%", "28%", "31%", "33%", "36%", "39%", "42%", "44%", "47%", "50%"],
-	// 			stat3: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 0, 2],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["15%", "20%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 1,
-	// 		skin_names: ["Crossing in Labyrinth"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false],
-	// 			hasVictoryLoopAnimation: [true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false],
-	// 			hasSit2Animation: [false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 157,
-	// 		name: "KSG",
-	// 		type: "SG",
-	// 		rarity: 5,
-	// 		max_hp: 253,
-	// 		max_dmg: 29,
-	// 		max_acc: 13,
-	// 		max_eva: 12,
-	// 		max_rof: 30,
-	// 		max_armor: 24,
-	// 		skill: {
-	// 			name: "Survival Instinct",
-	// 			initial_cooldown: "10s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases evasion by #1 and armor rating by #2 for #3 seconds.",
-	// 			number_of_stats: 3,
-	// 			stat1: ["30%", "33%", "37%", "40%", "43%", "47%", "50%", "53%", "57%", "60%"],
-	// 			stat2: ["30%", "33%", "37%", "40%", "43%", "47%", "50%", "53%", "57%", "60%"],
-	// 			stat3: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 0],
-	// 			row2: [1, 0, 2],
-	// 			row3: [0, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["15%", "20%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 158,
-	// 		name: "KS-23",
-	// 		type: "SG",
-	// 		rarity: 3,
-	// 		max_hp: 275,
-	// 		max_dmg: 40,
-	// 		max_acc: 9,
-	// 		max_eva: 10,
-	// 		max_rof: 25,
-	// 		max_armor: 21,
-	// 		skill: {
-	// 			name: "Damage Focus SG",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Increases damage by #1, and increases the amount of targets hit per attack to 5 (overwrites the effect of Slugs), lasts for 8 seconds.",
-	// 			number_of_stats: 1,
-	// 			stat1: ["30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%", "110%", "120%"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [0, 0, 2],
-	// 			row2: [0, 0, 0],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["12%", "30%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: null
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 159,
-	// 		name: "RMB-93",
-	// 		type: "SG",
-	// 		rarity: 3,
-	// 		max_hp: 242,
-	// 		max_dmg: 30,
-	// 		max_acc: 11,
-	// 		max_eva: 13,
-	// 		max_rof: 28,
-	// 		max_armor: 22,
-	// 		skill: {
-	// 			name: "Burst Impact",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Performs an additional attack which deals #1 damage and pushes targets back by #2 units.",
-	// 			number_of_stats: 2,
-	// 			stat1: ["1x", "1.1x", "1.2x", "1.3x", "1.4x", "1.6x", "1.7x", "1.8x", "1.9x", "2x"],
-	// 			stat2: [2, 2.1, 2.2, 2.3, 2.4, 2.6, 2.7, 2.8, 2.9, 3]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [0, 0, 0],
-	// 			row3: [0, 0, 2],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 2,
-	// 			stat1: ["Damage by ", "Accuracy by "],
-	// 			stat2: ["12%", "30%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Cross the Milky Way", "Untouchable Moonlit Lover"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// {
-	// 	normal: {
-	// 		id: 160,
-	// 		name: "Saiga-12",
-	// 		type: "SG",
-	// 		rarity: 5,
-	// 		max_hp: 264,
-	// 		max_dmg: 29,
-	// 		max_acc: 12,
-	// 		max_eva: 11,
-	// 		max_rof: 35,
-	// 		max_armor: 23,
-	// 		skill: {
-	// 			name: "Big Antelopes Horn",
-	// 			initial_cooldown: "8s",
-	// 			cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-	// 			description: "Attacks thrice with increased damage after each successive hit, dealing #1 damage to each target.",
-	// 			number_of_stats: 1,
-	// 			stat1: ["0.8x/1.2x/1.6x", "0.9x/1.3x/1.7x", "0.9x/1.5x/2x", "1.0x/1.6x/2.2x", "1.1x/1.7x/2.5x", "1.2x/1.8x/2.8x", "1.3x/2.0x/3.0x", "1.3x/2.1x/3.2x", "1.4x/2.3x/3.3x", "1.5x/2.5x/3.5x"]
-	// 		},
-	// 		tile_set: {
-	// 			row1: [1, 0, 0],
-	// 			row2: [1, 0, 2],
-	// 			row3: [1, 0, 0],
-	// 			targets: "Buffs MG",
-	// 			number_of_stats: 1,
-	// 			stat1: ["Damage by "],
-	// 			stat2: ["15%"]
-	// 		},
-	// 		animations: {
-	// 			hasSkillAnimation: false,
-	// 			hasVictoryLoopAnimation: true
-	// 		}
-	// 	},
-	// 	mod: null,
-	// 	skins: {
-	// 		number_of_skins: 2,
-	// 		skin_names: ["Crimson Cruise", "Daylight Judge"],
-	// 		animations: {
-	// 			hasSkillAnimation: [false, false],
-	// 			hasVictoryLoopAnimation: [true, true]
-	// 		},
-	// 		animations_dorm: {
-	// 			hasActionAnimation: [false, false],
-	// 			hasSit2Animation: [false, false]
-	// 		}
-	// 	}
-	// },
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
-	// /////////////////////////////////////////////////////////////////////////////////////////////////
 	// {
 	// 	normal: {
 	// 		id: 161,
