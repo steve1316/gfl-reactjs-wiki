@@ -679,6 +679,7 @@ export default function TDoll(props) {
 						variant="scrollable"
 					>
 						<Tab label="Wait" value="wait" />
+						{"hasWait2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasWait2Animation[tempSkinSelected] ? <Tab label="Wait2" value="wait2" /> : ""}
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
 						{tdoll.skins.animations.hasSkillAnimation[tempSkinSelected] ? <Tab label="Skill" value="skill" /> : ""}
@@ -701,6 +702,7 @@ export default function TDoll(props) {
 						variant="scrollable"
 					>
 						<Tab label="Wait" value="wait" />
+						{"hasWait2Animation" in tdoll.normal.animations ? <Tab label="Wait2" value="wait2" /> : ""}
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
 						{tdoll.selected.animations.hasSkillAnimation ? <Tab label="Skill" value="skill" /> : ""}
@@ -763,12 +765,20 @@ export default function TDoll(props) {
 		if (animationMode === 0) {
 			setAnimationTabSelected(newValue);
 
+			// This switch block is for Normal/Mod Animations.
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
 					} else {
 						setAnimation(tdoll.selected.animations.wait);
+					}
+					break;
+				case "wait2":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.wait2[tempSkinSelected]);
+					} else {
+						setAnimation(tdoll.selected.animations.wait2);
 					}
 					break;
 				case "move":
@@ -855,6 +865,7 @@ export default function TDoll(props) {
 		} else {
 			setAnimationDormTabSelected(newValue);
 
+			// This switch block is for Dorm Animations.
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
@@ -927,6 +938,9 @@ export default function TDoll(props) {
 			currentAnimation = animationTabSelected;
 
 			animationArray.push("wait");
+			if ((!showSkin && tdoll.selected.animations.hasWait2Animation) || (showSkin && tdoll.skins.animations.hasWait2Animation[tempSkinSelected])) {
+				animationArray.push("wait2");
+			}
 			animationArray.push("move");
 			animationArray.push("attack");
 			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && tdoll.skins.animations.hasSkillAnimation[tempSkinSelected])) {
