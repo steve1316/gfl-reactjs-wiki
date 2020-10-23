@@ -46,6 +46,10 @@ export default function processData(tdolls) {
 			tdoll.normal.animations.reload = require(`../images/tdolls/${id}/animations/${id}_normal_reload.gif`);
 		}
 
+		if ("hasWait2Animation" in tdoll.normal.animations) {
+			tdoll.normal.animations.wait2 = require(`../images/tdolls/${id}/animations/${id}_normal_wait2.gif`);
+		}
+
 		//////////// Dorm Animations for Normal ////////////
 		tdoll.normal.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_lying.gif`);
 		tdoll.normal.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_move.gif`);
@@ -169,6 +173,13 @@ export default function processData(tdolls) {
 						tdoll.skins.animations.reload = [];
 					}
 					tdoll.skins.animations.reload[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_reload.gif`);
+				}
+
+				if ("hasWait2Animation" in tdoll.skins.animations) {
+					if (tdoll.skins.animations.wait2 === undefined) {
+						tdoll.skins.animations.wait2 = [];
+					}
+					tdoll.skins.animations.wait2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_wait2.gif`);
 				}
 
 				//////////// Dorm Animations for Skin(s) ////////////
