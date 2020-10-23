@@ -23,8 +23,9 @@ import FormationIcon from "../images/formation_icon.png";
 // Import T-Dolls JSON
 const tdolls_from_1_to_100 = require("../data/tdolls_from_1_to_100").default;
 const tdolls_from_101_to_200 = require("../data/tdolls_from_101_to_200").default;
+const tdolls_from_201_to_300 = require("../data/tdolls_from_201_to_300").default;
 
-const tdolls = tdolls_from_1_to_100.concat(tdolls_from_101_to_200);
+const tdolls = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300);
 
 function Navbar(props) {
 	const useStyles = makeStyles((theme) => ({
