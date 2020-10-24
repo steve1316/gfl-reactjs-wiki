@@ -25,8 +25,9 @@ const tdolls_from_1_to_100 = require("../data/tdolls_from_1_to_100").default;
 const tdolls_from_101_to_200 = require("../data/tdolls_from_101_to_200").default;
 const tdolls_from_201_to_300 = require("../data/tdolls_from_201_to_300").default;
 const tdolls_from_301_to_400 = require("../data/tdolls_from_301_to_400").default;
+const tdolls_from_1000_to_1050 = require("../data/tdolls_from_1000_to_1050").default;
 
-const tdolls = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400);
+const tdolls = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400).concat(tdolls_from_1000_to_1050);
 
 function Navbar(props) {
 	const useStyles = makeStyles((theme) => ({
