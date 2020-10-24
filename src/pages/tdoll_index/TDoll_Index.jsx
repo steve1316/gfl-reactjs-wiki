@@ -18,8 +18,9 @@ import mod_button from "../../images/mod.png";
 const tdolls_from_1_to_100 = require("../../data/tdolls_from_1_to_100").default;
 const tdolls_from_101_to_200 = require("../../data/tdolls_from_101_to_200").default;
 const tdolls_from_201_to_300 = require("../../data/tdolls_from_201_to_300").default;
+const tdolls_from_301_to_400 = require("../../data/tdolls_from_301_to_400").default;
 
-const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300);
+const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400);
 
 const HtmlTooltip = withStyles((theme) => ({
 	tooltip: {
