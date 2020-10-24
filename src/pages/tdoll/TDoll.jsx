@@ -732,7 +732,11 @@ export default function TDoll(props) {
 				>
 					<Tab label="Wait" value="wait" />
 					<Tab label="Move" value="move" />
-					{tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected] ? <Tab label="Action" value="action" /> : ""}
+					{(tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected]) || "hasActionAnimation" in tdoll.selected.animations ? (
+						<Tab label="Action" value="action" />
+					) : (
+						""
+					)}
 					<Tab label="Pick" value="pick" />
 					<Tab label="Sit" value="sit" />
 					{tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasSit2Animation[tempSkinSelected] ? <Tab label="Sit2" value="sit2" /> : ""}
@@ -938,7 +942,10 @@ export default function TDoll(props) {
 			currentAnimation = animationTabSelected;
 
 			animationArray.push("wait");
-			if ((!showSkin && tdoll.selected.animations.hasWait2Animation) || (showSkin && tdoll.skins.animations.hasWait2Animation[tempSkinSelected])) {
+			if (
+				(!showSkin && "hasWait2Animation" in tdoll.selected.animations) ||
+				(showSkin && "hasWait2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasWait2Animation[tempSkinSelected])
+			) {
 				animationArray.push("wait2");
 			}
 			animationArray.push("move");
@@ -981,7 +988,7 @@ export default function TDoll(props) {
 
 			animationArray.push("wait");
 			animationArray.push("move");
-			if (tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected]) {
+			if ((tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected]) || "hasActionAnimation" in tdoll.selected.animations) {
 				animationArray.push("action");
 			}
 			animationArray.push("pick");

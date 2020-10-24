@@ -53,6 +53,9 @@ export default function processData(tdolls) {
 		//////////// Dorm Animations for Normal ////////////
 		tdoll.normal.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_lying.gif`);
 		tdoll.normal.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_move.gif`);
+		if ("hasActionAnimation" in tdoll.normal.animations) {
+			tdoll.normal.animations_dorm.action = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_action.gif`);
+		}
 		tdoll.normal.animations_dorm.pick = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_pick.gif`);
 		tdoll.normal.animations_dorm.sit = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_sit.gif`);
 		tdoll.normal.animations_dorm.wait = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_wait.gif`);
