@@ -183,7 +183,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: Apply 1 layer of marks to enemies every #1 seconds (these marks can stack). Active: Each normal attack will target a marked enemy and activate an additional attack while consuming 1 mark. Skill lasts for #2 seconds or until all marks are consumed.",
+					"[Passive]: Apply 1 layer of marks to enemies every #1 seconds (these marks can stack). [Active]: Each normal attack will target a marked enemy and activate an additional attack while consuming 1 mark. Skill lasts for #2 seconds or until all marks are consumed.",
 				number_of_stats: 2,
 				stat1: [3, 2.8, 2.7, 2.5, 2.3, 2.2, 2, 1.8, 1.7, 1.5],
 				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
@@ -223,7 +223,7 @@ var tdolls = [
 				initial_cooldown: "6s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
-				description: "Passive: The first attack on a new target will hit twice. Active: Upon skill activation, each attack will hit twice on current target for #1 seconds.",
+				description: "[Passive]: The first attack on a new target will hit twice. [Active]: Upon skill activation, each attack will hit twice on current target for #1 seconds.",
 				number_of_stats: 1,
 				stat1: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
 			},
@@ -654,7 +654,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: Normal attacks have #1 chance to apply 1 layer of Corrosion. When an enemy accumulates 5 layers of Corrosion, it deals #2 damage and stuns for #3 seconds in an extremely small area, and clears the Corrosion effect on the enemy. [Corrosion]: Reduces the target's rate of fire and movement speed by #4 for #5 seconds. Active: Fires a special grenade, applying 3 layers of Corrosion to targets within a radius of 2.5 units, and an additional 2 layers to the main targets of the grenade. After using the skill, chance of applying Corrosion on normal attacks increase to 100% for #6 seconds.",
+					"[Passive]: Normal attacks have #1 chance to apply 1 layer of Corrosion. When an enemy accumulates 5 layers of Corrosion, it deals #2 damage and stuns for #3 seconds in an extremely small area, and clears the Corrosion effect on the enemy. [Corrosion]: Reduces the target's rate of fire and movement speed by #4 for #5 seconds. [Active]: Fires a special grenade, applying 3 layers of Corrosion to targets within a radius of 2.5 units, and an additional 2 layers to the main targets of the grenade. After using the skill, chance of applying Corrosion on normal attacks increase to 100% for #6 seconds.",
 				number_of_stats: 6,
 				stat1: ["20%", "22%", "24%", "26%", "30%", "32%", "34%", "36%", "38%", "40%"],
 				stat2: ["3x", "3.2x", "3.67x", "4x", "4.33x", "4.67x", "5x", "5.33x", "5.67x", "6x"],
@@ -1010,7 +1010,7 @@ var tdolls = [
 				cooldown: [15, 14.6, 14.1, 13.7, 13.2, 12.8, 12.3, 11.9, 11.4, 11],
 				passive_active_description: true,
 				description:
-					"Passive: At max charge stacks, TAC's drone will start marking a random enemy (marked enemy changes every second). Active: Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the marked target based on the current number of charge stacks. This skill is capable of critical damage and all charge stacks will be consumed on skill usage.",
+					"[Passive]: At max charge stacks, TAC's drone will start marking a random enemy (marked enemy changes every second). [Active]: Begin charging after skill cooldown ends, gaining 1 charge stack every second, up to a maximum of 5 stacks. When skill is used, aim for 1 second, then deal #1 ~ #2 damage to the marked target based on the current number of charge stacks. This skill is capable of critical damage and all charge stacks will be consumed on skill usage.",
 				number_of_stats: 2,
 				stat1: [1.5, 1.6, 1.7, 1.7, 1.8, 1.9, 2, 2, 2.1, 2.2],
 				stat2: ["2.5x", "2.7x", "2.9x", "3.2x", "3.4x", "3.6x", "3.8x", "4.1x", "4.3x", "4.5x"]
@@ -1756,7 +1756,7 @@ var tdolls = [
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				passive_active_description: true,
 				description:
-					"Passive: Switch to LMG mode if she moves, which increases movement speed by 50% and decreases accuracy by #1. Remaining stationary for 6 seconds will switch her to HMG mode, which increases the number of rounds fired per volley by #2 and accuracy by #3. Active: Increase damage by #4 for #5 seconds.",
+					"[Passive]: Switch to LMG mode if she moves, which increases movement speed by 50% and decreases accuracy by #1. Remaining stationary for 6 seconds will switch her to HMG mode, which increases the number of rounds fired per volley by #2 and accuracy by #3. [Active]: Increase damage by #4 for #5 seconds.",
 				number_of_stats: 5,
 				stat1: ["40%", "38%", "36%", "33%", "31%", "29%", "27%", "24%", "22%", "20%"],
 				stat2: ["+0", "+0", "+0", "+1", "+1", "+1", "+2", "+2", "+2", "+2"],
@@ -2077,7 +2077,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					'Passive: Activates "Arc Shadow" for 3 seconds upon losing 5% health. 6 second cooldown. [Arc Shadow]: Gain a stackable #1 evasion increase every second. The following four attacks will be guaranteed hits and crits. Active: Activate "Arc Shadow" for 5 seconds and deploy 999 armor, 3 HP holograms for 3 seconds. The number of holograms deployed depend upon the number of Dummy Links.',
+					'[Passive]: Activates "Arc Shadow" for 3 seconds upon losing 5% health. 6 second cooldown. [Arc Shadow]: Gain a stackable #1 evasion increase every second. The following four attacks will be guaranteed hits and crits. [Active]: Activate "Arc Shadow" for 5 seconds and deploy 999 armor, 3 HP holograms for 3 seconds. The number of holograms deployed depend upon the number of Dummy Links.',
 				number_of_stats: 1,
 				stat1: ["8%", "9%", "11%", "12%", "13%", "15%", "16%", "17%", "19%", "20%"]
 			},
@@ -2168,7 +2168,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: Whenever an ally situated on her tiles reload, increase their damage and accuracy by 5% for 15 seconds. Max 3 stacks. Active: Increase damage of allies situated on her tiles by #1 for #2 seconds.",
+					"[Passive]: Whenever an ally situated on her tiles reload, increase their damage and accuracy by 5% for 15 seconds. Max 3 stacks. [Active]: Increase damage of allies situated on her tiles by #1 for #2 seconds.",
 				number_of_stats: 2,
 				stat1: ["6%", "7%", "8%", "9%", "10%", "11%", "12%", "13%", "14%", "15%"],
 				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8]
@@ -2448,7 +2448,7 @@ var tdolls = [
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				passive_active_description: true,
 				description:
-					"Passive: Reduce reload time by 15% after every reload, max 45% reduction. Increase the number of rounds fired per volley by 1 after every reload, max 3 rounds Active: Increase damage by #1 for #2 seconds.",
+					"[Passive]: Reduce reload time by 15% after every reload, max 45% reduction. Increase the number of rounds fired per volley by 1 after every reload, max 3 rounds [Active]: Increase damage by #1 for #2 seconds.",
 				number_of_stats: 2,
 				stat1: ["27%", "32%", "38%", "43%", "48%", "54%", "59%", "64%", "70%", "75%"],
 				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
@@ -2591,7 +2591,7 @@ var tdolls = [
 				cooldown: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 				passive_passive_active_description: true,
 				description:
-					"Passive 1: Gain one special bullet 6 seconds after battle start, then one every 8 seconds afterward. Max two special bullets. Each special bullet held increases damage and accuracy by #1. Passive 2: Use a normal bullet to initiate a normal attack every 1 second to deal 1.5x damage to the farthest enemy. Max two normal bullets. Reload after normal bullets are depleted. Reload time depends upon rate of fire. Active: Use one special bullet to aim for 2 seconds to deal #2 damage (can crit) to the enemy with the highest HP.",
+					"Passive 1: Gain one special bullet 6 seconds after battle start, then one every 8 seconds afterward. Max two special bullets. Each special bullet held increases damage and accuracy by #1. Passive 2: Use a normal bullet to initiate a normal attack every 1 second to deal 1.5x damage to the farthest enemy. Max two normal bullets. Reload after normal bullets are depleted. Reload time depends upon rate of fire. [Active]: Use one special bullet to aim for 2 seconds to deal #2 damage (can crit) to the enemy with the highest HP.",
 				number_of_stats: 2,
 				stat1: ["6%", "7%", "9%", "10%", "11%", "13%", "14%", "15%", "16%", "18%"],
 				stat2: ["1.5x", "1.61x", "1.72x", "1.83x", "1.94x", "2.06x", "2.17x", "2.28x", "2.39x", "2.5x"]
@@ -2643,7 +2643,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: Normal attacks against armorless enemies deal 1.05x damage. Active: Enter sniper mode for 9 seconds. After every #1 seconds of aiming, deal #2 damage (able to crit, but affected by armor) that cannot be dodged to the furthest target and decrease their damage by #3 for 3 seconds.",
+					"[Passive]: Normal attacks against armorless enemies deal 1.05x damage. [Active]: Enter sniper mode for 9 seconds. After every #1 seconds of aiming, deal #2 damage (able to crit, but affected by armor) that cannot be dodged to the furthest target and decrease their damage by #3 for 3 seconds.",
 				number_of_stats: 3,
 				stat1: [2.5, 2.4, 2.3, 2.2, 2.1, 1.9, 1.8, 1.7, 1.6, 1.5],
 				stat2: ["1.5x", "1.56x", "1.61x", "1.67x", "1.72x", "1.78x", "1.83x", "1.89x", "1.94x", "2x"],
@@ -2829,7 +2829,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: After attacking the same target 2 times, deal #1 bonus explosive damage to enemies within a small radius on the next attack. Active: Begin charging after skill cooldown ends, gaining 1 charge stack every 1s, up to a maximum of 4 stacks. When skill is activated, aim for 1s, then deal #2 ~ #3 damage to the enemy with the highest HP based on the current number of charge stacks. Additionally, deal #4 explosive damage to enemies within a radius of 1.5 units. All stacks will be consumed on skill use.",
+					"[Passive]: After attacking the same target 2 times, deal #1 bonus explosive damage to enemies within a small radius on the next attack. [Active]: Begin charging after skill cooldown ends, gaining 1 charge stack every 1s, up to a maximum of 4 stacks. When skill is activated, aim for 1s, then deal #2 ~ #3 damage to the enemy with the highest HP based on the current number of charge stacks. Additionally, deal #4 explosive damage to enemies within a radius of 1.5 units. All stacks will be consumed on skill use.",
 				number_of_stats: 4,
 				stat1: ["0.8x", "0.88x", "0.96x", "1.03x", "1.11x", "1.19x", "1.27x", "1.34x", "1.42x", "1.5x"],
 				stat2: ["1.8x", "1.9x", "2x", "2x", "2.1x", "2.2x", "2.3x", "2.3x", "2.4x", "2.5x"],
@@ -2932,7 +2932,7 @@ var tdolls = [
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				passive_active_description: true,
 				description:
-					"Passive: Reduce damage taken by 20% for allies on her tiles when she is reloading. Active: Increase damage by #1 for #2 seconds. In addition, gain extra stats for herself depending on the types of allies on her tiles: AR increases accuracy by 25% for 4 seconds, SMG reduces the time of the next reload by 25%, and SG increases ammo count by 1. Max 3 stacks per type.",
+					"[Passive]: Reduce damage taken by 20% for allies on her tiles when she is reloading. [Active]: Increase damage by #1 for #2 seconds. In addition, gain extra stats for herself depending on the types of allies on her tiles: AR increases accuracy by 25% for 4 seconds, SMG reduces the time of the next reload by 25%, and SG increases ammo count by 1. Max 3 stacks per type.",
 				number_of_stats: 2,
 				stat1: ["25%", "28%", "32%", "35%", "38%", "42%", "45%", "48%", "52%", "55%"],
 				stat2: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
@@ -2984,7 +2984,7 @@ var tdolls = [
 				cooldown: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 				passive_active_description: true,
 				description:
-					"Passive: Start the battle with 1 fleur-de-lis. Gain 1 fleur-de-lis every #1 seconds. Max 4 stacks. Active: Consume 1 fleur-de-lis to reduce the time of the next reload by #2. Max 2 stacks.",
+					"[Passive]: Start the battle with 1 fleur-de-lis. Gain 1 fleur-de-lis every #1 seconds. Max 4 stacks. [Active]: Consume 1 fleur-de-lis to reduce the time of the next reload by #2. Max 2 stacks.",
 				number_of_stats: 2,
 				stat1: [6, 5.8, 5.6, 5.3, 5.1, 4.9, 4.7, 4.4, 4.2, 4],
 				stat2: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"]
@@ -3064,7 +3064,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					"Passive: Consecutive attacks on the same target within 3 seconds will increase rate of fire by #1 for 3 seconds. Max 3 stacks. Stacks reset when target changes. Active: Increase damage by #2 for #3 seconds. The target switches to the farthest enemy until it dies. While the skill is active, stacks do not reset when target changes.",
+					"[Passive]: Consecutive attacks on the same target within 3 seconds will increase rate of fire by #1 for 3 seconds. Max 3 stacks. Stacks reset when target changes. [Active]: Increase damage by #2 for #3 seconds. The target switches to the farthest enemy until it dies. While the skill is active, stacks do not reset when target changes.",
 				number_of_stats: 3,
 				stat1: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
 				stat2: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
@@ -3246,7 +3246,7 @@ var tdolls = [
 				initial_cooldown: "6s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
-				description: "Passive: Every third attack deals 1x damage with perfect accuracy and piercing effect. Active: Increase rate of fire by #1 for #2 seconds.",
+				description: "[Passive]: Every third attack deals 1x damage with perfect accuracy and piercing effect. [Active]: Increase rate of fire by #1 for #2 seconds.",
 				number_of_stats: 2,
 				stat1: ["25%", "28%", "32%", "35%", "38%", "42%", "45%", "48%", "52%", "55%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
@@ -3338,7 +3338,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: Attacks penetrate HP shields and deal an equivalent amount of damage to the HP shield as well. Active: Increase self rate of fire by #1 for #2 seconds. Mark 3 enemy units with the highest combined HP and shield, and increase their damage taken by 10% for #3 seconds. Prioritize attacking the marked enemies, increasing the final damage dealt to marked enemies by #4 every attack, stacking up to 3 times.",
+					"[Passive]: Attacks penetrate HP shields and deal an equivalent amount of damage to the HP shield as well. [Active]: Increase self rate of fire by #1 for #2 seconds. Mark 3 enemy units with the highest combined HP and shield, and increase their damage taken by 10% for #3 seconds. Prioritize attacking the marked enemies, increasing the final damage dealt to marked enemies by #4 every attack, stacking up to 3 times.",
 				number_of_stats: 4,
 				stat1: ["15%", "18%", "21%", "23%", "26%", "29%", "32%", "34%", "37%", "40%"],
 				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
@@ -3422,7 +3422,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					"Passive: Increase damage when attacking debuffed enemies. Increase damage by #1 if the enemy has 1 debuff. Further increase damage by #2 for each different type of debuff on the enemy. Debuffs include: damage decrease, rate of fire decrease, accuracy decrease, evasion decrease, armor decrease, movement speed decrease, burning, stun. Active: Increase rate of fire by #3 for #4 seconds. Decrease the damage of ACR's target by #5 for 3 seconds, up to 5 stacks.",
+					"[Passive]: Increase damage when attacking debuffed enemies. Increase damage by #1 if the enemy has 1 debuff. Further increase damage by #2 for each different type of debuff on the enemy. Debuffs include: damage decrease, rate of fire decrease, accuracy decrease, evasion decrease, armor decrease, movement speed decrease, burning, stun. [Active]: Increase rate of fire by #3 for #4 seconds. Decrease the damage of ACR's target by #5 for 3 seconds, up to 5 stacks.",
 				number_of_stats: 5,
 				stat1: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
 				stat2: ["3%", "3%", "3%", "4%", "4%", "4%", "5%", "5%", "5%", "5%"],
@@ -3466,7 +3466,7 @@ var tdolls = [
 				cooldown: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
 				passive_active_description: true,
 				description:
-					"Passive: Start the battle with 30 reserve ammo. Gain 1 reserve ammo every 3 seconds when not reloading. Active: Press skill to activate Reserve Ammo Shooting mode. Each attack will use 1 reserve ammo to increase damage by #1 but decrease accuracy by #2 up to a max of 10 stacks for 5 seconds. Normal ammo remaining will be used up before using the reserve ammo. Press skill again to deactivate Reserve Ammo Shooting mode.",
+					"[Passive]: Start the battle with 30 reserve ammo. Gain 1 reserve ammo every 3 seconds when not reloading. [Active]: Press skill to activate Reserve Ammo Shooting mode. Each attack will use 1 reserve ammo to increase damage by #1 but decrease accuracy by #2 up to a max of 10 stacks for 5 seconds. Normal ammo remaining will be used up before using the reserve ammo. Press skill again to deactivate Reserve Ammo Shooting mode.",
 				number_of_stats: 2,
 				stat1: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
 				stat2: ["25%", "24%", "23%", "22%", "21%", "19%", "18%", "17%", "16%", "15%"]
@@ -3720,7 +3720,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: When any HP shield is active on self, stop attacking and gain 1 stack of charge every 1.5 seconds, up to 3 stacks. When charges are maxed out or the HP shield expires, carry out an expanding special attack and clear all charge stacks. [Charge 1]: Deal #1 damage that cannot miss to enemies within an area of 3 units ahead of self. [Charge 2]: Deals an additional #2 damage that cannot miss to enemies within an area of 5 units ahead of self. [Charge 3]: Deals an additional #3 damage that cannot miss to enemies within an area of 8 units ahead of self. Active: Gains a #4 HP shield for 5 seconds.",
+					"[Passive]: When any HP shield is active on self, stop attacking and gain 1 stack of charge every 1.5 seconds, up to 3 stacks. When charges are maxed out or the HP shield expires, carry out an expanding special attack and clear all charge stacks. [Charge 1]: Deal #1 damage that cannot miss to enemies within an area of 3 units ahead of self. [Charge 2]: Deals an additional #2 damage that cannot miss to enemies within an area of 5 units ahead of self. [Charge 3]: Deals an additional #3 damage that cannot miss to enemies within an area of 8 units ahead of self. [Active]: Gains a #4 HP shield for 5 seconds.",
 				number_of_stats: 4,
 				stat1: ["3x", "3.3x", "3.6x", "3.8x", "4.1x", "4.4x", "4.7x", "4.9x", "5.2x", "5.5x"],
 				stat2: ["3x", "3.3x", "3.6x", "3.8x", "4.1x", "4.4x", "4.7x", "4.9x", "5.2x", "5.5x"],
@@ -3777,7 +3777,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: Each reload grants a #1 HP shield to self for #2 seconds. Additionally, reduces incoming damage by #3 to self and allies in the tiles directly behind her for #4 seconds. Active: Immediately carry out a rapid reload and obtain +3 additional ammo to current clip; Additional ammo will be consumed first and deal #5 damage twice (incompatible with slugs).",
+					"[Passive]: Each reload grants a #1 HP shield to self for #2 seconds. Additionally, reduces incoming damage by #3 to self and allies in the tiles directly behind her for #4 seconds. [Active]: Immediately carry out a rapid reload and obtain +3 additional ammo to current clip; Additional ammo will be consumed first and deal #5 damage twice (incompatible with slugs).",
 				number_of_stats: 5,
 				stat1: [22, 24, 26, 28, 30, 32, 34, 36, 38, 40],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
@@ -3922,7 +3922,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					"Passive: Gain 3 Pigeonwings upon the start of the battle. When an allied unit has received a stat-decreasing debuff, that unit gains #1 Rate of Fire for 4 seconds, stacking up to 1 time. This boost does not trigger other passive effects, and cannot take effect on the same unit within 3 seconds. When C-93 receives 1 stat-decreasing debuff, trigger the aforementioned effect on herself and gain 1 Pigeonwing. Only up to 6 Pigeonwings can be stocked at once. Active: Increase all allied units' damage by #2 for #3 seconds, and expend all currently stocked Pigeonwings. For every Pigeonwing expended, an ally gains #4 Rate of Fire for 4 seconds, stacking up to 2 times, and this can stack with the Passive variant. This skill prioritizes units that have not been buffed by the Pigeonwings, and thereafter the units with the highest damage. Once the skill ends, C-93 replenishes 3 Pigeonwings.",
+					"[Passive]: Gain 3 Pigeonwings upon the start of the battle. When an allied unit has received a stat-decreasing debuff, that unit gains #1 Rate of Fire for 4 seconds, stacking up to 1 time. This boost does not trigger other passive effects, and cannot take effect on the same unit within 3 seconds. When C-93 receives 1 stat-decreasing debuff, trigger the aforementioned effect on herself and gain 1 Pigeonwing. Only up to 6 Pigeonwings can be stocked at once. [Active]: Increase all allied units' damage by #2 for #3 seconds, and expend all currently stocked Pigeonwings. For every Pigeonwing expended, an ally gains #4 Rate of Fire for 4 seconds, stacking up to 2 times, and this can stack with the Passive variant. This skill prioritizes units that have not been buffed by the Pigeonwings, and thereafter the units with the highest damage. Once the skill ends, C-93 replenishes 3 Pigeonwings.",
 				number_of_stats: 4,
 				stat1: ["3%", "4%", "4%", "5%", "5%", "6%", "6%", "7%", "7%", "8%"],
 				stat2: ["8%", "9%", "10%", "11%", "12%", "14%", "15%", "16%", "17%", "18%"],
@@ -4215,7 +4215,7 @@ var tdolls = [
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				passive_active_description: true,
 				description:
-					"Passive: Once ammo in current clip is depleted, enters AR Mode, reducing own rate of fire by #1 while increasing own accuracy by 100% and movement speed by 150%. Active: Reloads and switches back to MG Mode. Reload time is a fixed 1 second and reloading clears all stat changes from AR Mode while increasing own damage by #2 for #3 seconds.",
+					"[Passive]: Once ammo in current clip is depleted, enters AR Mode, reducing own rate of fire by #1 while increasing own accuracy by 100% and movement speed by 150%. [Active]: Reloads and switches back to MG Mode. Reload time is a fixed 1 second and reloading clears all stat changes from AR Mode while increasing own damage by #2 for #3 seconds.",
 				number_of_stats: 3,
 				stat1: ["50%", "56%", "61%", "67%", "72%", "78%", "83%", "89%", "94%", "100%"],
 				stat2: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
@@ -4257,7 +4257,7 @@ var tdolls = [
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				passive_active_description: true,
 				description:
-					'Passive: Attacks have a 15% chance to cause Rage, which lasts for 3 seconds. While Rage is active, every normal attack deals an instance of #1 extra damage. Active: Activates "Eye of the White Mastiff" and monitors all enemies. Attacks on monitored enemies raise self firepower, accuracy and critical chance by #2, and being attacked by a monitored enemy raises self evade by #3. Monitoring lasts for 6 seconds. While the skill is in effect, gain 5 stacks of Strain every 2 seconds, with each group of monitored enemies adding 1 stack of Strain per 2 seconds. At #4 stacks of Strain, Eye of the White Mastiff drops in effectiveness and clears all Strain stacks, inflicting a 20% decrease in ROF and accuracy for 5 seconds. This debuff can coexist with Monitoring, but the skill cannot be reactivated while the debuff is in effect.',
+					'[Passive]: Attacks have a 15% chance to cause Rage, which lasts for 3 seconds. While Rage is active, every normal attack deals an instance of #1 extra damage. [Active]: Activates "Eye of the White Mastiff" and monitors all enemies. Attacks on monitored enemies raise self firepower, accuracy and critical chance by #2, and being attacked by a monitored enemy raises self evade by #3. Monitoring lasts for 6 seconds. While the skill is in effect, gain 5 stacks of Strain every 2 seconds, with each group of monitored enemies adding 1 stack of Strain per 2 seconds. At #4 stacks of Strain, Eye of the White Mastiff drops in effectiveness and clears all Strain stacks, inflicting a 20% decrease in ROF and accuracy for 5 seconds. This debuff can coexist with Monitoring, but the skill cannot be reactivated while the debuff is in effect.',
 				number_of_stats: 4,
 				stat1: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
 				stat2: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],

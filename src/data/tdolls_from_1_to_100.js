@@ -251,7 +251,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: Whenever Python receives damage/rate of fire/evasion/accuracy/crit rate (including Fairies) skill buffs, increase the corresponding stats of allies on her tiles by #1 for 3 seconds. Active: The next six attacks will have a #2 chance of increasing self damage by #3 for #4 seconds. Max 6 stacks.",
+					"[Passive]: Whenever Python receives damage/rate of fire/evasion/accuracy/crit rate (including Fairies) skill buffs, increase the corresponding stats of allies on her tiles by #1 for 3 seconds. [Active]: The next six attacks will have a #2 chance of increasing self damage by #3 for #4 seconds. Max 6 stacks.",
 				number_of_stats: 4,
 				stat1: [
 					"3%/3%/15%/15%/6%",
@@ -449,7 +449,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: When equipped with \"Stechkin Exclusive Stock\", increases allies' damage by 4% for the same skill duration. Active: Increases all allies' rate of fire by #1 for #2 seconds.",
+					"[Passive]: When equipped with \"Stechkin Exclusive Stock\", increases allies' damage by 4% for the same skill duration. [Active]: Increases all allies' rate of fire by #1 for #2 seconds.",
 				number_of_stats: 2,
 				stat1: ["12%", "13%", "14%", "15%", "16%", "17%", "18%", "19%", "20%", "22%"],
 				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8]
@@ -484,7 +484,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: When equipped with \"Stechkin Exclusive Stock\", increases allies' damage by 4% for the same skill duration. Active: Increases all allies' rate of fire by #1 for #2 seconds.",
+					"[Passive]: When equipped with \"Stechkin Exclusive Stock\", increases allies' damage by 4% for the same skill duration. [Active]: Increases all allies' rate of fire by #1 for #2 seconds.",
 				number_of_stats: 2,
 				stat1: ["15%", "16%", "17%", "18%", "19%", "21%", "22%", "23%", "24%", "25%"],
 				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8]
@@ -2490,7 +2490,7 @@ var tdolls = [
 				initial_cooldown: "Passive",
 				passive_active_description: true,
 				description:
-					'Passive: Enter camouflage mode after staying still for 3 seconds, and increases self accuracy and rate of fire by #1. Active: Using "Interdiction Shot" when in camouflage mode increases skill damage by #2 and removes camouflage.',
+					'[Passive]: Enter camouflage mode after staying still for 3 seconds, and increases self accuracy and rate of fire by #1. [Active]: Using "Interdiction Shot" when in camouflage mode increases skill damage by #2 and removes camouflage.',
 				number_of_stats: 2,
 				stat1: ["5%", "5%", "6%", "6%", "6%", "7%", "7%", "7%", "8%", "8%"],
 				stat2: ["10%", "11%", "12%", "13%", "14%", "14%", "15%", "16%", "17%", "18%"]

@@ -508,8 +508,32 @@ var tdolls = [
 				name: "Mixing Time",
 				initial_cooldown: "6s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
-				description:
-					"During battle, Jill takes 3 seconds to mix different drinks depending upon her equipment. Each drink grants a different buff to her echelon.\nJill cannot attack. Each point of Jill's base damage stat grants herself 1% skill cooldown reduction (does not affect initial cooldown time), max 30%.\n<color=#db3d3d>■</color>Adelhyde <color=#70ad47>■</color>Flanergide <color=#91c1f0>■</color>Karmotrine <color=#ffb400>■</color>Bronson Ext <color=#2e74b5>■</color>Pwd Delta  \n╔∷∷∷∷∷∷∷∷♪♪Menu♪♪∷∷∷∷∷∷∷∷╗\n <color=#ffb400>■</color>Bronson Ext<color=#70ad47>■</color>Flanergide<color=#91c1f0>■</color>Karmotrine \nBig Beer \n Increase SG armor by #1 and damage and accuracy by #2 for #3 seconds.\n <color=#db3d3d>■</color>Adelhyde<color=#db3d3d>■</color>Adelhyde<color=#2e74b5>■</color>Pwd Delta \nBrandtini\n Increase MG damage and accuracy by #4 for #5 seconds.\n <color=#db3d3d>■</color>Adelhyde<color=#ffb400>■</color>Bronson Ext<color=#91c1f0>■</color>Karmotrine \nPiano Woman\n Increase the front column's evasion by #6 and the other positions' damage by #7 for #8 seconds.\n <color=#db3d3d>■</color>Adelhyde<color=#db3d3d>■</color>Adelhyde<color=#91c1f0>■</color>Karmotrine \nMoonblast \n Increase all allies' rate of fire by #9 for #10 seconds.\n <color=#ffb400>■</color>Bronson Ext<color=#2e74b5>■</color>Pwd Delta<color=#70ad47>■</color>Flanergide \nBleeding Jane\n Increase RF and AR crit rate by #11 and 60% of the crit rate over the cap becomes additional crit damage for #12 seconds.\n <color=#91c1f0>■</color>Karmotrine<color=#91c1f0>■</color>Karmotrine<color=#91c1f0>■</color>Karmotrine \nFringe Weaver \n Increase all allies' damage by #13 for #14 seconds. After the skill effect ends, become drunk and decrease damage and accuracy by #15 for 3 seconds.\n <color=#db3d3d>❈❈❈</color> Default: Sugar Rush\n Increase all allies' damage by #16 for #17 seconds.\n╚∷∷∷∷∷∷∷♪♪Night Night♪♪∷∷∷∷∷∷╝",
+				description: `
+					During battle, Jill takes 3 seconds to mix different drinks depending upon her equipment. Each drink grants a different buff to her echelon.
+					\nJill cannot attack. Each point of Jill's base damage stat grants herself 1% skill cooldown reduction (does not affect initial cooldown time), max 30%.
+					\n■Adelhyde ■Flanergide ■Karmotrine ■Bronson Ext ■Pwd Delta
+					\n╔∷∷∷∷∷∷∷∷♪♪Menu♪♪∷∷∷∷∷∷∷∷╗
+					\n■Bronson Ext ■Flanergide ■Karmotrine
+					\nBig Beer
+					Increase SG armor by #1 and damage and accuracy by #2 for #3 seconds.
+					\n■Adelhyde ■Adelhyde ■Pwd Delta
+					\nBrandtini
+					Increase MG damage and accuracy by #4 for #5 seconds.
+					\n■Adelhyde ■Bronson Ext ■Karmotrine
+					\nPiano Woman
+					Increase the front column's evasion by #6 and the other positions' damage by #7 for #8 seconds.
+					\n■Adelhyde ■Adelhyde ■Karmotrine
+					\nMoonblast
+					Increase all allies' rate of fire by #9 for #10 seconds.
+					\n■Bronson Ext ■Pwd Delta ■Flanergide
+					\nBleeding Jane
+					Increase RF and AR crit rate by #11 and 60% of the crit rate over the cap becomes additional crit damage for #12 seconds.
+					\n■Karmotrine ■Karmotrine ■Karmotrine
+					\nFringe Weaver
+					Increase all allies' damage by #13 for #14 seconds. After the skill effect ends, become drunk and decrease damage and accuracy by #15 for 3 seconds.
+					\n❈❈❈ Default: Sugar Rush
+					Increase all allies' damage by #16 for #17 seconds.
+					\n╚∷∷∷∷∷∷∷♪♪Night Night♪♪∷∷∷∷∷∷╝`,
 				number_of_stats: 17,
 				stat1: ["10%", "12%", "13%", "15%", "17%", "18%", "20%", "21%", "23%", "25%"],
 				stat2: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
@@ -575,7 +599,7 @@ var tdolls = [
 				initial_cooldown: "6s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				description:
-					"Grant ally SGs, SMGs, HGs, and Fairies a shield with a base HP of #1 points for #2 seconds. The shield gains additional HP based upon the target's missing HP, with the minimum increase being 0.8x and the maximum being 1.8x. When Stella is present, Sei's attacks count toward Stella's passive skill. Favorite Drink: When buffed by a Moonblast, skill takes effect for the duration of the Moonblast, and the additional shield HP gain based upon the target's missing HP is doubled.",
+					"Grant ally SGs, SMGs, HGs, and Fairies a shield with a base HP of #1 points for #2 seconds. The shield gains additional HP based upon the target's missing HP, with the minimum increase being 0.8x and the maximum being 1.8x. \n\nWhen Stella is present, Sei's attacks count toward Stella's passive skill. [Favorite Drink]: When buffed by a Moonblast, skill takes effect for the duration of the Moonblast, and the additional shield HP gain based upon the target's missing HP is doubled.",
 				number_of_stats: 2,
 				stat1: [14, 16, 18, 20, 22, 24, 26, 28, 30, 32],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
@@ -626,7 +650,7 @@ var tdolls = [
 				initial_cooldown: "1s",
 				cooldown: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
 				description:
-					"Press to toggle between Nano-Camo and MIRD-113. MIRD-113: When activated, increase self damage by #1 and decrease the accuracy of all allies in the same column by #2 but increase their evasion by #3 (cannot activate Python's passive). Nano-Camo: When activated, increase self evasion by #4 and decrease the evasion of all allies in same column by #5 but increase their accuracy by #6 (cannot activate Python's passive) .\nWhen Dorothy is in the center row, she activates Nano-Camo by default and MIRD-113 otherwise.\nFavorite Drink: When buffed by a Piano Woman, reduce the debuff effect of her skill by 50%.",
+					"Press to toggle between Nano-Camo and MIRD-113. [MIRD-113]: When activated, increase self damage by #1 and decrease the accuracy of all allies in the same column by #2 but increase their evasion by #3 (cannot activate Python's passive). [Nano-Camo]: When activated, increase self evasion by #4 and decrease the evasion of all allies in same column by #5 but increase their accuracy by #6 (cannot activate Python's passive). \n\nWhen Dorothy is in the center row, she activates Nano-Camo by default and MIRD-113 otherwise. [Favorite Drink]: When buffed by a Piano Woman, reduce the debuff effect of her skill by 50%.",
 				number_of_stats: 6,
 				stat1: ["50%", "56%", "61%", "67%", "72%", "78%", "83%", "89%", "94%", "100%"],
 				stat2: ["60%", "58%", "56%", "53%", "51%", "49%", "47%", "44%", "42%", "40%"],
@@ -682,7 +706,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					"Passive: After her puppets attack #1 times, her next attack gains an extra 50% critical damage. When Sei is present, Stella grants Sei 10% skill cooldown reduction (does not affect initial cooldown time). Favorite Drink: When buffed by a Bleeding Jane, the passive effect only requires #2 attacks to trigger. Active: Increase damage by #3 for #4 seconds.",
+					"[Passive]: After her puppets attack #1 times, her next attack gains an extra 50% critical damage. \n\nWhen Sei is present, Stella grants Sei 10% skill cooldown reduction (does not affect initial cooldown time). [Favorite Drink]: When buffed by a Bleeding Jane, the passive effect only requires #2 attacks to trigger. [Active]: Increase damage by #3 for #4 seconds.",
 				number_of_stats: 4,
 				stat1: [20, 20, 20, 20, 18, 18, 18, 16, 16, 16],
 				stat2: [14, 14, 14, 14, 12, 12, 12, 10, 10, 10],
@@ -736,8 +760,8 @@ var tdolls = [
 				name: "Love and Dreams",
 				initial_cooldown: "8s",
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
-				description: "Summon two drones that each deal #1 damage per hit for #2 seconds. Favorite Drink: when buffed by a Brandtini, drones last 1 second longer.",
-				number_of_stats: 4,
+				description: "Summon two drones that each deal #1 damage per hit for #2 seconds. [Favorite Drink]: when buffed by a Brandtini, drones last 1 second longer.",
+				number_of_stats: 2,
 				stat1: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
 				stat2: [2, 2.2, 2.4, 2.7, 2.9, 3.1, 3.3, 3.6, 3.8, 4]
 			},
@@ -790,7 +814,7 @@ var tdolls = [
 				initial_cooldown: "8s",
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				description:
-					"Jump up and pound the ground to create a big explosion, dealing #1 damage to enemies within a radius of 2 and knocking them back. Every point of armor increases the damage by 1%. Favorite Drink: When buffed by a Big Beer, gain 0.5 point of shield HP per point of armor. Normal attack: Launch an exploding rocket punch that deals #2 damage to a single target with a #3 knockback chance (does not stack with slug ammo).",
+					"Jump up and pound the ground to create a big explosion, dealing #1 damage to enemies within a radius of 2 and knocking them back. Every point of armor increases the damage by 1%. [Favorite Drink]: When buffed by a Big Beer, gain 0.5 point of shield HP per point of armor. [Normal Attack]: Launch an exploding rocket punch that deals #2 damage to a single target with a #3 knockback chance (does not stack with slug ammo).",
 				number_of_stats: 3,
 				stat1: ["1.2x", "1.27x", "1.33x", "1.4x", "0.9x", "0.9x", "1x", "1.1x", "1.1x", "1.2x"],
 				stat2: ["5%", "6%", "6%", "7%", "7%", "8%", "8%", "9%", "9%", "10%"],
@@ -843,7 +867,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					'Passive: Gain a 10-HP shield at the start of battle, lasting for 8s. When shielded, obtain a stack of "Damage Mark" every 2s, up to a maximum of 3 stacks. Each "Damage mark" stack increases her damage by #1 for #2. When not shielded, obtain a stack of "Evasion Mark" every 2s, up to a maximum of 3 stacks. Each "Evasion Mark" stack increases her evasion by #3 for #4. Active: Gain a +10 HP shield for 8s. For every stack of "Damage Mark", increase rate of fire by #5; for every stack of "Evasion Mark", gain an additional #6 HP shield. Effects last for #7.',
+					'[Passive]: Gain a 10-HP shield at the start of battle, lasting for 8s. When shielded, obtain a stack of "Damage Mark" every 2s, up to a maximum of 3 stacks. Each "Damage mark" stack increases her damage by #1 for #2. When not shielded, obtain a stack of "Evasion Mark" every 2s, up to a maximum of 3 stacks. Each "Evasion Mark" stack increases her evasion by #3 for #4. [Active]: Gain a +10 HP shield for 8s. For every stack of "Damage Mark", increase rate of fire by #5; for every stack of "Evasion Mark", gain an additional #6 HP shield. Effects last for #7.',
 				number_of_stats: 7,
 				stat1: ["15%", "17%", "18%", "20%", "22%", "23%", "25%", "27%", "28%", "30%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
@@ -901,7 +925,7 @@ var tdolls = [
 				cooldown: [12, 11.8, 11.6, 11.3, 11.1, 10.9, 10.7, 10.4, 10.2, 10],
 				passive_active_description: true,
 				description:
-					"Passive: Obtain a Tarot Card every 3 attacks, up to a maximum of 3 Tarot Cards. Each Tarot Card increases her damage by #1 for #2. Active: Consume all Tarot Cards and fire a shot that will not miss, dealing #3 damage to the furthest target and possible critical damage. Additionally, deal additional damage to enemies within a 1-unit radius around the target. The additional damage is equal to #4 the number of Tarot Cards consumed, up to a maximum of #5 damage.",
+					"[Passive]: Obtain a Tarot Card every 3 attacks, up to a maximum of 3 Tarot Cards. Each Tarot Card increases her damage by #1 for #2. [Active]: Consume all Tarot Cards and fire a shot that will not miss, dealing #3 damage to the furthest target and possible critical damage. Additionally, deal additional damage to enemies within a 1-unit radius around the target. The additional damage is equal to #4 the number of Tarot Cards consumed, up to a maximum of #5 damage.",
 				number_of_stats: 5,
 				stat1: ["6%", "7%", "8%", "9%", "10%", "11%", "12%", "13%", "14%", "15%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
@@ -958,7 +982,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: When there is an enemy unit within a 2-unit distance, switch to using a bayonet to deal 2x damage to the nearest target. In this state, no ammo is consumed and rate of fire increases by #1 (this passive will not take effect when using Slug ammo). If there are no enemy units within a 2-unit distance, increase maximum hit targets by 1. Active: Increase damage by #2 and movement speed by #3 for #4.",
+					"[Passive]: When there is an enemy unit within a 2-unit distance, switch to using a bayonet to deal 2x damage to the nearest target. In this state, no ammo is consumed and rate of fire increases by #1 (this passive will not take effect when using Slug ammo). If there are no enemy units within a 2-unit distance, increase maximum hit targets by 1. [Active]: Increase damage by #2 and movement speed by #3 for #4.",
 				number_of_stats: 4,
 				stat1: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"],
 				stat2: ["30%", "36%", "41%", "47%", "52%", "58%", "63%", "69%", "74%", "80%"],
@@ -1014,7 +1038,7 @@ var tdolls = [
 				cooldown: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
 				passive_active_description: true,
 				description:
-					'Passive: While in Charging Mode, this unit cannot perform normal attacks. For every 2s after a battle has begun, obtain a Charge up to a maximum of 5 Charges. Each Charge increases her damage by #1. Active: Enter Attack Mode. After Attack Mode expires, reload and remove all damage buff from Charging mode, then re-enter Charging Mode. When equipped with "Spectacles", Charging Mode grants 8-HP shields to all allied units in front of her for 5 seconds, up to a maximum of 3 stacks. When equipped with "Meteorite", Charging Mode increases all allies\' damage by 5% for 5 seconds, up to a maximum of 3 stacks. When equipped with "Wristwatch", Charging Mode grants her 1 extra ammo.',
+					'[Passive]: While in Charging Mode, this unit cannot perform normal attacks. For every 2s after a battle has begun, obtain a Charge up to a maximum of 5 Charges. Each Charge increases her damage by #1. [Active]: Enter Attack Mode. After Attack Mode expires, reload and remove all damage buff from Charging mode, then re-enter Charging Mode. When equipped with "Spectacles", Charging Mode grants 8-HP shields to all allied units in front of her for 5 seconds, up to a maximum of 3 stacks. When equipped with "Meteorite", Charging Mode increases all allies\' damage by 5% for 5 seconds, up to a maximum of 3 stacks. When equipped with "Wristwatch", Charging Mode grants her 1 extra ammo.',
 				number_of_stats: 1,
 				stat1: ["16%", "17%", "18%", "19%", "20%", "21%", "22%", "23%", "24%", "25%"]
 			},
@@ -1066,7 +1090,7 @@ var tdolls = [
 				cooldown: [16, 15.6, 15.1, 14.7, 14.2, 13.8, 13.3, 12.9, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: Increase damage by 12% at the start of battle. This buff gradually decays by 4% every 2s, and is completely removed after 6s. The buff will refresh itself every 10s. Active: Sacrifice #1 of accuracy to increase rate of fire to a fixed 150 for #2.",
+					"[Passive]: Increase damage by 12% at the start of battle. This buff gradually decays by 4% every 2s, and is completely removed after 6s. The buff will refresh itself every 10s. [Active]: Sacrifice #1 of accuracy to increase rate of fire to a fixed 150 for #2 seconds.",
 				number_of_stats: 2,
 				stat1: ["40%", "36%", "31%", "27%", "22%", "18%", "13%", "9%", "4%", "0%"],
 				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
