@@ -112,7 +112,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					"Passive: When enemies are under negative status effects, damage taken is increased by #1. When allies are under negative status effects, damage taken is reduced by #2. Passive is always active during night battles. Active: Increases the damage dealt to all enemies by #3 for #4 seconds.",
+					"[Passive]: When enemies are under negative status effects, damage taken is increased by #1. When allies are under negative status effects, damage taken is reduced by #2. Passive is always active during night battles. [Active]: Increases the damage dealt to all enemies by #3 for #4 seconds.",
 				number_of_stats: 4,
 				stat1: ["4%", "4%", "5%", "14%", "15%", "16%", "17%", "18%", "19%", "20%"],
 				stat2: ["6%", "7%", "8%", "9%", "10%", "11%", "12%", "13%", "14%", "15%"],
@@ -255,7 +255,7 @@ var tdolls = [
 				initial_cooldown: "5s",
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
-				description: "Passive: When attacking enemies ahead of self, increases damage by #1. Active: Increases damage by #2 and prioritise the closest enemy ahead for #3 seconds.",
+				description: "[Passive]: When attacking enemies ahead of self, increases damage by #1. [Active]: Increases damage by #2 and prioritise the closest enemy ahead for #3 seconds.",
 				number_of_stats: 3,
 				stat1: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
 				stat2: ["30%", "34%", "38%", "42%", "46%", "49%", "53%", "57%", "61%", "65%"],
@@ -308,7 +308,7 @@ var tdolls = [
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				passive_active_description: true,
 				description:
-					"Passive: After each reload, grants +1 ammo to other machine guns in the echelon and reduce self reload time by 20%, up to 60% max. Active: Immediately complete a special reload and obtain #1 additional ammo. When using additional ammo, increases damage and accuracy by #2.",
+					"[Passive]: After each reload, grants +1 ammo to other machine guns in the echelon and reduce self reload time by 20%, up to 60% max. [Active]: Immediately complete a special reload and obtain #1 additional ammo. When using additional ammo, increases damage and accuracy by #2.",
 				number_of_stats: 2,
 				stat1: ["+3", "+4", "+4", "+5", "+5", "+6", "+6", "+7", "+7", "+8"],
 				stat2: ["30%", "32%", "34%", "37%", "39%", "41%", "43%", "46%", "48%", "50%"]
@@ -399,7 +399,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: Deals #1 dummy-link-ignoring damage to the attacked target in a 1.5 unit radius. Active: During night battles, prioritize targets which have not attacked yet, checking enemies for #2 seconds. Enemies damaged by this skill have their evasion decreased by #3 for #4 seconds. (Stacks once, Can only be used during night)",
+					"[Passive]: Deals #1 dummy-link-ignoring damage to the attacked target in a 1.5 unit radius. [Active]: During night battles, prioritize targets which have not attacked yet, checking enemies for #2 seconds. Enemies damaged by this skill have their evasion decreased by #3 for #4 seconds. (Stacks once, Can only be used during night)",
 				number_of_stats: 4,
 				stat1: ["0.1x", "0.11x", "0.12x", "0.13x", "0.15x", "0.16x", "0.17x", "0.18x", "0.19x", "0.2x"],
 				stat2: [3, 3.2, 3.5, 3.7, 3.9, 4.2, 4.4, 4.6, 4.8, 5],
@@ -482,7 +482,7 @@ var tdolls = [
 				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
 				passive_active_description: true,
 				description:
-					'Passive: For every 20% Max HP lost, grants self a #1 HP shield. Active: Reduces incoming damage taken by #2 and grants self a "Taunt" effect for #3 seconds. [Taunt]: Enemies\' basic attacks and strengthened attacks will prioritize targets with "Taunt" within attack range.',
+					'[Passive]: For every 20% Max HP lost, grants self a #1 HP shield. [Active]: Reduces incoming damage taken by #2 and grants self a "Taunt" effect for #3 seconds. [Taunt]: Enemies\' basic attacks and strengthened attacks will prioritize targets with "Taunt" within attack range.',
 				number_of_stats: 3,
 				stat1: ["+10", "+11", "+12", "+13", "+14", "+16", "+17", "+18", "+19", "+20"],
 				stat2: ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"],
@@ -564,7 +564,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					"Passive: For every stat reduction effect on self, increase final damage by #1 (stacks additively). Active: Swaps to Focus mode, reducing self rate of fire by #2, movement speed and evasion by #3; Increases self damage by #4, accuracy by #5, critical damage by #6 for #7 seconds.",
+					"[Passive]: For every stat reduction effect on self, increase final damage by #1 (stacks additively). [Active]: Swaps to Focus mode, reducing self rate of fire by #2, movement speed and evasion by #3; Increases self damage by #4, accuracy by #5, critical damage by #6 for #7 seconds.",
 				number_of_stats: 7,
 				stat1: ["3%", "3.2%", "3.4%", "3.7%", "3.9%", "4.1%", "4.3%", "4.6%", "4.8%", "5%"],
 				stat2: ["30%", "29%", "28%", "27%", "26%", "25%", "24%", "23%", "22%", "20%"],
@@ -694,7 +694,7 @@ var tdolls = [
 				cooldown: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 				passive_active_description: true,
 				description:
-					"Passive: At the start of battle, summon 3 reinforcement T-Dolls with 3 dummy links each to the rear of the echelon. Each reinforcement has 5 HP per dummy link and inherits the following stats from General Liu; #1 damage, #2 rate of fire and #3 accuracy. The remaining stats and targeting mode are also the same as General Liu. Active: Activate the skill to switch between the following modes: [Rear-Focus (default)]: Reduces own rate of fire by 10% and increases own damage by 20% and targets the furthest enemy from self. [Vanguard-Focus]: Reduces own damage by 10% and increases own rate of fire by 20% and targets the nearest enemy from self.",
+					"[Passive]: At the start of battle, summon 3 reinforcement T-Dolls with 3 dummy links each to the rear of the echelon. Each reinforcement has 5 HP per dummy link and inherits the following stats from General Liu; #1 damage, #2 rate of fire and #3 accuracy. The remaining stats and targeting mode are also the same as General Liu. [Active]: Activate the skill to switch between the following modes: [Rear-Focus (default)]: Reduces own rate of fire by 10% and increases own damage by 20% and targets the furthest enemy from self. [Vanguard-Focus]: Reduces own damage by 10% and increases own rate of fire by 20% and targets the nearest enemy from self.",
 				number_of_stats: 3,
 				stat1: ["20%", "21%", "22%", "23%", "25%", "27%", "29%", "31%", "33%", "35%"],
 				stat2: ["45%", "46%", "47%", "48%", "50%", "52%", "54%", "56%", "58%", "60%"],
@@ -736,7 +736,7 @@ var tdolls = [
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				passive_active_description: true,
 				description:
-					"Passive: If currently assigned as an echelons leader, permanently reduces own rate of fire by 35% while increasing allied Rifles' critical hit rate by #1 and critical hit damage by #2. Active: When skill is activated, allies on her tiles gain #3 damage and #4 rate of fire for #5 seconds.",
+					"[Passive]: If currently assigned as an echelons leader, permanently reduces own rate of fire by 35% while increasing allied Rifles' critical hit rate by #1 and critical hit damage by #2. [Active]: When skill is activated, allies on her tiles gain #3 damage and #4 rate of fire for #5 seconds.",
 				number_of_stats: 5,
 				stat1: ["10%", "11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "20%"],
 				stat2: ["5%", "5.5%", "6%", "6.5%", "7%", "7.5%", "8%", "8.5%", "9%", "10%"],
@@ -780,7 +780,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					'Passive: Obtains +1 stack of "Destruct" every second. For every stack of "Destruct" currently active, increases own final damage by #1 up to a max of 10 stacks. Active: Consumes all stacks of "Destruct" and obtains damage/accuracy/rate of fire equivalent to the stat of the enemies with the highest respective stat. The stat gain is capped at #2 of self damage, #3 of self accuracy and #4 of self rate of fire. The effect lasts for #5 seconds and no stacks of "Destruct" can be gained throughout the skills duration.',
+					'[Passive]: Obtains +1 stack of "Destruct" every second. For every stack of "Destruct" currently active, increases own final damage by #1 up to a max of 10 stacks. [Active]: Consumes all stacks of "Destruct" and obtains damage/accuracy/rate of fire equivalent to the stat of the enemies with the highest respective stat. The stat gain is capped at #2 of self damage, #3 of self accuracy and #4 of self rate of fire. The effect lasts for #5 seconds and no stacks of "Destruct" can be gained throughout the skills duration.',
 				number_of_stats: 5,
 				stat1: ["1.6%", "1.7%", "1.8%", "1.9%", "2%", "2.1%", "2.2%", "2.3%", "2.4%", "2.5%"],
 				stat2: ["25%", "27%", "30%", "32%", "34%", "36%", "39%", "41%", "43%", "45%"],
@@ -824,7 +824,7 @@ var tdolls = [
 				cooldown: [18, 18, 18, 18, 18, 18, 18, 18, 18, 18],
 				passive_active_description: true,
 				description:
-					"Passive: During reloading state, allies on her tiles gain #1 evasion, whereas allies not on her tiles gain #2 damage. Active: Extends the current volley by +12 ammo. When using additional ammo, increases own accuracy by #3 and extends the next reload time by 4 seconds.",
+					"[Passive]: During reloading state, allies on her tiles gain #1 evasion, whereas allies not on her tiles gain #2 damage. [Active]: Extends the current volley by +12 ammo. When using additional ammo, increases own accuracy by #3 and extends the next reload time by 4 seconds.",
 				number_of_stats: 3,
 				stat1: ["10%", "11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "20%"],
 				stat2: ["5%", "5.5%", "6%", "6.5%", "7%", "7.5%", "8%", "8.5%", "9%", "10%"],

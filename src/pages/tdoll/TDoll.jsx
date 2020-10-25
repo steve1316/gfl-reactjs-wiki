@@ -520,17 +520,18 @@ export default function TDoll(props) {
 			}
 
 			if ("passive_active_description" in tdollTemp.selected.skill) {
-				tempSkillDescription1 = tempSkillDescription1.replace("Passive: ", '<span style="color: orange; font-size: 110%;"><ins>Passive:</ins></span> ');
-				tempSkillDescription1 = tempSkillDescription1.replace("Active: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Active:</ins></span> ');
+				tempSkillDescription1 = tempSkillDescription1.replace("[Passive]:", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
+				tempSkillDescription1 = tempSkillDescription1.replace("[Active]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
 			}
+
 			if ("passive_active_description" in tdollTemp.selected.skill2) {
-				tempSkillDescription2 = tempSkillDescription2.replace("Passive: ", '<span style="color: orange; font-size: 110%;"><ins>Passive:</ins></span> ');
-				tempSkillDescription2 = tempSkillDescription2.replace("Active: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Active:</ins></span> ');
+				tempSkillDescription2 = tempSkillDescription2.replace("[Passive]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
+				tempSkillDescription2 = tempSkillDescription2.replace("[Active]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
 			}
 
 			if ("passive_passive_description" in tdollTemp.selected.skill2) {
-				tempSkillDescription2 = tempSkillDescription2.replace("Passive 1: ", '<span style="color: orange; font-size: 110%;"><ins>Passive 1:</ins></span> ');
-				tempSkillDescription2 = tempSkillDescription2.replace("Passive 2: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Passive 2:</ins></span> ');
+				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 1]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive 1]</ins></span>: ');
+				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 2]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Passive 2]</ins></span>: ');
 			}
 
 			setSkillDescription1(tempSkillDescription1);
@@ -563,12 +564,89 @@ export default function TDoll(props) {
 					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
 					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
 					break;
+				case 6:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#6", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat6[skillLevel - 1] + "</ins></span>");
+					break;
+				case 7:
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#6", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat6[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#7", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat7[skillLevel - 1] + "</ins></span>");
+					break;
+				case 17: // For T-Doll 1017 - Jill
+					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#6", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat6[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#7", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat7[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#8", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat8[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#9", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat9[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#10", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat10[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#11", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat11[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#12", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat12[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#13", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat13[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#14", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat14[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#15", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat15[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#16", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat16[skillLevel - 1] + "</ins></span>");
+					tempSkillDescription1 = tempSkillDescription1.replace("#17", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat17[skillLevel - 1] + "</ins></span>");
+					break;
 				default:
 			}
 
 			if ("passive_active_description" in tdollTemp.selected.skill) {
-				tempSkillDescription1 = tempSkillDescription1.replace("Passive: ", '<span style="color: orange; font-size: 110%;"><ins>Passive:</ins></span> ');
-				tempSkillDescription1 = tempSkillDescription1.replace("Active: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />Active:</ins></span> ');
+				tempSkillDescription1 = tempSkillDescription1.replace("[Passive]:", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
+				tempSkillDescription1 = tempSkillDescription1.replace("[Active]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
+			}
+
+			// Insert HTML <br /> tags whenever there is an occurrence of \n inside string.abs
+			tempSkillDescription1 = tempSkillDescription1.replaceAll("\n", "<br />");
+
+			// Deal with Jill's special skill description menu.
+			if (tdoll.selected.id === 1017) {
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Adelhyde", '<span style="color: #db3d3d;">■Adelhyde</span>');
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Flanergide", '<span style="color: #70ad47;">■Flanergide</span>');
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Karmotrine", '<span style="color: #91c1f0;">■Karmotrine</span>');
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Bronson Ext", '<span style="color: #ffb400;">■Bronson Ext</span>');
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Pwd Delta", '<span style="color: #3a94e8;">■Pwd Delta</span>');
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("❈❈❈", '<span style="color: #db3d3d;">❈❈❈</span>');
+
+				tempSkillDescription1 = tempSkillDescription1.replace("Big Beer", '<span style="font-size: 120%;"><ins>Big Beer</ins></span>');
+				tempSkillDescription1 = tempSkillDescription1.replace("Brandtini", '<span style="font-size: 120%;"><ins>Brandtini</ins></span>');
+				tempSkillDescription1 = tempSkillDescription1.replace("Piano Woman", '<span style="font-size: 120%;"><ins>Piano Woman</ins></span>');
+				tempSkillDescription1 = tempSkillDescription1.replace("Moonblast", '<span style="font-size: 120%;"><ins>Moonblast</ins></span>');
+				tempSkillDescription1 = tempSkillDescription1.replace("Bleeding Jane", '<span style="font-size: 120%;"><ins>Bleeding Jane</ins></span>');
+				tempSkillDescription1 = tempSkillDescription1.replace("Fringe Weaver", '<span style="font-size: 120%;"><ins>Fringe Weaver</ins></span>');
+				tempSkillDescription1 = tempSkillDescription1.replace("Sugar Rush", '<span style="font-size: 120%;"><ins>Sugar Rush</ins></span>');
+			}
+
+			// Deal with the other T-Dolls from the Valhalla colloboration event.
+			if (tdoll.selected.id >= 1018 && tdoll.selected.id <= 1022) {
+				if (tdoll.selected.id === 1018) {
+					tempSkillDescription1 = tempSkillDescription1.replaceAll("Moonblast", '<span style="font-size: 110%;"><ins>Moonblast</ins></span>');
+				} else if (tdoll.selected.id === 1019) {
+					tempSkillDescription1 = tempSkillDescription1.replace("[MIRD-113]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[MIRD-113]</ins></span>: ');
+					tempSkillDescription1 = tempSkillDescription1.replace("[Nano-Camo]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Nano-Camo]</ins></span>: ');
+					tempSkillDescription1 = tempSkillDescription1.replace("Piano Woman", '<span style="font-size: 110%;"><ins>Piano Woman</ins></span>');
+				} else if (tdoll.selected.id === 1020) {
+					tempSkillDescription1 = tempSkillDescription1.replace("Bleeding Jane", '<span style="font-size: 110%;"><ins>Bleeding Jane</ins></span>');
+				} else if (tdoll.selected.id === 1021) {
+					tempSkillDescription1 = tempSkillDescription1.replace("Brandtini", '<span style="font-size: 110%;"><ins>Brandtini</ins></span>');
+				} else {
+					tempSkillDescription1 = tempSkillDescription1.replace("[Normal Attack]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Normal Attack]</ins></span>: ');
+					tempSkillDescription1 = tempSkillDescription1.replace("Big Beer", '<span style="font-size: 110%;"><ins>Big Beer</ins></span>');
+				}
+
+				tempSkillDescription1 = tempSkillDescription1.replace("[Favorite Drink]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Favorite Drink]</ins></span>: ');
 			}
 
 			setSkillDescription1(tempSkillDescription1);

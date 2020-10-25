@@ -124,7 +124,7 @@ var tdolls = [
 				cooldown: [666, 666, 666, 666, 666, 666, 666, 666, 666, 666],
 				passive_active_description: true,
 				description:
-					"Passive: Before activation, increase evasion by 10% and decrease damage by 5% every 2 seconds, 5 stacks maximum. Active: Clear all passive stacks, increase damage by #1 and decrease evasion by #2 every 2 seconds, 5 stacks maximum.",
+					"[Passive]: Before activation, increase evasion by 10% and decrease damage by 5% every 2 seconds, 5 stacks maximum. [Active]: Clear all passive stacks, increase damage by #1 and decrease evasion by #2 every 2 seconds, 5 stacks maximum.",
 				number_of_stats: 2,
 				stat1: ["20%", "21%", "22%", "23%", "24%", "25%", "26%", "27%", "28%", "30%"],
 				stat2: ["20%", "21%", "21%", "22%", "22%", "23%", "23%", "24%", "24%", "25%"]
@@ -1284,7 +1284,7 @@ var tdolls = [
 				initial_cooldown: "Passive",
 				passive_passive_description: true,
 				description:
-					'Passive: When "Aimed Snipe" fails to kill an enemy, repeatedly snipe the target based on the number of charge stacks, until the target dies or the charges run out. The additional snipes are strengthened auto-attacks, dealing 1x damage with perfect accuracy. This shot can do critical damage, but doesn\'t ignore armor. Passive: Increases damage of normal attacks and skills by #1 when attacking enemies with less than 50% HP.',
+					'[Passive]: When "Aimed Snipe" fails to kill an enemy, repeatedly snipe the target based on the number of charge stacks, until the target dies or the charges run out. The additional snipes are strengthened auto-attacks, dealing 1x damage with perfect accuracy. This shot can do critical damage, but doesn\'t ignore armor. [Passive]: Increases damage of normal attacks and skills by #1 when attacking enemies with less than 50% HP.',
 				number_of_stats: 1,
 				stat1: ["5%", "5.5%", "6%", "6.5%", "7%", "7.5%", "8%", "8.5%", "9%", "10%"]
 			},
@@ -3278,7 +3278,7 @@ var tdolls = [
 				initial_cooldown: "8s",
 				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
 				description:
-					'Passive: When equipped with "Frag-12 HE Rounds", attacks deal 1x armor ignoring damage to enemies within a radius of 1 units. Active: Grants #1 ammo to current clip and increases own rate of fire by #2 but decreases own damage by #3 for #4 seconds. Additionally, each attack has a #5 increased chance of knocking back enemy units.',
+					'[Passive]: When equipped with "Frag-12 HE Rounds", attacks deal 1x armor ignoring damage to enemies within a radius of 1 units. [Active]: Grants #1 ammo to current clip and increases own rate of fire by #2 but decreases own damage by #3 for #4 seconds. Additionally, each attack has a #5 increased chance of knocking back enemy units.',
 				number_of_stats: 5,
 				stat1: ["+5", "+5", "+6", "+6", "+7", "+7", "+8", "+8", "+9", "+10"],
 				stat2: ["35%", "40%", "45%", "50%", "55%", "60%", "65%", "70%", "75%", "80%"],
@@ -4943,7 +4943,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					"Passive: Each attack has a 40% chance to increase critical rate and rate of fire by #1 for T-Dolls within the same column for 2 seconds (max 3 stacks). Active: Upon activation, increases critical rate and rate of fire by #2 for every RF unit present in the echelon by for #3 seconds.",
+					"[Passive]: Each attack has a 40% chance to increase critical rate and rate of fire by #1 for T-Dolls within the same column for 2 seconds (max 3 stacks). [Active]: Upon activation, increases critical rate and rate of fire by #2 for every RF unit present in the echelon by for #3 seconds.",
 				number_of_stats: 3,
 				stat1: ["2%", "2.2%", "2.4%", "2.7%", "3.0%", "3.2%", "3.4%", "3.6%", "3.8%", "4%"],
 				stat2: ["5.0%", "5.3%", "5.6%", "5.9%", "6.3%", "6.6%", "7.0%", "7.3%", "7.6%", "8%"],
@@ -4996,7 +4996,7 @@ var tdolls = [
 				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
 				passive_active_description: true,
 				description:
-					"Passive: Instantly gains #1 stacks. Passive: Attacks have a #2 chance to gain #3 stacks. When stacks reach 18, the next attack against an elite enemy will deal #4 damage (#5 damage against normal enemy) and will clear current stacks to 0.",
+					"[Passive]: Instantly gains #1 stacks. [Passive]: Attacks have a #2 chance to gain #3 stacks. When stacks reach 18, the next attack against an elite enemy will deal #4 damage (#5 damage against normal enemy) and will clear current stacks to 0.",
 				number_of_stats: 5,
 				stat1: [12, 13, 13, 14, 15, 16, 16, 17, 17, 18],
 				stat2: ["30%", "35%", "40%", "45%", "50%", "55%", "55%", "60%", "65%", "70%"],
