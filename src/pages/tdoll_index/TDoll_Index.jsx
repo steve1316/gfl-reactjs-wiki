@@ -7,6 +7,8 @@ import ScrollToTop from "../../components/ScrollToTop";
 // MaterialUI imports
 import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, withStyles, Grow, Zoom } from "@material-ui/core";
 
+import Pagination from "@material-ui/lab/Pagination";
+
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
 import { useEffect } from "react";
@@ -68,16 +70,23 @@ export default function TDoll_Index() {
 		dividerForChips: {
 			margin: 5
 		},
-		dividerForCards: {
-			marginBottom: 50
+		topDividerForCards: {
+			marginTop: 10,
+			marginBottom: 25
+		},
+		bottomDividerForCards: {
+			marginTop: 25,
+			marginBottom: 10
 		}
 	}));
 
 	const classes = useStyles();
 
-	const [numberOfSearchResults, setNumberOfSearchResults] = useState(0);
+	const [currentSearchResults, setCurrentSearchResults] = useState(0);
+	const [totalSearchResults, setTotalSearchResults] = useState(0);
 	const [searchResults, setSearchResults] = useState([]);
 	const [searchResultPages, setSearchResultPages] = useState([]);
+	const [pageSelected, setPageSelected] = useState(1);
 
 	const [rarityFilter, setRarityFilter] = useState([
 		{ key: 0, label: "General", rarity: 2, selected: false },
@@ -116,7 +125,12 @@ export default function TDoll_Index() {
 		}
 	}, []);
 
-	// Update the search results every time the filters change. Save the filters in sessionStorage.
+	// Update the page selected whenever the following values change.
+	useEffect(() => {
+		setPageSelected(1);
+	}, [modFilter, rarityFilter, typeFilter, totalSearchResults]);
+
+	// Update the search results every time the filters and the page selected changes. Save the filters in sessionStorage.
 	useEffect(() => {
 		setSearchResults(renderTDolls());
 
@@ -127,7 +141,7 @@ export default function TDoll_Index() {
 		};
 
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-	}, [modFilter, rarityFilter, typeFilter]);
+	}, [modFilter, rarityFilter, typeFilter, pageSelected]);
 
 	// The following handler functions below are setting the filters selected as active.
 	const handleOnClickRarity = (rarityToBeUpdated) => () => {
@@ -149,6 +163,11 @@ export default function TDoll_Index() {
 			...modFilter,
 			selected: !modFilter.selected
 		});
+	};
+
+	// This will update the page selected via the Pagination component.
+	const handlePageChange = (event, value) => {
+		setPageSelected(value);
 	};
 
 	// Create and return an array of T-Dolls that match filters.
@@ -204,22 +223,30 @@ export default function TDoll_Index() {
 			tempSearchResultPages[j] = temp;
 		}
 
-		console.log("Partitions: ", tempSearchResultPages);
+		console.log("Page Partitions: ", tempSearchResultPages);
 
-		// Update the pages of search results.
+		// Update the pages of search results and the total number of results.
 		setSearchResultPages(tempSearchResultPages);
+		setTotalSearchResults(tempArray.length);
 
-		return tempArray;
+		return tempSearchResultPages;
 	};
 
 	// Render the Cards of T-Dolls based on filters selected.
 	const renderTDolls = () => {
 		var tempArrayOfSearchResults = createSearchResults();
+
 		var tempArray = [];
 		var stagger = 100;
+		var tempPageSelected = pageSelected;
+
+		// Makes sure to avoid the out of bounds error.
+		if (tempPageSelected > tempArrayOfSearchResults.length) {
+			tempPageSelected = 1;
+		}
 
 		// Go through the Search Results array from createSearchResults() and push 30 at a time until the remainder is left.
-		tempArrayOfSearchResults.map((tdoll) => {
+		tempArrayOfSearchResults[tempPageSelected - 1].map((tdoll) => {
 			tempArray.push(
 				<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
 					<Grow in={true} style={{ transformOrigin: "0 5 0" }} timeout={stagger}>
@@ -255,15 +282,15 @@ export default function TDoll_Index() {
 				</Grid>
 			);
 
-			// Stagger timeout will never be more than 1.5 seconds.
-			stagger += 200;
-			if (stagger >= 1500) {
+			// Stagger timeout will never be more than 2 seconds.
+			stagger += 100;
+			if (stagger >= 2000) {
 				stagger = 0;
 			}
 		});
 
 		// Update number of search results.
-		setNumberOfSearchResults(tempArray.length);
+		setCurrentSearchResults(tempArray.length);
 
 		return tempArray;
 	};
@@ -361,15 +388,24 @@ export default function TDoll_Index() {
 			{/* T-Dolls List */}
 			<Container className={classes.cardGrid} maxWidth="md">
 				<Typography component="h1" variant="h5" color="textPrimary" gutterBottom>
-					Now showing {numberOfSearchResults} search results.
+					Total number of search results: {totalSearchResults}. Now showing {currentSearchResults} search results.
 				</Typography>
 
-				<Divider className={classes.dividerForCards} />
+				{/* Pagination Component */}
+				<Pagination count={searchResultPages.length} color="primary" value={pageSelected} page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
+
+				<Divider className={classes.topDividerForCards} />
 
 				{/* Search Results */}
 				<Grid container spacing={4}>
 					{searchResults}
 				</Grid>
+
+				<Divider className={classes.bottomDividerForCards} />
+
+				{/* Pagination Component */}
+				<Pagination count={searchResultPages.length} color="primary" value={pageSelected} page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
+
 				{/* End of Search Results */}
 			</Container>
 
