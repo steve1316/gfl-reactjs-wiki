@@ -53,7 +53,7 @@ This project serves to provide a mobile-friendly web application of a database f
 
 - [x] ~~Add all Special T-Dolls #1000 to 1027.~~ (currently as of October 10, 2020)
 
-- [ ] _HIGH PRIORITY_ Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).
+- [ ] ~~_HIGH PRIORITY_ Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~
 
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ (Doing so will mess up the image resolution and make it too blurry)
 
