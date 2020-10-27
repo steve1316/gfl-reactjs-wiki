@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
@@ -65,6 +65,61 @@ export default function Home() {
 		{ title: "Fairy Index", description: "View Index of Fairies available.", link: "/fairy-index", image: fairy_index_logo },
 		{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo }
 	];
+
+	// This useEffect will run once to generate a random T-Doll.
+	useEffect(() => {
+		randomTDollDisplay();
+	}, []);
+
+	// This useEffect will call the randomTDollDisplay() function every 20 seconds and will stop when the component unmounts (moves to a new page).
+	useEffect(() => {
+		const interval = setInterval(() => {
+			randomTDollDisplay();
+		}, 20000);
+
+		return () => clearInterval(interval);
+	}, []);
+
+	// This function will fire at set intervals and will randomly choose a T-Doll to display.
+	const randomTDollDisplay = () => {
+		// Randomly choose a range of values first.
+		var min = 1;
+		var max = 5; // Total number of T-Doll JSON files.
+		var chosenRange = Math.floor(Math.random() * (max - min + 1) + min);
+
+		console.log("Range selected: ", chosenRange);
+
+		// Now, randomly choose a T-Doll from the chosen range of values.
+		var chosenTDoll = 0;
+		var newMin = 0;
+		var newMax = 0;
+		switch (chosenRange) {
+			case 1:
+				newMin = 1;
+				newMax = 100;
+				break;
+			case 2:
+				newMin = 101;
+				newMax = 100;
+				break;
+			case 3:
+				newMin = 201;
+				newMax = 300;
+				break;
+			case 4:
+				newMin = 301;
+				newMax = 400;
+				break;
+			case 5:
+				newMin = 1000;
+				newMax = 1050;
+				break;
+		}
+
+		chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin);
+
+		console.log("T-Doll selected: ", chosenTDoll);
+	};
 
 	return (
 		<main className={classes.root}>
