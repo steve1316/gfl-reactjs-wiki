@@ -7,6 +7,8 @@ import ScrollToTop from "../../components/ScrollToTop";
 // MaterialUI imports
 import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Grow, LinearProgress } from "@material-ui/core";
 
+import Skeleton from "@material-ui/lab/Skeleton";
+
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 
@@ -60,6 +62,21 @@ export default function Home() {
 			display: "flex",
 			margin: 10,
 			justifyContent: "flex-end"
+		},
+		heroCardRoot: {
+			display: "flex"
+		},
+		heroCardDetails: {
+			display: "flex",
+			alignContent: "center",
+			flexDirection: "column"
+		},
+		heroCardContent: {
+			flex: "1 0 auto"
+		},
+		heroCardMedia: {
+			height: 256,
+			width: 128
 		}
 	}));
 
@@ -69,6 +86,14 @@ export default function Home() {
 
 	// Set initial states for the progress state for the LinearProgress component.
 	const [progress, setProgress] = useState(0);
+
+	// Set initial state for the display of the random T-Doll.
+	const [tdollImage, setTDollImage] = useState(undefined);
+	const [tdollName, setTDollName] = useState("");
+	const [tdollType, setTDollType] = useState("");
+
+	// Set initial state to check if tab is in focus or not. This will affect the setInterval for the randomization function.
+	const [check, setCheck] = useState(true);
 
 	// This contains the information to be rendered into cards. The link attribute is tied to the Route in App.js.
 	const cards = [
@@ -84,40 +109,65 @@ export default function Home() {
 		randomTDollDisplay();
 	}, []);
 
-	// This useEffect will determine the progress of the LinearProgress component. This fires every 1 second because this accounts
-	// for the fact that if the user clicks off the tab making it inactive, browser defaults the interval to 1000ms so I might as well
-	// set it to fire every 1 second to avoid any discrepencies.
+	const onFocus = () => {
+		console.log("Tab Focused");
+		setCheck(true);
+	};
+
+	const onBlur = () => {
+		console.log("Tab Blurred");
+		setCheck(false);
+	};
+
+	// This will attach event listeners to listen for when the tab comes into focus or out of focus and will attach the following 2 functions to those events.
 	useEffect(() => {
+		window.addEventListener("focus", onFocus);
+		window.addEventListener("blur", onBlur);
+
+		return () => {
+			window.removeEventListener("focus", onFocus);
+			window.removeEventListener("blur", onBlur);
+		};
+	});
+
+	// This will handle the timing of both the LinearProgress component and the randomTDollDisplay().
+	// This useEffect will only be called when the focus of the tab is changed according to the event listeners
+	// and when the state of the T-Doll's name is changed.
+	useEffect(() => {
+		if (!check) {
+			return;
+		}
+
 		const timer = setInterval(() => {
 			setProgress((prevProgress) => (prevProgress === 100 ? 0 : Math.min(prevProgress + 10, 100)));
 		}, 1000);
 
-		return () => clearInterval(timer);
-	}, []);
-
-	// This useEffect will call randomTDollDisplay() every 10 + 1 seconds.
-	useEffect(() => {
-		const interval = setInterval(() => {
+		const interval = setTimeout(() => {
 			randomTDollDisplay();
 		}, 11000);
 
-		return () => clearInterval(interval);
-	}, []);
+		return () => {
+			clearInterval(timer);
+			clearTimeout(interval);
+			setProgress(0);
+		};
+	}, [tdollName, check]);
 
-	// This function will fire at set intervals and will randomly choose a T-Doll to display.
+	// This function will randomly choose a T-Doll to display based on the given ranges.
 	const randomTDollDisplay = () => {
-		// Randomly choose a JSON file to select from first.
+		// Minimum and maximum number of T-Doll JSON files.
 		var min = 1;
-		var max = 5; // Total number of T-Doll JSON files.
-		var chosenRange = Math.floor(Math.random() * (max - min + 1) + min); // Min and max are inclusive.
+		var max = 5;
 
-		// console.log("Range selected: ", chosenRange);
+		// Randomly choose a JSON file to select from first. Min and max are inclusive.
+		var chosenRange = Math.floor(Math.random() * (max - min + 1) + min);
 
-		// Next, randomly choose a T-Doll from the selected JSON data file according to the range of ID values as indicated in their file names.
 		var chosenTDoll = 0;
 		var newMin = 0;
 		var newMax = 0;
 
+		// Next, randomly choose a T-Doll from the selected JSON data file according to the range of ID values as indicated in their file names.
+		// TODO: Remember to update these ranges when MICA Team updates the game with new T-Dolls.
 		switch (chosenRange) {
 			case 1:
 				newMin = 1;
@@ -133,17 +183,38 @@ export default function Home() {
 				break;
 			case 4:
 				newMin = 301;
-				newMax = 400;
+				newMax = 320;
 				break;
 			default:
 				newMin = 1000;
-				newMax = 1050;
+				newMax = 1027;
 				break;
 		}
 
-		chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin); // Min and max are inclusive.
+		// Select a random T-Doll ID based on the newMin and newMax ranges. Min and max are inclusive.
+		chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin);
 
-		console.log("T-Doll selected: ", chosenTDoll);
+		console.log("ID selected: ", chosenTDoll);
+
+		// Finally, grab the T-Doll from the array and set the states.
+		var tempTDoll = tdolls_array.filter((tdoll) => {
+			if (tdoll.normal.id === chosenTDoll) {
+				return tdoll;
+			}
+		});
+
+		console.log("T-Doll selected: ", tempTDoll[0]);
+
+		// The else case will handle the case where the random ID is for a T-Doll that does not exist in the game (MICA Team skips certain IDs for reasons known only to them).
+		if (tempTDoll[0] !== undefined) {
+			setTDollImage(tempTDoll[0].normal.images.card);
+			setTDollName(tempTDoll[0].normal.name);
+			setTDollType(tempTDoll[0].normal.type);
+		} else {
+			setTDollImage(undefined);
+			setTDollName("");
+			setTDollType("");
+		}
 	};
 
 	return (
@@ -153,12 +224,24 @@ export default function Home() {
 			{/* Hero Unit */}
 			<div className={classes.heroContent}>
 				<Container maxWidth="sm">
-					<Typography component="h1" variant="h5" align="center" color="textPrimary" gutterBottom>
-						TODO: Random T-Dolls will display here. A timed function will randomly select from JSON of T-Dolls. Do not display all information.
-					</Typography>
-					<Typography variant="h5" align="center" color="textSecondary" paragraph>
-						Insert random T-Doll here
-					</Typography>
+					<Card className={classes.heroCardRoot}>
+						<div className={classes.heroCardDetails}>
+							{/* Skeleton components will display when the randomization function selects an ID for a T-Doll that does not exist. */}
+							{tdollImage !== undefined ? <CardMedia className={classes.heroCardMedia} image={tdollImage} title={tdollName} component="img" /> : <Skeleton variant="rect" height={256} width={128} />}
+
+							<CardContent className={classes.heroCardContent}>
+								<Typography component="h5" variant="h5">
+									{tdollName !== "" ? tdollName : <Skeleton />}
+								</Typography>
+								<Typography variant="subtitle2" color="textSecondary">
+									This is a Work-in-Progress
+								</Typography>
+								<Typography variant="subtitle1" color="textSecondary">
+									{tdollType !== "" ? tdollType : <Skeleton />}
+								</Typography>
+							</CardContent>
+						</div>
+					</Card>
 
 					<LinearProgress variant="determinate" value={progress} />
 
