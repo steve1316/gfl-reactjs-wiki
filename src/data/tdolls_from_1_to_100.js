@@ -5721,7 +5721,7 @@ var tdolls = [
 ////////////////////////////// END OF #1-#100 JSON DATA //////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-console.log("Now processing images and animations for #1-#100 T-Doll Index JSON.");
+//console.log("Now processing images and animations for #1-#100 T-Doll Index JSON.");
 tdolls = processData(tdolls);
 console.log("Finished processing images and animations for #1-#100 T-Doll Index JSON.");
 

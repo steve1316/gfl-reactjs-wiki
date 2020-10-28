@@ -1130,7 +1130,7 @@ var tdolls = [
 /////////////////////// END OF EXTRAS #1000-#1050 JSON DATA /////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-console.log("Now processing images and animations for EXTRAS #1000-#1050 T-Doll Index JSON.");
+//console.log("Now processing images and animations for EXTRAS #1000-#1050 T-Doll Index JSON.");
 tdolls = processData(tdolls);
 console.log("Finished processing images and animations for EXTRAS #1000-#1050 T-Doll Index JSON.");
 
