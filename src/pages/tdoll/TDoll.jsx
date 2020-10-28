@@ -236,9 +236,9 @@ export default function TDoll(props) {
 		tdolls = require("../../data/tdolls_from_101_to_200").default;
 	} else if (id > 200 && id <= 300) {
 		tdolls = require("../../data/tdolls_from_201_to_300").default;
-	} else if (id > 300 && id <= 400) {
+	} else if (id > 300 && id <= 320) {
 		tdolls = require("../../data/tdolls_from_301_to_400").default;
-	} else if (id >= 1000 && id <= 1050) {
+	} else if (id >= 1000 && id <= 1027) {
 		tdolls = require("../../data/tdolls_from_1000_to_1050").default;
 	}
 
