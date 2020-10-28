@@ -27,7 +27,7 @@ const tdolls_from_201_to_300 = require("../data/tdolls_from_201_to_300").default
 const tdolls_from_301_to_400 = require("../data/tdolls_from_301_to_400").default;
 const tdolls_from_1000_to_1050 = require("../data/tdolls_from_1000_to_1050").default;
 
-const tdolls = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400).concat(tdolls_from_1000_to_1050);
+const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400).concat(tdolls_from_1000_to_1050);
 
 function Navbar(props) {
 	const useStyles = makeStyles((theme) => ({
@@ -81,7 +81,7 @@ function Navbar(props) {
 	const [hasError, setHasError] = useState(false);
 
 	// Add a firstLetter property to every T-Doll for categorization in the autocomplete component.
-	const options = tdolls.map((tdoll) => {
+	const options = tdolls_array.map((tdoll) => {
 		const firstLetter = tdoll.normal.name[0].toUpperCase();
 		return {
 			firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter,
@@ -97,7 +97,7 @@ function Navbar(props) {
 	// This handleSubmit will take care of sending the user to the T-Doll page alongside its information.
 	const handleSubmit = () => {
 		var check = false;
-		tdolls.forEach((tdoll) => {
+		tdolls_array.forEach((tdoll) => {
 			// Check each T-Doll's name and match it with the search value.
 			if (searchValue === tdoll.normal.name) {
 				sessionStorage.clear();
