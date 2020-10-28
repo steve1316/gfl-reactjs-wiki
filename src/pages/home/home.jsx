@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Grow } from "@material-ui/core";
+import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Grow, LinearProgress } from "@material-ui/core";
 
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
@@ -16,6 +16,15 @@ import equipment_index_logo from "../../images/equipment_index_logo.jpg";
 import hoc_index_logo from "../../images/hoc_index_logo.jpg";
 import fairy_index_logo from "../../images/fairy_index_logo.jpg";
 import formation_logo from "../../images/formation_logo.jpg";
+
+// T-Dolls JSON import
+const tdolls_from_1_to_100 = require("../../data/tdolls_from_1_to_100").default;
+const tdolls_from_101_to_200 = require("../../data/tdolls_from_101_to_200").default;
+const tdolls_from_201_to_300 = require("../../data/tdolls_from_201_to_300").default;
+const tdolls_from_301_to_400 = require("../../data/tdolls_from_301_to_400").default;
+const tdolls_from_1000_to_1050 = require("../../data/tdolls_from_1000_to_1050").default;
+
+const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400).concat(tdolls_from_1000_to_1050);
 
 export default function Home() {
 	const useStyles = makeStyles((theme) => ({
@@ -55,7 +64,11 @@ export default function Home() {
 	}));
 
 	const classes = useStyles();
-	var stagger = 100;
+
+	var stagger = 100; // Stagger timeout for this page's animations.
+
+	// Set initial states for the progress state for the LinearProgress component.
+	const [progress, setProgress] = useState(0);
 
 	// This contains the information to be rendered into cards. The link attribute is tied to the Route in App.js.
 	const cards = [
@@ -71,28 +84,40 @@ export default function Home() {
 		randomTDollDisplay();
 	}, []);
 
-	// This useEffect will call the randomTDollDisplay() function every 20 seconds and will stop when the component unmounts (moves to a new page).
+	// This useEffect will determine the progress of the LinearProgress component. This fires every 1 second because this accounts
+	// for the fact that if the user clicks off the tab making it inactive, browser defaults the interval to 1000ms so I might as well
+	// set it to fire every 1 second to avoid any discrepencies.
+	useEffect(() => {
+		const timer = setInterval(() => {
+			setProgress((prevProgress) => (prevProgress === 100 ? 0 : Math.min(prevProgress + 10, 100)));
+		}, 1000);
+
+		return () => clearInterval(timer);
+	}, []);
+
+	// This useEffect will call randomTDollDisplay() every 10 + 1 seconds.
 	useEffect(() => {
 		const interval = setInterval(() => {
 			randomTDollDisplay();
-		}, 20000);
+		}, 11000);
 
 		return () => clearInterval(interval);
 	}, []);
 
 	// This function will fire at set intervals and will randomly choose a T-Doll to display.
 	const randomTDollDisplay = () => {
-		// Randomly choose a range of values first.
+		// Randomly choose a JSON file to select from first.
 		var min = 1;
 		var max = 5; // Total number of T-Doll JSON files.
-		var chosenRange = Math.floor(Math.random() * (max - min + 1) + min);
+		var chosenRange = Math.floor(Math.random() * (max - min + 1) + min); // Min and max are inclusive.
 
-		console.log("Range selected: ", chosenRange);
+		// console.log("Range selected: ", chosenRange);
 
-		// Now, randomly choose a T-Doll from the chosen range of values.
+		// Next, randomly choose a T-Doll from the selected JSON data file according to the range of ID values as indicated in their file names.
 		var chosenTDoll = 0;
 		var newMin = 0;
 		var newMax = 0;
+
 		switch (chosenRange) {
 			case 1:
 				newMin = 1;
@@ -110,13 +135,13 @@ export default function Home() {
 				newMin = 301;
 				newMax = 400;
 				break;
-			case 5:
+			default:
 				newMin = 1000;
 				newMax = 1050;
 				break;
 		}
 
-		chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin);
+		chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin); // Min and max are inclusive.
 
 		console.log("T-Doll selected: ", chosenTDoll);
 	};
@@ -134,6 +159,9 @@ export default function Home() {
 					<Typography variant="h5" align="center" color="textSecondary" paragraph>
 						Insert random T-Doll here
 					</Typography>
+
+					<LinearProgress variant="determinate" value={progress} />
+
 					<div className={classes.heroButtons}>
 						<Grid container spacing={2} justify="center">
 							<Grid item>
