@@ -1174,7 +1174,7 @@ var tdolls = [
 			number_of_skins: 5,
 			skin_names: ["Neet Zombie", "Most Beautiful Gift of Mine", "Dragon Jr.", "Lucky Mouse's Sleepy New Year", "Courage-Seeking Rex Bunny"],
 			animations: {
-				hasSkillAnimation: [, false, false, false, false],
+				hasSkillAnimation: [false, false, false, false, false],
 				hasVictoryLoopAnimation: [true, true, true, true, true]
 			},
 			animations_dorm: {
@@ -2065,8 +2065,8 @@ var tdolls = [
 				description: "Increase all allies' accuracy by #1 and evasion by #2 for #3 seconds.",
 				number_of_stats: 3,
 				stat1: ["32%", "35%", "37%", "40%", "42%", "45%", "47%", "50%", "52%", "55%"],
-				stat1: ["16%", "17%", "19%", "20%", "21%", "23%", "24%", "25%", "27%", "28%"],
-				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+				stat2: ["16%", "17%", "19%", "20%", "21%", "23%", "24%", "25%", "27%", "28%"],
+				stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
 			},
 			tile_set: {
 				row1: [0, 0, 1],
@@ -2144,8 +2144,8 @@ var tdolls = [
 				description: "Increases all allies' rate of fire by #1 and critical rate by #2 for #3 seconds.",
 				number_of_stats: 3,
 				stat1: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
-				stat1: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
-				stat2: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
+				stat2: ["12%", "13%", "14%", "15%", "16%", "16%", "17%", "18%", "19%", "20%"],
+				stat3: [5, 6, 6, 6, 7, 7, 7, 8, 8, 8]
 			},
 			tile_set: {
 				row1: [0, 1, 1],
@@ -5127,7 +5127,7 @@ var tdolls = [
 ////////////////////////////// END OF #101-#200 JSON DATA ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-console.log("Now processing images and animations for #101-#200 T-Doll Index JSON.");
+//console.log("Now processing images and animations for #101-#200 T-Doll Index JSON.");
 tdolls = processData(tdolls);
 console.log("Finished processing images and animations for #101-#200 T-Doll Index JSON.");
 

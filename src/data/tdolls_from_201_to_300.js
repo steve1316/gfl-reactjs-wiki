@@ -661,7 +661,7 @@ var tdolls = [
 				stat3: [1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4],
 				stat4: ["3%", "3%", "4%", "4%", "4%", "5%", "5%", "5%", "6%", "6%"],
 				stat5: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
-				stat5: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
+				stat6: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5]
 			},
 			tile_set: {
 				row1: [0, 0, 1],
@@ -4579,7 +4579,7 @@ var tdolls = [
 ////////////////////////////// END OF #201-#300 JSON DATA ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-console.log("Now processing images and animations for #201-#300 T-Doll Index JSON.");
+//console.log("Now processing images and animations for #201-#300 T-Doll Index JSON.");
 tdolls = processData(tdolls);
 console.log("Finished processing images and animations for #201-#300 T-Doll Index JSON.");
 

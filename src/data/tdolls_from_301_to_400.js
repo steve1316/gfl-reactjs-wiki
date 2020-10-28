@@ -894,7 +894,7 @@ var tdolls = [
 ////////////////////////////// END OF #301-#400 JSON DATA ///////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-console.log("Now processing images and animations for #301-#400 T-Doll Index JSON.");
+//console.log("Now processing images and animations for #301-#400 T-Doll Index JSON.");
 tdolls = processData(tdolls);
 console.log("Finished processing images and animations for #301-#400 T-Doll Index JSON.");
 
