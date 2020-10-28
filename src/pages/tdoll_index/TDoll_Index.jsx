@@ -130,6 +130,7 @@ export default function TDoll_Index() {
 		setPageSelected(1);
 	}, [modFilter, rarityFilter, typeFilter, totalSearchResults]);
 
+	/* eslint-disable */
 	// Update the search results every time the filters and the page selected changes. Save the filters in sessionStorage.
 	useEffect(() => {
 		setSearchResults(renderTDolls());
@@ -142,6 +143,7 @@ export default function TDoll_Index() {
 
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
 	}, [modFilter, rarityFilter, typeFilter, pageSelected]);
+	/* eslint-disable */
 
 	// The following handler functions below are setting the filters selected as active.
 	const handleOnClickRarity = (rarityToBeUpdated) => () => {

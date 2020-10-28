@@ -281,6 +281,7 @@ export default function TDoll(props) {
 	// useEffect and helper functions
 	///////////////////////////////////////////////////////////////////////////////////////////
 
+	/* eslint-disable */
 	// This will be used to initialize the functionality of the page.
 	useEffect(() => {
 		// Set initial information displayed to Normal.
@@ -302,6 +303,7 @@ export default function TDoll(props) {
 
 		console.log("Initial T-Doll state: ", tdoll);
 	}, []);
+	/* eslint-disable */
 
 	// This will update the animations when skins are switched.
 	useEffect(() => {
