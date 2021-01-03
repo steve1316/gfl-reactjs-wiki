@@ -6,14 +6,14 @@ import { orange, deepOrange } from "@material-ui/core/colors";
 import CssBaseline from "@material-ui/core/CssBaseline";
 
 // Pages imports
-import Home from "./pages/home/Home";
-import TDoll_Index from "./pages/tdoll_index/TDoll_Index";
-import TDoll from "./pages/tdoll/TDoll";
-import Equipment_Index from "./pages/equipment_index/Equipment_Index";
-import HOC_Index from "./pages/hoc_index/HOC_Index";
-import Fairy_Index from "./pages/fairy_index/Fairy_Index";
-import Formation_Simulator from "./pages/formation_simulator/Formation_Simulator";
-import NotFound404 from "./NotFound404";
+import Home from "./pages/home/home";
+import TDoll_Index from "./pages/tdoll_index/tdoll_index";
+import TDoll from "./pages/tdoll/tdoll";
+import Equipment_Index from "./pages/equipment_index/equipment_index";
+import HOC_Index from "./pages/hoc_index/hoc_index";
+import Fairy_Index from "./pages/fairy_index/fairy_index";
+import Formation_Simulator from "./pages/formation_simulator/formation_simulator";
+import NotFound404 from "./not_found_404";
 
 // styles.css import
 import "./styles.css";
