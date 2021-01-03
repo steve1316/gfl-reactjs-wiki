@@ -138,13 +138,15 @@ export default function Home() {
 			return;
 		}
 
+		// If you need to speed up or slow down the progress bar/timer, adjust the interval's timeout in ms and the timer's incrementation 
+		// of prevProgress such that the incremenation will reach 100 when the timer function fires.
 		const timer = setInterval(() => {
-			setProgress((prevProgress) => (prevProgress === 100 ? 0 : Math.min(prevProgress + 10, 100)));
+			setProgress((prevProgress) => prevProgress === 100 ? 0 : Math.min(prevProgress + 25, 100));
 		}, 1000);
 
 		const interval = setTimeout(() => {
 			randomTDollDisplay();
-		}, 11000);
+		}, 5000);
 
 		return () => {
 			clearInterval(timer);
@@ -160,7 +162,7 @@ export default function Home() {
 		var max = 5;
 
 		// Randomly choose a JSON file to select from first. Min and max are inclusive.
-		var chosenRange = Math.floor(Math.random() * (max - min + 1) + min);
+		var chosenRange = Math.floor(Math.random() * (max - min + 1));
 
 		var chosenTDoll = 0;
 		var newMin = 0;
@@ -175,7 +177,7 @@ export default function Home() {
 				break;
 			case 2:
 				newMin = 101;
-				newMax = 100;
+				newMax = 200;
 				break;
 			case 3:
 				newMin = 201;
@@ -191,9 +193,14 @@ export default function Home() {
 				break;
 		}
 
-		// Select a random T-Doll ID based on the newMin and newMax ranges. Min and max are inclusive.
-		chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin);
-
+		// Loop until a valid random T-Doll ID is chosen based on the newMin and newMax ranges. Min and max are inclusive.
+		var notValidIDs = [0, 30, 45, 67, 76, 83, 219, 246, 1011, 1012, 1013, 1014, 1015, 1016]
+		var validCheck = false
+		while(!validCheck) {
+			chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin);
+			validCheck = !notValidIDs.includes(chosenTDoll);
+		}
+		
 		console.log("ID selected: ", chosenTDoll);
 
 		// Finally, grab the T-Doll from the array and set the states.
