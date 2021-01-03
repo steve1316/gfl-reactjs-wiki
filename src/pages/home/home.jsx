@@ -88,6 +88,7 @@ export default function Home() {
 	const [progress, setProgress] = useState(0);
 
 	// Set initial state for the display of the random T-Doll.
+	const [tdoll, setTDoll] = useState(tdolls_array[0]) // This is set to the first T-Doll to prevent undefined error on initial compile.
 	const [tdollImage, setTDollImage] = useState(undefined);
 	const [tdollName, setTDollName] = useState("");
 	const [tdollType, setTDollType] = useState("");
@@ -194,7 +195,7 @@ export default function Home() {
 		}
 
 		// Loop until a valid random T-Doll ID is chosen based on the newMin and newMax ranges. Min and max are inclusive.
-		var notValidIDs = [0, 30, 45, 67, 76, 83, 219, 246, 1011, 1012, 1013, 1014, 1015, 1016]
+		var notValidIDs = [0, 30, 45, 67, 76, 83, 219, 246, 1000, 1011, 1012, 1013, 1014, 1015, 1016]
 		var validCheck = false
 		while(!validCheck) {
 			chosenTDoll = Math.floor(Math.random() * (newMax - newMin + 1) + newMin);
@@ -211,6 +212,7 @@ export default function Home() {
 		});
 
 		console.log("T-Doll selected: ", tempTDoll[0]);
+		setTDoll(tempTDoll[0])
 
 		// The else case will handle the case where the random ID is for a T-Doll that does not exist in the game (MICA Team skips certain IDs for reasons known only to them).
 		if (tempTDoll[0] !== undefined) {
@@ -223,6 +225,11 @@ export default function Home() {
 			setTDollType("");
 		}
 	};
+
+	const manualReroll = () => {
+		setProgress(0)
+		randomTDollDisplay()
+	}
 
 	return (
 		<main className={classes.root}>
@@ -255,12 +262,19 @@ export default function Home() {
 					<div className={classes.heroButtons}>
 						<Grid container spacing={2} justify="center">
 							<Grid item>
-								<Button variant="contained" color="primary">
-									Go to this T-Doll
-								</Button>
+								<Link
+									to={{
+										pathname: "/tdoll",
+										search: "?id=" + tdoll.normal.id
+									}}
+									onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}>
+										<Button variant="contained" color="primary">
+											Go to this T-Doll
+										</Button>
+								</Link>
 							</Grid>
 							<Grid item>
-								<Button variant="outlined" color="primary">
+								<Button variant="outlined" color="primary" onClick={() => manualReroll()}>
 									Reroll for a different one
 								</Button>
 							</Grid>
