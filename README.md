@@ -30,45 +30,28 @@ This project serves to provide a mobile-friendly web application of a database f
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
 # TODO (Subject to change)
-
 - [x] ~~Mock up the pages for the app.~~
-
 - [x] ~~Create initial structure of JSON data object that will hold all T-Dolls.~~
-
 - [x] ~~Set up filters and searching functionality for T-Dolls.~~
-
   - [x] ~~Finalize the Chip components.~~
   - [x] ~~Save filters when moving to and from T-Doll Index page for persistence.~~ (Maybe have a "Clear Filters" button)
   - [x] ~~Add 6* rarity filter to depict the Mod of 5*'s. Make it only show up by clicking on the Mod Filter Button.~~ (Did not add a 6* rarity filter but rather had the 5* rarity filter show the 6\* Mods instead)
-
 - [x] ~~Add T-Dolls #1 to #10 to JSON data object.~~
-
 - [x] ~~Add functionality to view information for each T-Doll.~~
-
 - [x] ~~Add images and animations.~~ (GIFs, not Spine unfortunately)
-
   - [x] ~~Rework the logic such that clicking on the GIF plays the next animation and loops back around when you reach the last animation.~~
-
 - [x] ~~Add T-Dolls #11 to 320~~ (currently as of October 10, 2020)
-
 - [x] ~~Add all Special T-Dolls #1000 to 1027.~~ (currently as of October 10, 2020)
-
-- [ ] ~~_HIGH PRIORITY_ Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~
-
+- [ ] ~~(HIGH PRIORITY) Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ (Doing so will mess up the image resolution and make it too blurry)
-
+- [ ] (HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.
+  - [ ] Create logic for the 2 buttons below it and link it to the component.
 - [ ] Create initial structure of JSON data object that will hold all equipment.
-
 - [ ] Set up filters and searching for equipment.
-
 - [ ] Add X amount of equipment to the JSON data object.
-
   - [ ] Add Special Equipment for the T-Dolls that have Mods or are farmable in-game.
-
   - [ ] Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
-
 - [ ] Add functionality to see the stats of equipped T-Dolls.
-
 - [ ] ...
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
