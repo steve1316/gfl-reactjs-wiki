@@ -809,7 +809,89 @@ var equipment = {
         }
     },
     armorPiercingAmmo: {
-
+        1: {
+            name: "12.7mm 1SL",
+            rarity: 5,
+            exclusive: true,
+            usable: ["KSVK"],
+            description: "These were originally special rounds used by attack helicopters, with a second bullet loaded into the cartridge to improve accuracy against ground targets. KSVK pleaded with I.O.P. to modify these rounds for normal use with her weapon, which would allow her to provide excellent suppressive fire during battles.",
+            stats: {
+                armorPiercing: ["+110~120", "+115~126", "+121~132", "+126~138", "+132~144", "+137~150", "+143~156", "+148~162", "+154~168", "+159~174", "+165~180"],
+                damage: ["+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9", "+5~9", "+6~10"]
+            }
+        },
+        2: {
+            name: "16Lab Sub-Caliber Armor-Piercing Ammo",
+            rarity: 5,
+            exclusive: false,
+            usable: ["RF", "MG"],
+            description: "A depleted uranium high-explosive armor-piercing ammunition recently developed by 16Lab, it is capable of penetrating any type of armor and causing heavy damage. Can be equipped by RFs and MGs.",
+            stats: {
+                armorPiercing: ["+80", "+84", "+88", "+92", "+96", "+100", "+104", "+108", "+112", "+116", "+120"]
+            }
+        },
+        3: {
+            name: "20mm HEI",
+            rarity: 5,
+            exclusive: true,
+            usable: ["NTW-20 Mod"],
+            description: "What is more terrifying than a 20mm round flying towards you at high speed? The answer is a 20mm High-Explosive Incendiary. Before you even hear the gunshot, the wall in front of you, you, the wall behind you, and your neighbor behind the wall behind you...are all gone.",
+            stats: {
+                armorPiercing: ["+110~120", "+115~126", "+121~132", "+126~138", "+132~144", "+137~150", "+143~156", "+148~162", "+154~168", "+159~174", "+165~180"],
+                damage: ["+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9", "+5~9", "+6~10"]
+            }
+        },
+        4: {
+            name: "M61 Armor-Piercing Ammo",
+            rarity: 2,
+            exclusive: false,
+            usable: ["RF", "MG"],
+            description: "The Type M61 armor-piercing ammunition manufactured by IOP Corporation possesses a standard steel-core armor piercing bullet design, aimed at penetrating enemy armor and causing effective damage. Can be equipped by RFs and MGs.",
+            stats: {
+                armorPiercing: ["+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55"]
+            }
+        },
+        5: {
+            name: "M993 Armor-Piercing Ammo",
+            rarity: 3,
+            exclusive: false,
+            usable: ["RF", "MG"],
+            description: "The Type M993 armor-piercing ammunition manufactured by IOP Corporation was developed to counter enemies possessing thicker armor by using a tungsten alloy material, aimed at penetrating enemy armor and causing effective damage. Can be equipped by RFs and MGs.",
+            stats: {
+                armorPiercing: ["+65~75", "+68~78", "+71~82", "+74~86", "+78~90", "+81~93", "+84~97", "+87~101", "+91~105", "+94~108", "+97~112"]
+            }
+        },
+        6: {
+            name: "Mk169 Armor-Piercing Ammo",
+            rarity: 4,
+            exclusive: false,
+            usable: ["RF", "MG"],
+            description: "The Type Mk169 armor-piercing ammunition developed by IOP in conjunction with the FCA Research Center has a specially made tungsten alloy core designed to be able to penetrate any enemy's armor. Can be equipped by RFs and MGs.",
+            stats: {
+                armorPiercing: ["+90~100", "+94~105", "+99~110", "+103~114", "+108~120", "+112~125", "+117~130", "+121~135", "+125~140", "+130~145", "+135~150"]
+            }
+        },
+        7: {
+            name: "Mk211 High-Explosive Armor-Piercing Ammo",
+            rarity: 5,
+            exclusive: false,
+            usable: ["RF", "MG"],
+            description: "The Type Mk211 high-explosive armor-piercing ammunition developed by IOP in conjunction with the FCA Research Center uses a combination of a tungsten alloy bullet and a high-explosive design to further improve its lethality. Can be equipped by RFs and MGs.",
+            stats: {
+                armorPiercing: ["+110~120", "+115~126", "+121~132", "+126~138", "+132~144", "+137~150", "+143~156", "+148~162", "+154~168", "+159~174", "+165~180"]
+            }
+        },
+        8: {
+            name: "National Match-Grade Armor-Piercing Ammo",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Springfield"],
+            description: "A legacy item of the early 20th century, the National Match-Grade Armor-Piercing Ammunition was specially made for The National Springfield Rifle Match. Can only be equipped by Springfield.",
+            stats: {
+                armorPiercing: ["+120~130", "+126~136", "+132~143", "+144~156", "+150~162", "+156~169", "+162~175", "+168~182", "+174~188", "+174~188", "+180~195"],
+                rateOfFire: ["+1~8", "+1~8", "+1~8", "+1~8", "+1~8", "+1~9", "+1~9", "+1~9", "+1~9", "+1~10", "+1~10"]
+            }
+        }
     },
     buckshotAmmo: {
 
