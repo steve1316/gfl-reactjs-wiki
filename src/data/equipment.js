@@ -187,7 +187,102 @@ var equipment = {
         },
     },
     holographicSight: {
-
+        1: {
+            name: "AMP COMPSP",
+            rarity: 5,
+            exclusive: true,
+            usable: ["UMP9"],
+            description: "AMP's exclusive optical sight for UMP9. The main feature is that the built-in 4MOA crosshair is bright yellow, just the way UMP9 likes it. Can only be equipped by UMP9.",
+            stats: {
+                damage: ["+5~7", "+5~7", "+5~7", "+5~7", "+5~8", "+6~8", "+6~8", "+6~9", "+6~9", "+7~9", "+7~10"],
+                accuracy: ["+6~10", "+6~10", "+6~10", "+6~11", "+6~11", "+6~12", "+7~12", "+7~12", "+7~13", "+8~13", "+8~14"],
+                rateOfFire: ["-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3"]
+            }
+        },
+        2: {
+            name: "DO Reflex Sight",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Beretta Model 38 Mod"],
+            description: "This reflex sight has a 7 MOA dot. Its small size and easy handling made it very popular in the pre-war civilian market. When attached to an M38 via a welded Picatinny rail, it greatly improves the user experience.",
+            stats: {
+                damage: ["+11", "+11", "+11", "+11", "+11", "+11", "+11", "+11", "+11", "+11", "+11"],
+                accuracy: ["+14", "+14", "+14", "+14", "+14", "+14", "+14", "+14", "+14", "+14", "+14"],
+                rateOfFire: ["-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4"]
+            }
+        },
+        3: {
+            name: "EOT 506",
+            rarity: 2,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "The Type 506 Holographic Sight manufactured by EOT Corporation. It looks pretty cool. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1"],
+                damage: ["+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1"],
+                rateOfFire: ["-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1"]
+            }
+        },
+        4: {
+            name: "EOT 512",
+            rarity: 3,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "The Type 512 Holographic Sight manufactured by EOT Corporation. It looks pretty cool. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+3~3"],
+                damage: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3"],
+                rateOfFire: ["-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2"]
+            }
+        },
+        4: {
+            name: "EOT 516",
+            rarity: 4,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "The Type 516 Holographic Sight manufactured by EOT Corporation. It looks very cool. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+3~5", "+3~5", "+3~5", "+3~5", "+3~5", "+3~6", "+3~6", "+3~6", "+3~6", "+3~6", "+4~7"],
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4"],
+                rateOfFire: ["-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3"]
+            }
+        },
+        5: {
+            name: "EOT 518",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "The Type 518 Holographic Sight manufactured by EOT Corporation. It looks super cool. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+6~10", "+6~10", "+6~10", "+6~11", "+6~11", "+7~12", "+7~12", "+7~12", "+7~13", "+8~13", "+8~14"],
+                damage: ["+4~6", "+4~6", "+4~6", "+4~6", "+4~6", "+4~7", "+4~7", "+5~7", "+5~7", "+5~8", "+5~8"],
+                rateOfFire: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"]
+            }
+        },
+        6: {
+            name: "EOT XPS3",
+            rarity: 5,
+            exclusive: true,
+            usable: ["HK416"],
+            description: "EOT's latest holographic sight. In addition to looking cool, it comes with a flip to side 3x magnifier scope, allowing it to be used under a wider range of situations. Can only be equipped by 416.",
+            stats: {
+                damage: ["+4~6", "+4~6", "+4~6", "+4~6", "+4~6", "+4~7", "+4~7", "+5~7", "+5~7", "+5~8", "+5~8"],
+                accuracy: ["+6~10", "+6~10", "+6~10", "+6~11", "+6~11", "+7~12", "+7~12", "+7~12", "+7~13", "+8~13", "+8~14"],
+                criticalHitRate: ["+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20", "+16~21", "+17~22", "+18~23", "+19~24", "+20~25"]
+            }
+        },
+        7: {
+            name: "LED Weapon Light",
+            rarity: 5,
+            exclusive: true,
+            usable: ["MP5"],
+            description: "The bright LED flashlight is integrated into the handguard with a built-in lithium battery. It can be quickly turned on and off with the press of a button on the handguard. Can only be equipped by Gr MP5.",
+            stats: {
+                damage: ["+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10",],
+                accuracy: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15",],
+                rateOfFire: ["-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4",]
+            }
+        },
     },
     redDotSight: {
 
