@@ -707,7 +707,106 @@ var equipment = {
         }
     },
     hollowPointAmmo: {
-
+        1: {
+            name: ".357 Jacketed Hollow Point Round",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Astra Revolver"],
+            description: "The 180gr charge of .357 caliber armored hollow point ammunition has a copper armor that prevents lead from hanging in the barrel and also serves to enlarge the cavity.",
+            stats: {
+                damage: ["+8~10", "+8~11", "+9~12", "+10~13", "+11~14", "+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20"],
+                armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
+            }
+        },
+        2: {
+            name: ".45 Hollow Point (Incendiary)",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Agent Vector"],
+            description: "Modified from normal hollow point rounds, they have a chance to ignite enemies and raise overall DPS.",
+            stats: {
+                damage: ["+10", "+10", "+11", "+11", "+12", "+12", "+13", "+13", "+14", "+14", "+15"],
+                armorPiercing: ["-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7"]
+            }
+        },
+        3: {
+            name: "ILM Hollow Point Ammo",
+            rarity: 5,
+            exclusive: false,
+            usable: ["HG", "SMG"],
+            description: "A hollow-point ammunition developed by ILM, it has extreme lethality against unarmored targets, but lacks penetration when facing armored enemies. Can be equipped by HG and SMGs.",
+            stats: {
+                damage: ["+7~10", "+7~10", "+7~11", "+8~11", "+8~12", "+8~12", "+9~13", "+9~13", "+9~14", "+10~14", "+10~15"],
+                armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
+            }
+        },
+        4: {
+            name: "ILM Hollow Point Ammo",
+            rarity: 2,
+            exclusive: false,
+            usable: ["HG", "SMG"],
+            description: "A hollow-point ammunition developed by ILM, it helps to increase lethality against unarmored targets, but lacks penetration when facing armored enemies. Can be equipped by HG and SMGs.",
+            stats: {
+                damage: ["+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1"],
+                armorPiercing: ["-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1"]
+            }
+        },
+        5: {
+            name: "ILM Hollow Point Ammo",
+            rarity: 3,
+            exclusive: false,
+            usable: ["HG", "SMG"],
+            description: "A hollow-point ammunition developed by ILM, it increases lethality against unarmored targets, but lacks penetration when facing armored enemies. Can be equipped by HG and SMGs.",
+            stats: {
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"],
+                armorPiercing: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
+            }
+        },
+        6: {
+            name: "ILM Hollow Point Ammo",
+            rarity: 4,
+            exclusive: false,
+            usable: ["HG", "SMG"],
+            description: "A hollow-point ammunition developed by ILM, it has high lethality against unarmored targets, but lacks penetration when facing armored enemies. Can be equipped by HG and SMGs.",
+            stats: {
+                damage: ["+4~6", "+4~6", "+4~6", "+4~6", "+4~7", "+5~7", "+5~7", "+5~8", "+5~8", "+5~8", "+6~9"],
+                armorPiercing: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"]
+            }
+        },
+        7: {
+            name: "MIRD Class-5 Rounds",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Dorothy"],
+            description: "Dorothy made private modifications to her fingers, allowing them to fire powerful ammunition.",
+            stats: {
+                damage: ["+12~15", "+12~15", "+13~16", "+13~17", "+14~18", "+15~18", "+15~19", "+16~20", "+16~21", "+17~21", "+18~22"],
+                armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
+            }
+        },
+        8: {
+            name: "RIP380ACP",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Skorpion"],
+            description: "Spin and explode! These hollowpoint rounds are vicious in appearance and effect, and their expanding tips can do extreme damage to soft targets. Truly a round worthy of the name \"R.I.P.\"",
+            stats: {
+                damage: ["+7~10", "+7~11", "+8~12", "+9~13", "+9~14", "+10~15", "+11~16", "+11~17", "+12~18", "+13~19", "+14~20"],
+                rateOfFire: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"],
+                armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
+            }
+        },
+        9: {
+            name: "XM261 ACP",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M1911"],
+            description: "The experimental ammunition that was once developed for CQC in the brutal tunnels of the War is essentially a shotgun shell that can be fired with a .45 caliber pistol. Can only be equipped by M1911.",
+            stats: {
+                damage: ["+8~11", "+8~11", "+8~12", "+9~12", "+9~13", "+10~14", "+10~14", "+11~15", "+11~16", "+12~16", "+12~17"],
+                armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
+            }
+        }
     },
     armorPiercingAmmo: {
 
