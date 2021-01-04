@@ -184,7 +184,7 @@ var equipment = {
             stats: {
                 criticalHitRate: ["+13~16", "+14~17", "+15~19", "+16~20", "+18~22", "+19~24", "+20~25", "+22~27", "+23~28", "+24~30", "+26~32"]
             }
-        },
+        }
     },
     holographicSight: {
         1: {
@@ -278,14 +278,116 @@ var equipment = {
             usable: ["MP5"],
             description: "The bright LED flashlight is integrated into the handguard with a built-in lithium battery. It can be quickly turned on and off with the press of a button on the handguard. Can only be equipped by Gr MP5.",
             stats: {
-                damage: ["+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10",],
-                accuracy: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15",],
+                damage: ["+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10", "+10"],
+                accuracy: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"],
                 rateOfFire: ["-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4",]
             }
-        },
+        }
     },
     redDotSight: {
-
+        1: {
+            name: "AMP COMPM2",
+            rarity: 2,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "The COMPML Red Dot Sight manufactured by AMP Corporation. Its only merit is its sturdiness. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3"],
+                rateOfFire: ["-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1"]
+            }
+        },
+        2: {
+            name: "AMP COMPM4",
+            rarity: 3,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "The COMPML Red Dot Sight manufactured by AMP Corporation. Its design has been enhanced, increasing its sturdiness even more. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+4~6", "+4~6", "+4~7", "+5~7", "+5~8", "+6~9", "+6~9", "+6~10", "+7~10", "+7~11", "+8~12"],
+                rateOfFire: ["-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1"]
+            }
+        },
+        3: {
+            name: "COG M150",
+            rarity: 4,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "The greatest advantage of COG Corporation's advanced red dot sight is that it does not require batteries to assist in aiming in any situation. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+7~10", "+7~11", "+8~12", "+9~13", "+9~14", "+10~15", "+11~16", "+11~17", "+12~18", "+13~19", "+14~20"],
+                rateOfFire: ["-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1"]
+            }
+        },
+        4: {
+            name: "CT 4X20",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M1918"],
+            description: "Originally developed for the AR platform, this battle-proven scope has been retrofitted for M1918. Can only be equipped by M1918.",
+            stats: {
+                criticalHitRate: ["+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9", "+5~9", "+6~10"],
+                accuracy: ["+11~15", "+12~16", "+13~18", "+14~19", "+15~21", "+16~22", "+17~24" ,"+18~25", "+19~27", "+20~28", "+22~30"],
+                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
+            }
+        },
+        5: {
+            name: "ITI Mars",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "An integrated red dot sight developed by ITI Corporation, it incorporates multiple functions without affecting shooting performance and is equipped with an anti-reflection system. Can be equipped by all except HG.",
+            stats: {
+                accuracy: ["+11~15", "+12~16", "+13~18", "+14~19", "+15~21", "+16~22", "+17~24" ,"+18~25", "+19~27", "+20~28", "+22~30"],
+                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
+            }
+        },
+        6: {
+            name: "Gr MG4 MGO",
+            rarity: 5,
+            exclusive: true,
+            usable: ["MG4"],
+            description: "A red dot sight optimized for machine guns by TJC. It boasts a 6x magnification and built-in rangefinder. The Bundeswehr camo makes it cost twice as much. Can only be equipped by Gr MG4.",
+            stats: {
+                criticalHitRate: ["+15", "+16", "+17", "+18", "+19", "+20", "+21", "+22", "+23", "+24", "+25"],
+                accuracy: ["+18", "+19", "+21", "+23", "+25", "+27", "+28", "+30", "+32", "+34", "+36"],
+                rateOfFire: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
+            }
+        },
+        7: {
+            name: "MGO 6X48",
+            rarity: 5,
+            exclusive: true,
+            usable: ["LWMMG"],
+            description: "A red dot sight optimized for machine guns by TJC. It increases fire suppression efficiency with its 6x magnification and built-in rangefinder. Can only be equipped by LWMMG.",
+            stats: {
+                accuracy: ["+13~17", "+14~18", "+15~20", "+16~22", "+18~23", "+19~25", "+20~27", "+22~28", "+23~30", "+24~32", "+26~34"],
+                damage: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2"],
+                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
+            }
+        },
+        8: {
+            name: "MGP Upgrade Kit",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M500"],
+            description: "An upgrade kit manufactured by a renowned gun accessories firm. The M-LOK system grants incredible adaptability and the length of the stock is now more suited for the average Doll.",
+            stats: {
+                criticalDamage: ["+12~15", "+12~15", "+13~16", "+14~17", "+15~18", "+15~19", "+16~20", "+17~21", "+18~22", "+19~23", "+19~24"],
+                accuracy: ["+11~15", "+12~16", "+13~18", "+14~19", "+15~21", "+16~22", "+17~24" ,"+18~25", "+19~27", "+20~28", "+22~30"],
+                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
+            }
+        },
+        9: {
+            name: "MPL M21",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Micro Uzi"],
+            description: "Designed for the tough environment of the Middle East, this red dot sight has an optical fiber crosshair lighted by radium. No battery needed. Can only be equipped by Micro Uzi.",
+            stats: {
+                accuracy: ["+14~18", "+15~19", "+16~21", "+18~23", "+19~25", "+21~27", "+22~28", "+23~30", "+25~32", "+26~34", "+28~36"],
+                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
+            }
+        }
     },
     suppressor: {
 
