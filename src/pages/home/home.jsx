@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Grow, LinearProgress } from "@material-ui/core";
+import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Grow, LinearProgress, Box } from "@material-ui/core";
 
 import Skeleton from "@material-ui/lab/Skeleton";
 
@@ -70,6 +70,9 @@ export default function Home() {
 			display: "flex",
 			alignContent: "center",
 			flexDirection: "column"
+		},
+		cardImageBox: {
+			width: 130
 		},
 		heroCardContent: {
 			flex: "1 0 auto"
@@ -202,6 +205,7 @@ export default function Home() {
 			validCheck = !notValidIDs.includes(chosenTDoll);
 		}
 		
+		console.clear()
 		console.log("ID selected: ", chosenTDoll);
 
 		// Finally, grab the T-Doll from the array and set the states.
@@ -236,52 +240,58 @@ export default function Home() {
 			<ScrollToTop />
 
 			{/* Hero Unit */}
-			<div className={classes.heroContent}>
-				<Container maxWidth="sm">
-					<Card className={classes.heroCardRoot}>
-						<div className={classes.heroCardDetails}>
-							{/* Skeleton components will display when the randomization function selects an ID for a T-Doll that does not exist. */}
-							{tdollImage !== undefined ? <CardMedia className={classes.heroCardMedia} image={tdollImage} title={tdollName} component="img" /> : <Skeleton variant="rect" height={256} width={128} />}
+			<Box boxShadow={1}>
+				<div className={classes.heroContent}>
+					<Container maxWidth="sm">
+						<Box boxShadow={5}>
+							<Card className={classes.heroCardRoot}>
+								<div className={classes.heroCardDetails}>
+									{/* Skeleton components will display when the randomization function selects an ID for a T-Doll that does not exist. */}
+									<Box className={classes.cardImageBox} boxShadow={6} border={1} borderColor="primary.main">
+										{tdollImage !== undefined ? <CardMedia className={classes.heroCardMedia} image={tdollImage} title={tdollName} component="img" /> : <Skeleton variant="rect" height={256} width={128} />}
+									</Box>
 
-							<CardContent className={classes.heroCardContent}>
-								<Typography component="h5" variant="h5">
-									{tdollName !== "" ? tdollName : <Skeleton />}
-								</Typography>
-								<Typography variant="subtitle2" color="textSecondary">
-									This is a Work-in-Progress
-								</Typography>
-								<Typography variant="subtitle1" color="textSecondary">
-									{tdollType !== "" ? tdollType : <Skeleton />}
-								</Typography>
-							</CardContent>
+									<CardContent className={classes.heroCardContent}>
+										<Typography component="h5" variant="h5">
+											{tdollName !== "" ? tdollName : <Skeleton />}
+										</Typography>
+										<Typography variant="subtitle2" color="textSecondary">
+											This is a Work-in-Progress
+										</Typography>
+										<Typography variant="subtitle1" color="textSecondary">
+											{tdollType !== "" ? tdollType : <Skeleton />}
+										</Typography>
+									</CardContent>
+								</div>
+							</Card>
+						</Box>
+
+						<LinearProgress variant="determinate" value={progress} />
+
+						<div className={classes.heroButtons}>
+							<Grid container spacing={2} justify="center">
+								<Grid item>
+									<Link
+										to={{
+											pathname: "/tdoll",
+											search: "?id=" + tdoll.normal.id
+										}}
+										onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}>
+											<Button variant="contained" color="primary">
+												Go to this T-Doll
+											</Button>
+									</Link>
+								</Grid>
+								<Grid item>
+									<Button variant="outlined" color="primary" onClick={() => manualReroll()}>
+										Reroll for a different one
+									</Button>
+								</Grid>
+							</Grid>
 						</div>
-					</Card>
-
-					<LinearProgress variant="determinate" value={progress} />
-
-					<div className={classes.heroButtons}>
-						<Grid container spacing={2} justify="center">
-							<Grid item>
-								<Link
-									to={{
-										pathname: "/tdoll",
-										search: "?id=" + tdoll.normal.id
-									}}
-									onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}>
-										<Button variant="contained" color="primary">
-											Go to this T-Doll
-										</Button>
-								</Link>
-							</Grid>
-							<Grid item>
-								<Button variant="outlined" color="primary" onClick={() => manualReroll()}>
-									Reroll for a different one
-								</Button>
-							</Grid>
-						</Grid>
-					</div>
-				</Container>
-			</div>
+					</Container>
+				</div>
+			</Box>
 			{/* End of Hero Unit */}
 
 			{/* Cards Section for Navigation */}
