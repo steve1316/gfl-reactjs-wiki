@@ -525,10 +525,92 @@ var equipment = {
                 criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
                 evasion: ["+8~11", "+8~11", "+8~11", "+8~12", "+9~12", "+9~13", "+9~13", "+14~16", "+10~14", "+10~14", "+11~15"]
             }
-        },
+        }
     },
     nightBattleEquipment: {
-
+        1: {
+            name: "16Lab Infrared Designator",
+            rarity: 5,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "An infrared designator system specially developed by 16Lab. Much of its superfluous functions and weight have been removed, leaving behind a truly practical night battle equipment that allows T-Dolls to perform to their fullest potential. Can only be equipped by SMGs, HGs, and ARs.",
+            stats: {
+                nightVision: ["+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100"]
+            }
+        },
+        2: {
+            name: "Black Cat",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Fail"],
+            description: "A searing light manifested from a chaotic soul of an alternate world. It seeks to remind you, who lost in the darkness, to never forget, \"I will always break the rules, no matter how many times!\"",
+            stats: {
+                nightVision: ["+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100"],
+                boostAbilityEffectiveness: ["+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25"]
+            }
+        },
+        3: {
+            name: "Glorylight",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Clear"],
+            description: "A radiant light born from a clear soul of an alternate world. It seeks to bring you, who is lost in the darkness, hope and strength. \"Glory day, glory light, you are the only one, you are the light!\"",
+            stats: {
+                nightVision: ["+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100"],
+                boostAbilityEffectiveness: ["+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33"]
+            }
+        },
+        4: {
+            name: "PEQ-15",
+            rarity: 4,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "An improved model of the ATPIAL infrared designator issued by IOP Corporation for their T-Dolls, it effectively increases the T-Dolls' combat efficiency during nighttime. Can only be equipped by SMGs, HGs, and ARs.",
+            stats: {
+                nightVision: ["+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85"],
+            }
+        },
+        5: {
+            name: "PEQ-16A",
+            rarity: 5,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "A custom model of the ATPIAL infrared designator issued by IOP Corporation for their T-Dolls, it is able to fulfill all their operational needs when battling at night. Can only be equipped by SMGs, HGs, and ARs.",
+            stats: {
+                nightVision: ["+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100"],
+            }
+        },
+        6: {
+            name: "PEQ-2",
+            rarity: 2,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "An early model ATPIAL infrared designator issued by IOP Corporation for their T-Dolls. Now T-Dolls can hit things at night! Can only be equipped by SMGs, HGs, and ARs.",
+            stats: {
+                nightVision: ["+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55"],
+            }
+        },
+        7: {
+            name: "PEQ-5",
+            rarity: 3,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The standard model ATPIAL infrared designator issued by IOP Corporation for their T-Dolls. Much of the early model's deficiencies had been fixed in this model, but its battery still runs out very quickly. Can only be equipped by SMGs, HGs, and ARs.",
+            stats: {
+                nightVision: ["+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70"],
+            }
+        },
+        8: {
+            name: "PKN03M Night Vision Scope",
+            rarity: 5,
+            exclusive: true,
+            usable: ["9A-91"],
+            description: "A night vision scope developed under the request of the Ministry of Internal Affairs. It has a 3x magnification capability and an infrared designator, allowing 9A-91 to silently strike enemy vital points in the dead of night.",
+            stats: {
+                damage: ["+5", "+5", "+5", "+5", "+6", "+6", "+6", "+7", "+7", "+7", "+8"],
+                nightVision: ["+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100"]
+            }
+        }
     },
     highVelocityAmmo: {
 
