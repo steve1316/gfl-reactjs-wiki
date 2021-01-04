@@ -44,8 +44,8 @@ This project serves to provide a mobile-friendly web application of a database f
 - [x] ~~Add all Special T-Dolls #1000 to 1027.~~ (currently as of October 10, 2020)
 - [ ] ~~(HIGH PRIORITY) Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ (Doing so will mess up the image resolution and make it too blurry)
-- [ ] (HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.
-  - [ ] Create logic for the 2 buttons below it and link it to the component.
+- [x] (HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.
+  - [x] Create logic for the 2 buttons below it and link it to the component.
 - [ ] Create initial structure of JSON data object that will hold all equipment.
 - [ ] Set up filters and searching for equipment.
 - [ ] Add X amount of equipment to the JSON data object.
