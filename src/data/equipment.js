@@ -390,7 +390,142 @@ var equipment = {
         }
     },
     suppressor: {
-
+        1: {
+            name: "AC1 Suppressor",
+            rarity: 2,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR", "RF"],
+            description: "A general use suppressor model manufactured by AC Corporation, it helps to keep T-Dolls concealed. Can be equipped by all except MGs and SGs.",
+            stats: {
+                criticalHitRate: ["+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~5"],
+                evasion: ["+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2"]
+            }
+        },
+        2: {
+            name: "AC2 Suppressor",
+            rarity: 3,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR", "RF"],
+            description: "An improved suppressor model manufactured by AC Corporation, it helps to keep T-Dolls concealed and reduces their chances of being detected. Can be equipped by all except MGs and SGs.",
+            stats: {
+                criticalHitRate: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10", "+7~10"],
+                evasion: ["+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+4~4", "+4~4"]
+            }
+        },
+        3: {
+            name: "AC3 Suppressor",
+            rarity: 4,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR", "RF"],
+            description: "An improved suppressor model manufactured by AC Corporation, it helps to keep T-Dolls concealed and reduces their chances of being detected. Can be equipped by all except MGs and SGs.",
+            stats: {
+                criticalHitRate: ["+9~11", "+9~11", "+9~11", "+10~12", "+10~12", "+10~13", "+11~13", "+11~14", "+11~14", "+12~14", "+12~15"],
+                evasion: ["+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~6", "+5~6", "+5~7"]
+            }
+        },
+        4: {
+            name: "AC4 Suppressor",
+            rarity: 5,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR", "RF"],
+            description: "A suppressor model specially developed for special operations, it is highly effective at keeping T-Dolls concealed and reduces their chances of being detected. Can be equipped by all except MGs and SGs.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10", "+7~10"]
+            }
+        },
+        5: {
+            name: "Antique Kaleidoscope",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Henrietta"],
+            description: "A kaleidoscope of intricate craftsmanship. Its owner doesn't care if it's genuine or counterfeit. What matters to her is the sentimental value it carries.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20", "+16~21", "+17~22", "+18~23", "+19~24", "+20~25"],
+                evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10", "+7~10"],
+                accuracy: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~4", "+1~4", "+1~4", "+1~4", "+1~4", "+1~5"]
+            }
+        },
+        6: {
+            name: "BPR4 & SRM6",
+            rarity: 5,
+            exclusive: true,
+            usable: ["MDR"],
+            description: "An OSS suppressor kit designed for .308 and 7.62mm caliber firearms. Due to the modular structure and chic look, it has gone viral on Griffin's discussion board. A certain frequent user of the anonymous forum obviously won't miss out on it.",
+            stats: {
+                criticalHitRate: ["+17~24", "+18~26", "+20~28", "+22~31", "+23~33", "+25~36", "+27~38", "+28~40", "+30~43", "+32~45", "+34~48"],
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+3~4", "+3~4", "+3~5", "+3~5", "+3~5", "+4~6"],
+                evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10", "+7~10"]
+            }
+        },
+        7: {
+            name: "M1895 Suppressor",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Nagant Revolver Mod"],
+            description: "Most revolvers cannot be suppressed due to the large physical gaps in their designs, but the unique structure of M1895 allows for the installation of a suppressor. It becomes very effective when paired with special reduced noise ammunition. Can only be equipped by M1895.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+7~10", "+7~10", "+7~10", "+7~11", "+8~11", "+8~12", "+8~12", "+8~13", "+9~13", "+9~13", "+9~14"],
+                accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"]
+            }
+        },
+        8: {
+            name: "Osprey45 Silencer",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Agent Vector"],
+            description: "A silencer in widespread service with the SHD. Mainly used on .45 Vectors. Its excellent performance and rugged appearance have won it much acclaim.",
+            stats: {
+                criticalHitRate: ["+15", "+15", "+16", "+16", "+17", "+17", "+18", "+18", "+19", "+19", "+20"],
+                evasion: ["+8", "+8", "+8", "+8", "+8", "+9", "+9", "+9", "+9", "+10", "+10"]
+            }
+        },
+        9: {
+            name: "OSS Silencer",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M3"],
+            description: "A suppressor developed by OSS back in the day for covert operations. In addition to concealing M3, it also comes with a cowhide cover that the Commander can use as emergency field ration.",
+            stats: {
+                criticalHitRate: ["+15~20", "+15~20", "+16~21", "+16~22", "+17~23", "+18~24", "+18~24", "+19~25", "+19~26", "+20~27", "+20~27"],
+                damage: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"],
+                evasion: ["+12~14", "+12~14", "+13~15", "+13~16", "+14~16", "+15~17", "+15~18", "+16~18", "+16~19", "+17~20", "+18~21"]
+            }
+        },
+        10: {
+            name: "PPK Silencer",
+            rarity: 5,
+            exclusive: true,
+            usable: ["PPK"],
+            description: "Other than lipstick, a lady will also always need a suppressor in her bag. The former keeps people talking, and the latter will ensure their silence forever.",
+            stats: {
+                criticalHitRate: ["+15~20", "+15~21", "+16~22", "+17~23", "+18~24", "+18~25", "+19~26", "+20~27", "+21~28", "+21~29", "+22~30"],
+                evasion: ["+11~13", "+11~13", "+11~14", "+12~14", "+12~15", "+13~15", "+13~16", "+14~16", "+14~17", "+14~17", "+15~18"]
+            }
+        },
+        11: {
+            name: "STEN Suppressor",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Sten MkII Mod"],
+            description: "Once widely used in the battlefields of Europe and the Pacific theater, this quaint-looking suppressor comes standard with a canvas cover that shields against heat generated during firing. Can only be equipped by STEN MkⅡ.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+8~11", "+8~11", "+8~11", "+8~12", "+9~12", "+9~13", "+9~13", "+14~16", "+10~14", "+10~14", "+11~15"]
+            }
+        },
+        12: {
+            name: "Type 64 Exclusive Suppressor",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Type 64"],
+            description: "This quaint suppressor allows Type 64 to silently blend into the darkness of the rainforest night while increasing her critical strike chance. Can only be equipped by Type 64.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+8~11", "+8~11", "+8~11", "+8~12", "+9~12", "+9~13", "+9~13", "+14~16", "+10~14", "+10~14", "+11~15"]
+            }
+        },
     },
     nightBattleEquipment: {
 
