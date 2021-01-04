@@ -613,7 +613,98 @@ var equipment = {
         }
     },
     highVelocityAmmo: {
-
+        1: {
+            name: ".300BLK High-Velocity Ammo",
+            rarity: 5,
+            exclusive: true,
+            usable: ["ST AR-15"],
+            description: "The .300 Blackout high-velocity ammunition was specially developed by 16Lab and is recommended for use with a suppressor. Can only be equipped by ST AR-15.",
+            stats: {
+                damage: ["+12~16", "+12~16", "+13~17", "+14~18", "+14~19", "+15~20", "+16~21", "+17~22", "+17~23", "+18~24", "+19~25"],
+                accuracy: ["-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5"]
+            }
+        },
+        2: {
+            name: "5.56mm HV rounds (Explosive)",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Agent 416"],
+            description: "Modified from ordinary 5.56mm high velocity rounds. They explode upon hitting an enemy, thus increasing DPS. Supposedly, they have the ability to draw targets' attention.",
+            stats: {
+                damage: ["+12", "+12", "+13", "+14", "+15", "+16", "+17", "+17", "+18", "+19", "+20"],
+            }
+        },
+        3: {
+            name: "7.92 KURZ",
+            rarity: 5,
+            exclusive: true,
+            usable: ["StG44 Mod"],
+            description: "This 7.9mm ammunition developed for StG44 is one of the world's first intermediate cartridges. The use of steel casing due to a lack of brass gives it a stylish and unique look. Can only be equipped by StG44.",
+            stats: {
+                damage: ["+10~14", "+10~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24"],
+            }
+        },
+        3: {
+            name: "9x39mm SPP",
+            rarity: 5,
+            exclusive: true,
+            usable: ["OTs-12"],
+            description: "The new 9x39mm round comes with better armor penetration than other bullets of the same caliber. The harmless-looking blue tip masks an astonishingly destructive force that mustn't be taken lightly.",
+            stats: {
+                criticalDamage: ["+6~10", "+6~10", "+6~11", "+6~11", "+7~12", "+7~12", "+7~13", "+8~13", "+8~14", "+8~14", "+9~15"],
+                damage: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
+            }
+        },
+        4: {
+            name: "APCR High-Velocity Ammo",
+            rarity: 5,
+            exclusive: false,
+            usable: ["AR"],
+            description: "The FCA Research Center's experimental APCR high-velocity ammunition integrates the idea of armor-piercing ammunition and uses a different design methodology to increase its lethality. They are issued with MP Group's reliable and lightweight magazines.",
+            stats: {
+                damage: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
+            }
+        },
+        5: {
+            name: "FMJ High-Velocity Ammo",
+            rarity: 2,
+            exclusive: false,
+            usable: ["AR"],
+            description: "The FCA Research Center's assault rifle-specific FMJ high-velocity ammunition effectively boosts the output of assault rifles through high quality, high pressure gunpowder. They are issued with MP Group's reliable and lightweight magazines.",
+            stats: {
+                damage: ["+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2"]
+            }
+        },
+        6: {
+            name: "JHP High-Velocity Ammo",
+            rarity: 4,
+            exclusive: false,
+            usable: ["AR"],
+            description: "The FCA Research Center's assault rifle-specific JHP high-velocity ammunition was developed with the experience gained from previous bullet designs and experimentations, greatly increasing its damaging capabilities. They are issued with MP Group's reliable and lightweight magazines.",
+            stats: {
+                damage: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12"]
+            }
+        },
+        7: {
+            name: "JSP High-Velocity Ammo",
+            rarity: 3,
+            exclusive: false,
+            usable: ["AR"],
+            description: "The FCA Research Center's assault rifle-specific JSP high-velocity ammunition uses an experimental bullet design to further increase the output of assault rifles. They are issued with MP Group's reliable and lightweight magazines.",
+            stats: {
+                damage: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
+            }
+        },
+        8: {
+            name: "SP6 Subsonic Ammo",
+            rarity: 5,
+            exclusive: true,
+            usable: ["AS Val"],
+            description: "Subsonic ammunition developed for use with a suppressor. Its steel tip makes it highly versatile. Can only be equipped by AS Val.",
+            stats: {
+                damage: ["+10~14", "+10~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24"]
+            }
+        }
     },
     hollowPointAmmo: {
 
