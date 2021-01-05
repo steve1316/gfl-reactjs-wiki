@@ -8,7 +8,7 @@
 
 This project serves to provide a mobile-friendly web application of a database hosted on GitHub featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
 
-<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/55/animations/55_mod_move.gif" alt="M4A1 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/56/animations/56_mod_move.gif" alt="M4 SOPMOD II Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/57/animations/57_mod_move.gif" alt="ST AR-15 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/143/animations/143_mod_move.gif" alt="RO635 Mod">
+<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/55/animations/55_mod_move.gif" width=175 height=175 alt="M4A1 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/56/animations/56_mod_move.gif" width=175 height=175 alt="M4 SOPMOD II Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/57/animations/57_mod_move.gif" width=175 height=175 alt="ST AR-15 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/143/animations/143_mod_move.gif" width=175 height=175 alt="RO635 Mod">
 
 # Table of Contents
 
@@ -35,7 +35,7 @@ This project serves to provide a mobile-friendly web application of a database h
 
 # TODO List
 
-<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/122/animations/122_mod_victoryloop.gif" alt="G11 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/65/animations/65_mod_wait.gif" style="transform: scaleX(-1)" alt="416 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/101/animations/101_mod_victoryloop.gif" alt="UMP9 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/103/animations/103_mod_victoryloop.gif" alt="UMP45 Mod">
+<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/122/animations/122_mod_victoryloop.gif" width=175 height=175 alt="G11 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/65/animations/65_mod_wait.gif" style="transform: scaleX(-1)" width=175 height=175 alt="416 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/101/animations/101_mod_victoryloop.gif" width=175 height=175 alt="UMP9 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/103/animations/103_mod_victoryloop.gif" width=175 height=175 alt="UMP45 Mod">
 
 - [x] ~~Mock up the pages for the app.~~
 - [x] ~~Create initial structure of JSON data object that will hold all T-Dolls.~~
@@ -84,7 +84,7 @@ npm install
 yarn install
 ```
 
-<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/124/animations/124_mod_victory.gif" alt="Super SASS Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/281/animations/281_normal_victoryloop.gif" alt="CAWS">
+<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/124/animations/124_mod_victory.gif" width=175 height=175 alt="Super SASS Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/281/animations/281_normal_victoryloop.gif" width=175 height=175 alt="CAWS">
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
