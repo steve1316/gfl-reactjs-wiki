@@ -1140,7 +1140,41 @@ var equipment = {
         }
     },
     ammunitionBox: {
-
+        1: {
+            name: "Infinite Ammo Box",
+            rarity: 5,
+            exclusive: true,
+            usable: ["MG3"],
+            description: "A mysterious and powerful equipment left over from ancient times. Although most of these had been confiscated by a certain mysterious authority//c one copy has been preserved to this day. Can only be equipped by MG3.",
+            stats: {
+                clipSize: ["+20", "+21", "+22", "+23", "+24", "+25", "+26", "+27", "+28", "+29", "+30"],
+                damage: ["-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25"],
+                accuracy: ["-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10"],
+                evasion: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"]
+            }
+        },
+        2: {
+            name: "IOP High-Capacity Ammo Box",
+            rarity: 4,
+            exclusive: false,
+            usable: ["MG"],
+            description: "A high-capacity ammunition box specially developed for machine gun T-Dolls by IOP Corporation//c it grants them much longer firepower output.",
+            stats: {
+                clipSize: ["+1", "+1", "+1", "+1", "+1", "+2", "+2", "+2", "+2", "+2", "+3"],
+                evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
+            }
+        },
+        3: {
+            name: "IOP Maximum Ammo Box",
+            rarity: 5,
+            exclusive: false,
+            usable: ["MG"],
+            description: "An extra-large ammunition box specially developed for machine gun T-Dolls by IOP Corporation//c it grants them unmatched firepower.",
+            stats: {
+                clipSize: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"],
+                evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
+            }
+        }
     },
     camouflageCloak: {
 
