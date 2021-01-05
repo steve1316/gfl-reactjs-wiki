@@ -1060,7 +1060,7 @@ var equipment = {
             rarity: 2,
             exclusive: false,
             usable: ["HG", "SMG", "AR"],
-            description: "The Type X1 Exoskeleton is an early model developed by IOP Corporation//c aimed at increasing the agility of T-Dolls through the exoskeleton system. Can be equipped by HGs//c SMGs//c and most ARs.",
+            description: "The Type X1 Exoskeleton is an early model developed by IOP Corporation, aimed at increasing the agility of T-Dolls through the exoskeleton system. Can be equipped by HGs, SMGs, and most ARs.",
             stats: {
                 evasion: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3"]
             }
@@ -1070,7 +1070,7 @@ var equipment = {
             rarity: 3,
             exclusive: false,
             usable: ["HG", "SMG", "AR"],
-            description: "The Type X2 Exoskeleton is the standard model manufactured by IOP Corporation with improved performance and flexibility. Can be equipped by HGs//c SMGs//c and most ARs.",
+            description: "The Type X2 Exoskeleton is the standard model manufactured by IOP Corporation with improved performance and flexibility. Can be equipped by HGs, SMGs, and most ARs.",
             stats: {
                 evasion: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3"]
             }
@@ -1080,7 +1080,7 @@ var equipment = {
             rarity: 4,
             exclusive: false,
             usable: ["HG", "SMG", "AR"],
-            description: "The Type X3 Exoskeleton is an enhanced model developed by IOP Corporation. Through improvements in technology//c it has greater flexibility while at the same time detracting less from the shooting ability of the user. Can be equipped by HGs//c SMGs//c and most ARs.",
+            description: "The Type X3 Exoskeleton is an enhanced model developed by IOP Corporation. Through improvements in technology, it has greater flexibility while at the same time detracting less from the shooting ability of the user. Can be equipped by HGs, SMGs, and most ARs.",
             stats: {
                 evasion: ["+6~7", "+6~7", "+7~8", "+7~8", "+8~9", "+8~10", "+9~10", "+9~11", "+10~12", "+10~12", "+10~12", "+11~13"]
             }
@@ -1090,7 +1090,7 @@ var equipment = {
             rarity: 5,
             exclusive: false,
             usable: ["HG", "SMG", "AR"],
-            description: "The Type X4 Exoskeleton is a custom model crafted by IOP Corporation//c specially developed based on the T-Dolls' characteristics so as to maximize their mobility and while minimizing the impact on their shooting ability. Can be equipped by HGs//c SMGs//c and most ARs.",
+            description: "The Type X4 Exoskeleton is a custom model crafted by IOP Corporation, specially developed based on the T-Dolls' characteristics so as to maximize their mobility and while minimizing the impact on their shooting ability. Can be equipped by HGs, SMGs, and most ARs.",
             stats: {
                 evasion: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
             }
@@ -1145,7 +1145,7 @@ var equipment = {
             rarity: 5,
             exclusive: true,
             usable: ["MG3"],
-            description: "A mysterious and powerful equipment left over from ancient times. Although most of these had been confiscated by a certain mysterious authority//c one copy has been preserved to this day. Can only be equipped by MG3.",
+            description: "A mysterious and powerful equipment left over from ancient times. Although most of these had been confiscated by a certain mysterious authority, one copy has been preserved to this day. Can only be equipped by MG3.",
             stats: {
                 clipSize: ["+20", "+21", "+22", "+23", "+24", "+25", "+26", "+27", "+28", "+29", "+30"],
                 damage: ["-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25", "-25"],
@@ -1158,7 +1158,7 @@ var equipment = {
             rarity: 4,
             exclusive: false,
             usable: ["MG"],
-            description: "A high-capacity ammunition box specially developed for machine gun T-Dolls by IOP Corporation//c it grants them much longer firepower output.",
+            description: "A high-capacity ammunition box specially developed for machine gun T-Dolls by IOP Corporation, it grants them much longer firepower output.",
             stats: {
                 clipSize: ["+1", "+1", "+1", "+1", "+1", "+2", "+2", "+2", "+2", "+2", "+3"],
                 evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
@@ -1169,7 +1169,7 @@ var equipment = {
             rarity: 5,
             exclusive: false,
             usable: ["MG"],
-            description: "An extra-large ammunition box specially developed for machine gun T-Dolls by IOP Corporation//c it grants them unmatched firepower.",
+            description: "An extra-large ammunition box specially developed for machine gun T-Dolls by IOP Corporation, it grants them unmatched firepower.",
             stats: {
                 clipSize: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"],
                 evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
@@ -1182,7 +1182,7 @@ var equipment = {
             rarity: 5,
             exclusive: true,
             usable: ["PTRD"],
-            description: "A cape once worn by a mysterious girl named Pavlichenko//c it is able to withstand the piercing cold of Siberia. Can only be equipped by PTRD.",
+            description: "A cape once worn by a mysterious girl named Pavlichenko, it is able to withstand the piercing cold of Siberia. Can only be equipped by PTRD.",
             stats: {
                 criticalDamage: ["+11~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24", "+18~25"],
                 rateOfFire: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"],
@@ -1194,7 +1194,7 @@ var equipment = {
             rarity: 3,
             exclusive: false,
             usable: ["RF"],
-            description: "A camouflage cape that has been passed down for ages//c its mottled edges tell a tale of the flames of war. Having an undisturbed firing environment allows for increased critical damage. Can only be equipped by RFs.",
+            description: "A camouflage cape that has been passed down for ages, its mottled edges tell a tale of the flames of war. Having an undisturbed firing environment allows for increased critical damage. Can only be equipped by RFs.",
             stats: {
                 criticalDamage: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12", "+9~13"],
                 movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
@@ -1228,7 +1228,7 @@ var equipment = {
             rarity: 5,
             exclusive: false,
             usable: ["RF"],
-            description: "A thermoptic camouflage cape developed with military technology//c it can adapt its camouflage patterns to the surrounding environment when lying still//c allowing sharpshooters to massively increase their critical damage. Can only be equipped by RFs.",
+            description: "A thermoptic camouflage cape developed with military technology, it can adapt its camouflage patterns to the surrounding environment when lying still, allowing sharpshooters to massively increase their critical damage. Can only be equipped by RFs.",
             stats: {
                 criticalDamage: ["+11~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24", "+18~25"],
                 movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
@@ -1263,7 +1263,7 @@ var equipment = {
             rarity: 5,
             exclusive: true,
             usable: ["M16A1"],
-            description: "A legacy equipment from before Sangvis Ferris Manufacturing went rogue//c it integrates a mobile exoskeleton with durable armor to greatly increase the user's survivability. However//c it causes great physical and mental stress to the user.",
+            description: "A legacy equipment from before Sangvis Ferris Manufacturing went rogue, it integrates a mobile exoskeleton with durable armor to greatly increase the user's survivability. However, it causes great physical and mental stress to the user.",
             stats: {
                 armor: ["+15", "+15", "+16", "+16", "+17", "+17", "+18", "+18", "+19", "+19", "+20"],
                 evasion: ["+8", "+8", "+8", "+8", "+8", "+9", "+9", "+9", "+9", "+10", "+10"],
@@ -1287,7 +1287,7 @@ var equipment = {
             rarity: 3,
             exclusive: false,
             usable: ["SG"],
-            description: "The protective grade Type I Fiber Plate provided by IOP Corporation helps to reduce the damage taken from being shot//c increasing T-Dolls' survivability on the battlefield.",
+            description: "The protective grade Type I Fiber Plate provided by IOP Corporation helps to reduce the damage taken from being shot, increasing T-Dolls' survivability on the battlefield.",
             stats: {
                 armor: ["+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+4~4", "+4~4"],
                 evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
@@ -1298,7 +1298,7 @@ var equipment = {
             rarity: 4,
             exclusive: false,
             usable: ["SG"],
-            description: "The protective grade Type II Composite Plate provided by IOP Corporation helps to greatly reduce the damage taken from being shot//c greatly enhancing T-Dolls' survivability on the battlefield.",
+            description: "The protective grade Type II Composite Plate provided by IOP Corporation helps to greatly reduce the damage taken from being shot, greatly enhancing T-Dolls' survivability on the battlefield.",
             stats: {
                 armor: ["+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~6", "+5~6", "+5~7"],
                 evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
@@ -1309,7 +1309,7 @@ var equipment = {
             rarity: 5,
             exclusive: false,
             usable: ["SG"],
-            description: "The protective grade Type III Kevlar Plate provided by IOP Corporation can resist high-caliber ammunition//c massively enhancing T-Dolls' survivability on the battlefield.",
+            description: "The protective grade Type III Kevlar Plate provided by IOP Corporation can resist high-caliber ammunition, massively enhancing T-Dolls' survivability on the battlefield.",
             stats: {
                 armor: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~10", "+7~10", "+8~10", "+8~11"],
                 evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
