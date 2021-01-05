@@ -1177,7 +1177,74 @@ var equipment = {
         }
     },
     camouflageCloak: {
-
+        1: {
+            name: "Blue Thick Cape",
+            rarity: 5,
+            exclusive: true,
+            usable: ["PTRD"],
+            description: "A cape once worn by a mysterious girl named Pavlichenko//c it is able to withstand the piercing cold of Siberia. Can only be equipped by PTRD.",
+            stats: {
+                criticalDamage: ["+11~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24", "+18~25"],
+                rateOfFire: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"],
+                movementSpeed: ["-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3"]
+            }
+        },
+        2: {
+            name: "Camouflage Cape",
+            rarity: 3,
+            exclusive: false,
+            usable: ["RF"],
+            description: "A camouflage cape that has been passed down for ages//c its mottled edges tell a tale of the flames of war. Having an undisturbed firing environment allows for increased critical damage. Can only be equipped by RFs.",
+            stats: {
+                criticalDamage: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12", "+9~13"],
+                movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
+            }
+        },
+        3: {
+            name: "Digital Camouflage",
+            rarity: 5,
+            exclusive: true,
+            usable: ["SV-98"],
+            description: "A winter digital camouflage cloak suitable for SV-98's operational environments. Increases damage and critical hit damage. Can only be equipped by SV-98.",
+            stats: {
+                criticalDamage: ["+11~16", "+11~16", "+12~17", "+12~18", "+13~19", "+14~20", "+14~21", "+15~22", "+16~23", "+16~24", "+17~25"],
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+3~4", "+3~4", "+3~5", "+3~5", "+3~5", "+4~6"],
+                movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
+            }
+        },
+        4: {
+            name: "Ragged Cape",
+            rarity: 2,
+            exclusive: false,
+            usable: ["RF"],
+            description: "A ragged cape that has been passed down for ages. Having an undisturbed firing environment allows for increased critical damage. Can only be equipped by RFs.",
+            stats: {
+                criticalDamage: ["+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4"],
+                movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
+            }
+        },
+        5: {
+            name: "Thermoptic Camouflage Cape",
+            rarity: 5,
+            exclusive: false,
+            usable: ["RF"],
+            description: "A thermoptic camouflage cape developed with military technology//c it can adapt its camouflage patterns to the surrounding environment when lying still//c allowing sharpshooters to massively increase their critical damage. Can only be equipped by RFs.",
+            stats: {
+                criticalDamage: ["+11~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24", "+18~25"],
+                movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
+            }
+        },
+        6: {
+            name: "Urban Camouflage Cape",
+            rarity: 4,
+            exclusive: false,
+            usable: ["RF"],
+            description: "A digital camouflage cape developed from Sangvis Ferris technology. It is able to blend into most environments. Having an undisturbed firing environment allows for increased critical damage. Can only be equipped by RFs.",
+            stats: {
+                criticalDamage: ["+8~10", "+8~10", "+9~11", "+9~12", "+10~13", "+11~14", "+11~14", "+12~15", "+13~16", "+13~17", "+14~18"],
+                movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
+            }
+        }
     },
     armorPlate: {
 
