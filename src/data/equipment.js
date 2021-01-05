@@ -990,7 +990,154 @@ var equipment = {
         },
     },
     exoskeleton: {
-
+        1: {
+            name: "416's Go Bag",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Agent 416"],
+            description: "A specially-made backpack modified to 416's personal requirements from a normal SHD go-bag.",
+            stats: {
+                evasion: ["+12", "+12", "+13", "+14", "+15", "+16", "+17", "+17", "+18", "+19", "+20"]
+            }
+        },
+        2: {
+            name: "GSG UX Exoskeleton",
+            rarity: 5,
+            exclusive: true,
+            usable: ["MP5"],
+            description: "A dedicated high-performance exoskeleton specially calibrated for MP5 which maximizes her mobility and evasive capabilities. Can only be equipped by MP5.",
+            stats: {
+                evasion: ["+30~45", "+30~46", "+31~47", "+32~49", "+33~50", "+34~51", "+35~53", "+36~54" , "+37~55", "+38~57", "+39~58"],
+                damage: ["-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6"]
+            }
+        },
+        3: {
+            name: "IOP T1 Exoskeleton",
+            rarity: 2,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type T1 Exoskeleton is an early model developed by IOP Corporation, aimed at increasing the agility of T-Dolls through the exoskeleton system. Can be equipped by HGs, SMGs, and most ARs.",
+            stats: {
+                evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~8"],
+                damage: ["-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1"]
+            }
+        },
+        4: {
+            name: "IOP T2 Exoskeleton",
+            rarity: 3,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type T2 Exoskeleton is the standard model manufactured by IOP Corporation with improved performance and flexibility. Can be equipped by HGs, SMGs, and most ARs.",
+            stats: {
+                evasion: ["+10~12", "+10~12", "+10~12", "+11~13", "+11~13", "+12~14", "+12~14", "+12~15", "+13~15", "+13~16", "+14~16"],
+                damage: ["-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3"]
+            }
+        },
+        5: {
+            name: "IOP T3 Exoskeleton",
+            rarity: 4,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type T3 Exoskeleton is an enhanced model developed by IOP Corporation. Through improvements in technology, it has greater flexibility while at the same time detracting less from the shooting ability of the user. Can be equipped by HGs, SMGs, and most ARs.",
+            stats: {
+                evasion: ["+14~16", "+14~16", "+15~17", "+15~17", "+16~18", "+16~19", "+17~19", "+17~20", "+18~21", "+19~21", "+19~22"],
+                damage: ["-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5"]
+            }
+        },
+        6: {
+            name: "IOP T4 Exoskeleton",
+            rarity: 5,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type T4 Exoskeleton is a custom model developed by IOP Corporation, specially developed based on the T-Dolls' characteristics so as to maximize their mobility and while minimizing the impact on their shooting ability. Can be equipped by HGs, SMGs, and most ARs.",
+            stats: {
+                evasion: ["+20~25", "+20~26", "+21~27", "+22~27", "+23~28", "+24~30", "+24~31", "+25~31", "+26~32", "+27~34", "+28~35"],
+                damage: ["-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6"]
+            }
+        },
+        7: {
+            name: "IOP X1 Exoskeleton",
+            rarity: 2,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type X1 Exoskeleton is an early model developed by IOP Corporation//c aimed at increasing the agility of T-Dolls through the exoskeleton system. Can be equipped by HGs//c SMGs//c and most ARs.",
+            stats: {
+                evasion: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3"]
+            }
+        },
+        8: {
+            name: "IOP X2 Exoskeleton",
+            rarity: 3,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type X2 Exoskeleton is the standard model manufactured by IOP Corporation with improved performance and flexibility. Can be equipped by HGs//c SMGs//c and most ARs.",
+            stats: {
+                evasion: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3"]
+            }
+        },
+        9: {
+            name: "IOP X3 Exoskeleton",
+            rarity: 4,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type X3 Exoskeleton is an enhanced model developed by IOP Corporation. Through improvements in technology//c it has greater flexibility while at the same time detracting less from the shooting ability of the user. Can be equipped by HGs//c SMGs//c and most ARs.",
+            stats: {
+                evasion: ["+6~7", "+6~7", "+7~8", "+7~8", "+8~9", "+8~10", "+9~10", "+9~11", "+10~12", "+10~12", "+10~12", "+11~13"]
+            }
+        },
+        10: {
+            name: "IOP X4 Exoskeleton",
+            rarity: 5,
+            exclusive: false,
+            usable: ["HG", "SMG", "AR"],
+            description: "The Type X4 Exoskeleton is a custom model crafted by IOP Corporation//c specially developed based on the T-Dolls' characteristics so as to maximize their mobility and while minimizing the impact on their shooting ability. Can be equipped by HGs//c SMGs//c and most ARs.",
+            stats: {
+                evasion: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
+            }
+        },
+        11: {
+            name: "MK31 Multi-functional Exoskeleton",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Suomi"],
+            description: "IOP designed for Suomi high-performance leg exoskeleton, the external attached a small mechanical arm for the user to operate. It is the latest exoskeleton that combines operability and maneuverability.",
+            stats: {
+                evasion: ["+25", "+27", "+29", "+31", "+34", "+36", "+38", "+40", "+43", "+45", "+47"],
+                damage: ["-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6"]
+            }
+        },
+        12: {
+            name: "UMP UX Exoskeleton",
+            rarity: 5,
+            exclusive: true,
+            usable: ["UMP9", "UMP40", "UMP45"],
+            description: "A highly mobile exoskeleton specially calibrated for T-Dolls of the UMP weapons platform by the former Equipment Department. It greatly increases evasive ability while preserving firing accuracy.",
+            stats: {
+                evasion: ["+20~25", "+20~26", "+21~27", "+22~27", "+23~28", "+24~30", "+24~31", "+25~31", "+26~32", "+27~34", "+28~35"],
+                criticalDamage: ["+11~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24", "+18~25"]
+            }
+        },
+        13: {
+            name: "Vector's Go Bag",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Agent Vector"],
+            description: "A go bag specially designed for Agent Vector. This compact string bag is both functional and does not impede Vector's operational tempo.",
+            stats: {
+                evasion: ["+25", "+26", "+27", "+27", "+28", "+30", "+31", "+31", "+32", "+34", "+35"],
+                damage: ["-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6"]
+            }
+        },
+        14: {
+            name: "White Knight's Armor",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Sei"],
+            description: "Armor made for White Knights. It rapidly heals its wearer's wounds.",
+            stats: {
+                evasion: ["+15~20", "+16~21", "+17~22", "+18~24", "+19~25", "+20~27", "+21~28", "+22~29", "+23~31", "+24~32", "+25~34"]
+            }
+        }
     },
     ammunitionBox: {
 
