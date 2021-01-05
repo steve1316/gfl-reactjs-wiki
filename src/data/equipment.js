@@ -1247,7 +1247,74 @@ var equipment = {
         }
     },
     armorPlate: {
-
+        1: {
+            name: "16Lab Armor Plate",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SG"],
+            description: "A composite ceramic and kevlar armor plate developed by 16Lab. It possesses a strong bullet-resistant ability and is extremely lightweight. The ideal choice for an elite.",
+            stats: {
+                armor: ["+8", "+8", "+8", "+8", "+9", "+9", "+9", "+10", "+10", "+10", "+11"],
+                evasion: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"]
+            }
+        },
+        2: {
+            name: "Special Warfare Mobile Suit",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M16A1"],
+            description: "A legacy equipment from before Sangvis Ferris Manufacturing went rogue//c it integrates a mobile exoskeleton with durable armor to greatly increase the user's survivability. However//c it causes great physical and mental stress to the user.",
+            stats: {
+                armor: ["+15", "+15", "+16", "+16", "+17", "+17", "+18", "+18", "+19", "+19", "+20"],
+                evasion: ["+8", "+8", "+8", "+8", "+8", "+9", "+9", "+9", "+9", "+10", "+10"],
+                rateOfFire: ["-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10", "-10"],
+                accuracy: ["-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20"]
+            }
+        },
+        3: {
+            name: "Tactical Mobile Shield",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Type 97 Shotgun Mod"],
+            description: "IOP designed this high-mobility bulletproof shield for Type 97S with a concise structure and simple appearance, making it highly reliable.",
+            stats: {
+                armor: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~10", "+7~10", "+8~10", "+8~11"],
+                evasion: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2"]
+            }
+        },
+        4: {
+            name: "Type 1 Armor Plate",
+            rarity: 3,
+            exclusive: false,
+            usable: ["SG"],
+            description: "The protective grade Type I Fiber Plate provided by IOP Corporation helps to reduce the damage taken from being shot//c increasing T-Dolls' survivability on the battlefield.",
+            stats: {
+                armor: ["+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+4~4", "+4~4"],
+                evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
+            }
+        },
+        5: {
+            name: "Type 2 Armor Plate",
+            rarity: 4,
+            exclusive: false,
+            usable: ["SG"],
+            description: "The protective grade Type II Composite Plate provided by IOP Corporation helps to greatly reduce the damage taken from being shot//c greatly enhancing T-Dolls' survivability on the battlefield.",
+            stats: {
+                armor: ["+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~6", "+5~6", "+5~7"],
+                evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
+            }
+        },
+        6: {
+            name: "Type 3 Armor Plate",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SG"],
+            description: "The protective grade Type III Kevlar Plate provided by IOP Corporation can resist high-caliber ammunition//c massively enhancing T-Dolls' survivability on the battlefield.",
+            stats: {
+                armor: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~10", "+7~10", "+8~10", "+8~11"],
+                evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", ]
+            }
+        }
     },
     chip: {
 
