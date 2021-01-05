@@ -4,32 +4,39 @@
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/steve1316/gfl-database?logo=GitHub) ![GitHub last commit](https://img.shields.io/github/last-commit/steve1316/gfl-database?logo=GitHub) ![GitHub issues](https://img.shields.io/github/issues/steve1316/gfl-database?logo=GitHub) ![GitHub pull requests](https://img.shields.io/github/issues-pr/steve1316/gfl-database?logo=GitHub) ![GitHub repo size](https://img.shields.io/github/repo-size/steve1316/gfl-database?logo=GitHub) ![GitHub](https://img.shields.io/github/license/steve1316/gfl-database?logo=GitHub)
 
-This project serves to provide a mobile-friendly web application of a database featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
+# Database last updated on October 10, 2020.
+
+This project serves to provide a mobile-friendly web application of a database hosted on GitHub featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
+
+<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/55/animations/55_mod_move.gif" alt="M4A1 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/56/animations/56_mod_move.gif" alt="M4 SOPMOD II Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/57/animations/57_mod_move.gif" alt="ST AR-15 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/143/animations/143_mod_move.gif" alt="RO635 Mod">
 
 # Table of Contents
 
-- [Planned Features (Subject to change)](<#planned-features-(subject-to-change)>)
-- [TODO (Subject to change)](<#todo-(subject-to-change)>)
+- [Planned Features](<#features>)
+- [TODO List](<#todo-list>)
 - [Installation](#installation)
 - [How to host locally](#how-to-host-locally)
 - [How to build and deploy to your GitHub Pages](#how-to-build-and-deploy-to-your-github-pages)
 - [License](#license)
 
-# Planned Features (Subject to change)
+# Features
 
-- Stats and animations of all T-Dolls (Tactical Dolls) in the game as of October 10, 2020.
+- [x] Stats and animations of all T-Dolls (Tactical Dolls) in the game as of October 10, 2020.
 
-- Information on equipment and their effects when equipped on T-Dolls.
+- [ ] Information on equipment and their effects when equipped on T-Dolls. (IN-PROGRESS)
 
-- Information on Fairies.
+- [ ] Information on Fairies.
 
-- Information on HOCs (Heavy Ordnance Corps).
+- [ ] Information on HOCs (Heavy Ordnance Corps).
 
-- Formation Simulator that can help you plan out your formations with tile buffs, equipment, and Fairies showing updated T-Doll stats.
+- [ ] Formation Simulator that can help you plan out your formations with tile buffs, equipment, and Fairies showing updated T-Doll stats.
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
-# TODO (Subject to change)
+# TODO List
+
+<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/122/animations/122_mod_victoryloop.gif" alt="G11 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/65/animations/65_mod_wait.gif" style="transform: scaleX(-1)" alt="416 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/101/animations/101_mod_victoryloop.gif" alt="UMP9 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/103/animations/103_mod_victoryloop.gif" alt="UMP45 Mod">
+
 - [x] ~~Mock up the pages for the app.~~
 - [x] ~~Create initial structure of JSON data object that will hold all T-Dolls.~~
 - [x] ~~Set up filters and searching functionality for T-Dolls.~~
@@ -46,13 +53,24 @@ This project serves to provide a mobile-friendly web application of a database f
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ (Doing so will mess up the image resolution and make it too blurry)
 - [x] (HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.
   - [x] Create logic for the 2 buttons below it and link it to the component.
-- [ ] Create initial structure of JSON data object that will hold all equipment.
-- [ ] Set up filters and searching for equipment.
-- [ ] Add X amount of equipment to the JSON data object.
-  - [ ] Add Special Equipment for the T-Dolls that have Mods or are farmable in-game.
-  - [ ] Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
-- [ ] Add functionality to see the stats of equipped T-Dolls.
-- [ ] ...
+- [x] Create initial structure of JSON data object that will hold all equipment.
+  - [x] Add Special Equipment for the T-Dolls that have Mods or are farmable in-game.
+  - [ ] (HIGH PRIORITY) Create the Equipment Index page.
+    - [ ] (MEDIUM PRIORTIY) Set up filters and searching for equipment.
+    - [ ] (LOW PRIORITY) Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
+- [ ] (MEDIUM PRIORITY) Create data model for HOCs.
+  - [ ] (MEDIUM PRIORITY) Create the HOC Index page.
+  - [ ] (LOW PRIORITY) Add in the animations of the HOCs.
+- [ ] (LOW PRIORITY) Create the data model for Fairies.
+  - [ ] (LOW PRIORITY) Create the Fairy Index page.
+  - [ ] (LOW PRIORITY) Add in the animations of the Fairies.
+- [ ] (LOW PRIORITY) Create the Formation Simulator page.
+  - [ ] (LOW PRIORITY) Create logic to connect the T-Dolls' stats and tiles to equipments and fairies buffs.
+- [ ] (LOW PRIORITY) Add functionality to see the stats of equipped T-Dolls.
+- [ ] (LOW PRIORITY) Add build times for T-Dolls.
+- [ ] (LOW PRIORITY) Add build times for equipment.
+- [ ] (LOW PRIORITY) Add build times for Fairies.
+- [ ] (LOW PRIORITY) Update the database from its last updated state of October 10, 2020 to the latest.
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
@@ -65,6 +83,8 @@ npm install
 
 yarn install
 ```
+
+<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/124/animations/124_mod_victory.gif" alt="Super SASS Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/281/animations/281_normal_victoryloop.gif" alt="CAWS">
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
