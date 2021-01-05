@@ -1,6 +1,8 @@
+/*
+    This list of equipments will contain information about all equipments used by the T-Dolls in the game in JSON format.
+*/
 
-
-var equipment = {
+var equipments = {
     opticalSight: {
         1: {
             name: "16Lab 6-24X56",
@@ -1366,4 +1368,6 @@ var equipment = {
             }
         }
     }
-}
+};
+
+export default equipments;
