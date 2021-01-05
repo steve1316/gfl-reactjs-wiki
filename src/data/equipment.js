@@ -894,7 +894,50 @@ var equipment = {
         }
     },
     buckshotAmmo: {
-
+        1: {
+            name: "#0 Buckshot",
+            rarity: 3,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Powerful shotgun shells issued by IOP. Each shot contains multiple pellets measuring 8.13mm in diameter. Can be equipped by SGs.",
+            stats: {
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4"],
+                criticalDamage: ["+5~6", "+5~6", "+5~6", "+5~6", "+6~7", "+6~7", "+6~7", "+6~8", "+7~8", "+7~8", "+7~9"]
+            }
+        },
+        2: {
+            name: "#00 Buckshot",
+            rarity: 4,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Very powerful shotgun shells issued by IOP. Each shot contains multiple pellets measuring 8.38mm in diameter. Can be equipped by SGs.",
+            stats: {
+                damage: ["+4~6", "+4~6", "+4~6", "+4~6", "+4~7", "+5~7", "+5~7", "+5~8", "+5~8", "+5~8", "+6~9"],
+                criticalDamage: ["+7~9", "+7~9", "+7~10", "+8~10", "+8~11", "+9~11", "+9~12", "+9~12", "+10~13", "+10~13", "+11~14"]
+            }
+        },
+        3: {
+            name: "#000 Buckshot",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Extremely powerful shotgun shells issued by IOP. Each shot contains multiple pellets measuring 9.14mm in diameter. Can be equipped by SGs.",
+            stats: {
+                damage: ["+7~10", "+7~10", "+7~11", "+8~11", "+8~12", "+8~12", "+9~13", "+9~13", "+9~14", "+10~14", "+10~15"],
+                criticalDamage: ["+10~15", "+10~15", "+11~16", "+11~17", "+12~18", "+12~18", "+13~19", "+13~20", "+14~21", "+14~21", "+15~22"]
+            }
+        },
+        4: {
+            name: "#1 Buckshot",
+            rarity: 2,
+            exclusive: false,
+            usable: ["SG"],
+            description: "High-powered shotgun shells issued by IOP. Each shot contains multiple pellets measuring 7.62mm in diameter. Can be equipped by SGs.",
+            stats: {
+                damage: ["+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1", "+1~1"],
+                criticalDamage: ["+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4"]
+            }
+        }
     },
     slugAmmo: {
 
