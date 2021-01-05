@@ -1312,11 +1312,58 @@ var equipment = {
             description: "The protective grade Type III Kevlar Plate provided by IOP Corporation can resist high-caliber ammunition//c massively enhancing T-Dolls' survivability on the battlefield.",
             stats: {
                 armor: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~10", "+7~10", "+8~10", "+8~11"],
-                evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", ]
+                evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
             }
         }
     },
     chip: {
-
+        1: {
+            name: "Performance+ Cartridge",
+            rarity: 5,
+            exclusive: true,
+            usable: ["IDW"],
+            description: "Looks like an antiquated cartridge. Hard to believe that you can increase combat performance just by plugging it in. You should probably blow into it before use. Can only be equipped by IDW.",
+            stats: {
+                evasion: ["+21~26", "+21~27", "+22~28", "+23~29", "+24~30", "+25~31", "+26~33", "+27~34", "+28~35", "+29~36", "+30~37"],
+                rateOfFire: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3"],
+                damage: ["-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6"]
+            }
+        },
+        2: {
+            name: "Tactical Memory Module",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Ameli"],
+            description: "Who knew that memory sticks are still a rare luxury in the year of 2063. This Holiday Limited Edition high-performance memory module is both a rare collector's item and an important strategic equipment. Can only be equipped by Ameli.",
+            stats: {
+                damage: ["+3~5", "+3~5", "+3~5", "+3~6", "+3~6", "+4~6", "+4~7", "+4~7", "+4~7", "+4~8", "+5~8"],
+                clipSize: ["+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~5", "+3~5", "+4~5", "+4~5", "+4~5", "+4~6"],
+                accuracy: ["-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3"]
+            }
+        },
+        3: {
+            name: "Hayha Memory Chip",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Mosin-Nagant"],
+            description: "A memory chip that allows the White Death to once more descend upon the battlefield. Can only be equipped by Mosin-Nagant.",
+            stats: {
+                damage: ["+18~25", "+18~25", "+18~26", "+19~26", "+19~27", "+19~27", "+20~27", "+20~28", "+20~28", "+21~29", "+21~30"],
+                evasion: ["+2~4", "+2~4", "+2~4", "+2~4", "+2~4", "+2~5", "+2~5", "+2~5", "+2~5", "+2~5", "+2~5"],
+                criticalDamage: ["+15~20", "+15~21", "+16~22", "+17~23", "+18~24", "+18~25", "+19~26", "+20~27", "+21~28", "+21~29", "+22~30"]
+            }
+        },
+        4: {
+            name: "Titan Fire-Control Chip",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M1918"],
+            description: "A fire-control chip that provides an overall increase to specific machine guns' firepower output. It looks strangely familiar for some reason. Can only be equipped by M1918.",
+            stats: {
+                clipSize: ["+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~5", "+3~5", "+4~5", "+4~5", "+4~5", "+4~6"],
+                damage: ["-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2"],
+                rateOfFire: ["-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1"]
+            }
+        }
     }
 }
