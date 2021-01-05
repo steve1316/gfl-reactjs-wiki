@@ -940,7 +940,54 @@ var equipment = {
         }
     },
     slugAmmo: {
-
+        1: {
+            name: "BK Slug",
+            rarity: 2,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. Each shot contains a single large projectile and is designed to deal single-target damage.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2"]
+            }
+        },
+        2: {
+            name: "FST Slug",
+            rarity: 3,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. With its mass centered in the front, each single large projectile shot is designed to deal accurate single-target damage.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
+            }
+        },
+        3: {
+            name: "SABOT Slug",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. After being fired, it gains a steady rotation that provides the shotgun shot with a stable firing trajectory and laser-like precision.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
+            }
+        },
+        4: {
+            name: "WAD Slug",
+            rarity: 4,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. With its mass centered in the front, each single large projectile shot encased in polymer casing is designed to deal highly accurate single-target damage.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12", "+9~13"]
+            }
+        },
     },
     exoskeleton: {
 
