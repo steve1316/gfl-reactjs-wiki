@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { makeStyles, Container, Typography } from "@material-ui/core";
 
 // Component imports
@@ -13,14 +13,20 @@ export default function Equipment_Index() {
 
 	const classes = useStyles();
 
+	// Set HTML meta-data here using document API.
+	useEffect(() => {
+		document.title = "Equipment Index"
+		document.querySelector('meta[name="description"]').setAttribute("content", "Index of sortable equipment");
+	}, [])
+
 	return (
 		<main className={classes.root}>
 			<ScrollToTop />
+
 			<Container>
-				<Typography component="h1" variant="h5" align="center" color="textPrimary" gutterBottom>
-					Page under construction!
-				</Typography>
+				
 			</Container>
+
 		</main>
 	);
 }

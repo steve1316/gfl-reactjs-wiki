@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
@@ -11,7 +11,6 @@ import Pagination from "@material-ui/lab/Pagination";
 
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
-import { useEffect } from "react";
 
 // Image imports
 import mod_button from "../../images/mod.png";
@@ -114,6 +113,12 @@ export default function TDoll_Index() {
 	const handleDelete = () => {
 		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
 	};
+
+	// Set HTML meta-data here using document API.
+	useEffect(() => {
+		document.title = "T-Doll Index"
+		document.querySelector('meta[name="description"]').setAttribute("content", "Index of filterable T-Dolls");
+	}, [])
 
 	// Checks for filters in sessionStorage. Set the number of search results to the length of the T-Doll JSON. Runs once for now.
 	useEffect(() => {

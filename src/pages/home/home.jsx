@@ -108,6 +108,12 @@ export default function Home() {
 		{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo }
 	];
 
+	// Set HTML meta-data here using document API.
+	useEffect(() => {
+		document.title = "Girls' Frontline Database"
+		document.querySelector('meta[name="description"]').setAttribute("content", "Database for Girls' Frontline featuring T-Dolls, equipment, Fairies and HOCs");
+	}, [])
+
 	// This useEffect will run once to generate a random T-Doll.
 	useEffect(() => {
 		randomTDollDisplay();
