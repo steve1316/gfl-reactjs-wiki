@@ -282,6 +282,12 @@ export default function TDoll(props) {
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	/* eslint-disable */
+	// Set HTML meta-data here using document API.
+	useEffect(() => {
+		document.title = `#${tdoll.normal.id} - ${tdoll.normal.name}`
+		document.querySelector('meta[name="description"]').setAttribute("content", `#${tdoll.normal.id} - ${tdoll.normal.name}`);
+	}, [])
+	
 	// This will be used to initialize the functionality of the page.
 	useEffect(() => {
 		// Set initial information displayed to Normal.
