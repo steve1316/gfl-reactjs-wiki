@@ -107,12 +107,13 @@ function Navbar(props) {
 				if (props.history.location.pathname === "/tdoll") {
 					// If user is already at /tdoll, send the user to a null component and then to the /tdoll page, triggering a state reload.
 					// This unfortunately disables the ability to go back to the T-Doll that was previous as you will go back to the page before that, like Home or Index.
-					props.history.push("/reload");
 					setTimeout(() => {
-						props.history.replace({
+						props.history.push({
 							pathname: "/tdoll",
 							search: `?id=${tdoll.normal.id}`
 						});
+
+						window.location.reload(false) // This will trigger a state reload so that the content on the page change over to the new T-Doll.
 					}, 0);
 				} else {
 					props.history.push({
