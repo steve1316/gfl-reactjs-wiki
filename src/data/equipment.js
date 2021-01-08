@@ -156,15 +156,13 @@ var equipments = {
             }
         },
         15: {
-            name: "ZFG42",
-            rarity: 5,
-            exclusive: true,
-            usable: ["FG42"],
-            description: "ZF's optical sight for FG42. Its brass exterior has faded after more than a century, but you can still get a sense of the German style from the lens. Looking through it makes you feel like you've joined Magnum.",
+            name: "PSO-1",
+            rarity: 4,
+            exclusive: false,
+            usable: ["SMG", "AR", "MG", "RF", "SG"],
+            description: "Possessing a compact and reliable design, the military-grade optical sight incorporates specialized reticle subtensions, allowing for ease of use on the battlefield. Can be equipped by all except HG.",
             stats: {
-                criticalHitRate: ["+13~17", "+14~18", "+15~20", "+16~21", "+17~23", "+18~24", "+20~26", "+21~27", "+22~29", "+23~30", "+24~32"],
-                criticalHitDamage: ["+13~16", "+13~16", "+14~17", "+14~18", "+15~19", "+16~20", "+16~20", "+17~21", "+18~22", "+18~23", "+19~24"],
-                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
+                criticalHitRate: ["+13~16", "+14~17", "+15~19", "+16~20", "+18~22", "+19~24", "+20~25", "+22~27", "+23~28", "+24~30", "+26~32"]
             }
         },
         16: {
@@ -178,13 +176,15 @@ var equipments = {
             }
         },
         17: {
-            name: "PSO-1",
-            rarity: 4,
-            exclusive: false,
-            usable: ["SMG", "AR", "MG", "RF", "SG"],
-            description: "Possessing a compact and reliable design, the military-grade optical sight incorporates specialized reticle subtensions, allowing for ease of use on the battlefield. Can be equipped by all except HG.",
+            name: "ZFG42",
+            rarity: 5,
+            exclusive: true,
+            usable: ["FG42"],
+            description: "ZF's optical sight for FG42. Its brass exterior has faded after more than a century, but you can still get a sense of the German style from the lens. Looking through it makes you feel like you've joined Magnum.",
             stats: {
-                criticalHitRate: ["+13~16", "+14~17", "+15~19", "+16~20", "+18~22", "+19~24", "+20~25", "+22~27", "+23~28", "+24~30", "+26~32"]
+                criticalHitRate: ["+13~17", "+14~18", "+15~20", "+16~21", "+17~23", "+18~24", "+20~26", "+21~27", "+22~29", "+23~30", "+24~32"],
+                criticalHitDamage: ["+13~16", "+13~16", "+14~17", "+14~18", "+15~19", "+16~20", "+16~20", "+17~21", "+18~22", "+18~23", "+19~24"],
+                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         }
     },
@@ -799,6 +799,17 @@ var equipments = {
             }
         },
         9: {
+            name: "S&B762",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Type 79"],
+            description: "85-grain full metal jacket bullets allow for greater penetration and have become Type 79's new favorite.",
+            stats: {
+                damage: ["+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20", "+16~21", "+17~22", "+18~23", "+19~24", "+20~25"],
+                rateOfFire: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"]
+            }
+        },
+        10: {
             name: "XM261 ACP",
             rarity: 5,
             exclusive: true,
