@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, withStyles, Grow, Zoom } from "@material-ui/core";
+import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, withStyles, Fade, Zoom } from "@material-ui/core";
 
 import Pagination from "@material-ui/lab/Pagination";
 
@@ -82,7 +82,6 @@ export default function TDoll_Index() {
 
 	const classes = useStyles();
 
-	const [currentSearchResults, setCurrentSearchResults] = useState(0);
 	const [totalSearchResults, setTotalSearchResults] = useState(0);
 	const [searchResults, setSearchResults] = useState([]);
 	const [searchResultPages, setSearchResultPages] = useState([]);
@@ -312,7 +311,7 @@ export default function TDoll_Index() {
 		var tempArrayOfSearchResults = createSearchResults();
 
 		var tempArray = [];
-		var stagger = 100;
+		var stagger = 0;
 		var tempPageSelected = pageSelected;
 
 		// Makes sure to avoid the out of bounds error.
@@ -325,8 +324,8 @@ export default function TDoll_Index() {
 		if(tempArrayOfSearchResults.length > 0){
 			tempArrayOfSearchResults[tempPageSelected - 1].map((tdoll) => {
 				tempArray.push(
-					<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
-						<Grow in={true} style={{ transformOrigin: "0 5 0"}} timeout={stagger}>
+					<Grid item key={tdoll.selected.name} xs={4} sm={4} md={2}>
+						<Fade in={true} timeout={stagger}>
 							<Card className={classes.card} elevation={12}>
 								<Link
 									to={{
@@ -355,20 +354,17 @@ export default function TDoll_Index() {
 									</HtmlTooltip>
 								</Link>
 							</Card>
-						</Grow>
+						</Fade>
 					</Grid>
 				);
 	
-				// Stagger timeout will never be more than 2 seconds.
-				stagger += 100;
-				if (stagger >= 2000) {
+				// Stagger timeout will never be more than 1 second.
+				stagger += 50;
+				if (stagger >= 1000) {
 					stagger = 0;
 				}
 			});
 		}
-
-		// Update number of search results.
-		setCurrentSearchResults(tempArray.length);
 
 		return tempArray;
 	};
