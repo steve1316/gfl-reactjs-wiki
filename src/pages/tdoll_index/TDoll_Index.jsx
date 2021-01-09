@@ -42,7 +42,7 @@ export default function TDoll_Index() {
 		cardGrid: {
 			paddingTop: theme.spacing(8),
 			paddingBottom: theme.spacing(8),
-			maxWidth: "90%"
+			minWidth: "70%"
 		},
 		card: {
 			display: "flex",
@@ -298,7 +298,7 @@ export default function TDoll_Index() {
 			tempSearchResultPages[j] = temp;
 		}
 
-		console.log("Page Partitions: ", tempSearchResultPages);
+		console.log("Page Partitions after filters: ", tempSearchResultPages);
 
 		// Update the pages of search results and the total number of results.
 		setSearchResultPages(tempSearchResultPages);
@@ -372,6 +372,32 @@ export default function TDoll_Index() {
 
 		return tempArray;
 	};
+
+	// Calculates the minimum and maximum number of filtered results for UX purposes.
+	const calculateRemainingResults = () => {
+		var tempPageSelected = pageSelected
+		var minResult = 0
+		var maxResult = 0
+
+		if(tempPageSelected === 1){
+			minResult = 1
+		}
+		else{
+			minResult += 30
+			minResult *= (pageSelected - 1)
+		}
+
+		while(tempPageSelected > 0){
+			maxResult += 30
+			tempPageSelected -= 1
+		}
+
+		if(maxResult > totalSearchResults){
+			maxResult = totalSearchResults
+		}
+
+		return `${minResult}-${maxResult}`
+	}
 
 	return (
 		<main className={classes.root}>
@@ -465,8 +491,8 @@ export default function TDoll_Index() {
 
 			{/* T-Dolls List */}
 			<Container className={classes.cardGrid} maxWidth="md">
-				<Typography component="h1" variant="h5" color="textPrimary" gutterBottom>
-					Total number of search results: {totalSearchResults}. Now showing {currentSearchResults}.
+				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
+					Now showing {calculateRemainingResults()} of {totalSearchResults}
 				</Typography>
 
 				{/* Pagination Component */}
@@ -480,6 +506,10 @@ export default function TDoll_Index() {
 				</Grid>
 
 				<Divider className={classes.bottomDividerForCards} />
+
+				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
+					Now showing {calculateRemainingResults()} of {totalSearchResults}
+				</Typography>
 
 				{/* Pagination Component */}
 				<Pagination count={searchResultPages.length} color="primary" value={pageSelected} page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
