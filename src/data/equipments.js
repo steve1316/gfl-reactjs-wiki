@@ -1,5 +1,11 @@
 /*
     This list of equipments will contain information about all equipments used by the T-Dolls in the game in JSON format.
+
+    Some things to note:
+        - Equipment with a character like "#" or "." as the first character in their names had it removed to avoid errors with loading images to each equipment.
+
+    TODO:
+        - Add in the Special category and all of its related equipments.
 */
 
 
@@ -1394,6 +1400,9 @@ for(var i = 0; i < keys.length; i++){
         }
         else if(equipment.name === "ILM Hollow Point Ammo"){
             imageName = `${equipment.name} (${equipment.rarity})`
+        }
+        else if(keys[i] === "buckshotAmmo"){
+            imageName = `${equipment.name.substring(1)}`
         }
         else{
             imageName = equipment.name
