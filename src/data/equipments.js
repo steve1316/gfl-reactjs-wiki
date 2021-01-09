@@ -2,9 +2,11 @@
     This list of equipments will contain information about all equipments used by the T-Dolls in the game in JSON format.
 */
 
+
+
 var equipments = {
-    opticalSight: {
-        1: {
+    opticalSight: [
+        {
             name: "16Lab 6-24X56",
             rarity: 5,
             exclusive: false,
@@ -14,7 +16,7 @@ var equipments = {
                 criticalHitRate: ["+24", "+26", "+28", "+31", "+33", "+36", "+38", "+40", "+43", "+45", "+48"]
             }
         },
-        2: {
+        {
             name: "ACOG (4x)",
             rarity: 5,
             exclusive: true,
@@ -24,7 +26,7 @@ var equipments = {
                 criticalHitRate: ["+24", "+26", "+28", "+31", "+33", "+36", "+38", "+40", "+43", "+45", "+48"]
             }
         },
-        3: {
+        {
             name: "Advanced Infantry Sight",
             rarity: 5,
             exclusive: true,
@@ -35,7 +37,7 @@ var equipments = {
                 damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"]
             }
         },
-        4: {
+        {
             name: "ART2",
             rarity: 5,
             exclusive: true,
@@ -46,7 +48,7 @@ var equipments = {
                 damage: ["+3~5", "+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9"]
             }
         },
-        5: {
+        {
             name: "BM 3-12X40",
             rarity: 2,
             exclusive: false,
@@ -56,7 +58,7 @@ var equipments = {
                 criticalHitRate: ["+5~8", "+5~8", "+5~8", "+5~8", "+5~8", "+5~8", "+5~8", "+5~8", "+5~8", "+5~8", "+5~8"],
             }
         },
-        6: {
+        {
             name: "FELIN System Sight",
             rarity: 5,
             exclusive: true,
@@ -68,7 +70,7 @@ var equipments = {
                 accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"]
             }
         },
-        7: {
+        {
             name: "Gr G36 Hybrid Sight",
             rarity: 5,
             exclusive: true,
@@ -79,7 +81,7 @@ var equipments = {
                 accuracy: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
             }
         },
-        8: {
+        {
             name: "K6-24X56",
             rarity: 5,
             exclusive: true,
@@ -90,7 +92,7 @@ var equipments = {
                 accuracy: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+3~4", "+3~4", "+3~5", "+3~5", "+3~5", "+4~6"]
             }
         },
-        9: {
+        {
             name: "KST1P7",
             rarity: 5,
             exclusive: true,
@@ -101,7 +103,7 @@ var equipments = {
                 criticalHitDamage: ["+10", "+10", "+11", "+11", "+12", "+12", "+13", "+13", "+14", "+14", "+15"]
             }
         },
-        10: {
+        {
             name: "KST1P8",
             rarity: 5,
             exclusive: true,
@@ -112,7 +114,7 @@ var equipments = {
                 criticalHitDamage: ["+25", "+25", "+26", "+26", "+27", "+27", "+27", "+28", "+28", "+29", "+30"]
             }
         },
-        11: {
+        {
             name: "KSTSP",
             rarity: 5,
             exclusive: true,
@@ -123,7 +125,7 @@ var equipments = {
                 criticalHitDamage: ["+40", "+40", "+40", "+41", "+41", "+42", "+42", "+42", "+43", "+43", "+44"]
             }
         },
-        12: {
+        {
             name: "LRA 2-12x50",
             rarity: 3,
             exclusive: false,
@@ -133,7 +135,7 @@ var equipments = {
                 criticalHitRate: ["+9~12", "+9~13", "+10~14", "+11~15", "+12~16", "+13~18", "+14~19", "+15~20", "+16~21", "+17~22", "+18~24"]
             }
         },
-        13: {
+        {
             name: "No32 MKI",
             rarity: 5,
             exclusive: true,
@@ -144,7 +146,7 @@ var equipments = {
                 rateOfFire: ["+2", "+2", "+2", "+2", "+2", "+3", "+3", "+3", "+3", "+3", "+4"]
             }
         },
-        14: {
+        {
             name: "PM 5-25X56",
             rarity: 5,
             exclusive: true,
@@ -155,7 +157,7 @@ var equipments = {
                 criticalHitDamage: ["+10", "+11", "+12", "+13", "+14", "+15", "+16", "+17", "+18", "+19", "+20"]
             }
         },
-        15: {
+        {
             name: "PSO-1",
             rarity: 4,
             exclusive: false,
@@ -165,7 +167,7 @@ var equipments = {
                 criticalHitRate: ["+13~16", "+14~17", "+15~19", "+16~20", "+18~22", "+19~24", "+20~25", "+22~27", "+23~28", "+24~30", "+26~32"]
             }
         },
-        16: {
+        {
             name: "VFL 6-24x56",
             rarity: 5,
             exclusive: false,
@@ -175,7 +177,7 @@ var equipments = {
                 criticalHitRate: ["+17~24", "+18~26", "+20~28", "+22~31", "+23~33", "+25~36", "+27~38", "+28~40", "+30~43", "+32~45", "+34~48"]
             }
         },
-        17: {
+        {
             name: "ZFG42",
             rarity: 5,
             exclusive: true,
@@ -187,9 +189,9 @@ var equipments = {
                 rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         }
-    },
-    holographicSight: {
-        1: {
+    ],
+    holographicSight: [
+        {
             name: "AMP COMPSP",
             rarity: 5,
             exclusive: true,
@@ -201,7 +203,7 @@ var equipments = {
                 rateOfFire: ["-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3"]
             }
         },
-        2: {
+        {
             name: "DO Reflex Sight",
             rarity: 5,
             exclusive: true,
@@ -213,7 +215,7 @@ var equipments = {
                 rateOfFire: ["-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4"]
             }
         },
-        3: {
+        {
             name: "EOT 506",
             rarity: 2,
             exclusive: false,
@@ -225,7 +227,7 @@ var equipments = {
                 rateOfFire: ["-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1"]
             }
         },
-        4: {
+        {
             name: "EOT 512",
             rarity: 3,
             exclusive: false,
@@ -237,7 +239,7 @@ var equipments = {
                 rateOfFire: ["-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2", "-2~2"]
             }
         },
-        4: {
+        {
             name: "EOT 516",
             rarity: 4,
             exclusive: false,
@@ -249,7 +251,7 @@ var equipments = {
                 rateOfFire: ["-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3"]
             }
         },
-        5: {
+        {
             name: "EOT 518",
             rarity: 5,
             exclusive: false,
@@ -261,7 +263,7 @@ var equipments = {
                 rateOfFire: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"]
             }
         },
-        6: {
+        {
             name: "EOT XPS3",
             rarity: 5,
             exclusive: true,
@@ -273,7 +275,7 @@ var equipments = {
                 criticalHitRate: ["+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20", "+16~21", "+17~22", "+18~23", "+19~24", "+20~25"]
             }
         },
-        7: {
+        {
             name: "LED Weapon Light",
             rarity: 5,
             exclusive: true,
@@ -285,9 +287,9 @@ var equipments = {
                 rateOfFire: ["-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4", "-4",]
             }
         }
-    },
-    redDotSight: {
-        1: {
+    ],
+    redDotSight: [
+        {
             name: "AMP COMPM2",
             rarity: 2,
             exclusive: false,
@@ -298,7 +300,7 @@ var equipments = {
                 rateOfFire: ["-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1"]
             }
         },
-        2: {
+        {
             name: "AMP COMPM4",
             rarity: 3,
             exclusive: false,
@@ -309,7 +311,7 @@ var equipments = {
                 rateOfFire: ["-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1"]
             }
         },
-        3: {
+        {
             name: "COG M150",
             rarity: 4,
             exclusive: false,
@@ -320,7 +322,7 @@ var equipments = {
                 rateOfFire: ["-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1", "-3~1"]
             }
         },
-        4: {
+        {
             name: "CT 4X20",
             rarity: 5,
             exclusive: true,
@@ -332,7 +334,7 @@ var equipments = {
                 rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         },
-        5: {
+        {
             name: "ITI Mars",
             rarity: 5,
             exclusive: false,
@@ -343,7 +345,7 @@ var equipments = {
                 rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         },
-        6: {
+        {
             name: "Gr MG4 MGO",
             rarity: 5,
             exclusive: true,
@@ -355,7 +357,7 @@ var equipments = {
                 rateOfFire: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
             }
         },
-        7: {
+        {
             name: "MGO 6X48",
             rarity: 5,
             exclusive: true,
@@ -367,7 +369,7 @@ var equipments = {
                 rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         },
-        8: {
+        {
             name: "MGP Upgrade Kit",
             rarity: 5,
             exclusive: true,
@@ -379,7 +381,7 @@ var equipments = {
                 rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         },
-        9: {
+        {
             name: "MPL M21",
             rarity: 5,
             exclusive: true,
@@ -390,9 +392,9 @@ var equipments = {
                 rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         }
-    },
-    suppressor: {
-        1: {
+    ],
+    suppressor: [
+        {
             name: "AC1 Suppressor",
             rarity: 2,
             exclusive: false,
@@ -403,7 +405,7 @@ var equipments = {
                 evasion: ["+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2", "+2~2"]
             }
         },
-        2: {
+        {
             name: "AC2 Suppressor",
             rarity: 3,
             exclusive: false,
@@ -414,7 +416,7 @@ var equipments = {
                 evasion: ["+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+3~3", "+4~4", "+4~4"]
             }
         },
-        3: {
+        {
             name: "AC3 Suppressor",
             rarity: 4,
             exclusive: false,
@@ -425,7 +427,7 @@ var equipments = {
                 evasion: ["+4~5", "+4~5", "+4~5", "+4~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~6", "+5~6", "+5~7"]
             }
         },
-        4: {
+        {
             name: "AC4 Suppressor",
             rarity: 5,
             exclusive: false,
@@ -436,7 +438,7 @@ var equipments = {
                 evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10", "+7~10"]
             }
         },
-        5: {
+        {
             name: "Antique Kaleidoscope",
             rarity: 5,
             exclusive: true,
@@ -448,7 +450,7 @@ var equipments = {
                 accuracy: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~4", "+1~4", "+1~4", "+1~4", "+1~4", "+1~5"]
             }
         },
-        6: {
+        {
             name: "BPR4 & SRM6",
             rarity: 5,
             exclusive: true,
@@ -460,7 +462,7 @@ var equipments = {
                 evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10", "+7~10"]
             }
         },
-        7: {
+        {
             name: "M1895 Suppressor",
             rarity: 5,
             exclusive: true,
@@ -472,7 +474,7 @@ var equipments = {
                 accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"]
             }
         },
-        8: {
+        {
             name: "Osprey45 Silencer",
             rarity: 5,
             exclusive: true,
@@ -483,7 +485,7 @@ var equipments = {
                 evasion: ["+8", "+8", "+8", "+8", "+8", "+9", "+9", "+9", "+9", "+10", "+10"]
             }
         },
-        9: {
+        {
             name: "OSS Silencer",
             rarity: 5,
             exclusive: true,
@@ -495,7 +497,7 @@ var equipments = {
                 evasion: ["+12~14", "+12~14", "+13~15", "+13~16", "+14~16", "+15~17", "+15~18", "+16~18", "+16~19", "+17~20", "+18~21"]
             }
         },
-        10: {
+        {
             name: "PPK Silencer",
             rarity: 5,
             exclusive: true,
@@ -506,7 +508,7 @@ var equipments = {
                 evasion: ["+11~13", "+11~13", "+11~14", "+12~14", "+12~15", "+13~15", "+13~16", "+14~16", "+14~17", "+14~17", "+15~18"]
             }
         },
-        11: {
+        {
             name: "STEN Suppressor",
             rarity: 5,
             exclusive: true,
@@ -517,7 +519,7 @@ var equipments = {
                 evasion: ["+8~11", "+8~11", "+8~11", "+8~12", "+9~12", "+9~13", "+9~13", "+14~16", "+10~14", "+10~14", "+11~15"]
             }
         },
-        12: {
+        {
             name: "Type 64 Exclusive Suppressor",
             rarity: 5,
             exclusive: true,
@@ -528,9 +530,9 @@ var equipments = {
                 evasion: ["+8~11", "+8~11", "+8~11", "+8~12", "+9~12", "+9~13", "+9~13", "+14~16", "+10~14", "+10~14", "+11~15"]
             }
         }
-    },
-    nightBattleEquipment: {
-        1: {
+    ],
+    nightBattleEquipment: [
+        {
             name: "16Lab Infrared Designator",
             rarity: 5,
             exclusive: false,
@@ -540,7 +542,7 @@ var equipments = {
                 nightVision: ["+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100"]
             }
         },
-        2: {
+        {
             name: "Black Cat",
             rarity: 5,
             exclusive: true,
@@ -551,7 +553,7 @@ var equipments = {
                 boostAbilityEffectiveness: ["+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25", "+25"]
             }
         },
-        3: {
+        {
             name: "Glorylight",
             rarity: 5,
             exclusive: true,
@@ -562,7 +564,7 @@ var equipments = {
                 boostAbilityEffectiveness: ["+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33", "+33"]
             }
         },
-        4: {
+        {
             name: "PEQ-15",
             rarity: 4,
             exclusive: false,
@@ -572,7 +574,7 @@ var equipments = {
                 nightVision: ["+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85", "+76~85"],
             }
         },
-        5: {
+        {
             name: "PEQ-16A",
             rarity: 5,
             exclusive: false,
@@ -582,7 +584,7 @@ var equipments = {
                 nightVision: ["+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100", "+91~100"],
             }
         },
-        6: {
+        {
             name: "PEQ-2",
             rarity: 2,
             exclusive: false,
@@ -592,7 +594,7 @@ var equipments = {
                 nightVision: ["+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55", "+51~55"],
             }
         },
-        7: {
+        {
             name: "PEQ-5",
             rarity: 3,
             exclusive: false,
@@ -602,7 +604,7 @@ var equipments = {
                 nightVision: ["+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70", "+61~70"],
             }
         },
-        8: {
+        {
             name: "PKN03M Night Vision Scope",
             rarity: 5,
             exclusive: true,
@@ -613,9 +615,9 @@ var equipments = {
                 nightVision: ["+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100", "+100"]
             }
         }
-    },
-    highVelocityAmmo: {
-        1: {
+    ],
+    highVelocityAmmo: [
+        {
             name: ".300BLK High-Velocity Ammo",
             rarity: 5,
             exclusive: true,
@@ -626,7 +628,7 @@ var equipments = {
                 accuracy: ["-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5", "-1~5"]
             }
         },
-        2: {
+        {
             name: "5.56mm HV rounds (Explosive)",
             rarity: 5,
             exclusive: true,
@@ -636,7 +638,7 @@ var equipments = {
                 damage: ["+12", "+12", "+13", "+14", "+15", "+16", "+17", "+17", "+18", "+19", "+20"],
             }
         },
-        3: {
+        {
             name: "7.92 KURZ",
             rarity: 5,
             exclusive: true,
@@ -646,7 +648,7 @@ var equipments = {
                 damage: ["+10~14", "+10~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24"],
             }
         },
-        3: {
+        {
             name: "9x39mm SPP",
             rarity: 5,
             exclusive: true,
@@ -657,7 +659,7 @@ var equipments = {
                 damage: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
             }
         },
-        4: {
+        {
             name: "APCR High-Velocity Ammo",
             rarity: 5,
             exclusive: false,
@@ -667,7 +669,7 @@ var equipments = {
                 damage: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
             }
         },
-        5: {
+        {
             name: "FMJ High-Velocity Ammo",
             rarity: 2,
             exclusive: false,
@@ -677,7 +679,7 @@ var equipments = {
                 damage: ["+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2", "+2"]
             }
         },
-        6: {
+        {
             name: "JHP High-Velocity Ammo",
             rarity: 4,
             exclusive: false,
@@ -687,7 +689,7 @@ var equipments = {
                 damage: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12"]
             }
         },
-        7: {
+        {
             name: "JSP High-Velocity Ammo",
             rarity: 3,
             exclusive: false,
@@ -697,7 +699,7 @@ var equipments = {
                 damage: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
             }
         },
-        8: {
+        {
             name: "SP6 Subsonic Ammo",
             rarity: 5,
             exclusive: true,
@@ -707,9 +709,9 @@ var equipments = {
                 damage: ["+10~14", "+10~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24"]
             }
         }
-    },
-    hollowPointAmmo: {
-        1: {
+    ],
+    hollowPointAmmo: [
+        {
             name: ".357 Jacketed Hollow Point Round",
             rarity: 5,
             exclusive: true,
@@ -720,7 +722,7 @@ var equipments = {
                 armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
             }
         },
-        2: {
+        {
             name: ".45 Hollow Point (Incendiary)",
             rarity: 5,
             exclusive: true,
@@ -731,7 +733,7 @@ var equipments = {
                 armorPiercing: ["-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7", "-7"]
             }
         },
-        3: {
+        {
             name: "ILM Hollow Point Ammo",
             rarity: 5,
             exclusive: false,
@@ -742,7 +744,7 @@ var equipments = {
                 armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
             }
         },
-        4: {
+        {
             name: "ILM Hollow Point Ammo",
             rarity: 2,
             exclusive: false,
@@ -753,7 +755,7 @@ var equipments = {
                 armorPiercing: ["-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1", "-1~1"]
             }
         },
-        5: {
+        {
             name: "ILM Hollow Point Ammo",
             rarity: 3,
             exclusive: false,
@@ -764,7 +766,7 @@ var equipments = {
                 armorPiercing: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
             }
         },
-        6: {
+        {
             name: "ILM Hollow Point Ammo",
             rarity: 4,
             exclusive: false,
@@ -775,7 +777,7 @@ var equipments = {
                 armorPiercing: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"]
             }
         },
-        7: {
+        {
             name: "MIRD Class-5 Rounds",
             rarity: 5,
             exclusive: true,
@@ -786,7 +788,7 @@ var equipments = {
                 armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
             }
         },
-        8: {
+        {
             name: "RIP380ACP",
             rarity: 5,
             exclusive: true,
@@ -798,7 +800,7 @@ var equipments = {
                 armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
             }
         },
-        9: {
+        {
             name: "S&B762",
             rarity: 5,
             exclusive: true,
@@ -809,7 +811,7 @@ var equipments = {
                 rateOfFire: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"]
             }
         },
-        10: {
+        {
             name: "XM261 ACP",
             rarity: 5,
             exclusive: true,
@@ -820,9 +822,9 @@ var equipments = {
                 armorPiercing: ["-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7", "-10~7"]
             }
         }
-    },
-    armorPiercingAmmo: {
-        1: {
+    ],
+    armorPiercingAmmo: [
+        {
             name: "12.7mm 1SL",
             rarity: 5,
             exclusive: true,
@@ -833,7 +835,7 @@ var equipments = {
                 damage: ["+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9", "+5~9", "+6~10"]
             }
         },
-        2: {
+        {
             name: "16Lab Sub-Caliber Armor-Piercing Ammo",
             rarity: 5,
             exclusive: false,
@@ -843,7 +845,7 @@ var equipments = {
                 armorPiercing: ["+80", "+84", "+88", "+92", "+96", "+100", "+104", "+108", "+112", "+116", "+120"]
             }
         },
-        3: {
+        {
             name: "20mm HEI",
             rarity: 5,
             exclusive: true,
@@ -854,7 +856,7 @@ var equipments = {
                 damage: ["+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9", "+5~9", "+6~10"]
             }
         },
-        4: {
+        {
             name: "M61 Armor-Piercing Ammo",
             rarity: 2,
             exclusive: false,
@@ -864,7 +866,7 @@ var equipments = {
                 armorPiercing: ["+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55", "+45~55"]
             }
         },
-        5: {
+        {
             name: "M993 Armor-Piercing Ammo",
             rarity: 3,
             exclusive: false,
@@ -874,7 +876,7 @@ var equipments = {
                 armorPiercing: ["+65~75", "+68~78", "+71~82", "+74~86", "+78~90", "+81~93", "+84~97", "+87~101", "+91~105", "+94~108", "+97~112"]
             }
         },
-        6: {
+        {
             name: "Mk169 Armor-Piercing Ammo",
             rarity: 4,
             exclusive: false,
@@ -884,7 +886,7 @@ var equipments = {
                 armorPiercing: ["+90~100", "+94~105", "+99~110", "+103~114", "+108~120", "+112~125", "+117~130", "+121~135", "+125~140", "+130~145", "+135~150"]
             }
         },
-        7: {
+        {
             name: "Mk211 High-Explosive Armor-Piercing Ammo",
             rarity: 5,
             exclusive: false,
@@ -894,7 +896,7 @@ var equipments = {
                 armorPiercing: ["+110~120", "+115~126", "+121~132", "+126~138", "+132~144", "+137~150", "+143~156", "+148~162", "+154~168", "+159~174", "+165~180"]
             }
         },
-        8: {
+        {
             name: "National Match-Grade Armor-Piercing Ammo",
             rarity: 5,
             exclusive: true,
@@ -905,9 +907,9 @@ var equipments = {
                 rateOfFire: ["+1~8", "+1~8", "+1~8", "+1~8", "+1~8", "+1~9", "+1~9", "+1~9", "+1~9", "+1~10", "+1~10"]
             }
         }
-    },
-    buckshotAmmo: {
-        1: {
+    ],
+    buckshotAmmo: [
+        {
             name: "#0 Buckshot",
             rarity: 3,
             exclusive: false,
@@ -918,7 +920,7 @@ var equipments = {
                 criticalDamage: ["+5~6", "+5~6", "+5~6", "+5~6", "+6~7", "+6~7", "+6~7", "+6~8", "+7~8", "+7~8", "+7~9"]
             }
         },
-        2: {
+        {
             name: "#00 Buckshot",
             rarity: 4,
             exclusive: false,
@@ -929,7 +931,7 @@ var equipments = {
                 criticalDamage: ["+7~9", "+7~9", "+7~10", "+8~10", "+8~11", "+9~11", "+9~12", "+9~12", "+10~13", "+10~13", "+11~14"]
             }
         },
-        3: {
+        {
             name: "#000 Buckshot",
             rarity: 5,
             exclusive: false,
@@ -940,7 +942,7 @@ var equipments = {
                 criticalDamage: ["+10~15", "+10~15", "+11~16", "+11~17", "+12~18", "+12~18", "+13~19", "+13~20", "+14~21", "+14~21", "+15~22"]
             }
         },
-        4: {
+        {
             name: "#1 Buckshot",
             rarity: 2,
             exclusive: false,
@@ -951,9 +953,9 @@ var equipments = {
                 criticalDamage: ["+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4"]
             }
         }
-    },
-    slugAmmo: {
-        1: {
+    ],
+    slugAmmo: [
+        {
             name: "BK Slug",
             rarity: 2,
             exclusive: false,
@@ -965,7 +967,7 @@ var equipments = {
                 accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2"]
             }
         },
-        2: {
+        {
             name: "FST Slug",
             rarity: 3,
             exclusive: false,
@@ -977,7 +979,7 @@ var equipments = {
                 accuracy: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
             }
         },
-        3: {
+        {
             name: "SABOT Slug",
             rarity: 5,
             exclusive: false,
@@ -989,7 +991,7 @@ var equipments = {
                 accuracy: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
             }
         },
-        4: {
+        {
             name: "WAD Slug",
             rarity: 4,
             exclusive: false,
@@ -1001,9 +1003,9 @@ var equipments = {
                 accuracy: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12", "+9~13"]
             }
         },
-    },
-    exoskeleton: {
-        1: {
+    ],
+    exoskeleton: [
+        {
             name: "416's Go Bag",
             rarity: 5,
             exclusive: true,
@@ -1013,7 +1015,7 @@ var equipments = {
                 evasion: ["+12", "+12", "+13", "+14", "+15", "+16", "+17", "+17", "+18", "+19", "+20"]
             }
         },
-        2: {
+        {
             name: "GSG UX Exoskeleton",
             rarity: 5,
             exclusive: true,
@@ -1024,7 +1026,7 @@ var equipments = {
                 damage: ["-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6"]
             }
         },
-        3: {
+        {
             name: "IOP T1 Exoskeleton",
             rarity: 2,
             exclusive: false,
@@ -1035,7 +1037,7 @@ var equipments = {
                 damage: ["-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1", "-2~1"]
             }
         },
-        4: {
+        {
             name: "IOP T2 Exoskeleton",
             rarity: 3,
             exclusive: false,
@@ -1046,7 +1048,7 @@ var equipments = {
                 damage: ["-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3", "-4~3"]
             }
         },
-        5: {
+        {
             name: "IOP T3 Exoskeleton",
             rarity: 4,
             exclusive: false,
@@ -1057,7 +1059,7 @@ var equipments = {
                 damage: ["-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5", "-6~5"]
             }
         },
-        6: {
+        {
             name: "IOP T4 Exoskeleton",
             rarity: 5,
             exclusive: false,
@@ -1068,7 +1070,7 @@ var equipments = {
                 damage: ["-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6"]
             }
         },
-        7: {
+        {
             name: "IOP X1 Exoskeleton",
             rarity: 2,
             exclusive: false,
@@ -1078,7 +1080,7 @@ var equipments = {
                 evasion: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3"]
             }
         },
-        8: {
+        {
             name: "IOP X2 Exoskeleton",
             rarity: 3,
             exclusive: false,
@@ -1088,7 +1090,7 @@ var equipments = {
                 evasion: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~3"]
             }
         },
-        9: {
+        {
             name: "IOP X3 Exoskeleton",
             rarity: 4,
             exclusive: false,
@@ -1098,7 +1100,7 @@ var equipments = {
                 evasion: ["+6~7", "+6~7", "+7~8", "+7~8", "+8~9", "+8~10", "+9~10", "+9~11", "+10~12", "+10~12", "+10~12", "+11~13"]
             }
         },
-        10: {
+        {
             name: "IOP X4 Exoskeleton",
             rarity: 5,
             exclusive: false,
@@ -1108,7 +1110,7 @@ var equipments = {
                 evasion: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
             }
         },
-        11: {
+        {
             name: "MK31 Multi-functional Exoskeleton",
             rarity: 5,
             exclusive: true,
@@ -1119,7 +1121,7 @@ var equipments = {
                 damage: ["-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6"]
             }
         },
-        12: {
+        {
             name: "UMP UX Exoskeleton",
             rarity: 5,
             exclusive: true,
@@ -1130,7 +1132,7 @@ var equipments = {
                 criticalDamage: ["+11~15", "+11~16", "+12~17", "+13~18", "+13~19", "+14~20", "+15~21", "+16~22", "+16~23", "+17~24", "+18~25"]
             }
         },
-        13: {
+        {
             name: "Vector's Go Bag",
             rarity: 5,
             exclusive: true,
@@ -1141,7 +1143,7 @@ var equipments = {
                 damage: ["-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6", "-6"]
             }
         },
-        14: {
+        {
             name: "White Knight's Armor",
             rarity: 5,
             exclusive: true,
@@ -1151,9 +1153,9 @@ var equipments = {
                 evasion: ["+15~20", "+16~21", "+17~22", "+18~24", "+19~25", "+20~27", "+21~28", "+22~29", "+23~31", "+24~32", "+25~34"]
             }
         }
-    },
-    ammunitionBox: {
-        1: {
+    ],
+    ammunitionBox: [
+        {
             name: "Infinite Ammo Box",
             rarity: 5,
             exclusive: true,
@@ -1166,7 +1168,7 @@ var equipments = {
                 evasion: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"]
             }
         },
-        2: {
+        {
             name: "IOP High-Capacity Ammo Box",
             rarity: 4,
             exclusive: false,
@@ -1177,7 +1179,7 @@ var equipments = {
                 evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
             }
         },
-        3: {
+        {
             name: "IOP Maximum Ammo Box",
             rarity: 5,
             exclusive: false,
@@ -1188,9 +1190,9 @@ var equipments = {
                 evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
             }
         }
-    },
-    camouflageCloak: {
-        1: {
+    ],
+    camouflageCloak: [
+        {
             name: "Blue Thick Cape",
             rarity: 5,
             exclusive: true,
@@ -1202,7 +1204,7 @@ var equipments = {
                 movementSpeed: ["-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3"]
             }
         },
-        2: {
+        {
             name: "Camouflage Cape",
             rarity: 3,
             exclusive: false,
@@ -1213,7 +1215,7 @@ var equipments = {
                 movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
             }
         },
-        3: {
+        {
             name: "Digital Camouflage",
             rarity: 5,
             exclusive: true,
@@ -1225,7 +1227,7 @@ var equipments = {
                 movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
             }
         },
-        4: {
+        {
             name: "Ragged Cape",
             rarity: 2,
             exclusive: false,
@@ -1236,7 +1238,7 @@ var equipments = {
                 movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
             }
         },
-        5: {
+        {
             name: "Thermoptic Camouflage Cape",
             rarity: 5,
             exclusive: false,
@@ -1247,7 +1249,7 @@ var equipments = {
                 movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
             }
         },
-        6: {
+        {
             name: "Urban Camouflage Cape",
             rarity: 4,
             exclusive: false,
@@ -1258,9 +1260,9 @@ var equipments = {
                 movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
             }
         }
-    },
-    armorPlate: {
-        1: {
+    ],
+    armorPlate: [
+        {
             name: "16Lab Armor Plate",
             rarity: 5,
             exclusive: false,
@@ -1271,7 +1273,7 @@ var equipments = {
                 evasion: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"]
             }
         },
-        2: {
+        {
             name: "Special Warfare Mobile Suit",
             rarity: 5,
             exclusive: true,
@@ -1284,7 +1286,7 @@ var equipments = {
                 accuracy: ["-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20", "-20"]
             }
         },
-        3: {
+        {
             name: "Tactical Mobile Shield",
             rarity: 5,
             exclusive: true,
@@ -1295,7 +1297,7 @@ var equipments = {
                 evasion: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2"]
             }
         },
-        4: {
+        {
             name: "Type 1 Armor Plate",
             rarity: 3,
             exclusive: false,
@@ -1306,7 +1308,7 @@ var equipments = {
                 evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
             }
         },
-        5: {
+        {
             name: "Type 2 Armor Plate",
             rarity: 4,
             exclusive: false,
@@ -1317,7 +1319,7 @@ var equipments = {
                 evasion: ["-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1", "-1"]
             }
         },
-        6: {
+        {
             name: "Type 3 Armor Plate",
             rarity: 5,
             exclusive: false,
@@ -1328,9 +1330,9 @@ var equipments = {
                 evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
             }
         }
-    },
-    chip: {
-        1: {
+    ],
+    chip: [
+        {
             name: "Performance+ Cartridge",
             rarity: 5,
             exclusive: true,
@@ -1342,7 +1344,7 @@ var equipments = {
                 damage: ["-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6", "-10~6"]
             }
         },
-        2: {
+        {
             name: "Tactical Memory Module",
             rarity: 5,
             exclusive: true,
@@ -1354,7 +1356,7 @@ var equipments = {
                 accuracy: ["-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3", "-5~3"]
             }
         },
-        3: {
+        {
             name: "Hayha Memory Chip",
             rarity: 5,
             exclusive: true,
@@ -1366,7 +1368,7 @@ var equipments = {
                 criticalDamage: ["+15~20", "+15~21", "+16~22", "+17~23", "+18~24", "+18~25", "+19~26", "+20~27", "+21~28", "+21~29", "+22~30"]
             }
         },
-        4: {
+        {
             name: "Titan Fire-Control Chip",
             rarity: 5,
             exclusive: true,
@@ -1378,7 +1380,29 @@ var equipments = {
                 rateOfFire: ["-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1"]
             }
         }
-    }
+    ]
 };
+
+var keys = Object.keys(equipments)
+var imageName = ""
+
+/* eslint-disable */
+for(var i = 0; i < keys.length; i++){
+    equipments[keys[i]].forEach((equipment) => {
+        if(equipment.name[0] === "."){
+            imageName = equipment.name.substring(1)
+        }
+        else if(equipment.name === "ILM Hollow Point Ammo"){
+            imageName = `${equipment.name} (${equipment.rarity})`
+        }
+        else{
+            imageName = equipment.name
+        }
+
+        equipment.image = require(`../images/equipment/${keys[i]}/${imageName}.png`)
+    })
+}
+
+console.log("Finished processing images for all T-Doll equipment.");
 
 export default equipments;
