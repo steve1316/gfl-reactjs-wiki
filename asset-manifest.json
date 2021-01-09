@@ -1,21 +1,21 @@
 {
   "files": {
     "main.css": "/gfl-database/static/css/main.57f5c29f.chunk.css",
-    "main.js": "/gfl-database/static/js/main.5e367830.chunk.js",
-    "main.js.map": "/gfl-database/static/js/main.5e367830.chunk.js.map",
+    "main.js": "/gfl-database/static/js/main.5fb3c811.chunk.js",
+    "main.js.map": "/gfl-database/static/js/main.5fb3c811.chunk.js.map",
     "runtime-main.js": "/gfl-database/static/js/runtime-main.378b0504.js",
     "runtime-main.js.map": "/gfl-database/static/js/runtime-main.378b0504.js.map",
-    "static/js/2.29e10d09.chunk.js": "/gfl-database/static/js/2.29e10d09.chunk.js",
-    "static/js/2.29e10d09.chunk.js.map": "/gfl-database/static/js/2.29e10d09.chunk.js.map",
+    "static/js/2.a024c17b.chunk.js": "/gfl-database/static/js/2.a024c17b.chunk.js",
+    "static/js/2.a024c17b.chunk.js.map": "/gfl-database/static/js/2.a024c17b.chunk.js.map",
     "index.html": "/gfl-database/index.html",
-    "precache-manifest.aa096015db4aea67165448e27d715abd.js": "/gfl-database/precache-manifest.aa096015db4aea67165448e27d715abd.js",
+    "precache-manifest.d5968295ed35ae5e0a7b1b6bea8e6a70.js": "/gfl-database/precache-manifest.d5968295ed35ae5e0a7b1b6bea8e6a70.js",
     "service-worker.js": "/gfl-database/service-worker.js",
     "static/css/main.57f5c29f.chunk.css.map": "/gfl-database/static/css/main.57f5c29f.chunk.css.map",
-    "static/js/2.29e10d09.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.29e10d09.chunk.js.LICENSE.txt",
-    "static/media/#0 Buckshot.png": "/gfl-database/static/media/#0 Buckshot.ec85aad8.png",
-    "static/media/#00 Buckshot.png": "/gfl-database/static/media/#00 Buckshot.6bf19daf.png",
-    "static/media/#000 Buckshot.png": "/gfl-database/static/media/#000 Buckshot.edda50df.png",
-    "static/media/#1 Buckshot.png": "/gfl-database/static/media/#1 Buckshot.f7980726.png",
+    "static/js/2.a024c17b.chunk.js.LICENSE.txt": "/gfl-database/static/js/2.a024c17b.chunk.js.LICENSE.txt",
+    "static/media/0 Buckshot.png": "/gfl-database/static/media/0 Buckshot.ec85aad8.png",
+    "static/media/00 Buckshot.png": "/gfl-database/static/media/00 Buckshot.6bf19daf.png",
+    "static/media/000 Buckshot.png": "/gfl-database/static/media/000 Buckshot.edda50df.png",
+    "static/media/1 Buckshot.png": "/gfl-database/static/media/1 Buckshot.f7980726.png",
     "static/media/1001_card.png": "/gfl-database/static/media/1001_card.508c559a.png",
     "static/media/1001_card_d.png": "/gfl-database/static/media/1001_card_d.f1cbffe8.png",
     "static/media/1001_full.png": "/gfl-database/static/media/1001_full.6f3e477d.png",
@@ -11826,8 +11826,8 @@
   },
   "entrypoints": [
     "static/js/runtime-main.378b0504.js",
-    "static/js/2.29e10d09.chunk.js",
+    "static/js/2.a024c17b.chunk.js",
     "static/css/main.57f5c29f.chunk.css",
-    "static/js/main.5e367830.chunk.js"
+    "static/js/main.5fb3c811.chunk.js"
   ]
 }
