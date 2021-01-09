@@ -183,43 +183,110 @@ export default function TDoll_Index() {
 		var tempArray = [];
 
 		tempArray = tdolls_array.filter((data) => {
-			// Filter if T-Dolls have Mod or not.
-			if (modFilter.selected) {
-				if (data.mod === null) {
-					return null;
-				}
-				data.selected = data.mod;
-			} else {
-				data.selected = data.normal;
-			}
+			var typeFilterCheck = false
+			var typeSelected = 0
+			var rarityFilterCheck = false
+			var raritySelected = 0
+			var modFilterCheck = false
 
-			// Filter for rarity.
-			for (var i = 0; i < rarityFilter.length; i++) {
-				if (rarityFilter[i].selected && rarityFilter[i].rarity !== data.selected.rarity) {
-					// Now check to see if rarity selected is 5* and the selected T-Doll is 6*. This is only possible for T-Dolls that have Mods so far.
-					// Thus, 6* Mods will appear when you select the 5* rarity filter and the Mod Filter is also selected.
-					if (rarityFilter[i].rarity === 5 && data.selected.rarity === 6) {
-						// This is intentionally empty to include the 6* Mods in the results.
-					} else {
+			// Check to see if filters are enabled and how many.
+			for(var i = 0; i < typeFilter.length; i++){
+				if(typeFilter[i].selected === true){
+					typeFilterCheck = true
+					typeSelected += 1
+				}
+			}
+			for(var j = 0; j < rarityFilter.length; j++){
+				if(rarityFilter[j].selected === true){
+					rarityFilterCheck = true
+					raritySelected += 1
+				}
+			}
+			if(modFilter.selected === true){
+				modFilterCheck = true
+			}
+			
+			// Check to see if any of the filters were selected.
+			if(typeFilterCheck || rarityFilterCheck || modFilterCheck){
+				// Filter if T-Dolls have Mod or not.
+				if (modFilter.selected) {
+					if (data.mod === null) {
 						return null;
 					}
+
+					data.selected = data.mod;
+
+					// If the only filter enabled is the Mod filter, return this T-Doll.
+					if(!typeFilterCheck && !rarityFilterCheck){
+						return data
+					}
+				} else {
+					data.selected = data.normal;
 				}
+
+				// Loop through all selected filters and only return the T-Doll that matches all selected filters.
+				if(typeSelected > 0 && raritySelected > 0){
+					for(var i = 0; i < typeFilter.length; i++){
+						if(typeFilter[i].selected && typeFilter[i].label === data.selected.type){
+							for(var j = 0; j < rarityFilter.length; j++){
+								if(!modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
+									return data
+								}
+
+								// If the Mod filter is active, return the T-Doll if its Mod rarity matches the selected rarity filter.
+								else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
+									return data
+								}
+
+								// Else if the Mod filter is active, return the T-Doll if its Mod rarity is at 6 stars and the selected rarity filter is 5 stars.
+								else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === 5 && data.selected.rarity === 6){
+									return data
+								}
+							}
+						}
+					}
+				}
+
+				// Otherwise if either type or rarity filter is unselected, filter using the opposite.
+				else if(typeSelected === 0 || raritySelected === 0){
+					if(typeSelected === 0){
+						for(var j = 0; j < rarityFilter.length; j++){
+							if(!modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
+								return data
+							}
+
+							// If the Mod filter is active, return the T-Doll if its Mod rarity matches the selected rarity filter.
+							else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
+								return data
+							}
+
+							// Else if the Mod filter is active, return the T-Doll if its Mod rarity is at 6 stars and the selected rarity filter is 5 stars.
+							else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === 5 && data.selected.rarity === 6){
+								return data
+							}
+						}
+					}
+					else if(raritySelected === 0){
+						for(var i = 0; i < typeFilter.length; i++){
+							if(typeFilter[i].selected && typeFilter[i].label === data.selected.type){
+								return data
+							}
+						}
+					}
+				}
+
+				return null;
 			}
 
-			// Filter for type.
-			for (i = 0; i < typeFilter.length; i++) {
-				if (typeFilter[i].selected && typeFilter[i].label !== data.selected.type) {
-					return null;
-				}
+			// Return the T-Doll if no filters at all were selected.
+			else{
+				data.selected = data.normal
+				return data
 			}
-
-			// If passed all filters, then return this T-Doll.
-			return data;
 		});
 
 		// Partition search results by 30 at a time (static for now).
 		var tempSearchResultPages = [];
-
 		for (var i = 0, j = 0; i < tempArray.length; i += 30, j++) {
 			var temp = [];
 			if (i + 30 > tempArray.length) {
@@ -254,6 +321,7 @@ export default function TDoll_Index() {
 		}
 
 		// Go through the Search Results array from createSearchResults() and push 30 at a time until the remainder is left.
+		// This is expecting that tdoll.selected has been set back in createSearchResults(). Otherwise, it will only see [Object object] and will error.
 		if(tempArrayOfSearchResults.length > 0){
 			tempArrayOfSearchResults[tempPageSelected - 1].map((tdoll) => {
 				tempArray.push(
@@ -398,7 +466,7 @@ export default function TDoll_Index() {
 			{/* T-Dolls List */}
 			<Container className={classes.cardGrid} maxWidth="md">
 				<Typography component="h1" variant="h5" color="textPrimary" gutterBottom>
-					Total number of search results: {totalSearchResults}. Now showing {currentSearchResults} search results.
+					Total number of search results: {totalSearchResults}. Now showing {currentSearchResults}.
 				</Typography>
 
 				{/* Pagination Component */}
