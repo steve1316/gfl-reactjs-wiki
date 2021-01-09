@@ -51,11 +51,11 @@ This project serves to provide a mobile-friendly web application of a database h
 - [x] ~~Add all Special T-Dolls #1000 to 1027.~~ (currently as of October 10, 2020)
 - [ ] ~~(HIGH PRIORITY) Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~
 - [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ (Doing so will mess up the image resolution and make it too blurry)
-- [x] (HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.
-  - [x] Create logic for the 2 buttons below it and link it to the component.
-- [x] Create initial structure of JSON data object that will hold all equipment.
-  - [x] Add Special Equipment for the T-Dolls that have Mods or are farmable in-game.
-  - [ ] (HIGH PRIORITY) Create the Equipment Index page.
+- [x] ~~(HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.~~
+  - [x] ~~Create logic for the 2 buttons below it and link it to the component.~~
+- [x] ~~Create initial structure of JSON data object that will hold all equipment.~~
+  - [x] ~~Add Special Equipment for the T-Dolls that have Mods or are farmable in-game.~~
+  - [x] ~~(HIGH PRIORITY) Create the Equipment Index page.~~
     - [ ] (MEDIUM PRIORTIY) Set up filters and searching for equipment.
     - [ ] (LOW PRIORITY) Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
 - [ ] (MEDIUM PRIORITY) Create data model for HOCs.
