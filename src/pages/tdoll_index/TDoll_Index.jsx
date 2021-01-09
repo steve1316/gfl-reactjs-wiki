@@ -41,7 +41,8 @@ export default function TDoll_Index() {
 		},
 		cardGrid: {
 			paddingTop: theme.spacing(8),
-			paddingBottom: theme.spacing(8)
+			paddingBottom: theme.spacing(8),
+			maxWidth: "90%"
 		},
 		card: {
 			display: "flex",
@@ -253,48 +254,50 @@ export default function TDoll_Index() {
 		}
 
 		// Go through the Search Results array from createSearchResults() and push 30 at a time until the remainder is left.
-		tempArrayOfSearchResults[tempPageSelected - 1].map((tdoll) => {
-			tempArray.push(
-				<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
-					<Grow in={true} style={{ transformOrigin: "0 5 0" }} timeout={stagger}>
-						<Card className={classes.card} elevation={12}>
-							<Link
-								to={{
-									pathname: "/tdoll",
-									search: "?id=" + tdoll.normal.id
-								}}
-								onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
-							>
-								<HtmlTooltip
-									title={
-										<>
-											<Typography color="inherit">
-												{tdoll.selected.name}
-												<small>
-													<sup>[#{tdoll.normal.id}]</sup>
-												</small>
-											</Typography>
-											<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
-										</>
-									}
-									placement="right"
+		if(tempArrayOfSearchResults.length > 0){
+			tempArrayOfSearchResults[tempPageSelected - 1].map((tdoll) => {
+				tempArray.push(
+					<Grid item key={tdoll.selected.name} xs={6} sm={4} md={2}>
+						<Grow in={true} style={{ transformOrigin: "0 5 0"}} timeout={stagger}>
+							<Card className={classes.card} elevation={12}>
+								<Link
+									to={{
+										pathname: "/tdoll",
+										search: "?id=" + tdoll.normal.id
+									}}
+									onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
 								>
-									<CardActionArea>
-										<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
-									</CardActionArea>
-								</HtmlTooltip>
-							</Link>
-						</Card>
-					</Grow>
-				</Grid>
-			);
-
-			// Stagger timeout will never be more than 2 seconds.
-			stagger += 100;
-			if (stagger >= 2000) {
-				stagger = 0;
-			}
-		});
+									<HtmlTooltip
+										title={
+											<>
+												<Typography color="inherit">
+													{tdoll.selected.name}
+													<small>
+														<sup>[#{tdoll.normal.id}]</sup>
+													</small>
+												</Typography>
+												<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
+											</>
+										}
+										placement="right"
+									>
+										<CardActionArea>
+											<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card} title={tdoll.selected.name} />
+										</CardActionArea>
+									</HtmlTooltip>
+								</Link>
+							</Card>
+						</Grow>
+					</Grid>
+				);
+	
+				// Stagger timeout will never be more than 2 seconds.
+				stagger += 100;
+				if (stagger >= 2000) {
+					stagger = 0;
+				}
+			});
+		}
 
 		// Update number of search results.
 		setCurrentSearchResults(tempArray.length);
