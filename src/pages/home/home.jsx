@@ -215,6 +215,7 @@ export default function Home() {
 		console.log("ID selected: ", chosenTDoll);
 
 		// Finally, grab the T-Doll from the array and set the states.
+		/* eslint-disable */
 		var tempTDoll = tdolls_array.filter((tdoll) => {
 			if (tdoll.normal.id === chosenTDoll) {
 				return tdoll;
