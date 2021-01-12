@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 // MaterialUI imports
-import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, CardActionArea, CardMedia } from "@material-ui/core";
+import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, CardActionArea, CardMedia, CardContent } from "@material-ui/core";
 import DoneIcon from "@material-ui/icons/Done";
 
 // Component imports
@@ -21,15 +21,14 @@ export default function Equipment_Index() {
 			maxWidth: "90%"
 		},
 		card: {
-			display: "flex",
-			flexDirection: "column",
-			maxWidth: 200,
-			maxHeight: 500
+			width: 1000
 		},
-		cardMedia: {
-			height: "100%",
-			width: "100%",
-			objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
+		cardDetails: {
+			display: "flex",
+			flexDirection: "column"
+		},
+		cardContent: {
+			flex: "1 0 auto"
 		},
 		chip: {
 			margin: theme.spacing(0.5)
@@ -79,6 +78,7 @@ export default function Equipment_Index() {
 
 	const [currentSearchResults, setCurrentSearchResults] = useState(0)
 	const [searchResults, setSearchResults] = useState([])
+	const [currentLevel, setCurrentLevel] = useState(0)
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
@@ -114,15 +114,76 @@ export default function Equipment_Index() {
 		for(var i = 0; i < keys.length; i++){
 			equipment_array[keys[i]].forEach((equipment) => {
 				tempArray.push(
-					<Grid item key={equipment.name + equipment.rarity} xs={6} sm={4} md={2}>
+					<Grid item key={equipment.name + equipment.rarity} xs={12} sm={6} md={4}>
 						<Card className={classes.card} elevation={12}>
-							<Typography className={classes.title} color="textSecondary" gutterBottom>
-								{equipment.name}
-							</Typography>
-	
-							<CardActionArea>
-								<CardMedia component="img" className={classes.cardMedia} image={equipment.image} title={equipment.name} />
-							</CardActionArea>
+							<div className={classes.cardDetails}>
+								<CardContent className={classes.cardContent}>
+									<Typography component="h5" variant="h5">
+										{equipment.name}
+									</Typography>
+
+									<Typography variant="subtitle1" color="textSecondary">
+										Equippable by {equipment.usable.map((item, index) => {
+											if(index + 1 < equipment.usable.length){
+												return <span key={item}>{item}, </span>
+											}else {
+												return <span key={item}>{item}</span>
+											}
+										})}
+										<CardActionArea style={{height: 98, width: 128}}>
+											<CardMedia style={{height: 98, width: 128}} image={equipment.image} title={equipment.name} />
+										</CardActionArea>
+									</Typography>
+
+									
+
+									<Typography variant="body2" component="p">
+										<br />
+										{equipment.description}
+									</Typography>
+
+									<Typography variant="subtitle1" color="textSecondary">
+										{Object.keys(equipment.stats).map((key) => {
+											var statName = ""
+											if(key === "criticalHitRate"){
+												statName = "Critical Hit Rate"
+											} else if(key === "damage"){
+												statName = "Damage"
+											} else if(key === "accuracy"){
+												statName = "Accuracy"
+											} else if(key === "criticalDamage"){
+												statName = "Critical Damage"
+											} else if(key === "rateOfFire"){
+												statName = "Rate of Fire"
+											} else if(key === "evasion"){
+												statName = "Evasion"
+											} else if(key === "nightVision"){
+												statName = "Night Vision"
+											} else if(key === "boostAbilityEffectiveness"){
+												statName = "Boost Ability Effectiveness"
+											} else if(key === "armorPiercing"){
+												statName = "Armor Piercing"
+											} else if(key === "target"){
+												statName = "Target"
+											} else if(key === "clipSize"){
+												statName = "Clip Size"
+											} else if(key === "movementSpeed"){
+												statName = "Movement Speed"
+											} else if(key === "armor"){
+												statName = "Armor"
+											}
+
+											return(
+												<div key={statName}>
+													<p>{statName}: {equipment.stats[key][currentLevel]}</p>
+												</div>
+											)
+										})}
+									</Typography>
+
+								</CardContent>
+							</div>
+							
 						</Card>
 					</Grid>
 				)
