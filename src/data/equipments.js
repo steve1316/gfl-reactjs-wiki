@@ -106,7 +106,7 @@ var equipments = {
             description: "An optical scope developed by KST before the war, it is specially designed to fit onto the AK family of weapons. It is still a decent choice for the AK variants to this day.",
             stats: {
                 criticalHitRate: ["+32", "+33", "+35", "+36", "+38", "+40", "+41", "+43", "+44", "+46", "+48"],
-                criticalHitDamage: ["+10", "+10", "+11", "+11", "+12", "+12", "+13", "+13", "+14", "+14", "+15"]
+                criticalDamage: ["+10", "+10", "+11", "+11", "+12", "+12", "+13", "+13", "+14", "+14", "+15"]
             }
         },
         {
@@ -117,7 +117,7 @@ var equipments = {
             description: "An optical scope meticulously developed by KST with accuracy and precision before the war, it is specially designed to fit onto the AK family of weapons. Due to its precision and durability, it is still favored for the AK variants to this day.",
             stats: {
                 criticalHitRate: ["+32", "+33", "+35", "+36", "+38", "+40", "+41", "+43", "+44", "+46", "+48"],
-                criticalHitDamage: ["+25", "+25", "+26", "+26", "+27", "+27", "+27", "+28", "+28", "+29", "+30"]
+                criticalDamage: ["+25", "+25", "+26", "+26", "+27", "+27", "+27", "+28", "+28", "+29", "+30"]
             }
         },
         {
@@ -128,7 +128,7 @@ var equipments = {
             description: "An optical scope developed by KSTSP before the war, it is specially designed to fit onto the AK family of weapons. Due to its unrivaled precision, it is still the accessory of choice for the AK variants to this day.",
             stats: {
                 criticalHitRate: ["+32", "+33", "+35", "+36", "+38", "+40", "+41", "+43", "+44", "+46", "+48"],
-                criticalHitDamage: ["+40", "+40", "+40", "+41", "+41", "+42", "+42", "+42", "+43", "+43", "+44"]
+                criticalDamage: ["+40", "+40", "+40", "+41", "+41", "+42", "+42", "+42", "+43", "+43", "+44"]
             }
         },
         {
@@ -160,7 +160,7 @@ var equipments = {
             description: "The expensive German-made optical lens has always been the ultimate choice for snipers and photographers. For someone who has toured through 130 years of battlefields, this sophisticated sight will allow her to be even more serene. Can only be equipped by Kar98k.",
             stats: {
                 criticalHitRate: ["+24", "+26", "+28", "+31", "+33", "+36", "+38", "+40", "+43", "+45", "+48"],
-                criticalHitDamage: ["+10", "+11", "+12", "+13", "+14", "+15", "+16", "+17", "+18", "+19", "+20"]
+                criticalDamage: ["+10", "+11", "+12", "+13", "+14", "+15", "+16", "+17", "+18", "+19", "+20"]
             }
         },
         {
@@ -191,7 +191,7 @@ var equipments = {
             description: "ZF's optical sight for FG42. Its brass exterior has faded after more than a century, but you can still get a sense of the German style from the lens. Looking through it makes you feel like you've joined Magnum.",
             stats: {
                 criticalHitRate: ["+13~17", "+14~18", "+15~20", "+16~21", "+17~23", "+18~24", "+20~26", "+21~27", "+22~29", "+23~30", "+24~32"],
-                criticalHitDamage: ["+13~16", "+13~16", "+14~17", "+14~18", "+15~19", "+16~20", "+16~20", "+17~21", "+18~22", "+18~23", "+19~24"],
+                criticalDamage: ["+13~16", "+13~16", "+14~17", "+14~18", "+15~19", "+16~20", "+16~20", "+17~21", "+18~22", "+18~23", "+19~24"],
                 rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
             }
         }
