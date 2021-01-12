@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 
 // MaterialUI imports
-import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, CardActionArea, CardMedia, CardContent } from "@material-ui/core";
+import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, CardActionArea, CardMedia, CardContent, CardHeader, Accordion, AccordionSummary, AccordionDetails} from "@material-ui/core";
 import DoneIcon from "@material-ui/icons/Done";
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
@@ -21,11 +22,14 @@ export default function Equipment_Index() {
 			maxWidth: "90%"
 		},
 		card: {
-			width: 1000
+			// width: 350,
+			// height: 400
 		},
-		cardDetails: {
-			display: "flex",
-			flexDirection: "column"
+		cardMedia: {
+			height: 98,
+			width: 151,
+			margin: 10,
+			objectFit: "contain"
 		},
 		cardContent: {
 			flex: "1 0 auto"
@@ -42,8 +46,22 @@ export default function Equipment_Index() {
 				margin: theme.spacing(0.5)
 			}
 		},
+		expand: {
+			transform: "rotate(0deg)",
+			marginLeft: "auto",
+			transition: theme.transitions.create("transform", {
+				duration: theme.transitions.duration.shortest
+			})
+		},
+		expandOpen: {
+			transform: "rotate(180deg)"
+		},
 		dividerForChips: {
 			margin: 5
+		},
+		heading: {
+			fontSize: theme.typography.pxToRem(15),
+			fontWeight: theme.typography.fontWeightRegular,
 		},
 		topDividerForCards: {
 			marginTop: 10,
@@ -79,6 +97,11 @@ export default function Equipment_Index() {
 	const [currentSearchResults, setCurrentSearchResults] = useState(0)
 	const [searchResults, setSearchResults] = useState([])
 	const [currentLevel, setCurrentLevel] = useState(0)
+	const [expanded, setExpanded] = useState("")
+
+	const handleChange = (panel) => (e, name) => {
+		setExpanded(name ? panel : false)
+	}
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
@@ -110,83 +133,9 @@ export default function Equipment_Index() {
 		// Grab the equipment categories as keys.
 		var keys = Object.keys(equipment_array)
 
-		// Go through the Search Results array and render each equipment as a Card onto the Grid.
 		for(var i = 0; i < keys.length; i++){
 			equipment_array[keys[i]].forEach((equipment) => {
-				tempArray.push(
-					<Grid item key={equipment.name + equipment.rarity} xs={12} sm={6} md={4}>
-						<Card className={classes.card} elevation={12}>
-							<div className={classes.cardDetails}>
-								<CardContent className={classes.cardContent}>
-									<Typography component="h5" variant="h5">
-										{equipment.name}
-									</Typography>
-
-									<Typography variant="subtitle1" color="textSecondary">
-										Equippable by {equipment.usable.map((item, index) => {
-											if(index + 1 < equipment.usable.length){
-												return <span key={item}>{item}, </span>
-											}else {
-												return <span key={item}>{item}</span>
-											}
-										})}
-										<CardActionArea style={{height: 98, width: 128}}>
-											<CardMedia style={{height: 98, width: 128}} image={equipment.image.default} title={equipment.name} />
-										</CardActionArea>
-									</Typography>
-
-									
-
-									<Typography variant="body2" component="p">
-										<br />
-										{equipment.description}
-									</Typography>
-
-									<Typography variant="subtitle1" color="textSecondary">
-										{Object.keys(equipment.stats).map((key) => {
-											var statName = ""
-											if(key === "criticalHitRate"){
-												statName = "Critical Hit Rate"
-											} else if(key === "damage"){
-												statName = "Damage"
-											} else if(key === "accuracy"){
-												statName = "Accuracy"
-											} else if(key === "criticalDamage"){
-												statName = "Critical Damage"
-											} else if(key === "rateOfFire"){
-												statName = "Rate of Fire"
-											} else if(key === "evasion"){
-												statName = "Evasion"
-											} else if(key === "nightVision"){
-												statName = "Night Vision"
-											} else if(key === "boostAbilityEffectiveness"){
-												statName = "Boost Ability Effectiveness"
-											} else if(key === "armorPiercing"){
-												statName = "Armor Piercing"
-											} else if(key === "target"){
-												statName = "Target"
-											} else if(key === "clipSize"){
-												statName = "Clip Size"
-											} else if(key === "movementSpeed"){
-												statName = "Movement Speed"
-											} else if(key === "armor"){
-												statName = "Armor"
-											}
-
-											return(
-												<div key={statName}>
-													<p>{statName}: {equipment.stats[key][currentLevel]}</p>
-												</div>
-											)
-										})}
-									</Typography>
-
-								</CardContent>
-							</div>
-							
-						</Card>
-					</Grid>
-				)
+				tempArray.push(equipment)
 			})
 		}
 
@@ -239,7 +188,75 @@ export default function Equipment_Index() {
 
 				{/* Filtered Results */}
 				<Grid container spacing={4}>
-					{searchResults}
+					{searchResults.map((equipment) => {
+						return(
+							<Grid item key={equipment.name + equipment.rarity} xs={12} sm={6} md={4} lg={3}>
+								<Card className={classes.card} elevation={12}>
+									<CardHeader title={equipment.name} subheader={equipment.usable.map((item, index) => {
+										if(index === 0){
+											return <span key={item}>Equippable by {item}</span>
+										}else{
+											return <span key={item}>, {item}</span>
+										}
+									})}/>
+
+									<CardActionArea>
+										<CardMedia component="img" image={equipment.image.default} title={equipment.title}/>
+									</CardActionArea>
+									
+									<CardContent>
+										<Typography component="span" variant="body2" style={{maxHeight: 100, overflow: "auto"}}>
+											{Object.keys(equipment.stats).map((key) => {
+												var statName = ""
+												if(key === "criticalHitRate"){
+													statName = "Critical Hit Rate"
+												} else if(key === "damage"){
+													statName = "Damage"
+												} else if(key === "accuracy"){
+													statName = "Accuracy"
+												} else if(key === "criticalDamage"){
+													statName = "Critical Damage"
+												} else if(key === "rateOfFire"){
+													statName = "Rate of Fire"
+												} else if(key === "evasion"){
+													statName = "Evasion"
+												} else if(key === "nightVision"){
+													statName = "Night Vision"
+												} else if(key === "boostAbilityEffectiveness"){
+													statName = "Boost Ability Effectiveness"
+												} else if(key === "armorPiercing"){
+													statName = "Armor Piercing"
+												} else if(key === "target"){
+													statName = "Target"
+												} else if(key === "clipSize"){
+													statName = "Clip Size"
+												} else if(key === "movementSpeed"){
+													statName = "Movement Speed"
+												} else if(key === "armor"){
+													statName = "Armor"
+												}
+
+												return(
+													<div key={statName}>
+														<p>{statName}: {equipment.stats[key][currentLevel]}</p>
+													</div>
+												)
+											})}
+										</Typography>
+									</CardContent>
+
+									<Accordion expanded={expanded === equipment.name + equipment.rarity} onChange={handleChange(equipment.name + equipment.rarity)}>
+										<AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
+											<Typography className="classes.heading">Description</Typography>
+										</AccordionSummary>
+										<AccordionDetails>
+											<Typography paragraph>{equipment.description}</Typography>
+										</AccordionDetails>
+									</Accordion>
+								</Card>
+							</Grid>
+						)
+					})}
 				</Grid>
 
 				<Divider className={classes.bottomDividerForCards} />
