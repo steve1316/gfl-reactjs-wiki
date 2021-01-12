@@ -53,7 +53,7 @@ export default function Equipment_Index() {
 		bottomDividerForCards: {
 			marginTop: 25,
 			marginBottom: 10
-		}
+		},
 	}));
 
 	const classes = useStyles();
@@ -70,14 +70,14 @@ export default function Equipment_Index() {
 		{ key: 8, label: "Buckshot Ammo", selected: false },
 		{ key: 9, label: "Slug Ammo", selected: false },
 		{ key: 10, label: "Exoskeleton", selected: false },
-		{ key: 13, label: "Armor Plate", selected: false },
-		{ key: 11, label: "Ammo Box", selected: false },
-		{ key: 12, label: "Camouflage Cloak", selected: false },
+		{ key: 11, label: "Armor Plate", selected: false },
+		{ key: 12, label: "Ammo Box", selected: false },
+		{ key: 13, label: "Camouflage Cloak", selected: false },
 		{ key: 14, label: "Chip", selected: false },
+		{ key: 15, label: "Special", selected: false },
 	]);
 
 	const [currentSearchResults, setCurrentSearchResults] = useState(0)
-	const [totalSearchResults, setTotalSearchResults] = useState(0)
 	const [searchResults, setSearchResults] = useState([])
 
 	// Set HTML meta-data here using document API.
@@ -100,24 +100,6 @@ export default function Equipment_Index() {
 		const key = selectedType.key
 		const newSelected = !selectedType.selected
 
-		setTypeFilter([
-			{ key: 0, label: "Optical Sight", selected: false },
-			{ key: 1, label: "Holographic Sight", selected: false },
-			{ key: 2, label: "Red Dot Sight", selected: false },
-			{ key: 3, label: "Suppressor", selected: false },
-			{ key: 4, label: "Night Battle Equipment", selected: false },
-			{ key: 5, label: "AP Ammo", selected: false },
-			{ key: 6, label: "HP Ammo", selected: false },
-			{ key: 7, label: "HV Ammo", selected: false },
-			{ key: 8, label: "Buckshot Ammo", selected: false },
-			{ key: 9, label: "Slug Ammo", selected: false },
-			{ key: 10, label: "Exoskeleton", selected: false },
-			{ key: 13, label: "Armor Plate", selected: false },
-			{ key: 11, label: "Ammo Box", selected: false },
-			{ key: 12, label: "Camouflage Cloak", selected: false },
-			{ key: 14, label: "Chip", selected: false },
-		])
-
 		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: newSelected } : type)))
 	}
 
@@ -132,7 +114,7 @@ export default function Equipment_Index() {
 		for(var i = 0; i < keys.length; i++){
 			equipment_array[keys[i]].forEach((equipment) => {
 				tempArray.push(
-					<Grid item key={equipment.name} xs={6} sm={4} md={2}>
+					<Grid item key={equipment.name + equipment.rarity} xs={6} sm={4} md={2}>
 						<Card className={classes.card} elevation={12}>
 							<Typography className={classes.title} color="textSecondary" gutterBottom>
 								{equipment.name}
@@ -146,10 +128,6 @@ export default function Equipment_Index() {
 				)
 			})
 		}
-			
-			
-			
-		
 
 		// Update number of search results.
 		setCurrentSearchResults(tempArray.length)
@@ -192,14 +170,18 @@ export default function Equipment_Index() {
 
 			{/* Equipment List */}
 			<Container className={classes.cardGrid} maxWidth="md">
-				<Typography component="h1" variant="h5" color="textPrimary" gutterBottom>
-					Total number of search results: {totalSearchResults}. Now showing {currentSearchResults} search results.
+				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
+					Now showing {currentSearchResults} search results
 				</Typography>
+
+				<Divider className={classes.topDividerForCards} />
 
 				{/* Filtered Results */}
 				<Grid container spacing={4}>
 					{searchResults}
 				</Grid>
+
+				<Divider className={classes.bottomDividerForCards} />
 			</Container>
 
 		</main>
