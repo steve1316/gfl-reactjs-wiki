@@ -304,8 +304,8 @@ export default function TDoll(props) {
 		handleChangeSkillDescription();
 
 		// Set the initial image and animation to be displayed for the T-Doll.
-		setTDollImage(tdoll.selected.images.card);
-		setAnimation(tdoll.selected.animations.wait);
+		setTDollImage(tdoll.selected.images.card.default);
+		setAnimation(tdoll.selected.animations.wait.default);
 
 		console.log("Initial T-Doll state: ", tdoll);
 	}, []);
@@ -316,9 +316,9 @@ export default function TDoll(props) {
 		var tempSkinSelected = helperSkinSelected();
 		if (showSkin) {
 			if (animationMode === 0) {
-				setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
+				setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
 			} else {
-				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
+				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
 			}
 		}
 	}, [showSkin, skinSelected]);
@@ -377,14 +377,14 @@ export default function TDoll(props) {
 		}
 
 		// Set T-Doll image.
-		setTDollImage(tdoll_temp.selected.images.card);
+		setTDollImage(tdoll_temp.selected.images.card.default);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
 		// Set animation.
 		if (animationMode === 1) {
-			setAnimation(tdoll_temp.selected.animations_dorm.wait);
+			setAnimation(tdoll_temp.selected.animations_dorm.wait.default);
 		} else {
-			setAnimation(tdoll_temp.selected.animations.wait);
+			setAnimation(tdoll_temp.selected.animations.wait.default);
 		}
 
 		// Finalize state updates.
@@ -401,18 +401,18 @@ export default function TDoll(props) {
 		if (animationMode === 0) {
 			// Switch to Dorm animations.
 			if (showSkin) {
-				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
+				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
 			} else {
-				setAnimation(tdoll.selected.animations_dorm.wait);
+				setAnimation(tdoll.selected.animations_dorm.wait.default);
 			}
 
 			setAnimationMode(1);
 		} else {
 			// Switch to Normal animations.
 			if (showSkin) {
-				setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
+				setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
 			} else {
-				setAnimation(tdoll.selected.animations.wait);
+				setAnimation(tdoll.selected.animations.wait.default);
 			}
 
 			setAnimationMode(0);
@@ -671,28 +671,28 @@ export default function TDoll(props) {
 			if (switchImage) {
 				// Normal Skin image
 				if (mode === 1) {
-					setTDollImage(tdoll.skins.mod_skin_images[skinSelected]);
+					setTDollImage(tdoll.skins.mod_skin_images[skinSelected].default);
 				} else {
-					setTDollImage(tdoll.skins.skin_images[skinSelected]);
+					setTDollImage(tdoll.skins.skin_images[skinSelected].default);
 				}
 				setSwitchImage(false);
 			} else {
 				// Damaged Skin image
 				if (mode === 1) {
-					setTDollImage(tdoll.skins.mod_skin_images[skinSelected + 1]);
+					setTDollImage(tdoll.skins.mod_skin_images[skinSelected + 1].default);
 				} else {
-					setTDollImage(tdoll.skins.skin_images[skinSelected + 1]);
+					setTDollImage(tdoll.skins.skin_images[skinSelected + 1].default);
 				}
 				setSwitchImage(true);
 			}
 		} else {
 			if (switchImage) {
 				// Normal image
-				setTDollImage(tdoll.selected.images.card);
+				setTDollImage(tdoll.selected.images.card.default);
 				setSwitchImage(false);
 			} else {
 				// Damaged image
-				setTDollImage(tdoll.selected.images.card_damaged);
+				setTDollImage(tdoll.selected.images.card_damaged.default);
 				setSwitchImage(true);
 			}
 		}
@@ -706,9 +706,9 @@ export default function TDoll(props) {
 
 		// Switch to the modded Skin image cards when currently displaying Mod information.
 		if (mode === 1) {
-			setTDollImage(tdoll.skins.mod_skin_images[newValue]);
+			setTDollImage(tdoll.skins.mod_skin_images[newValue].default);
 		} else {
-			setTDollImage(tdoll.skins.skin_images[newValue]);
+			setTDollImage(tdoll.skins.skin_images[newValue].default);
 		}
 
 		// Switch animations based on the animation mode selected, Normal or Dorm.
@@ -727,15 +727,15 @@ export default function TDoll(props) {
 	const renderImage = () => {
 		if (showSkin) {
 			if (switchImage) {
-				return <img src={tdoll.skins.skin_images_full[skinSelected + 1]} className={classes.fullImage} alt="Damaged Full Skin" />;
+				return <img src={tdoll.skins.skin_images_full[skinSelected + 1].default} className={classes.fullImage} alt="Damaged Full Skin" />;
 			} else {
-				return <img src={tdoll.skins.skin_images_full[skinSelected]} className={classes.fullImage} alt="Normal Full Skin" />;
+				return <img src={tdoll.skins.skin_images_full[skinSelected].default} className={classes.fullImage} alt="Normal Full Skin" />;
 			}
 		} else {
 			if (switchImage) {
-				return <img src={tdoll.selected.images.full_damaged} className={classes.fullImage} alt="Damaged Full" />;
+				return <img src={tdoll.selected.images.full_damaged.default} className={classes.fullImage} alt="Damaged Full" />;
 			} else {
-				return <img src={tdoll.selected.images.full} className={classes.fullImage} alt="Normal Full" />;
+				return <img src={tdoll.selected.images.full.default} className={classes.fullImage} alt="Normal Full" />;
 			}
 		}
 	};
@@ -859,95 +859,95 @@ export default function TDoll(props) {
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.wait);
+						setAnimation(tdoll.selected.animations.wait.default);
 					}
 					break;
 				case "wait2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.wait2[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.wait2[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.wait2);
+						setAnimation(tdoll.selected.animations.wait2.default);
 					}
 					break;
 				case "move":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.move[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.move[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.move);
+						setAnimation(tdoll.selected.animations.move.default);
 					}
 					break;
 				case "attack":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.attack[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.attack[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.attack);
+						setAnimation(tdoll.selected.animations.attack.default);
 					}
 					break;
 				case "attack2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.attack2[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.attack2[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.attack2);
+						setAnimation(tdoll.selected.animations.attack2.default);
 					}
 					break;
 				case "spattack":
-					setAnimation(tdoll.selected.animations.spattack);
+					setAnimation(tdoll.selected.animations.spattack.default);
 
 					break;
 				case "spattack2":
-					setAnimation(tdoll.selected.animations.spattack2);
+					setAnimation(tdoll.selected.animations.spattack2.default);
 
 					break;
 				case "reload":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.reload[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.reload[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.reload);
+						setAnimation(tdoll.selected.animations.reload.default);
 					}
 					break;
 				case "landing":
-					setAnimation(tdoll.selected.animations.landing);
+					setAnimation(tdoll.selected.animations.landing.default);
 
 					break;
 				case "die":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.die[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.die[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.die);
+						setAnimation(tdoll.selected.animations.die.default);
 					}
 					break;
 				case "skill":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.skill[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.skill[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.skill);
+						setAnimation(tdoll.selected.animations.skill.default);
 					}
 					break;
 				case "skill2":
-					setAnimation(tdoll.selected.animations.skill2);
+					setAnimation(tdoll.selected.animations.skill2.default);
 
 					break;
 				case "victory":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victory[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.victory[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.victory);
+						setAnimation(tdoll.selected.animations.victory.default);
 					}
 					break;
 				case "victory2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victory2[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.victory2[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.victory2);
+						setAnimation(tdoll.selected.animations.victory2.default);
 					}
 					break;
 				case "victoryloop":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victoryloop[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations.victoryloop[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations.victoryloop);
+						setAnimation(tdoll.selected.animations.victoryloop.default);
 					}
 					break;
 				default:
@@ -959,52 +959,52 @@ export default function TDoll(props) {
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.wait);
+						setAnimation(tdoll.selected.animations_dorm.wait.default);
 					}
 
 					break;
 				case "move":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.move[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations_dorm.move[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.move);
+						setAnimation(tdoll.selected.animations_dorm.move.default);
 					}
 					break;
 				case "action":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.action[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations_dorm.action[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.action);
+						setAnimation(tdoll.selected.animations_dorm.action.default);
 					}
 					break;
 				case "pick":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.pick[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations_dorm.pick[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.pick);
+						setAnimation(tdoll.selected.animations_dorm.pick.default);
 					}
 					break;
 				case "sit":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.sit);
+						setAnimation(tdoll.selected.animations_dorm.sit.default);
 					}
 					break;
 				case "sit2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.sit2[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations_dorm.sit2[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.sit2);
+						setAnimation(tdoll.selected.animations_dorm.sit2.default);
 					}
 					break;
 				case "lying":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.lying[tempSkinSelected]);
+						setAnimation(tdoll.skins.animations_dorm.lying[tempSkinSelected].default);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.lying);
+						setAnimation(tdoll.selected.animations_dorm.lying.default);
 					}
 					break;
 				default:
@@ -1288,7 +1288,7 @@ export default function TDoll(props) {
 								<Card className={classes.cardForSkill} elevation={12}>
 									<CardContent>
 										<CardHeader
-											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.image_skill : tdoll.selected.skill.image_skill} />}
+											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.image_skill.default : tdoll.selected.skill.image_skill.default} />}
 											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
 											subheader={
 												selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? "Initial CD: " + tdoll.selected.skill2.initial_cooldown : "Initial CD: " + tdoll.selected.skill.initial_cooldown

@@ -131,7 +131,7 @@ export default function Equipment_Index() {
 											}
 										})}
 										<CardActionArea style={{height: 98, width: 128}}>
-											<CardMedia style={{height: 98, width: 128}} image={equipment.image} title={equipment.name} />
+											<CardMedia style={{height: 98, width: 128}} image={equipment.image.default} title={equipment.name} />
 										</CardActionArea>
 									</Typography>
 

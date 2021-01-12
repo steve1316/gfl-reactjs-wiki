@@ -227,7 +227,7 @@ export default function Home() {
 
 		// The else case will handle the case where the random ID is for a T-Doll that does not exist in the game (MICA Team skips certain IDs for reasons known only to them).
 		if (tempTDoll[0] !== undefined) {
-			setTDollImage(tempTDoll[0].normal.images.card);
+			setTDollImage(tempTDoll[0].normal.images.card.default);
 			setTDollName(tempTDoll[0].normal.name);
 			setTDollType(tempTDoll[0].normal.type);
 		} else {
@@ -255,7 +255,7 @@ export default function Home() {
 								<div className={classes.heroCardDetails}>
 									{/* Skeleton components will display when the randomization function selects an ID for a T-Doll that does not exist. */}
 									<Box className={classes.cardImageBox} boxShadow={6} border={1} borderColor="primary.main">
-										{tdollImage !== undefined ? <CardMedia className={classes.heroCardMedia} image={tdollImage} title={tdollName} component="img" /> : <Skeleton variant="rect" height={256} width={128} />}
+										{tdollImage !== undefined ? <CardMedia className={classes.heroCardMedia} image={tdollImage} title={tdollName} /> : <Skeleton variant="rect" height={256} width={128} />}
 									</Box>
 
 									<CardContent className={classes.heroCardContent}>
