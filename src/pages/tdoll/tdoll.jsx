@@ -1199,7 +1199,7 @@ export default function TDoll(props) {
 									tdoll.skins.number_of_skins === 1 ? (
 										<Tabs
 											className={classes.tabs}
-											value={skinSelected !== undefined ? skinSelected : false}
+											value={showSkin ? skinSelected : false}
 											onChange={switchSkinSelected}
 											indicatorColor="primary"
 											textColor="primary"
@@ -1211,7 +1211,7 @@ export default function TDoll(props) {
 									) : (
 										<Tabs
 											className={classes.tabs}
-											value={skinSelected !== undefined ? skinSelected : false}
+											value={showSkin ? skinSelected : false}
 											onChange={switchSkinSelected}
 											indicatorColor="primary"
 											textColor="primary"
