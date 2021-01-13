@@ -56,7 +56,7 @@ This project serves to provide a mobile-friendly web application of a database h
 - [x] ~~Create initial structure of JSON data object that will hold all equipment.~~
   - [x] ~~Add Special Equipment for the T-Dolls that have Mods or are farmable in-game.~~
   - [x] ~~(HIGH PRIORITY) Create the Equipment Index page.~~
-    - [ ] (MEDIUM PRIORTIY) Set up filters and searching for equipment.
+    - [x] ~~(MEDIUM PRIORTIY) Set up filters and searching for equipment.~~
     - [ ] (LOW PRIORITY) Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
 - [ ] (MEDIUM PRIORITY) Create data model for HOCs.
   - [ ] (MEDIUM PRIORITY) Create the HOC Index page.
