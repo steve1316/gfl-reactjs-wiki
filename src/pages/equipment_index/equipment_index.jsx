@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 // MaterialUI imports
-import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, Box, CardActionArea, CardMedia, CardContent, CardHeader, Slider, Accordion, AccordionSummary, AccordionDetails} from "@material-ui/core";
+import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, Zoom, Fade, Box, CardActionArea, CardMedia, CardContent, CardHeader, Slider, Accordion, AccordionSummary, AccordionDetails} from "@material-ui/core";
 import DoneIcon from "@material-ui/icons/Done";
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
@@ -61,14 +61,13 @@ export default function Equipment_Index() {
 		{ key: 5, label: "AP Ammo", selected: false, property: "armorPiercingAmmo" },
 		{ key: 6, label: "HP Ammo", selected: false, property: "hollowPointAmmo" },
 		{ key: 7, label: "HV Ammo", selected: false, property: "highVelocityAmmo" },
-		{ key: 8, label: "Buckshot Ammo", selected: false, property: "buckshotAmmo" },
-		{ key: 9, label: "Slug Ammo", selected: false, property: "slugAmmo" },
-		{ key: 10, label: "Exoskeleton", selected: false, property: "exoskeleton" },
-		{ key: 11, label: "Armor Plate", selected: false, property: "armorPlate" },
-		{ key: 12, label: "Ammo Box", selected: false, property: "ammunitionBox" },
-		{ key: 13, label: "Camouflage Cloak", selected: false, property: "camouflageCloak" },
-		{ key: 14, label: "Chip", selected: false, property: "chip" },
-		{ key: 15, label: "Special", selected: false, property: "special" },
+		{ key: 8, label: "Shotgun Shells", selected: false, property: "shotgunShells" },
+		{ key: 9, label: "Exoskeleton", selected: false, property: "exoskeleton" },
+		{ key: 10, label: "Armor Plate", selected: false, property: "armorPlate" },
+		{ key: 11, label: "Ammo Box", selected: false, property: "ammunitionBox" },
+		{ key: 12, label: "Camouflage Cloak", selected: false, property: "camouflageCloak" },
+		{ key: 13, label: "Chip", selected: false, property: "chip" },
+		{ key: 14, label: "Special", selected: false, property: "special" },
 	]);
 
 	const [exclusiveFilter, setExclusiveFilter] = useState({
@@ -219,6 +218,23 @@ export default function Equipment_Index() {
 		setCurrentLevel(newValue)
 	}
 
+	const calculateTimeout = (index) => {
+		var stagger = 0
+		
+		if(index === 0){
+			stagger += 500
+		}
+		else{
+			stagger += (500 * index)
+		}
+
+		if(stagger >= 2000){
+			stagger = 1000
+		}
+
+		return stagger
+	}
+
 	return (
 		<main className={classes.root}>
 			<ScrollToTop />
@@ -230,20 +246,22 @@ export default function Equipment_Index() {
 					{typeFilter.map((type) => {
 						return (
 							<li key={type.key}>
-								<Chip 
-									className={classes.chip}
-									clickable
-									color={type.selected ? "primary" : "secondary"}
-									label={type.label}
-									onClick={() => handleOnClickType(type)}
-									onDelete={type.selected ? handleDelete : null}
-									deleteIcon={
-										<>
-											<Divider orientation="vertical" flexItem />
-											<DoneIcon />
-										</>
-									} 
-								/>
+								<Zoom in={true} timeout={400}>
+									<Chip 
+										className={classes.chip}
+										clickable
+										color={type.selected ? "primary" : "secondary"}
+										label={type.label}
+										onClick={() => handleOnClickType(type)}
+										onDelete={type.selected ? handleDelete : null}
+										deleteIcon={
+											<>
+												<Divider orientation="vertical" flexItem />
+												<DoneIcon />
+											</>
+										} 
+									/>
+								</Zoom>
 							</li>
 						)
 					})}
@@ -252,26 +270,30 @@ export default function Equipment_Index() {
 				<Divider className={classes.dividerForChips} />
 
 				<div className={classes.chipList}>
-					<Chip
-						className={classes.chip}
-						clickable
-						color={exclusiveFilter.selected ? "primary" : "secondary"}
-						label={exclusiveFilter.label}
-						onClick={() => handleOnClickExclusive()}
-						onDelete={exclusiveFilter.selected ? handleDelete : null}
-						deleteIcon={
-							<>
-								<Divider orientation="vertical" flexItem />
-								<DoneIcon />
-							</>
-						}
-					/>
+					<Zoom in={true} timeout={600}>
+						<Chip
+							className={classes.chip}
+							clickable
+							color={exclusiveFilter.selected ? "primary" : "secondary"}
+							label={exclusiveFilter.label}
+							onClick={() => handleOnClickExclusive()}
+							onDelete={exclusiveFilter.selected ? handleDelete : null}
+							deleteIcon={
+								<>
+									<Divider orientation="vertical" flexItem />
+									<DoneIcon />
+								</>
+							}
+						/>
+					</Zoom>
 				</div>
 
 			</Container>
 
 			<Box display="flex" width="80%" m="auto" marginTop={5}>
-				<Slider step={1} defaultValue={1} value={currentLevel} onChange={handleSlider} valueLabelDisplay="auto" getAriaValueText={valuetext} valueLabelFormat={valuetext} marks={customSliderMarks} min={1} max={10} />
+				<Fade in={true} timeout={500}>
+					<Slider step={1} defaultValue={1} value={currentLevel} onChange={handleSlider} valueLabelDisplay="auto" getAriaValueText={valuetext} valueLabelFormat={valuetext} marks={customSliderMarks} min={1} max={10} />
+				</Fade>
 			</Box>
 
 			<Container className={classes.cardGrid} maxWidth="md">
@@ -283,94 +305,96 @@ export default function Equipment_Index() {
 
 				{/* Filtered Equipment Results */}
 				<Grid container spacing={4}>
-					{searchResults.map((equipment) => {
+					{searchResults.map((equipment, index) => {
 						return(
 							<Grid item key={equipment.name + equipment.rarity} xs={12} sm={6} md={3} lg={3} xl={2}>
-								<Card className={classes.card} elevation={12}>
-									{/* Equipment Name and what types of T-Dolls can use it */}
-									<CardHeader title={equipment.name} subheader={equipment.usable.map((item, index) => {
-										if(index === 0 && !equipment.exclusive){
-											return <span key={item}>Equippable by {item}</span>
-										}else if(index === 0 && equipment.exclusive){
-											return <span key={item}>Equippable by <span style={{color: "#ff9800"}}><ins>{item}</ins></span></span>
-										} else if(index !== 0 && equipment.exclusive){
-											return <span key={item}><span style={{color: "#ff9800"}}>, <ins>{item}</ins></span></span>
-										} else{
-											return <span key={item}>, {item}</span>
-										}
-									})}/>
+								<Fade in={true} timeout={calculateTimeout(index)}>
+									<Card className={classes.card} elevation={12}>
+										{/* Equipment Name and what types of T-Dolls can use it */}
+										<CardHeader title={equipment.name} subheader={equipment.usable.map((item, index) => {
+											if(index === 0 && !equipment.exclusive){
+												return <span key={item}>Equippable by {item}</span>
+											}else if(index === 0 && equipment.exclusive){
+												return <span key={item}>Equippable by <span style={{color: "#ff9800"}}><ins>{item}</ins></span></span>
+											} else if(index !== 0 && equipment.exclusive){
+												return <span key={item}><span style={{color: "#ff9800"}}>, <ins>{item}</ins></span></span>
+											} else{
+												return <span key={item}>, {item}</span>
+											}
+										})}/>
 
-									{/* Equipment Image */}
-									<CardActionArea>
-										<CardMedia component="img" image={equipment.image.default} title={equipment.title}/>
-									</CardActionArea>
-									
-									{/* Equipment Stats */}
-									<CardContent>
-										<Typography component="span" variant="body2" style={{maxHeight: 100, overflow: "auto"}}>
-											{Object.keys(equipment.stats).map((key) => {
-												var statName = ""
-												if(key === "criticalHitRate"){
-													statName = "Critical Hit Rate"
-												} else if(key === "damage"){
-													statName = "Damage"
-												} else if(key === "accuracy"){
-													statName = "Accuracy"
-												} else if(key === "criticalDamage"){
-													statName = "Critical Damage"
-												} else if(key === "rateOfFire"){
-													statName = "Rate of Fire"
-												} else if(key === "evasion"){
-													statName = "Evasion"
-												} else if(key === "nightVision"){
-													statName = "Night Vision"
-												} else if(key === "boostAbilityEffectiveness"){
-													statName = "Boost Ability Effectiveness"
-												} else if(key === "armorPiercing"){
-													statName = "Armor Piercing"
-												} else if(key === "target"){
-													statName = "Target"
-												} else if(key === "clipSize"){
-													statName = "Clip Size"
-												} else if(key === "movementSpeed"){
-													statName = "Movement Speed"
-												} else if(key === "armor"){
-													statName = "Armor"
-												}
+										{/* Equipment Image */}
+										<CardActionArea>
+											<CardMedia component="img" image={equipment.image.default} title={equipment.title}/>
+										</CardActionArea>
+										
+										{/* Equipment Stats */}
+										<CardContent>
+											<Typography component="span" variant="body2" style={{maxHeight: 100, overflow: "auto"}}>
+												{Object.keys(equipment.stats).map((key) => {
+													var statName = ""
+													if(key === "criticalHitRate"){
+														statName = "Critical Hit Rate"
+													} else if(key === "damage"){
+														statName = "Damage"
+													} else if(key === "accuracy"){
+														statName = "Accuracy"
+													} else if(key === "criticalDamage"){
+														statName = "Critical Damage"
+													} else if(key === "rateOfFire"){
+														statName = "Rate of Fire"
+													} else if(key === "evasion"){
+														statName = "Evasion"
+													} else if(key === "nightVision"){
+														statName = "Night Vision"
+													} else if(key === "boostAbilityEffectiveness"){
+														statName = "Boost Ability Effectiveness"
+													} else if(key === "armorPiercing"){
+														statName = "Armor Piercing"
+													} else if(key === "target"){
+														statName = "Target"
+													} else if(key === "clipSize"){
+														statName = "Clip Size"
+													} else if(key === "movementSpeed"){
+														statName = "Movement Speed"
+													} else if(key === "armor"){
+														statName = "Armor"
+													}
 
-												if(currentLevel === 1){
-													return(
-														<div key={statName}>
-															<p>{statName}: {equipment.stats[key][currentLevel - 1]}</p>
-														</div>
-													)
-												} else if(currentLevel !== 1 && equipment.stats[key][currentLevel - 1] !== equipment.stats[key][0]){
-													return(
-														<div key={statName}>
-															<p>{statName}: <span style={{color: "#ff9800"}}>{equipment.stats[key][currentLevel - 1]}</span></p>
-														</div>
-													)
-												} else{
-													return(
-														<div key={statName}>
-															<p>{statName}: {equipment.stats[key][currentLevel - 1]}</p>
-														</div>
-													)
-												}
-											})}
-										</Typography>
-									</CardContent>
+													if(currentLevel === 1){
+														return(
+															<div key={statName}>
+																<p>{statName}: {equipment.stats[key][currentLevel - 1]}</p>
+															</div>
+														)
+													} else if(currentLevel !== 1 && equipment.stats[key][currentLevel - 1] !== equipment.stats[key][0]){
+														return(
+															<div key={statName}>
+																<p>{statName}: <span style={{color: "#ff9800"}}>{equipment.stats[key][currentLevel - 1]}</span></p>
+															</div>
+														)
+													} else{
+														return(
+															<div key={statName}>
+																<p>{statName}: {equipment.stats[key][currentLevel - 1]}</p>
+															</div>
+														)
+													}
+												})}
+											</Typography>
+										</CardContent>
 
-									{/* Equipment Description */}
-									<Accordion expanded={expanded === equipment.name + equipment.rarity} onChange={handleChange(equipment.name + equipment.rarity)}>
-										<AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-											<Typography className="classes.heading">Description</Typography>
-										</AccordionSummary>
-										<AccordionDetails>
-											<Typography paragraph>{equipment.description}</Typography>
-										</AccordionDetails>
-									</Accordion>
-								</Card>
+										{/* Equipment Description */}
+										<Accordion expanded={expanded === equipment.name + equipment.rarity} onChange={handleChange(equipment.name + equipment.rarity)}>
+											<AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
+												<Typography className="classes.heading">Description</Typography>
+											</AccordionSummary>
+											<AccordionDetails>
+												<Typography paragraph>{equipment.description}</Typography>
+											</AccordionDetails>
+										</Accordion>
+									</Card>
+								</Fade>
 							</Grid>
 						)
 					})}
