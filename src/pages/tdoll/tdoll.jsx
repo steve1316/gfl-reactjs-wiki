@@ -259,7 +259,7 @@ export default function TDoll(props) {
 	const [switchImage, setSwitchImage] = useState(false); // If true, show Damaged version.
 	const [tdollImage, setTDollImage] = useState(undefined);
 	const [showSkin, setShowSkin] = useState(false);
-	const [skinSelected, setSkinSelected] = useState(undefined); // The value of this is dependent on how many skins a T-Doll has.
+	const [skinSelected, setSkinSelected] = useState(0); // The value of this is dependent on how many skins a T-Doll has.
 
 	// Set initial states for the skills. Set Skill 2 to the description of Skill 1 in case T-Doll does not have a Neural Upgrade.
 	const [showModSkill, setShowModSkill] = useState(false);
@@ -361,7 +361,7 @@ export default function TDoll(props) {
 		var tdoll_temp = tdoll;
 
 		setShowSkin(false); // Prevent skin image to be rendered if it was selected.
-		setSkinSelected(undefined);
+		setSkinSelected(0);
 
 		// Perform check to see if the information shown should be Mod or not.
 		if (mode === 0 && hasMod) {
@@ -713,10 +713,11 @@ export default function TDoll(props) {
 
 		// Switch animations based on the animation mode selected, Normal or Dorm.
 		var tempSkinSelected = helperSkinSelected();
+
 		if (animationMode === 0) {
-			setAnimation(tdoll.skins.animations.wait[tempSkinSelected]);
+			setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
 		} else {
-			setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected]);
+			setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
 		}
 
 		// Reset animation tab selected.
