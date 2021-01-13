@@ -184,7 +184,18 @@ var tdolls = [
 			}
 		},
 		mod: null,
-		skins: null
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Mysterious Wayfarer SA"],
+			animations: {
+				hasSkillAnimation: [true],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -715,7 +726,18 @@ var tdolls = [
 			}
 		},
 		mod: null,
-		skins: null
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Fox's Shadow of Drooping Branches"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -803,7 +825,18 @@ var tdolls = [
 			}
 		},
 		mod: null,
-		skins: null
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Keeper on Page 8"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
