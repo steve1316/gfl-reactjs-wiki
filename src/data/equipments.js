@@ -914,7 +914,101 @@ var equipments = {
             }
         }
     ],
-    buckshotAmmo: [
+    shotgunShells: [
+        {
+            name: "12GA Flechette Shells",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M1897"],
+            description: "Special flechette shells used in wars of the past. Each round contains 20 miniature flechettes. Supposedly, its main purpose was to eliminate enemies hiding in foliage.",
+            stats: {
+                damage: ["+8~12", "+8~12", "+8~13", "+9~13", "+9~14", "+10~15", "+10~15", "+10~16", "+11~16", "+11~17", "+12~18"],
+                accuracy: ["+4~6", "+4~6", "+4~7", "+5~7", "+5~8", "+6~9", "+6~9", "+6~10", "+7~10", "+7~11", "+8~12"]
+            }
+        },
+        {
+            name: "16Lab Buckshot",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SG"],
+            description: "16Lab's custom magnum shotgun shell is one of the strongest shells currently available for shotguns with its high-powered gunpowder and tungsten alloy outer shell encapsuling a lead bullet.",
+            stats: {
+                damage: ["+10", "+10", "+11", "+11", "+12", "+12", "+13", "+13", "+14", "+14", "+15"],
+                criticalDamage: ["+15", "+15", "+16", "+17", "+18", "+18", "+19", "+20", "+21", "+21", "+22"]
+            }
+        },
+        {
+            name: "20GA Buckshot",
+            rarity: 5,
+            exclusive: true,
+            usable: ["KS-23"],
+            description: "This bright yellow shell contains twenty pellets. It boasts top muzzle velocity and excellent spread pattern, greatly increasing the lethality of KS23.",
+            stats: {
+                criticalDamage: ["+14~18", "+14~18", "+15~19", "+16~20", "+16~21", "+17~22", "+18~23", "+18~24", "+19~25", "+20~26", "+21~27"],
+                damage: ["+9~12", "+9~12", "+9~13", "+10~13", "+10~14", "+11~15", "+11~15", "+12~16", "+12~16", "+13~17", "+13~18"],
+                accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"]
+            }
+        },
+        {
+            name: "BK Slug",
+            rarity: 2,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. Each shot contains a single large projectile and is designed to deal single-target damage.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2"]
+            }
+        },
+        {
+            name: "FRAG-12 High Explosive Rounds",
+            rarity: 5,
+            exclusive: true,
+            usable: ["AA-12"],
+            description: "These are high-explosive rounds designed for 12-gauge shotguns and quickly became a major selling point for the AA-12 on the market. With the combination of the explosive rounds' effect and the AA-12's full automatic shooting, art is a blast!",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["+8", "+8", "+9", "+10", "+10", "+11", "+12", "+13", "+13", "+14", "+15"],
+                accuracy: ["+12", "+12", "+13", "+14", "+15", "+16", "+17", "+17", "+18", "+19", "+20"]
+            }
+        },
+        {
+            name: "FST Slug",
+            rarity: 3,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. With its mass centered in the front, each single large projectile shot is designed to deal accurate single-target damage.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
+            }
+        },
+        {
+            name: "SABOT Slug",
+            rarity: 5,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. After being fired, it gains a steady rotation that provides the shotgun shot with a stable firing trajectory and laser-like precision.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
+            }
+        },
+        {
+            name: "WAD Slug",
+            rarity: 4,
+            exclusive: false,
+            usable: ["SG"],
+            description: "Shotgun slugs issued by IOP. With its mass centered in the front, each single large projectile shot encased in polymer casing is designed to deal highly accurate single-target damage.",
+            stats: {
+                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
+                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
+                accuracy: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12", "+9~13"]
+            }
+        },
         {
             name: "#0 Buckshot",
             rarity: 3,
@@ -959,56 +1053,6 @@ var equipments = {
                 criticalDamage: ["+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4", "+3~4"]
             }
         }
-    ],
-    slugAmmo: [
-        {
-            name: "BK Slug",
-            rarity: 2,
-            exclusive: false,
-            usable: ["SG"],
-            description: "Shotgun slugs issued by IOP. Each shot contains a single large projectile and is designed to deal single-target damage.",
-            stats: {
-                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
-                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
-                accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2"]
-            }
-        },
-        {
-            name: "FST Slug",
-            rarity: 3,
-            exclusive: false,
-            usable: ["SG"],
-            description: "Shotgun slugs issued by IOP. With its mass centered in the front, each single large projectile shot is designed to deal accurate single-target damage.",
-            stats: {
-                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
-                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
-                accuracy: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
-            }
-        },
-        {
-            name: "SABOT Slug",
-            rarity: 5,
-            exclusive: false,
-            usable: ["SG"],
-            description: "Shotgun slugs issued by IOP. After being fired, it gains a steady rotation that provides the shotgun shot with a stable firing trajectory and laser-like precision.",
-            stats: {
-                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
-                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
-                accuracy: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
-            }
-        },
-        {
-            name: "WAD Slug",
-            rarity: 4,
-            exclusive: false,
-            usable: ["SG"],
-            description: "Shotgun slugs issued by IOP. With its mass centered in the front, each single large projectile shot encased in polymer casing is designed to deal highly accurate single-target damage.",
-            stats: {
-                target: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"],
-                damage: ["*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3", "*3"],
-                accuracy: ["+5~7", "+5~7", "+5~8", "+6~8", "+6~9", "+7~10", "+7~10", "+8~11", "+8~12", "+9~12", "+9~13"]
-            }
-        },
     ],
     exoskeleton: [
         {
@@ -1386,6 +1430,592 @@ var equipments = {
                 rateOfFire: ["-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1", "-8~1"]
             }
         }
+    ],
+    special: [
+        {
+            name: "7N31",
+            rarity: 5,
+            exclusive: true,
+            usable: ["GSh-18 Mod"],
+            description: "They have higher penetration than regular 9x19mm Parabellum rounds. GSh-18 bought a lot of 7N31 rounds in order to deal with the ever-growing number of armored units.",
+            stats: {
+                armorPiercing: ["+16~20", "+17~21", "+18~23", "+19~24", "+20~26", "+22~27", "+23~29", "+24~30", "+25~32", "+26~33", "+28~35"],
+                damage: ["+7~10", "+7~10", "+7~11", "+8~11", "+8~12", "+8~12", "+9~13", "+9~13", "+9~14", "+10~14", "+10~15"],
+                rateOfFire: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3"]
+            }
+        },
+        {
+            name: "Acceleration Coil",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Hanyang Type 88 Mod"],
+            description: "Abandoning the outdated propellant propulsion method of lead delivery, the newly upgraded Type88 is now equipped with a high-performance acceleration coil, which can accelerate projectiles to Mach 1.5 in 0.2 seconds. Isn't this a bit overpowered?",
+            stats: {
+                criticalHitRate: ["+18~25", "+19~27", "+21~30", "+23~32", "+25~35", "+27~37", "+28~40", "+30~42", "+32~45", "+34~47", "+36~50"],
+                damage: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~4", "+1~4", "+1~4", "+1~4", "+1~5", "+1~5"]
+            }
+        },
+        {
+            name: "ACS-L",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Super SASS Mod"],
+            description: "This polymer backrest designed by MGP has a small storage bin at the rear for tools. The large cheek support increases the comfort of the user.",
+            stats: {
+                criticalHitRate: ["+18~24", "+19~26", "+21~28", "+23~31", "+25~33", "+27~36", "+28~38", "+30~40", "+32~43", "+34~45", "+36~48"],
+                damage: ["+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9", "+5~9", "+6~10"]
+            }
+        },
+        {
+            name: "Additional Computing Module",
+            rarity: 5,
+            exclusive: true,
+            usable: ["UMP45 Mod"],
+            description: "A chip upgrade developed especially for UMP45 to improve her basic performance and more importantly, effectively solve the problem of electronic warfare T-Dolls not being able to have complex fire control systems installed.",
+            stats: {
+                criticalHitRate: ["+15~18", "+15~18", "+16~19", "+16~20", "+17~20", "+18~21", "+18~22", "+19~23", "+19~23", "+20~24", "+21~25"],
+                evasion: ["+7~10", "+7~10", "+7~11", "+8~11", "+8~12", "+8~12", "+9~13", "+9~13", "+9~14", "+10~14", "+10~15"]
+            }
+        },
+        {
+            name: "Adelhyde 1",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The sweet component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "Adelhyde 2",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The sweet component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "Cybernetic Hands",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Alma"],
+            description: "In order to avoid long-term Carpal Tunnel Syndrome (and also to install other useful functions), Alma underwent surgery to have her hands replaced with electronic prostheses.",
+            stats: {
+                damage: ["+2~4", "+2~4", "+2~4", "+2~4", "+2~4", "+2~5", "+2~5", "+2~5", "+2~5", "+2~5", "+3~6"],
+                clipSize: ["+2~4", "+2~4", "+2~4", "+2~4", "+2~4", "+2~5", "+2~5", "+2~5", "+2~5", "+2~5", "+3~6"],
+                evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
+            }
+        },
+        {
+            name: "BM59 Heavy Barrel",
+            rarity: 5,
+            exclusive: true,
+            usable: ["BM59"],
+            description: "Equipped with a heavy barrel, BM59 Mark IV will not overheat with sustained fire, allowing it to play the role of fire support.",
+            stats: {
+                criticalHitRate: ["+18~25", "+19~27", "+21~30", "+23~32", "+25~35", "+27~37", "+28~40", "+30~42", "+32~45", "+34~47", "+36~50"],
+                accuracy: ["+4~6", "+4~6", "+4~6", "+4~6", "+4~7", "+4~7", "+5~7", "+5~7", "+5~8", "+5~8", "+5~8"],
+                rateOfFire: ["+2~4", "+2~4", "+2~4", "+2~4", "+2~4", "+2~5", "+2~5", "+2~5", "+2~5", "+2~5", "+3~6"]
+            }
+        },
+        {
+            name: "Bren L4 Barrel Kit",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Bren Mod"],
+            description: "Installing this L4 barrel kit allows Bren to fire 7.62x51mm NATO rounds. Increases damage and accuracy but decreases rate of fire. Can only be equipped by Bren.",
+            stats: {
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"],
+                accuracy: ["+12~16", "+13~17", "+14~18", "+15~20", "+16~21", "+17~23", "+18~24", "+19~26", "+20~27", "+21~28", "+22~30"],
+                rateOfFire: ["-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1", "-4~1"]
+            }
+        },
+        {
+            name: "Bronson Extract",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The bitter component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "C96 Oak Stock",
+            rarity: 5,
+            exclusive: true,
+            usable: ["C96 Mod"],
+            description: "A real wooden stock that was specially made for the Mauser C96, it improves accuracy when firing multiple rounds in succession and is decorated with a cloth sleeve that matches the Doll's clothing. You can even store some snacks in it. All in all, it's incredibly practical.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20", "+16~21", "+17~22", "+18~23", "+19~24", "+20~25"],
+                evasion: ["+8~10", "+8~11", "+9~12", "+10~13", "+11~14", "+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20"]
+            }
+        },
+        {
+            name: "Meteorite",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Claes"],
+            description: "No amount of fire and blood will ever consume such genuine feelings.",
+            stats: {
+                criticalHitRate: ["+18~25", "+19~27", "+21~30", "+23~32", "+25~35", "+27~37", "+28~40", "+30~42", "+32~45", "+34~47", "+36~50"],
+                damage: ["+3~5", "+3~5", "+3~5", "+3~6", "+3~6", "+4~6", "+4~7", "+4~7", "+4~7", "+4~8", "+5~8"],
+                accuracy: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~4", "+1~4", "+1~4", "+1~4", "+1~4", "+1~5"]
+            }
+        },
+        {
+            name: "Fairy Tale Picture Books",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Angelica"],
+            description: "A girl's dreams and memories are stored within these fairy tale picture books. No matter when or where, just seeing them is reassuring.",
+            stats: {
+                evasion: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"],
+                damage: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~4", "+1~4", "+1~4", "+1~4", "+1~4", "+1~5"]
+            }
+        },
+        {
+            name: "SAA Long Barrel",
+            rarity: 5,
+            exclusive: true,
+            usable: ["SAA Mod"],
+            description: "A long-barreled SAA, spurred boots, and a neatly trimmed mustache are important features of a wild west protagonist. Perhaps a bottle of cola from the old days too.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~10", "+7~10", "+7~10"],
+                damage: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3"]
+            }
+        },
+        {
+            name: "Bayonet",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Triela"],
+            description: "When guns cannot be used, one fights with knives, fists, and teeth. Whatever it takes to win.",
+            stats: {
+                damage: ["+7~10", "+7~10", "+7~11", "+8~11", "+8~12", "+8~12", "+9~13", "+9~13", "+9~14", "+10~14", "+10~15"],
+                criticalHitRate: ["+10~14", "+10~15", "+11~16", "+12~17", "+13~18", "+14~19", "+14~20", "+15~21", "+16~22", "+17~24", "+18~25"],
+                criticalDamage: ["+11~15", "+11~15", "+12~16", "+12~17", "+13~18", "+13~18", "+14~19", "+14~20", "+15~21", "+15~21", "+16~22"]
+            }
+        },
+        {
+            name: "Dinergate RO",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M4 SOPMOD II Mod"],
+            description: "When guns cannot be used, one fights with knives, fists, and teeth. Whatever it takes to win.",
+            stats: {
+                accuracy: ["+6~10", "+6~10", "+6~10", "+6~11", "+6~11", "+7~12", "+7~12", "+7~12", "+7~13", "+8~13", "+8~14"],
+                damage: ["+6~9", "+6~9", "+6~9", "+6~9", "+6~10", "+7~10", "+7~10", "+7~11", "+7~11", "+7~11", "+8~12"],
+                criticalDamage: ["-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2", "-4~2"]
+            }
+        },
+        {
+            name: "Fire Selector",
+            rarity: 5,
+            exclusive: true,
+            usable: ["FN-49 Mod"],
+            description: "A fire selector for later versions of the rifle. A FN49 equipped with this can freely switch between semi-auto and fully-auto. Increases rate of fire and critical strike chance. Can only be equipped by FN49.",
+            stats: {
+                criticalHitRate: ["+17~24", "+18~26", "+20~28", "+22~31", "+23~33", "+25~36", "+27~38", "+28~40", "+30~43", "+32~45", "+34~48"],
+                rateOfFire: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"]
+            }
+        },
+        {
+            name: "Flanergide",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The spicy component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "G-Box",
+            rarity: 5,
+            exclusive: true,
+            usable: ["G11 Mod"],
+            description: "This mysterious toolbox developed by IOP specifically for G11 was initially planned to be a backup energy storage for dolls. The final version of the G-Box can also store G11's daily necessities, and has become her mobile life terminal. At the same time, G11 insists this box has a very high tactical value to her.",
+            stats: {
+                accuracy: ["+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9", "+5~9", "+6~10"],
+                evasion: ["-10~5+", "-10~5+", "-10~5+", "-10~5+", "-10~5+", "-10~5+", "-10~5+", "-10~5+", "-10~5+", "-10~5+", "-10~5+"]
+            }
+        },
+        {
+            name: "Gr G3 Barrel Kit",
+            rarity: 5,
+            exclusive: true,
+            usable: ["G3 Mod"],
+            description: "This heavy barrel kit provides Gr G3 with a higher stability and reduced bullet spread. Its roller-delayed blowback design increases accuracy comparable to sniper rifles.",
+            stats: {
+                damage: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"],
+                criticalHitRate: ["+18~26", "+19~28", "+21~30", "+22~32", "+24~34", "+25~37", "+27~39", "+28~41", "+30~43", "+31~45", "+33~48"]
+            }
+        },
+        {
+            name: "Galil Exclusive Handguard",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Galil Mod"],
+            description: "This modular handguard was specially designed for the Galil rifle. The brand new MLOK system brings many possibilities with it.",
+            stats: {
+                accuracy: ["+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0"],
+                evasion: ["+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0", "+0"]
+            }
+        },
+        {
+            name: "Hi-Performance Tactical Hair Accessory",
+            rarity: 5,
+            exclusive: true,
+            usable: ["G41"],
+            description: "This strange-looking sphere-shaped hair accessory used by Gr G41 is equipped with a fire control chip that improves both her ability to detect enemies and her aim. When it turns red, she'll be in grave danger and need to be return for immediate repairs.",
+            stats: {
+                damage: ["+3", "+3", "+3", "+3", "+3", "+4", "+4", "+4", "+4", "+4", "+5"],
+                accuracy: ["+3", "+3", "+3", "+3", "+3", "+4", "+4", "+4", "+4", "+4", "+5"],
+                evasion: ["+12", "+12", "+13", "+14", "+15", "+16", "+16", "+17", "+18", "+19", "+20"]
+            }
+        },
+        {
+            name: "Inherited Case",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M4A1 Mod"],
+            description: "A departing gift that had witnessed many unsung wars and heroes without tombstones from an old veteran. It has been calibrated for M4A1.",
+            stats: {
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"],
+                armor: ["+9~12", "+9~12", "+9~12", "+9~12", "+9~13", "+10~13", "+10~13", "+10~14", "+10~14", "+11~14", "+11~15"]
+            }
+        },
+        {
+            name: "Karmotrine 1",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The alcoholic component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "Karmotrine 2",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The alcoholic component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "Karmotrine 3",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The alcoholic component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "Lightweight Rail Kit",
+            rarity: 5,
+            exclusive: true,
+            usable: ["ST AR-15 Mod"],
+            description: "Equipment designed to be lightweight and to maintain stability while shooting at high rates of fire. Includes keymod rails, front grip, muzzle compensator, and a free-floating barrel. Increases crit damage and accuracy. Can only be equipped by AR15.",
+            stats: {
+                criticalDamage: ["+11~15", "+11~15", "+11~16", "+12~16", "+12~17", "+12~17", "+13~18", "+13~18", "+13~19", "+14~19", "+14~20"],
+                accuracy: ["+4~6", "+4~6", "+4~6", "+4~7", "+5~7", "+5~8", "+5~8", "+5~8", "+6~9", "+6~9", "+6~10"]
+            }
+        },
+        {
+            name: "M2 Bipod",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M14 Mod"],
+            description: "This time-honored foldable bipod which improves shooting stability had been issued to M14s for a brief period of time in the past. Can only be equipped by M14.",
+            stats: {
+                criticalHitRate: ["+20~24", "+22~26", "+24~28", "+26~31", "+28~33", "+30~36", "+32~38", "+34~40", "+36~43", "+38~45", "+40~48"],
+                accuracy: ["+4~5", "+4~5", "+4~6", "+5~6", "+5~7", "+6~7", "+6~8", "+6~8", "+7~9", "+7~9", "+8~10"]
+            }
+        },
+        {
+            name: "M9 BC2 Grips",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M9"],
+            description: "A set of modified synthetic tactical grips for exclusive use with M9. They provide an underbarrel Picatinny rail mount and improve controllability while also increasing flexibility in equipping tactical accessories.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+10~12", "+10~12", "+11~13", "+12~14", "+12~15", "+13~16", "+14~17", "+14~17", "+15~18", "+16~19", "+17~20"],
+                accuracy: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3"]
+            }
+        },
+        {
+            name: "MAX10 Upper Receiver",
+            rarity: 5,
+            exclusive: true,
+            usable: ["MAC-10"],
+            description: "A modified upper receiver for exclusive use with Ingram. It adds a rail system that increases flexibility in equipping tactical accessories while also reducing the weapon's cyclic rate, allowing her fire control module to control it more easily. Most importantly, it looks REALLY cool.",
+            stats: {
+                criticalHitRate: ["+15~20", "+16~21", "+17~23", "+18~24", "+19~26", "+20~27", "+21~29", "+22~30", "+24~32", "+25~33", "+26~35"],
+                evasion: ["+10~12", "+10~12", "+11~13", "+12~14", "+12~15", "+13~16", "+14~17", "+14~17", "+15~18", "+16~19", "+17~20"],
+                rateOfFire: ["-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4", "-6~4"]
+            }
+        },
+        {
+            name: "Prosthetic Arm",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Dana"],
+            description: "Dana's cybernetic arm. She has never revealed the story of how she lost her real arm.",
+            stats: {
+                damage: ["+2~4", "+2~4", "+2~4", "+2~4", "+2~4", "+2~5", "+2~5", "+2~5", "+2~5", "+2~5", "+3~6"],
+                armor: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~10", "+7~10", "+8~10", "+8~11"],
+                evasion: ["-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2", "-2"]
+            }
+        },
+        {
+            name: "MP446C Match Barrel",
+            rarity: 5,
+            exclusive: true,
+            usable: ["MP-446 Mod"],
+            description: "With improvements in accuracy, this 120mm match barrel upgrades MP-446 into the more versatile 446C. Can only be equipped by MP-446.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~10", "+7~10", "+7~10"],
+                accuracy: ["+3~4", "+3~4", "+3~4", "+3~5", "+4~5", "+4~6", "+4~6", "+5~6", "+5~7", "+5~7", "+6~8"]
+            }
+        },
+        {
+            name: "Spectacles",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Claes"],
+            description: "A pair of spectacles that bore witness to a vow between two people. They aren't corrective, but they do let her look at the world with more composure.",
+            stats: {
+                criticalHitRate: ["+18~25", "+19~27", "+21~30", "+23~32", "+25~35", "+27~37", "+28~40", "+30~42", "+32~45", "+34~47", "+36~50"],
+                damage: ["+3~5", "+3~5", "+3~5", "+3~6", "+3~6", "+4~6", "+4~7", "+4~7", "+4~7", "+4~8", "+5~8"],
+                accuracy: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~4", "+1~4", "+1~4", "+1~4", "+1~4", "+1~5"]
+            }
+        },
+        {
+            name: "Pet Keychain",
+            rarity: 5,
+            exclusive: true,
+            usable: ["RO635 Mod"],
+            description: "A multi-functional pendant designed for RO635, with integrated uses in decompression, load-bearing, and as an alarm. It is said that during the design process, a certain doll broke into the lab and forced the designer to create this pendant in her own image.",
+            stats: {
+                evasion: ["+20~25", "+21~27", "+23~29", "+24~31", "+26~33", "+28~35", "+29~37", "+31~39", "+32~41", "+34~43", "+36~45"],
+                damage: ["-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6", "-8~6"]
+            }
+        },
+        {
+            name: "Duelling Cards",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Rico"],
+            description: "They may have been given a cool name, but they're still nothing more than toys for building a house of cards – one of the few things that a cyborg created for destruction can make.",
+            stats: {
+                criticalDamage: ["+18~25", "+19~27", "+20~29", "+22~31", "+23~33", "+25~35", "+26~37", "+28~39", "+29~41", "+30~43", "+32~45"],
+                movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
+            }
+        },
+        {
+            name: "Prosthetic Eye",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Stella"],
+            description: "In her youth, Stella lost an eye when she was attacked by thugs, so she has used an electronic eye ever since.",
+            stats: {
+                criticalDamage: ["+15~20", "+15~21", "+16~22", "+17~23", "+18~24", "+18~25", "+19~26", "+20~27", "+21~28", "+21~29", "+22~30"],
+                rateOfFire: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3"],
+                movementSpeed: ["-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3", "-3"]
+            }
+        },
+        {
+            name: "PT-3 Buttstock",
+            rarity: 5,
+            exclusive: true,
+            usable: ["PP-19 Mod"],
+            description: "A buttstock designed by the renowned ZNT. Both its design and workmanship ooze with Russian flavour.",
+            stats: {
+                damage: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"],
+                evasion: ["+8~10", "+8~11", "+9~13", "+10~13", "+11~14", "+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20"]
+            }
+        },
+        {
+            name: "Powdered Delta",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Jill"],
+            description: "The sour component of drinks. Issued by the BTC.",
+            stats: {
+                evasion: ["+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15", "+15"]
+            }
+        },
+        {
+            name: "Am RFB Quad Rail",
+            rarity: 5,
+            exclusive: true,
+            usable: ["RFB"],
+            description: "Insufficient space is often a problem when mounting accessories onto bullpup assault rifles. Thanks to this three-inch quad rail produced by the original manufacturer KTC, the tactical Christmas tree is no longer dominated by standard firearms. Can only be equipped by Am RFB.",
+            stats: {
+                criticalHitRate: ["+17~24", "+18~26", "+20~28", "+22~31", "+23~33", "+25~36", "+27~38", "+28~40", "+30~43", "+32~45", "+34~48"],
+                criticalDamage: ["+6~10", "+6~10", "+6~11", "+7~12", "+7~13", "+8~14", "+8~14", "+9~15", "+9~16", "+10~17", "+10~18"]
+            }
+        },
+        {
+            name: "RPD Infantry Webbing",
+            rarity: 5,
+            exclusive: true,
+            usable: ["RPD"],
+            description: "A piece of infantry equipment produced by a certain Eastern faction before the War. Light and practical, it's very popular among certain collectors. People often bug RPD to sell it to them at a high price when she goes on security missions, much to her chagrin.",
+            stats: {
+                clipSize: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+2~4", "+2~4", "+3~4", "+3~4", "+3~5"],
+                damage: ["+2~3", "+2~3", "+2~3", "+2~3", "+2~4", "+3~4", "+3~4", "+3~5", "+3~5", "+3~5", "+4~6"],
+                evasion: ["-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2", "-3~2"]
+            }
+        },
+        {
+            name: "SIG-510 Fire Selector",
+            rarity: 5,
+            exclusive: true,
+            usable: ["SIG-510"],
+            description: "Designed for SIG-510, the fire selector can be freely switched between single shot and fully automatic, allowing for full adaptability in the ever-changing battlefield.",
+            stats: {
+                criticalHitRate: ["+18~25", "+19~27", "+21~30", "+23~32", "+25~35", "+27~37", "+28~40", "+30~42", "+32~45", "+34~47", "+36~50"],
+                damage: ["+3~5", "+3~5", "+3~5", "+3~6", "+3~6", "+4~7", "+4~7", "+4~7", "+4~8", "+5~8", "+5~9"],
+                accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"]
+            }
+        },
+        {
+            name: "Stechkin Buttstock",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Stechkin"],
+            description: "Although the newer resin buttstock is lighter, everyone knows that a classic, weather-beaten solid wood buttstock is the only choice for a self respecting Stechkin. Can only be equipped by Stechkin.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10", "+7~10"],
+                accuracy: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"]
+            }
+        },
+        {
+            name: "Tactical Thunderbolt Ahoge",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Stechkin Mod"],
+            description: "Many Commanders have been bothered by how Stechkin's lightning bolt-shaped ahoge can move around so nimbly and vigorously. They secretly considered it to be an overly eye-catching element of her design, until one day P7 found out that Stechkin detaches it and puts it aside to charge while she sleeps.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
+            }
+        },
+        {
+            name: "Tactical Earphones",
+            rarity: 5,
+            exclusive: true,
+            usable: ["TAR-21"],
+            description: "TAR-21's trademark headwear. It looks like a set of bunny ears but contains many sensors, allowing her to accurately pinpoint targets without exposing herself from behind cover.",
+            stats: {
+                damage: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3"],
+                rateOfFire: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3"],
+                evasion: ["+8~12", "+8~12", "+9~13", "+9~14", "+10~15", "+10~16", "+11~17", "+11~17", "+12~18", "+13~19", "+13~20"]
+            }
+        },
+        {
+            name: "Tactical Folding Stock",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Spectre M4"],
+            description: "The folding backrest specially designed for Spectre M4 makes the use of firearms more convenient.",
+            stats: {
+                evasion: ["+7~10", "+7~11", "+8~12", "+9~13", "+9~14", "+10~15", "+11~16", "+11~17", "+12~18", "+13~19", "+14~20"],
+                rateOfFire: ["+1~2", "+1~2", "+1~2", "+1~2", "+1~2", "+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+2~4"]
+            }
+        },
+        {
+            name: "Tactical Grip",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Makarov"],
+            description: "The tactical grip designed by the famous firearms accessories factory for the Makarov PM has a built-in magazine for quick release structure. At the same time, the comfort of holding is improved, and it is a product that users can't put it down.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+7~11", "+7~12", "+8~13", "+9~14", "+9~15", "+10~16", "+11~17", "+11~18", "+12~19", "+13~20", "+14~22"]
+            }
+        },
+        {
+            name: "Tactical Guard Rail",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Serdyukov"],
+            description: "The tactical rail designed specifically for the Serdyukov pistol allows the pistol to replace external accessories to deal with different environments.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+8~11", "+8~12", "+9~13", "+10~14", "+11~15", "+12~16", "+12~17", "+13~18", "+14~19", "+15~20", "+16~22"]
+            }
+        },
+        {
+            name: "Tactical Headband",
+            rarity: 5,
+            exclusive: true,
+            usable: ["HK416 Mod"],
+            description: "A brand new improved motion sensor system, may only appear to be an ornament, but it has up to 22 different sensor arrays integrated within, significantly improves HK416's combat effectiveness.",
+            stats: {
+                criticalDamage: ["+6~8", "+6~8", "+6~8", "+6~8", "+6~8", "+6~9", "+6~9", "+7~9", "+7~9", "+7~9", "+7~10"],
+                evasion: ["+10~12", "+10~12", "+11~13", "+12~14", "+12~15", "+13~16", "+14~17", "+14~17", "+15~18", "+16~19", "+17~20"]
+            }
+        },
+        {
+            name: "Type 100 Folding Stock",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Type 100"],
+            description: "The folding buttstock designed for paratrooper combat is quite special. Compared with the common metal folding butt of other guns, Sakura uses a wooden butt with a metal loose-leaf folding structure, which is exclusively for Sakura.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+12~15", "+12~16", "+13~17", "+14~18", "+15~19", "+16~20", "+16~21", "+17~22", "+18~23", "+19~24", "+20~25"]
+            }
+        },
+        {
+            name: "WML & Tactical Handguard",
+            rarity: 5,
+            exclusive: true,
+            usable: ["M950A Mod"],
+            description: "A tactical handguard installed after M950A's remodel. Its four rails give her more choice in accessories, but at the same time, M950A's been complaining about how heavy the front of the gun has become, leading to increased training costs.",
+            stats: {
+                criticalHitRate: ["+12~15", "+12~15", "+12~16", "+13~16", "+13~17", "+14~17", "+14~18", "+14~18", "+15~19", "+15~19", "+16~20"],
+                evasion: ["+9~12", "+9~12", "+10~13", "+10~14", "+11~15", "+12~16", "+12~17", "+13~17", "+14~18", "+14~19", "+15~20"]
+            }
+        },
+        {
+            name: "Wooden Grips",
+            rarity: 5,
+            exclusive: true,
+            usable: ["NZ75"],
+            description: "The wooden grip piece specially designed for NZ75 greatly improves the grip.",
+            stats: {
+                criticalHitRate: ["+16~20", "+16~21", "+17~22", "+18~23", "+19~24", "+20~25", "+20~26", "+21~27", "+22~28", "+23~29", "+24~30"],
+                evasion: ["+7~10", "+7~11", "+8~12", "+9~13", "+9~14", "+10~15", "+11~16", "+11~17", "+12~18", "+13~19", "+14~20"]
+            }
+        },
+        {
+            name: "Wristwatch",
+            rarity: 5,
+            exclusive: true,
+            usable: ["Claes"],
+            description: "iving a regimented life is also a solid kind of happiness.",
+            stats: {
+                criticalHitRate: ["+18~25", "+19~27", "+21~30", "+23~32", "+25~35", "+27~37", "+28~40", "+30~42", "+32~45", "+34~47", "+36~50"],
+                evasion: ["+3~5", "+3~5", "+3~5", "+3~6", "+3~6", "+4~6", "+4~7", "+4~7", "+4~7", "+4~8", "+5~8"],
+                accuracy: ["+1~3", "+1~3", "+1~3", "+1~3", "+1~3", "+1~4", "+1~4", "+1~4", "+1~4", "+1~4", "+1~5"]
+            }
+        }
     ]
 };
 
@@ -1398,11 +2028,11 @@ for(var i = 0; i < keys.length; i++){
         if(equipment.name[0] === "."){
             imageName = equipment.name.substring(1)
         }
+        else if(equipment.name[0] === "#"){
+            imageName = equipment.name.substring(1)
+        }
         else if(equipment.name === "ILM Hollow Point Ammo"){
             imageName = `${equipment.name} (${equipment.rarity})`
-        }
-        else if(keys[i] === "buckshotAmmo"){
-            imageName = `${equipment.name.substring(1)}`
         }
         else{
             imageName = equipment.name
