@@ -3538,7 +3538,18 @@ var tdolls = [
 			}
 		},
 		mod: null,
-		skins: null
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Dead Silent Dancer"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4111,7 +4122,18 @@ var tdolls = [
 			}
 		},
 		mod: null,
-		skins: null
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Waltz of the End"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
 	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
