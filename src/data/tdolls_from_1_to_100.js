@@ -1133,15 +1133,15 @@ var tdolls = [
 		},
 		mod: null,
 		skins: {
-			number_of_skins: 2,
-			skin_names: ["Kitty Paws", "Love is Blind"],
+			number_of_skins: 3,
+			skin_names: ["Kitty Paws", "Love is Blind", "Hellfire"],
 			animations: {
-				hasSkillAnimation: [true, true],
-				hasVictoryLoopAnimation: [true, true]
+				hasSkillAnimation: [true, true, true],
+				hasVictoryLoopAnimation: [true, true, true]
 			},
 			animations_dorm: {
-				hasActionAnimation: [false, false],
-				hasSit2Animation: [false, false]
+				hasActionAnimation: [false, false, false],
+				hasSit2Animation: [false, false, false]
 			}
 		}
 	},
@@ -3878,15 +3878,15 @@ var tdolls = [
 			}
 		},
 		skins: {
-			number_of_skins: 3,
-			skin_names: ["Starry Cocoon", "Black Cat's Gift", "Primrose-Flavored Foil Candy"],
+			number_of_skins: 4,
+			skin_names: ["Starry Cocoon", "Black Cat's Gift", "Primrose-Flavored Foil Candy", "Fangs"],
 			animations: {
-				hasSkillAnimation: [true, true, true],
-				hasVictoryLoopAnimation: [true, true, true]
+				hasSkillAnimation: [true, true, true, true],
+				hasVictoryLoopAnimation: [true, true, true, true]
 			},
 			animations_dorm: {
-				hasActionAnimation: [false, false, false],
-				hasSit2Animation: [false, false, false]
+				hasActionAnimation: [false, false, false, false],
+				hasSit2Animation: [false, false, false, false]
 			}
 		}
 	},
