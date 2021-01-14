@@ -70,7 +70,7 @@ This project serves to provide a mobile-friendly web application of a database h
 - [ ] (LOW PRIORITY) Add build times for T-Dolls.
 - [ ] (LOW PRIORITY) Add build times for equipment.
 - [ ] (LOW PRIORITY) Add build times for Fairies.
-- [x] (LOW PRIORITY) Update the database from its last updated state of October 10, 2020 to the latest.
+- [x] ~~(LOW PRIORITY) Update the database from its last updated state of October 10, 2020 to the latest.~~
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
