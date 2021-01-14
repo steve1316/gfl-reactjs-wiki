@@ -4,7 +4,7 @@
 
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/steve1316/gfl-database?logo=GitHub) ![GitHub last commit](https://img.shields.io/github/last-commit/steve1316/gfl-database?logo=GitHub) ![GitHub issues](https://img.shields.io/github/issues/steve1316/gfl-database?logo=GitHub) ![GitHub pull requests](https://img.shields.io/github/issues-pr/steve1316/gfl-database?logo=GitHub) ![GitHub repo size](https://img.shields.io/github/repo-size/steve1316/gfl-database?logo=GitHub) ![GitHub](https://img.shields.io/github/license/steve1316/gfl-database?logo=GitHub)
 
-# Database last updated on October 10, 2020.
+# Database last updated on January 13, 2021.
 
 This project serves to provide a mobile-friendly web application of a database hosted on GitHub featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
 
@@ -21,9 +21,9 @@ This project serves to provide a mobile-friendly web application of a database h
 
 # Features
 
-- [x] Stats and animations of all T-Dolls (Tactical Dolls) in the game as of October 10, 2020.
+- [x] Stats and animations of all T-Dolls (Tactical Dolls) in the game as of January 13, 2021.
 
-- [ ] Information on equipment and their effects when equipped on T-Dolls. (IN-PROGRESS)
+- [x] Information on equipment and their effects when equipped on T-Dolls.
 
 - [ ] Information on Fairies.
 
@@ -70,7 +70,7 @@ This project serves to provide a mobile-friendly web application of a database h
 - [ ] (LOW PRIORITY) Add build times for T-Dolls.
 - [ ] (LOW PRIORITY) Add build times for equipment.
 - [ ] (LOW PRIORITY) Add build times for Fairies.
-- [ ] (LOW PRIORITY) Update the database from its last updated state of October 10, 2020 to the latest.
+- [x] (LOW PRIORITY) Update the database from its last updated state of October 10, 2020 to the latest.
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
