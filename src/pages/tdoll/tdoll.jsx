@@ -236,9 +236,9 @@ export default function TDoll(props) {
 		tdolls = require("../../data/tdolls_from_101_to_200").default;
 	} else if (id > 200 && id <= 300) {
 		tdolls = require("../../data/tdolls_from_201_to_300").default;
-	} else if (id > 300 && id <= 320) {
+	} else if (id > 300 && id <= 330) {
 		tdolls = require("../../data/tdolls_from_301_to_400").default;
-	} else if (id >= 1000 && id <= 1027) {
+	} else if (id >= 1000 && id <= 1029) {
 		tdolls = require("../../data/tdolls_from_1000_to_1050").default;
 	}
 
@@ -755,6 +755,7 @@ export default function TDoll(props) {
 		var tempSkinSelected = helperSkinSelected();
 		if (animationMode === 0) {
 			if (showSkin) {
+				// Skin animations for Combat.
 				return (
 					<Tabs
 						className={classes.tabs}
@@ -769,8 +770,12 @@ export default function TDoll(props) {
 						{"hasWait2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasWait2Animation[tempSkinSelected] ? <Tab label="Wait2" value="wait2" /> : ""}
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
+						{tdoll.selected.type === "SG" ? <Tab label="Reload" value="reload" /> : ""}
 						{tdoll.skins.animations.hasSkillAnimation[tempSkinSelected] ? <Tab label="Skill" value="skill" /> : ""}
+						{"crouch" in tdoll.skins.animations && tdoll.skins.animations.crouch[tempSkinSelected] ? <Tab label="Crouch" value="crouch" /> : ""}
 						{"hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[tempSkinSelected] ? <Tab label="Attack2" value="attack2" /> : ""}
+						{"action" in tdoll.skins.animations && tdoll.skins.animations.action[tempSkinSelected] ? <Tab label="Action" value="action" /> : ""}
+						{"action2" in tdoll.skins.animations && tdoll.skins.animations.action2[tempSkinSelected] ? <Tab label="Action2" value="action2" /> : ""}
 						{tdoll.selected.type === "MG" ? <Tab label="Reload" value="reload" /> : ""}
 						<Tab label="Die" value="die" />
 						<Tab label="Victory" value="victory" />
@@ -778,6 +783,7 @@ export default function TDoll(props) {
 					</Tabs>
 				);
 			} else {
+				// Normal Animations for Combat.
 				return (
 					<Tabs
 						className={classes.tabs}
@@ -792,9 +798,13 @@ export default function TDoll(props) {
 						{"hasWait2Animation" in tdoll.normal.animations ? <Tab label="Wait2" value="wait2" /> : ""}
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
+						{tdoll.selected.type === "SG" ? <Tab label="Reload" value="reload" /> : ""}
 						{tdoll.selected.animations.hasSkillAnimation ? <Tab label="Skill" value="skill" /> : ""}
 						{"skill2" in tdoll.selected.animations ? <Tab label="Skill2" value="skill2" /> : ""}
+						{"crouch" in tdoll.selected.animations && tdoll.selected.animations.crouch ? <Tab label="Crouch" value="crouch" /> : ""}
 						{"hasAttack2Animation" in tdoll.selected.animations ? <Tab label="Attack2" value="attack2" /> : ""}
+						{"action" in tdoll.selected.animations && tdoll.selected.animations.action ? <Tab label="Action" value="action" /> : ""}
+						{"action2" in tdoll.selected.animations && tdoll.selected.animations.action2 ? <Tab label="Action2" value="action2" /> : ""}
 						{"spattack" in tdoll.selected.animations ? <Tab label="Special Attack" value="spattack" /> : ""}
 						{"spattack2" in tdoll.selected.animations ? <Tab label="Special Attack2" value="spattack2" /> : ""}
 						{"landing" in tdoll.selected.animations ? <Tab label="Landing" value="landing" /> : ""}
@@ -807,6 +817,7 @@ export default function TDoll(props) {
 				);
 			}
 		} else {
+			// Animations for Dorm.
 			return (
 				<Tabs
 					className={classes.tabs}
@@ -886,11 +897,32 @@ export default function TDoll(props) {
 						setAnimation(tdoll.selected.animations.attack.default);
 					}
 					break;
+				case "crouch":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.crouch[tempSkinSelected].default);
+					} else {
+						setAnimation(tdoll.selected.animations.crouch.default);
+					}
+					break;
 				case "attack2":
 					if (showSkin) {
 						setAnimation(tdoll.skins.animations.attack2[tempSkinSelected].default);
 					} else {
 						setAnimation(tdoll.selected.animations.attack2.default);
+					}
+					break;
+				case "action":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.action[tempSkinSelected].default);
+					} else {
+						setAnimation(tdoll.selected.animations.action.default);
+					}
+					break;
+				case "action2":
+					if (showSkin) {
+						setAnimation(tdoll.skins.animations.action2[tempSkinSelected].default);
+					} else {
+						setAnimation(tdoll.selected.animations.action2.default);
 					}
 					break;
 				case "spattack":
@@ -1017,7 +1049,8 @@ export default function TDoll(props) {
 	// Functions for Tileset functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Switch the animation playing to the next one when you click on the GIF Player.
+	// Switch the animation playing to the next one when you click on the GIF Player. This also influences the movement trhough the animation Tabs as well. 
+	// If you encounter the bug that moving forward suddenly skips a few tabs, chances are that animationArray is missing some of your newly added animations.
 	const playerSwitchAnimations = () => {
 		var currentAnimation = "";
 		var animationArray = [];
@@ -1043,11 +1076,17 @@ export default function TDoll(props) {
 			if (!showSkin && "skill2" in tdoll.selected.animations) {
 				animationArray.push("skill2");
 			}
-			if (
-				(!showSkin && "hasAttack2Animation" in tdoll.selected.animations) ||
-				(showSkin && "hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[tempSkinSelected])
-			) {
+			if ((!showSkin && "crouch" in tdoll.selected.animations) || (showSkin && "crouch" in tdoll.skins.animations && tdoll.skins.animations.crouch[tempSkinSelected])) {
+				animationArray.push("crouch");
+			}
+			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && "hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[tempSkinSelected])) {
 				animationArray.push("attack2");
+			}
+			if ((!showSkin && "action" in tdoll.selected.animations) || (showSkin && "action" in tdoll.skins.animations && tdoll.skins.animations.action[tempSkinSelected])) {
+				animationArray.push("action");
+			}
+			if ((!showSkin && "action2" in tdoll.selected.animations) || (showSkin && "action2" in tdoll.skins.animations && tdoll.skins.animations.action2[tempSkinSelected])) {
+				animationArray.push("action2");
 			}
 			if (!showSkin && "spattack" in tdoll.selected.animations) {
 				animationArray.push("spattack");
@@ -1058,7 +1097,7 @@ export default function TDoll(props) {
 			if (!showSkin && "landing" in tdoll.selected.animations) {
 				animationArray.push("landing");
 			}
-			if (tdoll.selected.type === "MG") {
+			if (tdoll.selected.type === "MG" || tdoll.selected.type === "SG") {
 				animationArray.push("reload");
 			}
 			animationArray.push("die");
