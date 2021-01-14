@@ -58,6 +58,8 @@ This project serves to provide a mobile-friendly web application of a database h
   - [x] ~~(HIGH PRIORITY) Create the Equipment Index page.~~
     - [x] ~~(MEDIUM PRIORTIY) Set up filters and searching for equipment.~~
     - [ ] (LOW PRIORITY) Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
+    - [ ] (MEDIUM PRIORITY) Add a way to go to the T-Doll from its exclusive equipment.
+    - [ ] (MEDIUM PRIORITY) Display all exclusive equipment linked to a T-Doll on its page.
 - [ ] (MEDIUM PRIORITY) Create data model for HOCs.
   - [ ] (MEDIUM PRIORITY) Create the HOC Index page.
   - [ ] (LOW PRIORITY) Add in the animations of the HOCs.
