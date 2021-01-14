@@ -50,6 +50,13 @@ export default function processData(tdolls) {
 			tdoll.normal.animations.wait2 = require(`../images/tdolls/${id}/animations/${id}_normal_wait2.gif`);
 		}
 
+		// Take care of the special animations for Agent Vector and Agent 416.
+		if(tdoll.normal.id === 1028 || tdoll.normal.id === 1029){
+			tdoll.normal.animations.action = require(`../images/tdolls/${id}/animations/${id}_normal_action.gif`);
+			tdoll.normal.animations.action2 = require(`../images/tdolls/${id}/animations/${id}_normal_action2.gif`);
+			tdoll.normal.animations.crouch = require(`../images/tdolls/${id}/animations/${id}_normal_crouch.gif`);
+		}
+
 		//////////// Dorm Animations for Normal ////////////
 		tdoll.normal.animations_dorm.lying = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_lying.gif`);
 		tdoll.normal.animations_dorm.move = require(`../images/tdolls/${id}/animations/${id}_normal_dorm_move.gif`);
@@ -121,6 +128,13 @@ export default function processData(tdolls) {
 			tdoll.skins.animations.attack = [];
 			tdoll.skins.animations.die = [];
 			tdoll.skins.animations.move = [];
+
+			// Initialize action and action2 animation arrays for the Division Collab skins of Vector, 416,  Agent Vector, and Agent 416.
+			if(tdoll.normal.id === 20 || tdoll.normal.id === 65 || tdoll.normal.id === 1028 || tdoll.normal.id === 1029){
+				tdoll.skins.animations.action = [];
+				tdoll.skins.animations.action2 = [];
+			}
+
 			tdoll.skins.animations.victory = [];
 			tdoll.skins.animations.wait = [];
 			tdoll.skins.animations_dorm.lying = [];
@@ -183,6 +197,18 @@ export default function processData(tdolls) {
 						tdoll.skins.animations.wait2 = [];
 					}
 					tdoll.skins.animations.wait2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_wait2.gif`);
+				}
+
+				// Take care of the special animations for the Division Collab skins for Vector and 416.
+				if((tdoll.normal.id === 20 && skinSelected === 3) || (tdoll.normal.id === 65 && skinSelected === 4)){
+					tdoll.skins.animations.action[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_action.gif`);
+					tdoll.skins.animations.action2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_action2.gif`);
+				}
+
+				// Take care of the special animations for the Division Collab skins of Agent Vector and Agent 416.
+				if((tdoll.normal.id === 1028 && skinSelected === 1) || (tdoll.normal.id === 1029 && skinSelected === 1)){
+					tdoll.skins.animations.action[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_action.gif`);
+					tdoll.skins.animations.action2[i] = require(`../images/tdolls/${id}/animations/${id}_skin${skinSelected}_action2.gif`);
 				}
 
 				//////////// Dorm Animations for Skin(s) ////////////
