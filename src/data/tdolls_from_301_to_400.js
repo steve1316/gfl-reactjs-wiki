@@ -919,7 +919,421 @@ var tdolls = [
 		},
 		mod: null,
 		skins: null
-	}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 321,
+			name: "TS12",
+			type: "SG",
+			rarity: 3,
+			max_hp: 242,
+			max_dmg: 34,
+			max_acc: 13,
+			max_eva: 11,
+			max_rof: 30,
+			max_armor: 21,
+			skill: {
+				name: "Rotating Magazine",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Upon skill activation, the next 2 reloads have their reload time reduced to 0 seconds. Attacks after the first reload have #1 increased damage. Attacks after the second reload have #2 increased accuracy.",
+				number_of_stats: 2,
+				stat1: ["65%", "67%", "69%", "72%", "75%", "78%", "81%", "84%", "87%", "90%"],
+				stat2: ["90%", "96%", "102%", "108%", "115%", "122%", "129%", "136%", "143%", "150%"]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 0, 2],
+				row3: [1, 0, 0],
+				targets: "Buffs MG",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 322,
+			name: "QSB-91",
+			type: "HG",
+			rarity: 3,
+			max_hp: 70,
+			max_dmg: 36,
+			max_acc: 58,
+			max_eva: 72,
+			max_rof: 53,
+			skill: {
+				name: "Sharpshooting",
+				initial_cooldown: "4s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				passive_active_description: true,
+				description: "[Passive]: If there are enemies near self, switch to knife mode. In this mode, every attack will deal #1 damage 4 times to the nearest target that cannot miss. [Active]: Fire 4 consecutive shots with perfect accuracy at the current target, with each hit dealing #2 damage and ignores HP shields. Every shot requires 1 second of aiming.",
+				number_of_stats: 2,
+				stat1: ["0.2x", "0.21x", "0.21x", "0.22x", "0.22x", "0.23x", "0.23x", "0.24x", "0.24x", "0.25x"],
+				stat2: ["4x", "4.2x", "4.4x", "4.6x", "4.8x", "5x", "5.2x", "5.4x", "5.7x", "6x"]
+			},
+			tile_set: {
+				row1: [1, 1, 0],
+				row2: [1, 2, 0],
+				row3: [1, 1, 0],
+				targets: "Buffs All Types",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["32%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				hasAttack2Animation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 323,
+			name: "LTLX7000",
+			type: "SG",
+			rarity: 5,
+			max_hp: 275,
+			max_dmg: 23,
+			max_acc: 14,
+			max_eva: 11,
+			max_rof: 28,
+			max_armor: 25,
+			skill: {
+				name: "Opposites Repel",
+				initial_cooldown: "5s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				passive_active_description: true,
+				description: "[Passive]: Reduces damage dealt to self from enemies directly ahead by #1. [Active]: Performs an attack that does not deal damage, forcibly knocking back moveable enemies within a 150-degree frontal cone of 6 unit radius ahead of self by 5 units, and remove the targets' HP shields and buff effects. Additionally, increases self armour by #2 for every target knocked-back (up to 5 stacks max) and reduce self damage by #3 for #4 seconds.",
+				number_of_stats: 4,
+				stat1: ["10%", "11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "20%"],
+				stat2: ["10%", "11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "20%"],
+				stat3: ["30%", "27%", "24%", "21%", "18%", "15%", "12%", "8%", "4%", "0%"],
+				stat4: [6, 6.2, 6.4, 6.6, 6.8, 7, 7.2, 7.4, 7.7, 8]
+			},
+			tile_set: {
+				row1: [1, 1, 0],
+				row2: [1, 1, 2],
+				row3: [1, 1, 0],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["10%", "15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 324,
+			name: "M6 ASW",
+			type: "SG",
+			rarity: 5,
+			max_hp: 260,
+			max_dmg: 39,
+			max_acc: 15,
+			max_eva: 14,
+			max_rof: 28,
+			max_armor: 22,
+			skill: {
+				name: "Resilience of Blood and Fire",
+				initial_cooldown: "5s",
+				cooldown: [24, 23.6, 23.1, 22.7, 22.2, 21.8, 21.3, 20.9, 20.4, 20],
+				passive_active_description: true,
+				description: "[Passive]: The first attack will consume all ammo and deal 4 hits. Whenever ammo is fully used up, switches to RF mode and change targeting mode to prioritise the furthest enemy from self. While RF mode is active, obtains the following stat changes: Reduced evasion by #1, increased rate of fire and damage by #2, increased accuracy by #3, increased armour piercing by +100 points. [Active]: Reload and switches back to SG mode. Grants self a taunt effect until SG mode ends. Reload time is fixed at 2 seconds. When reloading ends, remove stat changes from RF mode and gains a #4 HP shield for #5 seconds. (Slug ammo only applies to normal attacks under SG mode)",
+				number_of_stats: 5,
+				stat1: ["35%", "32%", "30%", "27%", "24%", "21%", "18%", "15%", "12%", "10%"],
+				stat2: ["50%", "55%", "60%", "65%", "70%", "76%", "82%", "88%", "94%", "100%"],
+				stat3: ["150%", "155%", "160%", "165%", "170%", "176%", "182%", "188%", "194%", "200%"],
+				stat4: ["+30", "+35", "+40", "+45", "+50", "+55", "+60", "+65", "+70", "+75"],
+				stat5: [3, 3.2, 3.4, 3.6, 3.8, 4, 4.2, 4.4, 4.7, 5]
+			},
+			tile_set: {
+				row1: [1, 1, 0],
+				row2: [1, 1, 2],
+				row3: [1, 1, 0],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["10%", "15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 325,
+			name: "V-PM5",
+			type: "SG",
+			rarity: 4,
+			max_hp: 238,
+			max_dmg: 34,
+			max_acc: 12,
+			max_eva: 15,
+			max_rof: 29,
+			max_armor: 20,
+			skill: {
+				name: "Survival First",
+				initial_cooldown: "8s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				passive_active_description: true,
+				description: "[Passive]: Whenever movement is made, grants self +9 movement speed which gradually decays within 9 seconds. [Active]: Gains additional evasion equal to #1 of armour value for #2 seconds.",
+				number_of_stats: 2,
+				stat1: ["0.3x", "0.35x", "0.4x", "0.45x", "0.5x", "0.55x", "0.6x", "0.65x", "0.7x", "0.8x"],
+				stat2: [3, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 4]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [0, 1, 2],
+				row3: [1, 1, 0],
+				targets: "Buffs MG",
+				number_of_stats: 1,
+				stat1: ["Damage by "],
+				stat2: ["18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 326,
+			name: "HK512",
+			type: "SG",
+			rarity: 4,
+			max_hp: 256,
+			max_dmg: 37,
+			max_acc: 15,
+			max_eva: 13,
+			max_rof: 31,
+			max_armor: 20,
+			skill: {
+				name: "Fiery Dimension",
+				initial_cooldown: "6s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				passive_active_description: true,
+				description: "[Passive]: When reloading, reduce the current remaining reload time by #1 for self and other shotguns in the same column. [Active]: Upon skill activation, increases own armour and evasion by #2 for every shotgun in the echelon for #3 seconds.",
+				number_of_stats: 2,
+				stat1: ["10%", "11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "20%"],
+				stat2: ["10%", "11%", "12%", "13%", "14%", "15%", "16%", "17%", "18%", "20%"],
+				stat3: [4, 4.2, 4.4, 4.7, 4.9, 5.1, 5.3, 5.6, 5.8, 6]
+			},
+			tile_set: {
+				row1: [1, 0, 1],
+				row2: [1, 1, 2],
+				row3: [1, 0, 1],
+				targets: "Buffs MG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Armor by "],
+				stat2: ["10%", "18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 327,
+			name: "SUB-2000",
+			type: "SMG",
+			rarity: 3,
+			max_hp: 194,
+			max_dmg: 27,
+			max_acc: 13,
+			max_eva: 66,
+			max_rof: 84,
+			skill: {
+				name: "Griffin Command",
+				initial_cooldown: "5s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				description: "For every allied two/three-star rarity T-Doll on the field, increase said T-Dolls' damage, rate of fire, accuracy, evasion and armour by #1 for #2 seconds. The buff increases based on the number of two/three-star T-Dolls present, up to a max of #3.",
+				number_of_stats: 3,
+				stat1: ["3%", "3.2%", "3.4%", "3.6%", "3.8%", "4%", "4.2%", "4.4%", "4.7%", "5%"],
+				stat2: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				stat3: ["15%", "16%", "17%", "18%", "19%", "20%", "21%", "22%", "23%", "25%"]
+			},
+			tile_set: {
+				row1: [1, 2, 1],
+				row2: [1, 1, 1],
+				row3: [1, 1, 1],
+				targets: "Buffs All Types",
+				number_of_stats: 3,
+				stat1: ["Damage by ", "Accuracy by", "Critical Rate by "],
+				stat2: ["20%", "20%", "10%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 328,
+			name: "AR-57",
+			type: "SMG",
+			rarity: 4,
+			max_hp: 183,
+			max_dmg: 26,
+			max_acc: 14,
+			max_eva: 74,
+			max_rof: 92,
+			skill: {
+				name: "Complex Modification",
+				initial_cooldown: "3s",
+				cooldown: ["3s", "3s", "3s", "3s", "3s", "3s", "3s", "3s", "3s", "3s"],
+				description: "When skill is activated, grants effects based on the number of allies present on their buff tiles; If there is more than 2 allies present, increases damage by #1 for #2 seconds to self and allies on their tiles. If there is 2 or less allies present, increases evasion by #3 for #4 seconds to self and allies on their tiles.",
+				number_of_stats: 4,
+				stat1: ["5%", "6%", "7%", "8%", "9%", "11%", "12%", "13%", "14%", "15%"],
+				stat2: [1, 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8, 1.9, 2],
+				stat3: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
+				stat4: [1, 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8, 1.9, 2]
+			},
+			tile_set: {
+				row1: [1, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 1, 0],
+				targets: "Buffs AR and SMG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Evasion by"],
+				stat2: ["20%", "15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 329,
+			name: "SVCh",
+			type: "RF",
+			rarity: 5,
+			max_hp: 87,
+			max_dmg: 144,
+			max_acc: 97,
+			max_eva: 30,
+			max_rof: 35,
+			skill: {
+				name: "Candy Echo",
+				initial_cooldown: "5s",
+				cooldown: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				passive_active_description: true,
+				description: "[Passive]: When changing attack targets, increases own damage by #1 for #2 seconds (stacks up to 4 layers). [Active]: For #3 seconds, each attack from every dummy link carries an additional #4 points of fixed damage, ignoring enemy evasion, armour and HP shields; When attacking enemies with multiple dummy links, the effect is doubled.",
+				number_of_stats: 4,
+				stat1: ["5%", "5.6%", "6.1%", "6.7%", "7.2%", "7.8%", "8.3%", "8.9%", "9.4%", "10%"],
+				stat2: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				stat3: [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+				stat4: [60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 0, 1],
+				row3: [0, 2, 1],
+				targets: "Buffs HG",
+				number_of_stats: 1,
+				stat1: ["Reduces Skill CD by "],
+				stat2: ["18%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 330,
+			name: "FX-05",
+			type: "AR",
+			rarity: 4,
+			max_hp: 110,
+			max_dmg: 54,
+			max_acc: 55,
+			max_eva: 47,
+			max_rof: 69,
+			skill: {
+				name: "Snake-Nest Hunting",
+				initial_cooldown: "2s",
+				cooldown: [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+				description: "Increases own damage by #1 for #2 seconds. While skill is active, for every layer of damage buffs obtained, increases own rate of fire by #3 until the skill ends (stacks up to 8 layers).",
+				number_of_stats: 3,
+				stat1: ["20%", "22%", "24%", "27%", "29%", "31%", "33%", "36%", "38%", "40%"],
+				stat2: [9, 9.7, 10.3, 11, 11.7, 12.3, 13, 13.7, 14.3, 15],
+				stat3: ["3%", "3.2%", "3.4%", "3.7%", "3.9%", "4.1%", "4.3%", "4.6%", "4.8%", "5%"]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [0, 2, 1],
+				row3: [0, 0, 1],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Rate of Fire by "],
+				stat2: ["30%", "10%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true
+			}
+		},
+		mod: null,
+		skins: null
+	},
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 ];

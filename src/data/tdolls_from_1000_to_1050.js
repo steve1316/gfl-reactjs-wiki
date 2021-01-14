@@ -1122,6 +1122,110 @@ var tdolls = [
 				hasSit2Animation: [false]
 			}
 		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 1028,
+			name: "Agent Vector",
+			type: "SMG",
+			rarity: 1,
+			max_hp: 185,
+			max_dmg: 30,
+			max_acc: 11,
+			max_eva: 71,
+			max_rof: 101,
+			skill: {
+				name: "Mobile Cover",
+				initial_cooldown: "6s",
+				cooldown: [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+				passive_active_description: true,
+				description: "[Passive]: If Agent Vector equips 2 pieces of her exclusive equipment, she gains the following effects which affects her skill: If there are other ally units in the same column, sets down a mobile cover in front of them too. The additional mobile covers will inherit the same HP and duration as the initial deployed cover.\nIf Agent Vector equips the full set of her exclusive equipment, she gains the following effects which affects her skill: When the mobile cover is destroyed, grants 100% evasion and 20% damage reduction to the unit it was covering for 5 seconds. [Active]: Deploys a mobile cover ahead of self lasting for #1 seconds. The mobile cover will inherit #2 of the user's Max HP and gains a taunt effect on deployment.",
+				number_of_stats: 2,
+				stat1: [5, 5.3, 5.7, 6, 6.3, 6.7, 7, 7.3, 7.7, 8],
+				stat2: ["6%", "7%", "8%", "9%", "10%", "11%", "12%", "13%", "14%", "15%"]
+			},
+			tile_set: {
+				row1: [0, 0, 0],
+				row2: [1, 2, 0],
+				row3: [1, 0, 0],
+				targets: "Buffs AR",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Accuracy by "],
+				stat2: ["12%", "35%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				hasAttack2Animation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Searing Edge"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
+	},
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	{
+		normal: {
+			id: 1029,
+			name: "Agent 416",
+			type: "AR",
+			rarity: 1,
+			max_hp: 121,
+			max_dmg: 51,
+			max_acc: 46,
+			max_eva: 44,
+			max_rof: 76,
+			skill: {
+				name: "Sticky Bombs",
+				initial_cooldown: "3s",
+				cooldown: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+				passive_active_description: true,
+				description: "[Passive]: If Agent Vector equips 2 pieces of her exclusive equipment, she gains the following effects which affects her skill: At battle start, set up 3 interspersed sticky grenades in the area ahead. When enemies approach them, they will automatically detonate and deal 50% skill damage.\nIf Agent Vector equips the full set of her exclusive equipment, she gains the following effects which affects her skill: When the sticky grenades explode, they cause an additional area disruption effect, reducing the accuracy and evasion of enemy units within range by 50% for 5 seconds. [Active]: Every #1 seconds, automatically place a sticky grenade on the enemy with the highest HP, up to a maximum of 3 grenades per enemy unit. When skill is activated, detonate all sticky grenades on the field, each dealing #2 damage that cannot miss within an area of 1.5 units.",
+				number_of_stats: 2,
+				stat1: [10, 9.8, 9.6, 9.3, 9.1, 8.9, 8.7, 8.4, 8.2, 8],
+				stat2: ["3x", "3.22x", "3.44x", "3.67x", "3.89x", "4.11x", "4.33x", "4.56x", "4.78x", "5x"],
+			},
+			tile_set: {
+				row1: [0, 0, 1],
+				row2: [0, 2, 1],
+				row3: [0, 0, 0],
+				targets: "Buffs SMG",
+				number_of_stats: 2,
+				stat1: ["Damage by ", "Evasion by "],
+				stat2: ["20%", "15%"]
+			},
+			animations: {
+				hasSkillAnimation: false,
+				hasVictoryLoopAnimation: true,
+				hasAttack2Animation: true
+			}
+		},
+		mod: null,
+		skins: {
+			number_of_skins: 1,
+			skin_names: ["Defender of Manhattan"],
+			animations: {
+				hasSkillAnimation: [false],
+				hasVictoryLoopAnimation: [true]
+			},
+			animations_dorm: {
+				hasActionAnimation: [false],
+				hasSit2Animation: [false]
+			}
+		}
 	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
