@@ -1,4 +1,4 @@
-# Girls Frontline Database
+# Girls Frontline ReactJS Wiki
 
 ![Girls' Frontline](/src/images/logo.png)
 
