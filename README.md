@@ -6,7 +6,7 @@
 
 # Database last updated on January 13, 2021.
 
-This project serves to provide a mobile-friendly web application of a database hosted on GitHub featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
+This project serves to provide a mobile-friendly web application of a wiki hosted on GitHub featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
 
 <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/55/animations/55_mod_move.gif" width=175 height=175 alt="M4A1 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/56/animations/56_mod_move.gif" width=175 height=175 alt="M4 SOPMOD II Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/57/animations/57_mod_move.gif" width=175 height=175 alt="ST AR-15 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/143/animations/143_mod_move.gif" width=175 height=175 alt="RO635 Mod">
 
