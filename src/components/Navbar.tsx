@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 import { Link, withRouter } from "react-router-dom";
+import type { RouteComponentProps } from "react-router-dom";
 
 // MaterialUI imports
 import { AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, fade, makeStyles, Icon, Divider, TextField } from "@material-ui/core";
@@ -12,24 +14,40 @@ import match from "autosuggest-highlight/match";
 // MaterialUI icon imports
 import MenuIcon from "@material-ui/icons/Menu";
 
-// Image imports
-import HomeIcon from "../images/home_icon.png";
-import IndexIcon from "../images/index_icon.png";
-import EquipmentIcon from "../images/equipment_icon.png";
-import HOCIcon from "../images/hoc_icon.png";
-import FairyIcon from "../images/fairy_icon.png";
-import FormationIcon from "../images/formation_icon.png";
+import { uiUrl } from "../lib/assets";
+import { searchIndex } from "../lib/data";
 
-// Import T-Dolls JSON
-const tdolls_from_1_to_100 = require("../data/tdolls_from_1_to_100").default;
-const tdolls_from_101_to_200 = require("../data/tdolls_from_101_to_200").default;
-const tdolls_from_201_to_300 = require("../data/tdolls_from_201_to_300").default;
-const tdolls_from_301_to_400 = require("../data/tdolls_from_301_to_400").default;
-const tdolls_from_1000_to_1050 = require("../data/tdolls_from_1000_to_1050").default;
+const HomeIcon = uiUrl("home_icon.png");
+const IndexIcon = uiUrl("index_icon.png");
+const EquipmentIcon = uiUrl("equipment_icon.png");
+const HOCIcon = uiUrl("hoc_icon.png");
+const FairyIcon = uiUrl("fairy_icon.png");
+const FormationIcon = uiUrl("formation_icon.png");
 
-const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400).concat(tdolls_from_1000_to_1050);
+/** One entry in the search dropdown, grouped by its leading character. */
+interface SearchOption {
+	/** The heading this option groups under: a letter, or "0-9" for names starting with a digit. */
+	firstLetter: string;
+	/** Doll id, used to build the link. */
+	id: number;
+	/** Doll name, shown and matched against. */
+	name: string;
+}
 
-function Navbar(props) {
+/**
+ * The search dropdown's options.
+ *
+ * Built from the search index rather than the full dataset. The navbar renders on every route, so
+ * pulling all five data shards here cost 65 KB gzipped on every page including the 404.
+ */
+const options: SearchOption[] = searchIndex
+	.map((entry) => {
+		const firstLetter = entry.name.charAt(0).toUpperCase();
+		return { firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter, id: entry.id, name: entry.name };
+	})
+	.sort((a, b) => a.firstLetter.localeCompare(b.firstLetter) || a.name.localeCompare(b.name));
+
+function Navbar(props: RouteComponentProps) {
 	const useStyles = makeStyles((theme) => ({
 		root: {
 			flexGrow: 1
@@ -80,56 +98,23 @@ function Navbar(props) {
 	const [searchValue, setSearchValue] = useState("");
 	const [hasError, setHasError] = useState(false);
 
-	// Add a firstLetter property to every T-Doll for categorization in the autocomplete component.
-	const options = tdolls_array.map((tdoll) => {
-		const firstLetter = tdoll.normal.name[0].toUpperCase();
-		return {
-			firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter,
-			...tdoll
-		};
-	});
-
 	// Controls opening and closing the Drawer.
 	const handleDrawerToggle = () => {
 		setDrawerOpen(!drawerOpen);
 	};
 
 	// This handleSubmit will take care of sending the user to the T-Doll page alongside its information.
-	const handleSubmit = () => {
-		var check = false;
-		tdolls_array.forEach((tdoll) => {
-			// Check each T-Doll's name and match it with the search value.
-			if (searchValue === tdoll.normal.name) {
-				sessionStorage.clear();
-				setHasError(false);
-				sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll));
-
-				if (props.history.location.pathname === "/tdoll") {
-					// If user is already at /tdoll, send the user to a null component and then to the /tdoll page, triggering a state reload.
-					// This unfortunately disables the ability to go back to the T-Doll that was previous as you will go back to the page before that, like Home or Index.
-					setTimeout(() => {
-						props.history.push({
-							pathname: "/tdoll",
-							search: `?id=${tdoll.normal.id}`
-						});
-
-						window.location.reload(false) // This will trigger a state reload so that the content on the page change over to the new T-Doll.
-					}, 0);
-				} else {
-					props.history.push({
-						pathname: "/tdoll",
-						search: `?id=${tdoll.normal.id}`
-					});
-				}
-
-				check = true;
-			}
-		});
-
-		if (!check) {
+	// Look the typed name up in the search index and navigate to that doll's route.
+	const handleSubmit = (event?: FormEvent) => {
+		event?.preventDefault();
+		const selected = options.find((option) => option.name === searchValue);
+		if (!selected) {
 			console.log("did not find match");
 			setHasError(true);
+			return;
 		}
+		setHasError(false);
+		props.history.push(`/tdoll/${selected.id}`);
 	};
 
 	const listItems = [
@@ -192,20 +177,20 @@ function Navbar(props) {
 					<div className={classes.search}>
 						<form onSubmit={handleSubmit}>
 							<Autocomplete
-								options={options.sort((a, b) => -b.firstLetter.localeCompare(a.firstLetter))}
+								options={options}
 								groupBy={(option) => option.firstLetter}
-								getOptionLabel={(option) => option.normal.name}
+								getOptionLabel={(option) => option.name}
 								size="small"
 								style={{ minWidth: 300, width: "auto" }}
 								inputValue={searchValue}
-								onInputChange={(e, newInputValue) => {
+								onInputChange={(_event, newInputValue) => {
 									setSearchValue(newInputValue);
 								}}
 								clearOnEscape
 								renderInput={(params) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} value={searchValue} variant="outlined" />}
 								renderOption={(option, { inputValue }) => {
-									const matches = match(option.normal.name, inputValue);
-									const parts = parse(option.normal.name, matches);
+									const matches = match(option.name, inputValue);
+									const parts = parse(option.name, matches);
 
 									return (
 										<div>

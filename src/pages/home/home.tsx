@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
@@ -12,21 +12,15 @@ import Skeleton from "@material-ui/lab/Skeleton";
 // MaterialUI icon imports
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
 
-// Image imports
-import tdoll_index_logo from "../../images/tdoll_index_logo.jpg";
-import equipment_index_logo from "../../images/equipment_index_logo.jpg";
-import hoc_index_logo from "../../images/hoc_index_logo.jpg";
-import fairy_index_logo from "../../images/fairy_index_logo.jpg";
-import formation_logo from "../../images/formation_logo.jpg";
+import { uiUrl } from "../../lib/assets";
+import { loadDoll } from "../../lib/data";
+import type { TDoll } from "../../types/tdoll";
 
-// T-Dolls JSON import
-const tdolls_from_1_to_100 = require("../../data/tdolls_from_1_to_100").default;
-const tdolls_from_101_to_200 = require("../../data/tdolls_from_101_to_200").default;
-const tdolls_from_201_to_300 = require("../../data/tdolls_from_201_to_300").default;
-const tdolls_from_301_to_400 = require("../../data/tdolls_from_301_to_400").default;
-const tdolls_from_1000_to_1050 = require("../../data/tdolls_from_1000_to_1050").default;
-
-const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400).concat(tdolls_from_1000_to_1050);
+const tdoll_index_logo = uiUrl("tdoll_index_logo.jpg");
+const equipment_index_logo = uiUrl("equipment_index_logo.jpg");
+const hoc_index_logo = uiUrl("hoc_index_logo.jpg");
+const fairy_index_logo = uiUrl("fairy_index_logo.jpg");
+const formation_logo = uiUrl("formation_logo.jpg");
 
 export default function Home() {
 	const useStyles = makeStyles((theme) => ({
@@ -91,8 +85,8 @@ export default function Home() {
 	const [progress, setProgress] = useState(0);
 
 	// Set initial state for the display of the random T-Doll.
-	const [tdoll, setTDoll] = useState(tdolls_array[0]) // This is set to the first T-Doll to prevent undefined error on initial compile.
-	const [tdollImage, setTDollImage] = useState(undefined);
+	const [tdoll, setTDoll] = useState<TDoll | undefined>(undefined);
+	const [tdollImage, setTDollImage] = useState<string | undefined>(undefined);
 	const [tdollName, setTDollName] = useState("");
 	const [tdollType, setTDollType] = useState("");
 
@@ -111,7 +105,7 @@ export default function Home() {
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
 		document.title = "Girls' Frontline Database"
-		document.querySelector('meta[name="description"]').setAttribute("content", "Database for Girls' Frontline featuring T-Dolls, equipment, Fairies and HOCs");
+		document.querySelector('meta[name="description"]')?.setAttribute("content", "Database for Girls' Frontline featuring T-Dolls, equipment, Fairies and HOCs");
 	}, [])
 
 	// This useEffect will run once to generate a random T-Doll.
@@ -214,27 +208,21 @@ export default function Home() {
 		console.clear()
 		console.log("ID selected: ", chosenTDoll);
 
-		// Finally, grab the T-Doll from the array and set the states.
-		/* eslint-disable */
-		var tempTDoll = tdolls_array.filter((tdoll) => {
-			if (tdoll.normal.id === chosenTDoll) {
-				return tdoll;
+		// Only the shard holding this id is fetched, rather than all five.
+		void loadDoll(chosenTDoll).then((selected) => {
+			setTDoll(selected);
+
+			// MICA Team skips certain ids, so a random pick can land on a doll that does not exist.
+			if (selected !== undefined) {
+				setTDollImage(selected.normal.assets.images.card);
+				setTDollName(selected.normal.name);
+				setTDollType(selected.normal.type);
+			} else {
+				setTDollImage(undefined);
+				setTDollName("");
+				setTDollType("");
 			}
 		});
-
-		console.log("T-Doll selected: ", tempTDoll[0]);
-		setTDoll(tempTDoll[0])
-
-		// The else case will handle the case where the random ID is for a T-Doll that does not exist in the game (MICA Team skips certain IDs for reasons known only to them).
-		if (tempTDoll[0] !== undefined) {
-			setTDollImage(tempTDoll[0].normal.images.card.default);
-			setTDollName(tempTDoll[0].normal.name);
-			setTDollType(tempTDoll[0].normal.type);
-		} else {
-			setTDollImage(undefined);
-			setTDollName("");
-			setTDollType("");
-		}
 	};
 
 	const manualReroll = () => {
@@ -278,15 +266,11 @@ export default function Home() {
 						<div className={classes.heroButtons}>
 							<Grid container spacing={2} justify="center">
 								<Grid item>
-									<Link
-										to={{
-											pathname: "/tdoll",
-											search: "?id=" + tdoll.normal.id
-										}}
-										onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}>
-											<Button variant="contained" color="primary">
-												Go to this T-Doll
-											</Button>
+									{/* The doll page loads by id, so nothing needs stashing in sessionStorage first. */}
+									<Link to={`/tdoll/${tdoll?.normal.id ?? ""}`}>
+										<Button variant="contained" color="primary" disabled={tdoll === undefined}>
+											Go to this T-Doll
+										</Button>
 									</Link>
 								</Grid>
 								<Grid item>

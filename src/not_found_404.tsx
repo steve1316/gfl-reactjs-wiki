@@ -1,14 +1,17 @@
-import React from "react";
-
 import { makeStyles } from "@material-ui/core";
 
-export default function NotFound404() {
-	const useStyles = makeStyles((theme) => ({
-		root: {
-			marginTop: "4rem"
-		}
-	}));
+const useStyles = makeStyles({
+	root: {
+		marginTop: "4rem"
+	}
+});
 
+/**
+ * The catch-all page for unknown routes.
+ *
+ * @returns The 404 message.
+ */
+export default function NotFound404() {
 	const classes = useStyles();
 
 	return (
