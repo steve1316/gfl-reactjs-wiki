@@ -1,12 +1,6 @@
-import { Container, Typography, makeStyles } from "@material-ui/core";
+import { Box, Container, Typography } from "@mui/material";
 
 import ScrollToTop from "../../components/ScrollToTop";
-
-const useStyles = makeStyles({
-	root: {
-		marginTop: "5rem"
-	}
-});
 
 /**
  * Placeholder page, pending the data model this section needs.
@@ -14,16 +8,14 @@ const useStyles = makeStyles({
  * @returns The under-construction notice.
  */
 export default function FormationSimulator() {
-	const classes = useStyles();
-
 	return (
-		<main className={classes.root}>
+		<Box component="main" sx={{ marginTop: "5rem" }}>
 			<ScrollToTop />
 			<Container>
 				<Typography component="h1" variant="h5" align="center" color="textPrimary" gutterBottom>
 					Page under construction!
 				</Typography>
 			</Container>
-		</main>
+		</Box>
 	);
 }
