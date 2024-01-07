@@ -44,7 +44,9 @@ import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 import "./styles.css";
 
 import { uiUrl } from "../../lib/assets";
-import { loadDoll } from "../../lib/data";
+import { loadDoll, spineFor } from "../../lib/data";
+import { spineImageBase, spineUrl } from "../../lib/assets";
+import SpineAnimation from "../../components/SpineAnimation";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
 const mod_button = uiUrl("mod.png");
@@ -378,6 +380,12 @@ function TDollContent({ doll }: TDollContentProps) {
 	// 	console.log("Skin selected before calc: ", tempSkinSelected);
 	// 	console.log("Skin selected after calc: ", tempSkinSelected);
 	// });
+
+	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
+	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
+	const spineEntry = spineFor(tdoll.normal.id);
+	const spineRig = animationMode === 0 ? spineEntry?.combat : spineEntry?.dorm;
+	const spineAnimationName = animationMode === 0 ? animationTabSelected : animationDormTabSelected;
 
 	/**
 	 * Look up a skin's resolved assets.
@@ -1251,11 +1259,33 @@ function TDollContent({ doll }: TDollContentProps) {
 
 								{animationMode === 0 ? (
 									<Card className={classes.cardForCombatAnimations} elevation={12}>
-										<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
+										{spineRig ? (
+											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
+												<SpineAnimation
+													skelUrl={spineUrl(tdoll.normal.id, spineRig.skel, "skel")}
+													atlasUrl={spineUrl(tdoll.normal.id, spineRig.atlas, "atlas")}
+													imageBase={spineImageBase(tdoll.normal.id, spineRig.atlas)}
+													animation={spineAnimationName}
+												/>
+											</div>
+										) : (
+											<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
+										)}
 									</Card>
 								) : (
 									<Card className={classes.cardForDormAnimations} elevation={12}>
-										<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
+										{spineRig ? (
+											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
+												<SpineAnimation
+													skelUrl={spineUrl(tdoll.normal.id, spineRig.skel, "skel")}
+													atlasUrl={spineUrl(tdoll.normal.id, spineRig.atlas, "atlas")}
+													imageBase={spineImageBase(tdoll.normal.id, spineRig.atlas)}
+													animation={spineAnimationName}
+												/>
+											</div>
+										) : (
+											<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
+										)}
 									</Card>
 								)}
 							</Grid>
