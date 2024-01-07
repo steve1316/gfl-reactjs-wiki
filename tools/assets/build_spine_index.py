@@ -6,6 +6,7 @@ Each doll directory holds one or more skeletons. Naming follows the game's own c
     FG42.skel        combat rig
     RFG42.skel       dorm rig, an `R` prefix on the same code
     M1873_2105.skel  a skin, the code plus the skin's id
+    G3Mod.skel       the Mod rig, `Mod` appended to the code, with its own RG3Mod dorm counterpart
 
 Atlases are not one per skeleton. The dorm rig usually shares the combat atlas, and some skins do
 too, so each skeleton is paired with the closest atlas that actually exists rather than an assumed
@@ -15,7 +16,21 @@ one. Getting that wrong shows up as an invisible doll, since the regions fail to
 import argparse
 import json
 import os
+import re
 import sys
+
+
+def split_skeleton(skeleton):
+    """Split a skeleton name into the subdirectory prefix it sits under and its bare stem.
+
+    Args:
+        skeleton: A skeleton name, optionally prefixed with `<subdirectory>/`.
+
+    Returns:
+        A tuple of the prefix (empty when the file is flat, otherwise ending in a slash) and the stem.
+    """
+    directory, _, stem = skeleton.rpartition("/")
+    return (f"{directory}/" if directory else "", stem)
 
 
 def index_doll(doll_dir):
@@ -25,7 +40,7 @@ def index_doll(doll_dir):
         doll_dir: Directory holding that doll's Spine files.
 
     Returns:
-        A dict with `combat`, `dorm` and `skins` entries, each naming a skeleton and its atlas.
+        A dict with `combat`, `dorm`, `mod` and `skins` entries, each naming a skeleton and its atlas.
     """
     # Some dolls keep their Spine files in a subdirectory rather than flat, so one level is walked.
     names = []
@@ -44,46 +59,97 @@ def index_doll(doll_dir):
 
     def atlas_for(skeleton):
         """Pick the atlas a skeleton should use, falling back to the rig it was derived from."""
-        directory, _, stem = skeleton.rpartition("/")
-        prefix = f"{directory}/" if directory else ""
-
-        def lookup(candidate):
-            return atlases.get(f"{prefix}{candidate}".lower())
-
-        found = lookup(stem)
-        if found:
-            return found
-        # Dorm rigs drop the leading R to share the combat atlas.
-        if stem.startswith("R") and lookup(stem[1:]):
-            return lookup(stem[1:])
-        # Skins fall back to their base code.
+        prefix, stem = split_skeleton(skeleton)
         base = stem.split("_")[0]
-        if lookup(base):
-            return lookup(base)
-        if base.startswith("R") and lookup(base[1:]):
-            return lookup(base[1:])
+
+        # Names are tried in this order: the skeleton's own, then the combat rig a dorm rig drops its
+        # leading R to share, then the base code a skin was derived from, then that base code's own
+        # combat rig. The R tests ignore case, since the subdirectory copies of these files are
+        # lowercased throughout and a case-sensitive test left every one of their dorm rigs without an atlas.
+        candidates = [stem]
+        if stem[:1] in ("R", "r"):
+            candidates.append(stem[1:])
+        candidates.append(base)
+        if base[:1] in ("R", "r"):
+            candidates.append(base[1:])
+
+        for candidate in candidates:
+            found = atlases.get(f"{prefix}{candidate}".lower())
+            if found:
+                return found
         return None
 
-    # The shortest non-R skeleton is the base combat rig; everything else hangs off it.
-    plain = [s for s in skeletons if not s.rpartition("/")[2].startswith("R")]
-    combat = min(plain, key=len) if plain else skeletons[0]
-    combat_dir, _, combat_stem = combat.rpartition("/")
-    combat_prefix = f"{combat_dir}/" if combat_dir else ""
-    dorm = next((s for s in skeletons if s.lower() == f"{combat_prefix}R{combat_stem}".lower()), None)
+    # The dorm rig is named after the combat rig with an `R` in front, so the pair identifies itself.
+    # Guessing by "does it start with R" instead is wrong in both directions: RPD, RO635, R93, RPK16
+    # and RFB are real doll codes, while Ribeyrolles and RexZero1 pair with RRibeyrolles and
+    # RRexZero1. Where every skeleton began with R the old rule fell back to alphabetical order and
+    # picked the dorm rig as the default, which is what showed the wrong animations.
+    skeleton_by_name = {s.lower(): s for s in skeletons}
 
-    entry = {}
-    for label, skeleton in (("combat", combat), ("dorm", dorm)):
-        if skeleton and atlas_for(skeleton):
-            entry[label] = {"skel": skeleton, "atlas": atlas_for(skeleton)}
+    def dorm_of(skeleton):
+        """Return the dorm counterpart of a skeleton, if one was published."""
+        prefix, stem = split_skeleton(skeleton)
+        return skeleton_by_name.get(f"{prefix}R{stem}".lower())
 
-    skins = {}
-    for skeleton in skeletons:
-        stem = skeleton.rpartition("/")[2]
-        if skeleton in (combat, dorm) or stem.startswith("R") or "_" not in stem:
-            continue
+    def is_dorm(skeleton):
+        """True when this skeleton is the R-prefixed counterpart of another one here."""
+        prefix, stem = split_skeleton(skeleton)
+        return stem[:1] in ("R", "r") and f"{prefix}{stem[1:]}".lower() in skeleton_by_name
+
+    def is_skin(skeleton):
+        """True when the name carries a trailing skin id, as in `HK21_2701`."""
+        return re.search(r"_\d+$", split_skeleton(skeleton)[1]) is not None
+
+    # Prefer a rig that is neither a dorm counterpart nor a skin. Ranking by paired-ness first put
+    # `HK21_2701` ahead of `HK21`, which has no dorm rig of its own, and ranking by full path length
+    # put `Type62_2908` ahead of `type62/type62` because the subdirectory made the real one longer.
+    not_dorm = [s for s in skeletons if not is_dorm(s)]
+    base = [s for s in not_dorm if not is_skin(s)]
+    ranked = base or not_dorm or skeletons
+    combat = min(ranked, key=lambda s: (len(split_skeleton(s)[1]), s))
+    dorm = dorm_of(combat)
+
+    def rig_pair(skeleton):
+        """Describe a combat skeleton and its dorm counterpart, skipping either if it has no atlas."""
+        pair = {}
         atlas = atlas_for(skeleton)
         if atlas:
-            skins[stem.split("_", 1)[1]] = {"skel": skeleton, "atlas": atlas}
+            pair["combat"] = {"skel": skeleton, "atlas": atlas}
+        counterpart = dorm_of(skeleton)
+        dorm_atlas = atlas_for(counterpart) if counterpart else None
+        if dorm_atlas:
+            pair["dorm"] = {"skel": counterpart, "atlas": dorm_atlas}
+        return pair
+
+    entry = rig_pair(combat)
+
+    # A Mod doll is a different chibi with its own animations, so it needs its own rig. It is filed
+    # next to the combat rig with `Mod` appended, and carries an R-prefixed dorm counterpart like any
+    # other rig. Mod skins do not exist: a Mod doll wearing a skin shows the skin's own chibi.
+    prefix, stem = split_skeleton(combat)
+    mod = skeleton_by_name.get(f"{prefix}{stem}Mod".lower())
+    mod_pair = rig_pair(mod) if mod else {}
+    if mod_pair:
+        entry["mod"] = mod_pair
+
+    # Skins carry their own combat and dorm rigs, the latter prefixed with R exactly like the base one.
+    # Dorm rigs are recognised by `is_dorm` rather than by a leading R, for the same reason the base
+    # rig is: `RO635_4501` is a skin of a doll whose code starts with R, not a dorm rig, and the
+    # lowercased subdirectory copies would slip past a case-sensitive test and register as skins.
+    skins = {}
+    for skeleton in skeletons:
+        stem = split_skeleton(skeleton)[1]
+        if skeleton in (combat, dorm) or is_dorm(skeleton) or "_" not in stem:
+            continue
+        record = rig_pair(skeleton)
+        if "combat" not in record:
+            continue
+        skin_id = stem.split("_", 1)[1]
+        # Twenty dolls carry the same skin twice, once flat and once in a lowercased subdirectory,
+        # because the CDN download landed alongside an earlier import. They are the same rig, so the
+        # more complete copy is kept rather than whichever happened to be read last.
+        if len(record) >= len(skins.get(skin_id, {})):
+            skins[skin_id] = record
     if skins:
         entry["skins"] = skins
 
@@ -114,10 +180,12 @@ def main():
         handle.write("\n")
 
     with_dorm = sum(1 for entry in index.values() if "dorm" in entry)
+    with_mod = sum(1 for entry in index.values() if "mod" in entry)
     with_skins = sum(1 for entry in index.values() if "skins" in entry)
     print(f"wrote {args.out} ({os.path.getsize(args.out) / 1024:.0f} KB)")
     print(f"  dolls        {len(index)}")
     print(f"  with dorm    {with_dorm}")
+    print(f"  with mod     {with_mod}")
     print(f"  with skins   {with_skins}")
 
 
