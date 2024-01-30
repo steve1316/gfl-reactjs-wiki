@@ -37,7 +37,7 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 		let active = true;
 		setStatus("loading");
 
-		void createSpinePlayer({ container: containerRef.current as HTMLElement, skelUrl, atlasUrl, imageBase, size, initialAnimation: animation })
+		void createSpinePlayer({ container: containerRef.current as HTMLElement, skelUrl, atlasUrl, imageBase, size, resolution: window.devicePixelRatio || 1, initialAnimation: animation })
 			.then((player) => {
 				if (!active) {
 					player.destroy();

@@ -44,7 +44,7 @@ const formation_logo = uiUrl("formation_logo.jpg");
  * render. `sx` needs no hook and the values sit at module scope with the rest of the configuration.
  */
 const styles = {
-	root: { marginTop: "4rem" },
+	root: { py: 3 },
 	heroContent: { backgroundColor: "background.paper", pt: 8, pb: 6 },
 	heroButtons: { mt: 4 },
 	cardGrid: { py: 8 },
@@ -280,7 +280,7 @@ export default function Home() {
 						return (
 							<Grid key={card.title} size={{ xs: 12, sm: 6, md: 4 }}>
 								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={400 + stagger}>
-									<Card sx={styles.card} elevation={12}>
+									<Card sx={styles.card}>
 										<CardActionArea>
 											<CardMedia sx={styles.cardMedia} image={card.image} title={card.title} />
 										</CardActionArea>

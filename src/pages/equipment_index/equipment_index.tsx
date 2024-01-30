@@ -6,7 +6,6 @@ import {
 	Container,
 	Typography,
 	Divider,
-	Chip,
 	Grid,
 	Card,
 	Zoom,
@@ -22,20 +21,41 @@ import {
 	AccordionDetails,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
-import DoneIcon from "@mui/icons-material/Done";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
+import FilterChip from "../../components/FilterChip";
 
 import { loadEquipment } from "../../lib/data";
 import type { Equipment } from "../../types/equipment";
 
 /** Styles for this page, as `sx` entries. Declared at module scope so they are created once rather than on every render. */
+/**
+ * Display names for the stat keys in the equipment data.
+ *
+ * This was a thirteen-branch if/else chain rebuilt inside the render for every stat of every card.
+ * Anything missing from the map falls back to the raw key, which is at least visible rather than the
+ * empty string the chain produced.
+ */
+const STAT_NAMES: Record<string, string> = {
+	criticalHitRate: "Critical hit rate",
+	damage: "Damage",
+	accuracy: "Accuracy",
+	criticalDamage: "Critical damage",
+	rateOfFire: "Rate of fire",
+	evasion: "Evasion",
+	nightVision: "Night vision",
+	boostAbilityEffectiveness: "Boost ability effectiveness",
+	armorPiercing: "Armor piercing",
+	target: "Target",
+	clipSize: "Clip size",
+	movementSpeed: "Movement speed",
+	armor: "Armor"
+};
+
 const styles = {
-	root: {
-		marginTop: "5rem"
-	},
+	root: { py: 3 },
 	bottomDividerForCards: {
 		marginTop: "25px",
 		marginBottom: "10px"
@@ -172,10 +192,6 @@ export default function EquipmentIndex() {
 		setSearchResults(filterEquipment());
 	}, [typeFilter, exclusiveFilter, equipmentByCategory]);
 
-	const handleDelete = () => {
-		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
-	};
-
 	const handleOnClickType = (selectedType: { key: number; selected: boolean }) => {
 		const key = selectedType.key
 		const newSelected = !selectedType.selected
@@ -275,20 +291,9 @@ export default function EquipmentIndex() {
 						return (
 							<li key={type.key}>
 								<Zoom in={true} timeout={400}>
-									<Chip 
-										sx={styles.chip}
-										clickable
-										color={type.selected ? "primary" : "secondary"}
-										label={type.label}
-										onClick={() => handleOnClickType(type)}
-										onDelete={type.selected ? handleDelete : undefined}
-										deleteIcon={
-											<>
-												<Divider orientation="vertical" flexItem />
-												<DoneIcon />
-											</>
-										} 
-									/>
+									<span>
+										<FilterChip label={type.label} selected={type.selected} onToggle={() => handleOnClickType(type)} />
+									</span>
 								</Zoom>
 							</li>
 						)
@@ -299,20 +304,9 @@ export default function EquipmentIndex() {
 
 				<Box component="div" sx={styles.chipList}>
 					<Zoom in={true} timeout={600}>
-						<Chip
-							sx={styles.chip}
-							clickable
-							color={exclusiveFilter.selected ? "primary" : "secondary"}
-							label={exclusiveFilter.label}
-							onClick={() => handleOnClickExclusive()}
-							onDelete={exclusiveFilter.selected ? handleDelete : undefined}
-							deleteIcon={
-								<>
-									<Divider orientation="vertical" flexItem />
-									<DoneIcon />
-								</>
-							}
-						/>
+						<span>
+							<FilterChip label={exclusiveFilter.label} selected={exclusiveFilter.selected} onToggle={handleOnClickExclusive} />
+						</span>
 					</Zoom>
 				</Box>
 
@@ -337,15 +331,15 @@ export default function EquipmentIndex() {
 						return(
 							<Grid key={equipment.name + equipment.rarity} size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 2 }}>
 								<Fade in={true} timeout={calculateTimeout(index)}>
-									<Card elevation={12}>
+									<Card>
 										{/* Equipment Name and what types of T-Dolls can use it */}
 										<CardHeader title={equipment.name} subheader={equipment.usable.map((item, index) => {
 											if(index === 0 && !equipment.exclusive){
 												return <span key={item}>Equippable by {item}</span>
 											}else if(index === 0 && equipment.exclusive){
-												return <span key={item}>Equippable by <span style={{color: "#ff9800"}}><ins>{item}</ins></span></span>
+												return <span key={item}>Equippable by <Box component="span" sx={{ color: "primary.main" }}><ins>{item}</ins></Box></span>
 											} else if(index !== 0 && equipment.exclusive){
-												return <span key={item}><span style={{color: "#ff9800"}}>, <ins>{item}</ins></span></span>
+												return <span key={item}><Box component="span" sx={{ color: "primary.main" }}>, <ins>{item}</ins></Box></span>
 											} else{
 												return <span key={item}>, {item}</span>
 											}
@@ -357,51 +351,36 @@ export default function EquipmentIndex() {
 										</CardActionArea>
 										
 										{/* Equipment Stats */}
-										<CardContent>
-											<Typography component="span" variant="body2" style={{maxHeight: 100, overflow: "auto"}}>
-												{Object.keys(equipment.stats).map((key) => {
-													var statName = ""
-													if(key === "criticalHitRate"){
-														statName = "Critical Hit Rate"
-													} else if(key === "damage"){
-														statName = "Damage"
-													} else if(key === "accuracy"){
-														statName = "Accuracy"
-													} else if(key === "criticalDamage"){
-														statName = "Critical Damage"
-													} else if(key === "rateOfFire"){
-														statName = "Rate of Fire"
-													} else if(key === "evasion"){
-														statName = "Evasion"
-													} else if(key === "nightVision"){
-														statName = "Night Vision"
-													} else if(key === "boostAbilityEffectiveness"){
-														statName = "Boost Ability Effectiveness"
-													} else if(key === "armorPiercing"){
-														statName = "Armor Piercing"
-													} else if(key === "target"){
-														statName = "Target"
-													} else if(key === "clipSize"){
-														statName = "Clip Size"
-													} else if(key === "movementSpeed"){
-														statName = "Movement Speed"
-													} else if(key === "armor"){
-														statName = "Armor"
-													}
+									<CardContent sx={{ maxHeight: 140, overflow: "auto", py: 0 }}>
+										{Object.keys(equipment.stats).map((key) => {
+											const values = equipment.stats[key] ?? [];
+											const atLevel = values[currentLevel - 1];
+											// Highlighted when levelling has actually moved this stat off its level-one value.
+											const improved = currentLevel !== 1 && atLevel !== values[0];
 
-													const values = equipment.stats[key] ?? []
-													const atLevel = values[currentLevel - 1]
-													const atLevelOne = values[0]
-													const improved = currentLevel !== 1 && atLevel !== atLevelOne
-
-													return(
-														<div key={statName}>
-															<p>{statName}: {improved ? <span style={{color: "#ff9800"}}>{atLevel}</span> : atLevel}</p>
-														</div>
-													)
-												})}
-											</Typography>
-										</CardContent>
+											return (
+												<Box
+													key={key}
+													sx={{
+														display: "flex",
+														justifyContent: "space-between",
+														gap: 2,
+														py: 0.9,
+														borderBottom: 1,
+														borderColor: "divider",
+														"&:last-of-type": { borderBottom: 0 }
+													}}
+												>
+													<Typography variant="body2" color="text.secondary">
+														{STAT_NAMES[key] ?? key}
+													</Typography>
+													<Typography variant="body2" sx={{ fontWeight: 650, color: improved ? "primary.main" : "text.primary" }}>
+														{atLevel}
+													</Typography>
+												</Box>
+											);
+										})}
+									</CardContent>
 
 										{/* Equipment Description */}
 										<Accordion expanded={expanded === equipment.name + equipment.rarity} onChange={handleChange(equipment.name + equipment.rarity)}>

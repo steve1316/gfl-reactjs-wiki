@@ -6,6 +6,9 @@ import parse from "html-react-parser"; // This is needed to parse the span tags 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 
+// Library imports
+import { cardArtSx } from "../../lib/artLayout";
+
 // MaterialUI imports
 import {
 	Box,
@@ -34,22 +37,21 @@ import {
 	Fab,
 	Backdrop,
 	//Grow
-	Divider,
+	Divider
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // MaterialUI icon imports
-import StarIcon from "@mui/icons-material/Star";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-
-import "./styles.css";
 
 import { uiUrl } from "../../lib/assets";
 import { loadDoll, spineFor } from "../../lib/data";
 import { spineImageBase, spineUrl } from "../../lib/assets";
 import { animationTabs } from "../../lib/spine";
 import SpineAnimation from "../../components/SpineAnimation";
+import { RarityStars, TypeBadge } from "../../components/DollBadges";
+import { INGREDIENT_COLOURS } from "../../theme";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
 const mod_button = uiUrl("mod.png");
@@ -62,9 +64,23 @@ interface DisplayTDoll extends TDollData {
 	selected: TDollForm;
 }
 
+/**
+ * The stat rows on the doll page, in display order.
+ *
+ * These were five hand-written table rows differing only by label and field, which is how the header
+ * and the rows drifted apart in wording. Listing them keeps the order and the labels in one place.
+ */
+const STAT_ROWS = [
+	{ label: "HP", key: "max_hp" },
+	{ label: "Damage", key: "max_dmg" },
+	{ label: "Accuracy", key: "max_acc" },
+	{ label: "Evasion", key: "max_eva" },
+	{ label: "Rate of fire", key: "max_rof" }
+] as const;
+
 const styles = {
 	cardGrid: {
-		pt: 8,
+		pt: 3,
 		pb: 8
 	},
 	card: {
@@ -72,105 +88,90 @@ const styles = {
 		width: "100%"
 	},
 	cardForImage: {
-		width: 256, // The dimensions of the images.
-		height: 512,
+		...cardArtSx,
+		// Capped at the artwork's own 256px rather than stretched, since upscaling a bitmap that is
+		// already undersampled at this pixel ratio only makes it softer.
+		maxWidth: 256,
+		mx: "auto",
 		marginBottom: "10px"
 	},
 	cardForSkill: {
-		minWidth: 256,
-		backgroundColor: "grey.700"
+		width: "100%"
 	},
 	cardForTileSet: {
-		minWidth: 256,
-		backgroundColor: "grey.700"
+		width: "100%"
 	},
-	cardForCombatAnimations: {
+	cardForCombatAnimations: (theme: Theme) => ({
 		display: "flex",
 		justifyContent: "center",
-		width: 256,
-		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
-		backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
-		backgroundSize: "5.66px 5.66px",
-		cursor: "pointer",
-		backgroundColor: "grey.700"
-	},
-	cardForDormAnimations: {
-		display: "flex",
-		justifyContent: "center",
-		width: 256,
-		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
-		backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
-		backgroundSize: "5.66px 5.66px",
-		// backgroundImage:
-		// 	"linear-gradient(45deg, #000000 5.56%, #292929 5.56%, #292929 33.33%, #424242 33.33%, #424242 50%, #000000 50%, #000000 55.56%, #292929 55.56%, #292929 83.33%, #424242 83.33%, #424242 100%)",
-		// backgroundSize: "12.73px 12.73px",
-		cursor: "pointer",
-		backgroundColor: "grey.700"
-	},
-	rarityStars: {
-		listStyleType: "none",
-		display: "inline",
-		margin: 0,
-		padding: 0
-	},
-	rarityStar: {
-		display: "inline-block",
-		transform: "translate(0px, 3px)", // This will set the rendered stars to be inline with the T-Doll's type text.
-		marginLeft: "3px"
-	},
-	tableContainer: {
-		minWidth: 256
-	},
-	table: {
 		width: "100%",
-		backgroundColor: "grey.700"
+		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
+		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
+		backgroundSize: "5.66px 5.66px",
+		cursor: "pointer"
+	}),
+	cardForDormAnimations: (theme: Theme) => ({
+		display: "flex",
+		justifyContent: "center",
+		width: "100%",
+		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
+		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
+		backgroundSize: "5.66px 5.66px",
+		cursor: "pointer"
+	}),
+	tableContainer: {
+		width: "100%"
 	},
+	table: (theme: Theme) => ({
+		width: "100%",
+		backgroundColor: theme.palette.raised
+	}),
 	title: {
 		fontSize: 14
 	},
 	cooldownText: {
 		paddingTop: "12px"
 	},
-	tabs: {
-		width: 256,
-		backgroundColor: "grey.900"
-	},
+	tabs: (theme: Theme) => ({
+		width: "100%",
+		backgroundColor: theme.palette.background.paper
+	}),
 	tabForSkin: {
 		width: 100
 	},
-	tabsForSkills: {
-		minWidth: 256,
-		backgroundColor: "grey.900"
-	},
-	tableTileSet: {
+	tabsForSkills: (theme: Theme) => ({
+		width: "100%",
+		backgroundColor: theme.palette.background.paper
+	}),
+	tableTileSet: (theme: Theme) => ({
 		width: 100,
 		height: 100,
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderSpacing: 0,
 		borderWidth: 2
-	},
-	blackTile: {
-		backgroundColor: "grey.800",
+	}),
+	blackTile: (theme: Theme) => ({
+		backgroundColor: theme.palette.raised,
 		width: "33%",
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderWidth: 1
-	},
-	cyanTile: {
-		backgroundColor: "cyan",
+	}),
+	cyanTile: (theme: Theme) => ({
+		backgroundColor: theme.palette.tile.buff,
 		width: "33%",
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderWidth: 1
-	},
-	whiteTile: {
-		backgroundColor: "white",
+	}),
+	whiteTile: (theme: Theme) => ({
+		backgroundColor: theme.palette.tile.self,
 		width: "33%",
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderWidth: 1
-	},
+	}),
 	tileSetDiv: {
 		display: "flex"
 	},
@@ -213,7 +214,7 @@ const styles = {
 	},
 	backdrop: (theme: Theme) => ({
 		zIndex: theme.zIndex.drawer + 1,
-		color: "#fff"
+		color: theme.palette.common.white
 	}),
 	fullImage: {
 		height: "100%",
@@ -252,11 +253,11 @@ export default function TDoll() {
 
 	if (doll === undefined) {
 		return (
-			<main style={{ marginTop: "5rem" }}>
+			<Box component="main" sx={{ py: 3 }}>
 				<Typography component="h1" variant="h5" align="center" color="textPrimary">
 					Loading T-Doll...
 				</Typography>
-			</main>
+			</Box>
 		);
 	}
 
@@ -316,10 +317,10 @@ function TDollContent({ doll }: TDollContentProps) {
 	/* eslint-disable */
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
-		document.title = `#${tdoll.normal.id} - ${tdoll.normal.name}`
+		document.title = `#${tdoll.normal.id} - ${tdoll.normal.name}`;
 		document.querySelector('meta[name="description"]')?.setAttribute("content", `#${tdoll.normal.id} - ${tdoll.normal.name}`);
-	}, [tdoll])
-	
+	}, [tdoll]);
+
 	// This will be used to initialize the functionality of the page.
 	useEffect(() => {
 		// Set initial information displayed to Normal.
@@ -587,12 +588,11 @@ function TDollContent({ doll }: TDollContentProps) {
 
 			// Deal with Jill's special skill description menu.
 			if (tdoll.selected.id === 1017) {
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Adelhyde", '<span style="color: #db3d3d;">■Adelhyde</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Flanergide", '<span style="color: #70ad47;">■Flanergide</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Karmotrine", '<span style="color: #91c1f0;">■Karmotrine</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Bronson Ext", '<span style="color: #ffb400;">■Bronson Ext</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Pwd Delta", '<span style="color: #3a94e8;">■Pwd Delta</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("❈❈❈", '<span style="color: #db3d3d;">❈❈❈</span>');
+				// The ingredient colours come from the palette rather than being written out five times.
+				for (const [ingredient, colour] of Object.entries(INGREDIENT_COLOURS)) {
+					tempSkillDescription1 = tempSkillDescription1.replaceAll(`■${ingredient}`, `<span style="color: ${colour};">■${ingredient}</span>`);
+				}
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("❈❈❈", `<span style="color: ${INGREDIENT_COLOURS.Adelhyde};">❈❈❈</span>`);
 
 				tempSkillDescription1 = tempSkillDescription1.replace("Big Beer", '<span style="font-size: 120%;"><ins>Big Beer</ins></span>');
 				tempSkillDescription1 = tempSkillDescription1.replace("Brandtini", '<span style="font-size: 120%;"><ins>Brandtini</ins></span>');
@@ -720,7 +720,8 @@ function TDollContent({ doll }: TDollContentProps) {
 						textColor="primary"
 						scrollButtons
 						variant="scrollable"
-						allowScrollButtonsMobile>
+						allowScrollButtonsMobile
+					>
 						{spineTabs.map((tab) => (
 							<Tab key={tab.value} label={tab.label} value={tab.value} />
 						))}
@@ -737,7 +738,8 @@ function TDollContent({ doll }: TDollContentProps) {
 						textColor="primary"
 						scrollButtons
 						variant="scrollable"
-						allowScrollButtonsMobile>
+						allowScrollButtonsMobile
+					>
 						{spineTabs.map((tab) => (
 							<Tab key={tab.value} label={tab.label} value={tab.value} />
 						))}
@@ -755,7 +757,8 @@ function TDollContent({ doll }: TDollContentProps) {
 					textColor="primary"
 					scrollButtons
 					variant="scrollable"
-					allowScrollButtonsMobile>
+					allowScrollButtonsMobile
+				>
 					{spineTabs.map((tab) => (
 						<Tab key={tab.value} label={tab.label} value={tab.value} />
 					))}
@@ -969,7 +972,7 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Functions for Tileset functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Switch the animation playing to the next one when you click on the GIF Player. This also influences the movement trhough the animation Tabs as well. 
+	// Switch the animation playing to the next one when you click on the GIF Player. This also influences the movement trhough the animation Tabs as well.
 	// If you encounter the bug that moving forward suddenly skips a few tabs, chances are that animationArray is missing some of your newly added animations.
 	const playerSwitchAnimations = () => {
 		var currentAnimation = "";
@@ -982,15 +985,12 @@ function TDollContent({ doll }: TDollContentProps) {
 			currentAnimation = animationTabSelected;
 
 			animationArray.push("wait");
-			if (
-				(!showSkin && "hasWait2Animation" in tdoll.selected.animations) ||
-				(showSkin && ("wait2" in (skinForm(tempSkinSelected)?.animations ?? {})))
-			) {
+			if ((!showSkin && "hasWait2Animation" in tdoll.selected.animations) || (showSkin && "wait2" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("wait2");
 			}
 			animationArray.push("move");
 			animationArray.push("attack");
-			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && ("skill" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
+			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && "skill" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("skill");
 			}
 			if (!showSkin && "skill2" in tdoll.selected.animations) {
@@ -999,7 +999,7 @@ function TDollContent({ doll }: TDollContentProps) {
 			if ((!showSkin && "crouch" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.crouch)) {
 				animationArray.push("crouch");
 			}
-			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && ("attack2" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
+			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && "attack2" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("attack2");
 			}
 			if ((!showSkin && "action" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.action)) {
@@ -1025,7 +1025,7 @@ function TDollContent({ doll }: TDollContentProps) {
 			if ("victory2" in tdoll.selected.animations && !showSkin) {
 				animationArray.push("victory2");
 			}
-			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && ("victoryloop" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
+			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && "victoryloop" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("victoryloop");
 			}
 		} else {
@@ -1034,12 +1034,12 @@ function TDollContent({ doll }: TDollContentProps) {
 
 			animationArray.push("wait");
 			animationArray.push("move");
-			if ((tdoll.skins && showSkin && ("action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) || "hasActionAnimation" in tdoll.selected.animations) {
+			if ((tdoll.skins && showSkin && "action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) || "hasActionAnimation" in tdoll.selected.animations) {
 				animationArray.push("action");
 			}
 			animationArray.push("pick");
 			animationArray.push("sit");
-			if (tdoll.skins && showSkin && ("sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) {
+			if (tdoll.skins && showSkin && "sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) {
 				animationArray.push("sit2");
 			}
 			animationArray.push("lying");
@@ -1100,27 +1100,6 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Misc Functions
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Render the amount of stars equal to the T-Doll's rarity next to its type text at the top of the Card.
-	const renderStars = (rarity: number) => {
-		const array: number[] = [];
-
-		// Populate the array with the keys to the length of the rarity.
-		for (var i = 0; i < rarity; i++) {
-			array.push(i);
-		}
-
-		const stars = array.map((i) => {
-			return (
-				<Box component="li" sx={styles.rarityStar} key={i}>
-					<StarIcon style={{ color: "yellow" }} />
-					{/* <img src={rarity_star} alt="rarity star" /> */}
-				</Box>
-			);
-		});
-
-		return stars;
-	};
-
 	// The following 2 handle functions control the Backdrop component.
 	const handleToggle = () => {
 		setOpen(!open);
@@ -1139,10 +1118,10 @@ function TDollContent({ doll }: TDollContentProps) {
 				<Card sx={styles.card}>
 					<CardContent>
 						{/************** T-Doll's Name, Rarity in stars, type, and Index Number **************/}
-						<Typography sx={styles.rarityStars} color="textSecondary" gutterBottom>
-							{tdoll.selected.type}
-							{renderStars(tdoll.selected.rarity)}
-						</Typography>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+							<TypeBadge type={tdoll.selected.type} />
+							<RarityStars rarity={tdoll.selected.rarity} isMod={tdoll.selected === tdoll.mod} />
+						</Box>
 						<Typography variant="h3" component="h2">
 							{tdoll.selected.name}
 							<Typography component="span" sx={{ display: "inline" }} color="textSecondary">
@@ -1164,7 +1143,8 @@ function TDollContent({ doll }: TDollContentProps) {
 											textColor="primary"
 											variant="fullWidth"
 											scrollButtons
-											allowScrollButtonsMobile>
+											allowScrollButtonsMobile
+										>
 											{renderSkinsTabs()}
 										</Tabs>
 									) : (
@@ -1176,7 +1156,8 @@ function TDollContent({ doll }: TDollContentProps) {
 											textColor="primary"
 											variant="scrollable"
 											scrollButtons
-											allowScrollButtonsMobile>
+											allowScrollButtonsMobile
+										>
 											{renderSkinsTabs()}
 										</Tabs>
 									)
@@ -1186,7 +1167,7 @@ function TDollContent({ doll }: TDollContentProps) {
 									</Tabs>
 								)}
 
-								<Card sx={styles.cardForImage} elevation={12}>
+								<Card sx={styles.cardForImage}>
 									<CardActionArea onClick={switchBetweenNormalDamagedCardImages}>
 										<CardMedia component="img" sx={styles.cardForImage} image={tdollImage} title={tdoll.selected.name} />
 									</CardActionArea>
@@ -1222,7 +1203,7 @@ function TDollContent({ doll }: TDollContentProps) {
 								{renderAnimationTabs()}
 
 								{animationMode === 0 ? (
-									<Card sx={styles.cardForCombatAnimations} elevation={12}>
+									<Card sx={styles.cardForCombatAnimations}>
 										{spineRig ? (
 											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
 												<SpineAnimation
@@ -1237,7 +1218,7 @@ function TDollContent({ doll }: TDollContentProps) {
 										)}
 									</Card>
 								) : (
-									<Card sx={styles.cardForDormAnimations} elevation={12}>
+									<Card sx={styles.cardForDormAnimations}>
 										{spineRig ? (
 											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
 												<SpineAnimation
@@ -1267,13 +1248,15 @@ function TDollContent({ doll }: TDollContentProps) {
 									</Tabs>
 								)}
 
-								<Card sx={styles.cardForSkill} elevation={12}>
+								<Card sx={styles.cardForSkill}>
 									<CardContent>
 										<CardHeader
 											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.skillImages.skill2 : tdoll.skillImages.skill1} />}
 											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
 											subheader={
-												selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? "Initial CD: " + tdoll.selected.skill2.initial_cooldown : "Initial CD: " + tdoll.selected.skill.initial_cooldown
+												selectedSkill === 1 && tdoll.selected.skill2 !== undefined
+													? "Initial CD: " + tdoll.selected.skill2.initial_cooldown
+													: "Initial CD: " + tdoll.selected.skill.initial_cooldown
 											}
 											action={
 												<FormControl>
@@ -1324,9 +1307,9 @@ function TDollContent({ doll }: TDollContentProps) {
 												<Typography sx={styles.cooldownText} color="textSecondary">
 													Cooldown:{" "}
 													{
-														<span style={{ color: "cyan" }}>
-															<ins>{(tdoll.selected.skill.cooldown?.[skillLevel - 1] ?? "?")}s</ins>
-														</span>
+														<Box component="span" sx={{ color: "secondary.main" }}>
+															<ins>{tdoll.selected.skill.cooldown?.[skillLevel - 1] ?? "?"}s</ins>
+														</Box>
 													}
 												</Typography>
 											</>
@@ -1339,7 +1322,7 @@ function TDollContent({ doll }: TDollContentProps) {
 								<br />
 
 								{/************** T-Doll's tileset information **************/}
-								<Card sx={styles.cardForTileSet} elevation={12}>
+								<Card sx={styles.cardForTileSet}>
 									<Box component="div" sx={styles.tileSetDiv}>
 										<CardContent sx={styles.content}>
 											<Box component="table" sx={styles.tableTileSet} id="tdoll-tileset">
@@ -1375,45 +1358,23 @@ function TDollContent({ doll }: TDollContentProps) {
 								<br />
 
 								{/************** T-Doll's stats in table format **************/}
-								<TableContainer sx={styles.tableContainer} component={Paper} elevation={12}>
+								<TableContainer sx={styles.tableContainer} component={Paper}>
 									<Table sx={styles.table} size="small">
 										<TableHead>
 											<TableRow>
 												<TableCell>Stats</TableCell>
-												<TableCell align="right">At Max Level</TableCell>
+												<TableCell align="right">At max level</TableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													HP
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_hp}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													DMG
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_dmg}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													ACC
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_acc}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													EVA
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_eva}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													ROF
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_rof}</TableCell>
-											</TableRow>
+											{STAT_ROWS.map((stat) => (
+												<TableRow key={stat.key}>
+													<TableCell component="th" scope="row">
+														{stat.label}
+													</TableCell>
+													<TableCell align="right">{tdoll.selected[stat.key]}</TableCell>
+												</TableRow>
+											))}
 										</TableBody>
 									</Table>
 								</TableContainer>
