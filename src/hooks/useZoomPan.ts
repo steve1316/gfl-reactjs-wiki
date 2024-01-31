@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import type { CSSProperties, PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from "react";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,9 +49,11 @@ export interface UseZoomPanResult {
 		onPointerUp: (event: ReactPointerEvent<HTMLElement>) => void;
 		/** Ends a drag or pinch that the browser cancelled. */
 		onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => void;
-		/** Toggles between fitted and `doubleScale`. */
-		onDoubleClick: (event: ReactPointerEvent<HTMLElement>) => void;
+		/** Toggles between fitted and `doubleScale`. A native double click, so this is a mouse event, not a pointer event. */
+		onDoubleClick: (event: ReactMouseEvent<HTMLElement>) => void;
 	};
+	/** Style for the element that receives the gestures: touch-action so the browser doesn't claim them for scrolling, and the cursor. */
+	containerStyle: CSSProperties;
 	/** Style for the content being transformed. */
 	contentStyle: CSSProperties;
 	/** Multiply the current scale, keeping the centre fixed. */
@@ -157,28 +159,36 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanResult {
 	);
 
 	const onDoubleClick = useCallback(
-		(event: ReactPointerEvent<HTMLElement>) => {
+		(event: ReactMouseEvent<HTMLElement>) => {
 			event.preventDefault();
 			setTransform((current) => (current.scale > minScale ? { scale: minScale, x: 0, y: 0 } : { scale: clamp(doubleScale), x: 0, y: 0 }));
 		},
 		[clamp, doubleScale, minScale]
 	);
 
+	const containerStyle = useMemo<CSSProperties>(
+		() => ({
+			// The browser must not claim the gesture for scrolling, or pinch never reaches these handlers. This has to sit
+			// on the container rather than the content, since that is the element the handlers are actually spread onto.
+			touchAction: "none",
+			cursor: transform.scale > minScale ? "grab" : "default"
+		}),
+		[transform.scale, minScale]
+	);
+
 	const contentStyle = useMemo<CSSProperties>(
 		() => ({
 			transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
 			transformOrigin: "center center",
-			// The browser must not claim the gesture for scrolling, or pinch never reaches these handlers.
-			touchAction: "none",
-			cursor: transform.scale > minScale ? "grab" : "default",
 			willChange: "transform"
 		}),
-		[transform, minScale]
+		[transform]
 	);
 
 	return {
 		transform,
 		handlers: { onWheel, onPointerDown, onPointerMove, onPointerUp: endPointer, onPointerCancel: endPointer, onDoubleClick },
+		containerStyle,
 		contentStyle,
 		zoomBy,
 		reset,

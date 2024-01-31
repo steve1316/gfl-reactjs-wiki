@@ -221,6 +221,8 @@ export interface SpinePlayer {
 	animations: string[];
 	/** Play one animation by name, looping. Unknown names are ignored. */
 	play: (name: string) => void;
+	/** Resize the square stage and refit the skeleton inside it. */
+	resize: (size: number) => void;
 	/** Tear down the renderer and free its WebGL context. */
 	destroy: () => void;
 }
@@ -292,6 +294,10 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	const resolution = Math.min(options.resolution ?? 1, 3);
 	const app = new PIXI.Application(size, size, { backgroundColor: 0x000000, transparent: true, antialias: true, resolution, autoResize: true });
 	options.container.appendChild(app.view);
+	// Tracked so a resize can refit whichever animation is currently playing without the caller
+	// having to remember and re-pass it.
+	let currentSize = size;
+	let currentAnimation: { duration: number; apply: (...args: unknown[]) => void } | undefined;
 
 	const spine = new PIXI.spine.Spine(skeletonData);
 	app.stage.addChild(spine);
@@ -337,8 +343,9 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	 * framing is chosen once and does not drift while it plays.
 	 *
 	 * @param animation The animation about to play.
+	 * @param targetSize Square stage size in CSS pixels to fit within.
 	 */
-	const fitToAnimation = (animation: { duration: number; apply: (...args: unknown[]) => void }) => {
+	const fitToAnimation = (animation: { duration: number; apply: (...args: unknown[]) => void }, targetSize: number) => {
 		const skeleton = spine.skeleton;
 		const steps = 20;
 		let minX = Infinity;
@@ -364,19 +371,31 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 		}
 
 		// A little breathing room on top of the measured artwork so nothing grazes the edge.
-		const breathing = size * 0.04;
+		const breathing = targetSize * 0.04;
 		minX -= padLeft + breathing;
 		maxX += padRight + breathing;
 		minY -= padTop + breathing;
 		maxY += padBottom + breathing;
 
 		// Never enlarge, only shrink to fit. Scaling a chibi up looks worse than leaving it small.
-		const fit = Math.min(size / (maxX - minX), size / (maxY - minY), 1);
+		const fit = Math.min(targetSize / (maxX - minX), targetSize / (maxY - minY), 1);
 		spine.scale.set(fit);
 		// pixi-spine already flips the Y axis, so these bone coordinates share Pixi's orientation and
 		// both axes centre the same way. Adding on Y instead pushes the skeleton off the top.
-		spine.x = size / 2 - ((minX + maxX) / 2) * fit;
-		spine.y = size / 2 - ((minY + maxY) / 2) * fit;
+		spine.x = targetSize / 2 - ((minX + maxX) / 2) * fit;
+		spine.y = targetSize / 2 - ((minY + maxY) / 2) * fit;
+	};
+
+	/**
+	 * Refit whichever animation is currently playing to a stage size.
+	 *
+	 * @param targetSize Square stage size in CSS pixels to fit within.
+	 */
+	const fit = (targetSize: number) => {
+		currentSize = targetSize;
+		if (currentAnimation) {
+			fitToAnimation(currentAnimation, targetSize);
+		}
 	};
 
 	const animations: string[] = skeletonData.animations.map((animation: { name: string }) => animation.name);
@@ -391,9 +410,23 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 		// the first tick with "current.animation.apply is not a function".
 		const animation = skeletonData.findAnimation(resolveAnimation(animations, name) ?? name);
 		if (animation) {
-			fitToAnimation(animation);
+			currentAnimation = animation;
+			fitToAnimation(animation, currentSize);
 			spine.state.setAnimation(0, animation, true);
 		}
+	};
+
+	/**
+	 * Resize the stage and refit the skeleton.
+	 *
+	 * @param next New square size in CSS pixels.
+	 */
+	const resize = (next: number) => {
+		if (next <= 0) {
+			return;
+		}
+		app.renderer.resize(next, next);
+		fit(next);
 	};
 
 	const first = options.initialAnimation && animations.includes(options.initialAnimation) ? options.initialAnimation : animations[0];
@@ -404,6 +437,7 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	return {
 		animations,
 		play,
+		resize,
 		destroy: () => {
 			app.destroy(true, { children: true, texture: true, baseTexture: true });
 		}
