@@ -27,7 +27,7 @@ export default function TDollArt() {
 	const [damaged, setDamaged] = useState(false);
 	const [formKey, setFormKey] = useState("normal");
 
-	const zoom = useZoomPan({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
+	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
 
 	useEffect(() => {
 		let active = true;
@@ -95,7 +95,7 @@ export default function TDollArt() {
 				</IconButton>
 			</Box>
 
-			<Box sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
+			<Box ref={zoom.containerRef} sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
 				{source ? <Box component="img" src={source} alt="" sx={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} style={zoom.contentStyle} /> : null}
 			</Box>
 

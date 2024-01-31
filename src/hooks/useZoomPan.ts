@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import type { CSSProperties, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, WheelEvent as ReactWheelEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, RefObject } from "react";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,14 +33,14 @@ export interface UseZoomPanOptions {
 	doubleScale?: number;
 }
 
-/** What `useZoomPan` hands back. */
-export interface UseZoomPanResult {
+/** What `useZoomPan` hands back. `T` is the concrete type of the gesture container, e.g. `HTMLDivElement`. */
+export interface UseZoomPanResult<T extends HTMLElement = HTMLElement> {
 	/** The live transform, for callers that need the numbers. */
 	transform: ZoomPanTransform;
+	/** Ref for the element that receives gestures. Attach it to the same node that spreads `handlers`. */
+	containerRef: RefObject<T | null>;
 	/** Spread onto the element that should receive gestures. */
 	handlers: {
-		/** Wheel zoom, anchored on the pointer. */
-		onWheel: (event: ReactWheelEvent<HTMLElement>) => void;
 		/** Starts a drag, or the second finger of a pinch. */
 		onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
 		/** Drags or pinches. */
@@ -76,7 +76,7 @@ export interface UseZoomPanResult {
  * @param options Tuning for the scale limits.
  * @returns The transform, the handlers to spread, and imperative controls.
  */
-export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanResult {
+export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoomPanOptions = {}): UseZoomPanResult<T> {
 	const minScale = options.minScale ?? DEFAULT_MIN;
 	const maxScale = options.maxScale ?? DEFAULT_MAX;
 	const doubleScale = options.doubleScale ?? DEFAULT_DOUBLE;
@@ -87,6 +87,7 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanResult {
 	// re-rendering on each one would drop frames during a pinch.
 	const pointers = useRef(new Map<number, { x: number; y: number }>());
 	const pinchStart = useRef<{ distance: number; scale: number } | null>(null);
+	const containerRef = useRef<T | null>(null);
 
 	const clamp = useCallback((scale: number) => Math.min(maxScale, Math.max(minScale, scale)), [minScale, maxScale]);
 
@@ -105,13 +106,21 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanResult {
 		[clamp, minScale]
 	);
 
-	const onWheel = useCallback(
-		(event: ReactWheelEvent<HTMLElement>) => {
+	// React attaches wheel listeners passively, so `preventDefault` inside an `onWheel` prop is silently
+	// ignored and the page scrolls underneath the gesture. Attaching the listener by hand with
+	// `passive: false` is the only way to actually stop that scroll.
+	useEffect(() => {
+		const element = containerRef.current;
+		if (!element) {
+			return;
+		}
+		const handleWheel = (event: WheelEvent) => {
 			event.preventDefault();
 			zoomBy(Math.exp(-event.deltaY * WHEEL_STEP));
-		},
-		[zoomBy]
-	);
+		};
+		element.addEventListener("wheel", handleWheel, { passive: false });
+		return () => element.removeEventListener("wheel", handleWheel);
+	}, [zoomBy]);
 
 	const onPointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
 		event.currentTarget.setPointerCapture(event.pointerId);
@@ -187,7 +196,8 @@ export function useZoomPan(options: UseZoomPanOptions = {}): UseZoomPanResult {
 
 	return {
 		transform,
-		handlers: { onWheel, onPointerDown, onPointerMove, onPointerUp: endPointer, onPointerCancel: endPointer, onDoubleClick },
+		containerRef,
+		handlers: { onPointerDown, onPointerMove, onPointerUp: endPointer, onPointerCancel: endPointer, onDoubleClick },
 		containerStyle,
 		contentStyle,
 		zoomBy,

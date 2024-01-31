@@ -35,7 +35,7 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 	const playerRef = useRef<SpinePlayer | null>(null);
 	const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 	const [stageSize, setStageSize] = useState(maxSize);
-	const zoom = useZoomPan({ minScale: 1, maxScale: 4, doubleScale: 2 });
+	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 4, doubleScale: 2 });
 
 	// The stage was pinned at 250px whatever the screen, so it was small on a desktop and still had to fit
 	// a phone. A square that tracks its container suits both.
@@ -121,6 +121,7 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 		// comment above describes), so clipping to its own box would clip the mount point to nothing instead
 		// of just trimming the parts of a zoomed-in chibi that pan past the stage edge.
 		<div
+			ref={zoom.containerRef}
 			style={{ width: "100%", height: stageSize, position: "relative", ...zoom.containerStyle }}
 			{...zoom.handlers}
 			onClick={(event) => {

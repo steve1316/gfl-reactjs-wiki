@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
-import type { ChangeEvent, JSX } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
-import FilterChip from "../../components/FilterChip";
+import FilterSheet from "../../components/FilterSheet";
 import { RarityLabel, TypeBadge } from "../../components/DollBadges";
 
 // Library imports
 import { cardArtSx } from "../../lib/artLayout";
 
 // MaterialUI imports
-import { Box, Container, Grid, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, tooltipClasses, styled, Fade, Zoom, useTheme } from "@mui/material";
+import { Box, Container, Grid, Chip, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, tooltipClasses, styled, Fade, Button } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import Pagination from "@mui/material/Pagination";
+// MaterialUI icon imports
+import FilterListIcon from "@mui/icons-material/FilterList";
 
-import { uiUrl } from "../../lib/assets";
 import { loadAllDolls } from "../../lib/data";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
-const mod_button = uiUrl("mod.png");
+/** How many dolls one page of results holds. */
+const PAGE_SIZE = 30;
 
 /** A doll paired with the form the current filters mean we should show. */
 interface IndexEntry extends TDoll {
@@ -42,8 +42,27 @@ const HtmlTooltip = styled(Tooltip)({
 
 const styles = {
 	root: { py: 3 },
+	summaryContainer: { pt: 2 },
+	summaryRow: {
+		display: "flex",
+		flexWrap: "wrap",
+		alignItems: "center",
+		justifyContent: "space-between",
+		gap: 1
+	},
+	summaryActions: {
+		display: "flex",
+		alignItems: "center",
+		gap: 1.5
+	},
+	activeChipList: {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: 0.5,
+		mt: 1
+	},
 	cardGrid: {
-		pt: 8,
+		pt: 4,
 		pb: 8,
 		minWidth: "70%"
 	},
@@ -54,21 +73,6 @@ const styles = {
 		maxHeight: 500
 	},
 	cardMedia: cardArtSx,
-	chip: {
-		m: 0.5
-	},
-	chipList: {
-		display: "flex",
-		justifyContent: "center",
-		listStyle: "none",
-		flexWrap: "wrap",
-		"& > *": {
-			m: 0.5
-		}
-	},
-	dividerForChips: {
-		margin: "5px"
-	},
 	topDividerForCards: {
 		marginTop: "10px",
 		marginBottom: "25px"
@@ -80,13 +84,7 @@ const styles = {
 } satisfies Record<string, SxProps<Theme>>;
 
 export default function TDoll_Index() {
-	const theme = useTheme();
-
-	const [totalSearchResults, setTotalSearchResults] = useState(0);
 	const [allDolls, setAllDolls] = useState<TDoll[]>([]);
-	const [searchResults, setSearchResults] = useState<JSX.Element[]>([]);
-	const [searchResultPages, setSearchResultPages] = useState<IndexEntry[][]>([]);
-	const [pageSelected, setPageSelected] = useState(1);
 
 	const [rarityFilter, setRarityFilter] = useState([
 		{ key: 0, label: "General", rarity: 2, selected: false },
@@ -111,6 +109,57 @@ export default function TDoll_Index() {
 		selected: false
 	});
 
+	/** How many results are on screen. Raised by the load-more button rather than by paging. */
+	const [shown, setShown] = useState(PAGE_SIZE);
+
+	/** Whether the filter sheet is open. */
+	const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+
+	/**
+	 * The dolls matching the current filters.
+	 *
+	 * This used to be built inside an effect that stored rendered JSX elements in state, so every filter
+	 * change re-rendered the whole list twice and the element array was a second copy of the data.
+	 */
+	const matches = useMemo(() => {
+		const typeOn = typeFilter.some((entry) => entry.selected);
+		const rarityOn = rarityFilter.some((entry) => entry.selected);
+		const modOn = modFilter.selected;
+
+		return allDolls.flatMap<IndexEntry>((data) => {
+			if (!typeOn && !rarityOn && !modOn) {
+				return [{ ...data, selected: data.normal }];
+			}
+			let selected: TDollForm;
+			if (modOn) {
+				if (data.mod === null) {
+					return [];
+				}
+				selected = data.mod;
+				if (!typeOn && !rarityOn) {
+					return [{ ...data, selected }];
+				}
+			} else {
+				selected = data.normal;
+			}
+			const entry: IndexEntry[] = [{ ...data, selected }];
+			const matchesType = typeFilter.some((type) => type.selected && type.label === selected.type);
+			// A Mod at 6 stars is shown under the 5 star filter, since that is the rarity it upgraded from.
+			const matchesRarity = rarityFilter.some((rarity) => rarity.selected && (rarity.rarity === selected.rarity || (modOn && rarity.rarity === 5 && selected.rarity === 6)));
+			if (typeOn && rarityOn) {
+				return matchesType && matchesRarity ? entry : [];
+			}
+			return (typeOn ? matchesType : matchesRarity) ? entry : [];
+		});
+	}, [allDolls, typeFilter, rarityFilter, modFilter]);
+
+	// The slice of matches actually rendered, grown by PAGE_SIZE each time the load-more button is clicked.
+	const visible = useMemo(() => matches.slice(0, shown), [matches, shown]);
+
+	// The old version computed this with a loop and an off-by-one, so page 2 read "30-60" rather than
+	// "31-60" and every later page was wrong by the same one.
+	const rangeLabel = matches.length === 0 ? "0" : `1-${visible.length}`;
+
 	// The index renders every doll, so it is the one route that legitimately loads all shards.
 	useEffect(() => {
 		void loadAllDolls().then(setAllDolls);
@@ -122,7 +171,7 @@ export default function TDoll_Index() {
 		document.querySelector('meta[name="description"]')?.setAttribute("content", "Index of filterable T-Dolls");
 	}, []);
 
-	// Checks for filters in sessionStorage. Set the number of search results to the length of the T-Doll JSON. Runs once for now.
+	// Checks for filters in sessionStorage. Runs once for now.
 	useEffect(() => {
 		const savedFilters = sessionStorage.getItem("filters");
 		if (savedFilters) {
@@ -133,26 +182,18 @@ export default function TDoll_Index() {
 		}
 	}, []);
 
-	// Update the page selected whenever the following values change.
+	// Reset the visible slice and persist the filters every time they change, so a narrower filter never
+	// leaves a stale, too-large slice on screen.
 	useEffect(() => {
-		setPageSelected(1);
-	}, [modFilter, rarityFilter, typeFilter, totalSearchResults]);
+		setShown(PAGE_SIZE);
 
-	/* eslint-disable */
-	// Update the search results every time the filters and the page selected changes. Save the filters in sessionStorage.
-	useEffect(() => {
-		setSearchResults(renderTDolls());
-
-		var tempFilters = {
+		const tempFilters = {
 			rarityFilter: rarityFilter,
 			typeFilter: typeFilter,
 			modFilter: modFilter
 		};
-
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-		// allDolls is a dependency because the shards load asynchronously, so the first render has none.
-	}, [modFilter, rarityFilter, typeFilter, pageSelected, allDolls]);
-	/* eslint-disable */
+	}, [modFilter, rarityFilter, typeFilter]);
 
 	// The following handler functions below are setting the filters selected as active.
 	const handleOnClickRarity = (rarityToBeUpdated: { key: number; selected: boolean }) => () => {
@@ -176,266 +217,130 @@ export default function TDoll_Index() {
 		});
 	};
 
-	// This will update the page selected via the Pagination component.
-	const handlePageChange = (_event: ChangeEvent<unknown>, value: number) => {
-		setPageSelected(value);
+	// Deselects every filter at once, for the sheet's Clear all button.
+	const handleClearAll = () => {
+		setRarityFilter((rarities) => rarities.map((rarity) => ({ ...rarity, selected: false })));
+		setTypeFilter((types) => types.map((type) => ({ ...type, selected: false })));
+		setModFilter({ ...modFilter, selected: false });
 	};
 
-	// Create and return an array of T-Dolls that match filters.
-	const createSearchResults = (): IndexEntry[][] => {
-		const typeSelected = typeFilter.filter((type) => type.selected).length;
-		const raritySelected = rarityFilter.filter((rarity) => rarity.selected).length;
-		const typeFilterCheck = typeSelected > 0;
-		const rarityFilterCheck = raritySelected > 0;
-		const modFilterCheck = modFilter.selected;
-
-		// Copies are returned rather than a `selected` property assigned onto the doll. The dolls come
-		// from a shared cache, so mutating them here would leak the current filter into every later read.
-		const tempArray: IndexEntry[] = allDolls.flatMap((data) => {
-			if (!typeFilterCheck && !rarityFilterCheck && !modFilterCheck) {
-				return [{ ...data, selected: data.normal }];
-			}
-
-			// Filter if T-Dolls have Mod or not.
-			let selected: TDollForm;
-			if (modFilter.selected) {
-				if (data.mod === null) {
-					return [];
-				}
-				selected = data.mod;
-
-				// If the only filter enabled is the Mod filter, return this T-Doll.
-				if (!typeFilterCheck && !rarityFilterCheck) {
-					return [{ ...data, selected }];
-				}
-			} else {
-				selected = data.normal;
-			}
-
-			const entry: IndexEntry[] = [{ ...data, selected }];
-			const matchesType = typeFilter.some((type) => type.selected && type.label === selected.type);
-
-			// A Mod at 6 stars is shown under the 5 star filter, since that is the rarity it upgraded from.
-			const matchesRarity = rarityFilter.some((rarity) => rarity.selected && (rarity.rarity === selected.rarity || (modFilterCheck && rarity.rarity === 5 && selected.rarity === 6)));
-
-			if (typeSelected > 0 && raritySelected > 0) {
-				return matchesType && matchesRarity ? entry : [];
-			}
-			if (typeSelected === 0) {
-				return matchesRarity ? entry : [];
-			}
-			return matchesType ? entry : [];
-		});
-
-		// Partition search results by 30 at a time (static for now).
-		const tempSearchResultPages: IndexEntry[][] = [];
-		for (var i = 0, j = 0; i < tempArray.length; i += 30, j++) {
-			let temp: IndexEntry[] = [];
-			if (i + 30 > tempArray.length) {
-				temp = tempArray.slice(i, tempArray.length);
-			} else {
-				temp = tempArray.slice(i, i + 30);
-			}
-
-			tempSearchResultPages[j] = temp;
-		}
-
-		console.log("Page Partitions after filters: ", tempSearchResultPages);
-
-		// Update the pages of search results and the total number of results.
-		setSearchResultPages(tempSearchResultPages);
-		setTotalSearchResults(tempArray.length);
-
-		return tempSearchResultPages;
-	};
-
-	// Render the Cards of T-Dolls based on filters selected.
-	const renderTDolls = () => {
-		var tempArrayOfSearchResults = createSearchResults();
-
-		const tempArray: JSX.Element[] = [];
-		let stagger = 0;
-		var tempPageSelected = pageSelected;
-
-		// Makes sure to avoid the out of bounds error.
-		if (tempPageSelected > tempArrayOfSearchResults.length) {
-			tempPageSelected = 1;
-		}
-
-		// Go through the Search Results array from createSearchResults() and push 30 at a time until the remainder is left.
-		// This is expecting that tdoll.selected has been set back in createSearchResults(). Otherwise, it will only see [Object object] and will error.
-		if (tempArrayOfSearchResults.length > 0) {
-			(tempArrayOfSearchResults[tempPageSelected - 1] ?? []).forEach((tdoll) => {
-				tempArray.push(
-					<Grid key={tdoll.selected.name} size={{ xs: 4, sm: 4, md: 2 }}>
-						<Fade in={true} timeout={stagger}>
-							<Card sx={styles.card}>
-								<Link
-									to={{
-										pathname: "/tdoll",
-										search: "?id=" + tdoll.normal.id
-									}}
-									onClick={() => sessionStorage.setItem(String(tdoll.normal.id), JSON.stringify(tdoll))}
-								>
-									<HtmlTooltip
-										title={
-											<>
-												<Typography color="inherit">
-													{tdoll.selected.name}
-													<small>
-														<sup>[#{tdoll.normal.id}]</sup>
-													</small>
-												</Typography>
-												<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
-											</>
-										}
-										placement="right"
-									>
-										<CardActionArea>
-											<CardMedia component="img" sx={styles.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
-											{/* Rarity and type used to live only in a hover tooltip, which a touch screen cannot open. */}
-											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, px: 0.75, py: 0.5 }}>
-												<TypeBadge type={tdoll.selected.type} dense />
-												<RarityLabel rarity={tdoll.selected.rarity} isMod={tdoll.selected === tdoll.mod} />
-											</Box>
-										</CardActionArea>
-									</HtmlTooltip>
-								</Link>
-							</Card>
-						</Fade>
-					</Grid>
-				);
-
-				// Stagger timeout will never be more than 1 second.
-				stagger += 50;
-				if (stagger >= 1000) {
-					stagger = 0;
-				}
-			});
-		}
-
-		return tempArray;
-	};
-
-	// Calculates the minimum and maximum number of filtered results for UX purposes.
-	const calculateRemainingResults = () => {
-		var tempPageSelected = pageSelected;
-		var minResult = 0;
-		var maxResult = 0;
-
-		if (tempPageSelected === 1) {
-			minResult = 1;
-		} else {
-			minResult += 30;
-			minResult *= pageSelected - 1;
-		}
-
-		while (tempPageSelected > 0) {
-			maxResult += 30;
-			tempPageSelected -= 1;
-		}
-
-		if (maxResult > totalSearchResults) {
-			maxResult = totalSearchResults;
-		}
-
-		return `${minResult}-${maxResult}`;
-	};
+	// The currently active filters, flattened into one list the summary bar can render as removable chips.
+	// Each entry keeps a reference to its own toggle handler so its delete button clears just that filter.
+	const activeFilters = [
+		...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: handleOnClickRarity(rarity) })),
+		...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: handleOnClickType(type) })),
+		...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleOnClickMod }] : [])
+	];
 
 	return (
 		<Box component="main" sx={styles.root}>
 			<ScrollToTop />
-			<Container>
-				<br />
 
-				{/* Chips List */}
-				<Box component="div" sx={styles.chipList}>
-					{rarityFilter.map((rarity) => {
-						return (
-							<li key={rarity.key}>
-								<Zoom in={true} timeout={400}>
-									<span>
-										<FilterChip
-											label={rarity.label}
-											selected={rarity.selected}
-											onToggle={handleOnClickRarity(rarity)}
-											colour={theme.palette.rarity[rarity.rarity as keyof typeof theme.palette.rarity]}
-											avatar={<Avatar>{rarity.rarity}</Avatar>}
-										/>
-									</span>
-								</Zoom>
-							</li>
-						);
-					})}
+			{/* Summary bar */}
+			<Container maxWidth="lg" sx={styles.summaryContainer}>
+				<Box sx={styles.summaryRow}>
+					<Typography variant="body1" color="textSecondary">
+						Showing {rangeLabel} of {matches.length}
+					</Typography>
+
+					<Box sx={styles.summaryActions}>
+						{activeFilters.length > 0 && (
+							<Typography variant="body2" color="textSecondary">
+								{activeFilters.length} filter{activeFilters.length === 1 ? "" : "s"} active
+							</Typography>
+						)}
+						<Button variant="outlined" startIcon={<FilterListIcon />} onClick={() => setFilterSheetOpen(true)}>
+							Filters
+						</Button>
+					</Box>
 				</Box>
 
-				<Divider sx={styles.dividerForChips} />
-
-				<Box component="div" sx={styles.chipList}>
-					{typeFilter.map((type) => {
-						return (
-							<li key={type.key}>
-								<Zoom in={true} timeout={600}>
-									<span>
-										<FilterChip
-											label={type.label}
-											selected={type.selected}
-											onToggle={handleOnClickType(type)}
-											colour={theme.palette.weaponType[type.label as keyof typeof theme.palette.weaponType]}
-										/>
-									</span>
-								</Zoom>
-							</li>
-						);
-					})}
-				</Box>
-
-				<Divider sx={styles.dividerForChips} />
-
-				<Box component="div" sx={styles.chipList}>
-					<Zoom in={true} timeout={800}>
-						<span>
-							<FilterChip
-								label={modFilter.label}
-								selected={modFilter.selected}
-								onToggle={handleOnClickMod}
-								avatar={
-									<Avatar>
-										<img src={mod_button} alt="" style={{ width: 20, height: 20 }} />
-									</Avatar>
-								}
-							/>
-						</span>
-					</Zoom>
-				</Box>
-
-				{/* End of Chips List */}
+				{activeFilters.length > 0 && (
+					<Box sx={styles.activeChipList}>
+						{activeFilters.map((filter) => (
+							<Chip key={filter.id} label={filter.label} onDelete={filter.onDelete} size="small" />
+						))}
+					</Box>
+				)}
 			</Container>
+			{/* End of summary bar */}
+
+			<FilterSheet
+				open={filterSheetOpen}
+				onClose={() => setFilterSheetOpen(false)}
+				rarityFilter={rarityFilter}
+				typeFilter={typeFilter}
+				modFilter={modFilter}
+				onToggleRarity={handleOnClickRarity}
+				onToggleType={handleOnClickType}
+				onToggleMod={handleOnClickMod}
+				onClear={handleClearAll}
+			/>
 
 			{/* T-Dolls List */}
-			<Container sx={styles.cardGrid} maxWidth="md">
+			<Container sx={styles.cardGrid} maxWidth="lg">
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
-					Now showing {calculateRemainingResults()} of {totalSearchResults}
+					Now showing {rangeLabel} of {matches.length}
 				</Typography>
-
-				{/* Pagination Component */}
-				<Pagination count={searchResultPages.length} color="primary" page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
 
 				<Divider sx={styles.topDividerForCards} />
 
 				{/* Search Results */}
 				<Grid container spacing={4}>
-					{searchResults}
+					{visible.map((tdoll, index) => (
+						<Grid key={tdoll.selected.name} size={{ xs: 4, sm: 4, md: 2 }}>
+							<Fade in={true} timeout={(index * 50) % 1000}>
+								<Card sx={styles.card}>
+									<Link
+										to={{
+											pathname: "/tdoll",
+											search: "?id=" + tdoll.normal.id
+										}}
+										onClick={() => sessionStorage.setItem(String(tdoll.normal.id), JSON.stringify(tdoll))}
+									>
+										<HtmlTooltip
+											title={
+												<>
+													<Typography color="inherit">
+														{tdoll.selected.name}
+														<small>
+															<sup>[#{tdoll.normal.id}]</sup>
+														</small>
+													</Typography>
+													<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
+												</>
+											}
+											placement="right"
+										>
+											<CardActionArea>
+												<CardMedia component="img" sx={styles.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
+												{/* Rarity and type used to live only in a hover tooltip, which a touch screen cannot open. */}
+												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, px: 0.75, py: 0.5 }}>
+													<TypeBadge type={tdoll.selected.type} dense />
+													<RarityLabel rarity={tdoll.selected.rarity} isMod={tdoll.selected === tdoll.mod} />
+												</Box>
+											</CardActionArea>
+										</HtmlTooltip>
+									</Link>
+								</Card>
+							</Fade>
+						</Grid>
+					))}
 				</Grid>
+
+				{visible.length < matches.length && (
+					<Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+						<Button variant="outlined" onClick={() => setShown((current) => current + PAGE_SIZE)}>
+							Load {Math.min(PAGE_SIZE, matches.length - visible.length)} more
+						</Button>
+					</Box>
+				)}
 
 				<Divider sx={styles.bottomDividerForCards} />
 
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
-					Now showing {calculateRemainingResults()} of {totalSearchResults}
+					Now showing {rangeLabel} of {matches.length}
 				</Typography>
-
-				{/* Pagination Component */}
-				<Pagination count={searchResultPages.length} color="primary" page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
 
 				{/* End of Search Results */}
 			</Container>
