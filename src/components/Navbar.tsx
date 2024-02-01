@@ -96,20 +96,28 @@ export default function Navbar() {
 		setDrawerOpen(!drawerOpen);
 	};
 
-	// This handleSubmit will take care of sending the user to the T-Doll page alongside its information.
-	// Look the typed name up in the search index and navigate to that doll's route.
+	// Send the reader to a doll and leave search mode. Shared by picking a suggestion and by submitting
+	// the form, so both routes behave the same.
+	const goTo = (option: SearchOption) => {
+		// Collapse the field again, or the reader lands on the doll with the bar still in search mode.
+		setSearchOpen(false);
+		void navigate(`/tdoll/${option.id}`);
+	};
+
+	// Submitting without picking a suggestion. An exact name wins, otherwise the first option the typed
+	// text appears in, which is the row the dropdown would have had highlighted.
 	const handleSubmit = (event?: FormEvent) => {
 		event?.preventDefault();
-		const selected = options.find((option) => option.name === searchValue);
+		const typed = searchValue.trim().toLowerCase();
+		if (typed === "") {
+			return;
+		}
+		const selected = options.find((option) => option.name.toLowerCase() === typed) ?? options.find((option) => option.name.toLowerCase().includes(typed));
 		if (!selected) {
-			console.log("did not find match");
 			setHasError(true);
 			return;
 		}
-		setHasError(false);
-		// Collapse the field again, or the reader lands on the doll with the bar still in search mode.
-		setSearchOpen(false);
-		void navigate(`/tdoll/${selected.id}`);
+		goTo(selected);
 	};
 
 	const listItems = [
@@ -168,14 +176,27 @@ export default function Navbar() {
 				inputValue={searchValue}
 				onInputChange={(_event, newInputValue) => {
 					setSearchValue(newInputValue);
+					// Without this the failed-search label stays until the next successful submit.
+					setHasError(false);
 				}}
+				// Picking a suggestion used to only fill the text box, leaving the reader to press Enter
+				// themselves. Names repeat across forms, so options are compared by id rather than by label.
+				onChange={(_event, option) => {
+					if (option) {
+						goTo(option);
+					}
+				}}
+				isOptionEqualToValue={(option, value) => option.id === value.id}
+				// MUI swallows the first Enter to select the highlighted row, so without a row highlighted
+				// the reader had to press Enter twice before the form ever saw it.
+				autoHighlight
+				blurOnSelect
 				clearOnEscape
 				renderInput={(params) => (
 					<TextField
 						{...params}
 						color="secondary"
 						label={hasError ? "Does not match any T-Doll" : "Search..."}
-						value={searchValue}
 						variant="outlined"
 						sx={(theme) => ({
 							// One shape, not two. The wrapper used to draw a 64px pill behind an 8px

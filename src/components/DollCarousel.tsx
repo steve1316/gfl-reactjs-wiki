@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Box, IconButton, useMediaQuery, useTheme } from "@mui/material";
+import { Box, ButtonBase, IconButton, Skeleton, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 
 import DollCard from "./DollCard";
 import { loadDoll } from "../lib/data";
@@ -18,10 +19,29 @@ const ADVANCE_MS = 6000;
 /** Horizontal travel, in pixels, that counts as a swipe rather than a tap. */
 const SWIPE_THRESHOLD = 40;
 
+/** Width of the centre card in CSS pixels, per breakpoint. Everything else is scaled down from this. */
+const CARD_WIDTH = { narrow: 180, medium: 190, wide: 200 };
+
+/** Room under the 1:2 art for the name, the badges and the id. */
+const CARD_TEXT_HEIGHT = 64;
+
+/** Horizontal distance between neighbouring cards, as a fraction of the card width. Below 1 they overlap. */
+const SLOT_RATIO = 0.74;
+
+/** How the ring shrinks and fades away from the centre, indexed by distance from it. The last entry is the off-screen slot. */
+const DEPTH = [
+	{ scale: 1, opacity: 1 },
+	{ scale: 0.64, opacity: 0.55 },
+	{ scale: 0.52, opacity: 0.3 },
+	{ scale: 0.46, opacity: 0 }
+];
+
 /** Props for DollCarousel. */
 interface DollCarouselProps {
 	/** Doll ids to cycle through. Loaded once, then kept, so going back shows the same doll again. */
 	ids: number[];
+	/** Replaces the whole set with a fresh random one. Omitted when the caller has nothing to reshuffle. */
+	onShuffle?: () => void;
 }
 
 /**
@@ -67,21 +87,28 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * way back to the one just shown, because each tick picked a fresh random id rather than stepping
  * through a list. Holding the ids means previous is a real previous.
  *
+ * Cards are positioned absolutely and keyed by doll id, so when the index moves React keeps each node
+ * and only its transform changes. That is what makes the ring slide rather than redraw.
+ *
  * @param props Component props.
  * @returns The carousel.
  */
-export default function DollCarousel({ ids }: DollCarouselProps) {
+export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 	const theme = useTheme();
 	const isNarrow = useMediaQuery(theme.breakpoints.down("sm"));
+	const isMedium = useMediaQuery(theme.breakpoints.down("md"));
 	const reduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
 	const [dolls, setDolls] = useState<(TDoll | undefined)[]>([]);
 	const [index, setIndex] = useState(0);
 	const [paused, setPaused] = useState(false);
-	const touchStart = useRef<number | null>(null);
+	const touchStart = useRef<{ x: number; y: number } | null>(null);
 
 	useEffect(() => {
 		let active = true;
+		// A fresh set starts at its own beginning rather than wherever the previous one had got to.
+		setIndex(0);
+		setDolls([]);
 		void Promise.all(ids.map((id) => loadDoll(id))).then((loaded) => {
 			if (active) {
 				setDolls(loaded);
@@ -129,15 +156,28 @@ export default function DollCarousel({ ids }: DollCarouselProps) {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [step]);
 
+	const width = isNarrow ? CARD_WIDTH.narrow : isMedium ? CARD_WIDTH.medium : CARD_WIDTH.wide;
+	const slot = Math.round(width * SLOT_RATIO);
+	// The art is 1:2, so the tallest card in the ring is the unscaled centre one.
+	const height = width * 2 + CARD_TEXT_HEIGHT;
+
+	// How many cards the reader should see: 5 on a desktop, 3 on a tablet, 1 on a phone.
+	const visibleRadius = isNarrow ? 0 : isMedium ? 1 : 2;
+	// One extra slot each side so cards fade in and out at the edges rather than popping. Never more
+	// slots than there are dolls, or the same doll would be rendered twice and React would see two of one key.
+	const radius = Math.min(visibleRadius + 1, Math.max(0, Math.floor((entries.length - 1) / 2)));
+
 	if (entries.length === 0) {
-		return <Box sx={{ height: 320 }} />;
+		return (
+			<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+				<Skeleton variant="rounded" width={width} height={height} />
+			</Box>
+		);
 	}
 
 	const at = (offset: number) => entries[(index + offset + entries.length) % entries.length];
-	const centre = at(0);
-	if (!centre) {
-		return <Box sx={{ height: 320 }} />;
-	}
+	const offsets = Array.from({ length: radius * 2 + 1 }, (_value, position) => position - radius);
+	const transition = reduceMotion ? "none" : "transform 380ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 380ms ease";
 
 	return (
 		<Box
@@ -147,13 +187,19 @@ export default function DollCarousel({ ids }: DollCarouselProps) {
 			onBlurCapture={() => setPaused(false)}
 			onTouchStart={(event) => {
 				setPaused(true);
-				touchStart.current = event.touches[0]?.clientX ?? null;
+				const touch = event.touches[0];
+				touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
 			}}
 			onTouchEnd={(event) => {
 				const start = touchStart.current;
-				const end = event.changedTouches[0]?.clientX ?? null;
-				if (start !== null && end !== null && Math.abs(end - start) > SWIPE_THRESHOLD) {
-					step(end < start ? 1 : -1);
+				const end = event.changedTouches[0] ?? null;
+				if (start !== null && end !== null) {
+					const dx = end.clientX - start.x;
+					const dy = end.clientY - start.y;
+					// Without the vertical check a page scroll that drifts sideways also turns the ring.
+					if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+						step(dx < 0 ? 1 : -1);
+					}
 				}
 				touchStart.current = null;
 				setPaused(false);
@@ -162,33 +208,81 @@ export default function DollCarousel({ ids }: DollCarouselProps) {
 				touchStart.current = null;
 				setPaused(false);
 			}}
-			sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: { xs: 1, sm: 2 }, py: 2 }}
+			sx={{ py: 2 }}
 		>
-			<IconButton onClick={() => step(-1)} aria-label="previous" size="large">
-				<ChevronLeftIcon />
-			</IconButton>
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: { xs: 0, sm: 1 } }}>
+				<IconButton onClick={() => step(-1)} aria-label="previous" size="large">
+					<ChevronLeftIcon />
+				</IconButton>
 
-			{!isNarrow && (
-				<Box sx={{ width: 110, opacity: 0.4, flexShrink: 0 }}>
-					<DollCard {...cardProps(at(-1))} dense />
+				{/* The ring itself. Cards sit on top of each other and are pushed apart by their transform,
+				    which is what lets them animate between slots instead of being relaid out. */}
+				<Box sx={{ position: "relative", flexGrow: 1, height, maxWidth: slot * (visibleRadius * 2 + 1) + width * 0.3, overflow: "hidden" }}>
+					{offsets.map((offset) => {
+						const entry = at(offset);
+						if (!entry) {
+							return null;
+						}
+						// Anything past the visible radius is the extra slot that only exists to fade in and out,
+						// so it takes the last DEPTH entry whatever its distance.
+						const distance = Math.abs(offset);
+						const depth = (distance > visibleRadius ? DEPTH[DEPTH.length - 1] : DEPTH[Math.min(distance, DEPTH.length - 2)]) ?? DEPTH[0];
+						return (
+							<Box
+								key={entry.normal.id}
+								aria-hidden={offset !== 0}
+								sx={{
+									position: "absolute",
+									top: 0,
+									left: "50%",
+									width,
+									transform: `translateX(-50%) translateX(${offset * slot}px) scale(${depth?.scale ?? 1})`,
+									opacity: depth?.opacity ?? 1,
+									zIndex: DEPTH.length - Math.abs(offset),
+									transition,
+									pointerEvents: offset === 0 ? "auto" : "none"
+								}}
+							>
+								<DollCard {...cardProps(entry)} dense={offset !== 0} />
+							</Box>
+						);
+					})}
 				</Box>
-			)}
 
-			{/* The centre card's art is at least 180px wide. At a device ratio of 1 the old hero drew a
-			    256px source at 128 CSS pixels, discarding half of it. */}
-			<Box sx={{ width: { xs: 200, sm: 220 }, flexShrink: 0 }}>
-				<DollCard {...cardProps(centre)} />
+				<IconButton onClick={() => step(1)} aria-label="next" size="large">
+					<ChevronRightIcon />
+				</IconButton>
 			</Box>
 
-			{!isNarrow && (
-				<Box sx={{ width: 110, opacity: 0.4, flexShrink: 0 }}>
-					<DollCard {...cardProps(at(1))} dense />
+			{/* Position indicator, plus the way to a different set entirely. */}
+			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mt: 1 }}>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }} role="tablist" aria-label="Carousel position">
+					{entries.map((entry, position) => (
+						<ButtonBase
+							key={entry.normal.id}
+							role="tab"
+							aria-label={`Show ${entry.normal.name}`}
+							aria-selected={position === index}
+							onClick={() => setIndex(position)}
+							sx={{
+								height: 8,
+								width: position === index ? 22 : 8,
+								borderRadius: "999px",
+								backgroundColor: position === index ? "primary.main" : "action.disabled",
+								transition: reduceMotion ? "none" : "width 240ms ease, background-color 240ms ease"
+							}}
+						/>
+					))}
 				</Box>
-			)}
 
-			<IconButton onClick={() => step(1)} aria-label="next" size="large">
-				<ChevronRightIcon />
-			</IconButton>
+				{onShuffle && (
+					<Tooltip title="Show a different set">
+						<IconButton onClick={onShuffle} aria-label="Show a different set" size="small">
+							<AutorenewIcon fontSize="small" />
+						</IconButton>
+					</Tooltip>
+				)}
+			</Box>
 		</Box>
 	);
 }

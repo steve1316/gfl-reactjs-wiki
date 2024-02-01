@@ -72,6 +72,9 @@ const styles = {
 		display: "flex",
 		justifyContent: "center",
 		listStyle: "none",
+		// A real ul now, so its default 40px inline padding has to go or the rows sit off centre.
+		p: 0,
+		m: 0,
 		flexWrap: "wrap",
 		"& > *": {
 			m: 0.5
@@ -286,7 +289,7 @@ export default function EquipmentIndex() {
 				<br />
 
 				{/* Filters List */}
-				<Box component="div" sx={styles.chipList}>
+				<Box component="ul" sx={styles.chipList}>
 					{typeFilter.map((type) => {
 						return (
 							<li key={type.key}>
@@ -302,7 +305,7 @@ export default function EquipmentIndex() {
 
 				<Divider sx={styles.dividerForChips} />
 
-				<Box component="div" sx={styles.chipList}>
+				<Box component="ul" sx={styles.chipList}>
 					<Zoom in={true} timeout={600}>
 						<span>
 							<FilterChip label={exclusiveFilter.label} selected={exclusiveFilter.selected} onToggle={handleOnClickExclusive} />
