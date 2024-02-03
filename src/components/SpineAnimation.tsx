@@ -35,7 +35,9 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 	const playerRef = useRef<SpinePlayer | null>(null);
 	const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 	const [stageSize, setStageSize] = useState(maxSize);
-	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 4, doubleScale: 2 });
+	// No double-click zoom here: a click on the stage already advances the animation, so two quick clicks
+	// used to both skip ahead and zoom the chibi in. Wheel and pinch still zoom.
+	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 4, doubleClickZoom: false });
 
 	// The stage was pinned at 250px whatever the screen, so it was small on a desktop and still had to fit
 	// a phone. A square that tracks its container suits both.
@@ -125,8 +127,9 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 			style={{ width: "100%", height: stageSize, position: "relative", ...zoom.containerStyle }}
 			{...zoom.handlers}
 			onClick={(event) => {
-				// A drag ends in a click. Swallow it while zoomed so a pan does not also advance the animation.
-				if (zoom.isZoomed) {
+				// A drag ends in a click. Swallow only that one, so a pan does not also advance the animation. This
+				// used to swallow every click while zoomed, which left the animation stuck until the view was reset.
+				if (zoom.wasDragged()) {
 					event.stopPropagation();
 				}
 			}}
@@ -144,20 +147,25 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 					transform: `translateX(-50%) translate(${zoom.transform.x}px, ${zoom.transform.y}px) scale(${zoom.transform.scale})`
 				}}
 			/>
-			{/* Bottom right rather than top right: the chibi's head sits at the top of the stage, and this
-			    matches where the full-art button sits on the portrait card.
+			{/* Bottom right of the stage: the chibi's head sits at the top, and this matches where the full-art
+			    button sits on the portrait card.
 
-			    onPointerDown is stopped here because the gesture container calls setPointerCapture on itself
-			    for every pointerdown that reaches it. With the pointer captured by the container, the matching
-			    pointerup never lands on this button, so no click is ever synthesised and the reset does nothing. */}
+			    Positioned from the stage's own size rather than with `right`. This div's CSS width resolves to 0
+			    (see above), so `right: 8` measured from its centre and left the button near the middle of the stage.
+
+			    Both events are stopped. The pointerdown would otherwise start a gesture on the stage, and the click
+			    would bubble to the stage's own click handler and skip to the next animation as well as resetting. */}
 			{zoom.isZoomed && (
 				<Fab
 					size="small"
 					color="primary"
 					onPointerDown={(event) => event.stopPropagation()}
-					onClick={zoom.reset}
+					onClick={(event) => {
+						event.stopPropagation();
+						zoom.reset();
+					}}
 					aria-label="reset view"
-					sx={{ position: "absolute", right: 8, bottom: 8, opacity: 0.9 }}
+					sx={{ position: "absolute", left: `calc(50% + ${stageSize / 2 - 48}px)`, bottom: 8, opacity: 0.9 }}
 				>
 					<RestartAltIcon />
 				</Fab>

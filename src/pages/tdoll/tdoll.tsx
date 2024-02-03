@@ -6,12 +6,13 @@ import ScrollToTop from "../../components/ScrollToTop";
 import ChibiPanel from "./ChibiPanel";
 import DollHero from "./DollHero";
 import LazySection from "./LazySection";
+import PageBackdrop from "./PageBackdrop";
 import SkillsPanel from "./SkillsPanel";
 import StatsPanel from "./StatsPanel";
 import TilesPanel from "./TilesPanel";
 
 // MaterialUI imports
-import { Box, Container, Grid, Paper, Typography } from "@mui/material";
+import { Box, Container, Grid, Paper, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { loadDoll, spineFor } from "../../lib/data";
@@ -31,13 +32,50 @@ const styles = {
 		// Wider than the xl breakpoint so a 1920 screen actually gets four usable columns, but still capped
 		// so the sections do not stretch into a letterbox on an ultrawide.
 		maxWidth: 1800,
-		mx: "auto"
+		mx: "auto",
+		// Lifts the content above the fixed backdrop, which would otherwise paint over it.
+		position: "relative",
+		zIndex: 1
 	},
-	section: {
-		p: { xs: 2, md: 2.5 }
+	// Translucent so the backdrop reads through the sections too, with a light blur behind the panel to keep
+	// the text legible over the busier parts of the art.
+	section: (theme: Theme) => ({
+		p: { xs: 2, md: 2.5 },
+		backgroundColor: alpha(theme.palette.background.paper, 0.7),
+		backdropFilter: "blur(6px)"
+	}),
+	// The two sections under the hero share a row from a medium screen up, so they fill it to the taller one.
+	// Narrower screens keep natural heights, where equalising would pair a card with the taller Animations one.
+	rowSection: {
+		height: { md: "100%" },
+		// On a wide screen the panel inside grows with the card too, so the inner boxes end level. Between md and
+		// lg the Abilities card stacks and runs far taller than the stat table, and a grown table there was a
+		// large empty box, so the table keeps its own height and only the outer card matches.
+		display: { md: "flex" },
+		flexDirection: "column",
+		"& > :last-child": { flexGrow: { md: 0, lg: 1 } }
 	},
 	sectionHeading: {
 		mb: 1.5
+	},
+	// Skill and tile buffs side by side inside the Abilities card on a wide screen, stacked on a narrow one.
+	abilities: {
+		display: "flex",
+		flexDirection: { xs: "column", lg: "row" },
+		gap: 2
+	},
+	// Each half stretches to the card's height, and its panel fills the half, so the two inner boxes end level.
+	// Tile buffs is a fixed 300px on a wide screen, about what its grid and one line of text need, and the
+	// skill takes the rest, since its description is what wraps and makes the whole row taller.
+	abilityPart: {
+		display: "flex",
+		flexDirection: "column",
+		minWidth: 0,
+		"& > :last-child": { flexGrow: 1 }
+	},
+	abilityHeading: {
+		mb: 1,
+		fontWeight: 600
 	},
 	// The Spine stage tracks its container, so this is what actually decides how large the chibi draws.
 	chibiColumn: {
@@ -220,10 +258,14 @@ function TDollContent({ doll }: TDollContentProps) {
 	// hero's Mod toggle, which stay in lockstep since they describe the same underlying state.
 	const isModForm = tdoll.selected === tdoll.mod;
 
-	// The hero's full art follows the same selection as the card portrait: the current skin when one is
-	// shown, otherwise the Normal/Mod form. mod_skin* forms only ever publish card art, so the base
-	// Normal form's full art stands in whenever the selected form has none of its own.
-	const heroArtUrl = (showSkin ? skinForm(helperSkinSelected(), mode === 1)?.images.full : tdoll.selected.assets.images.full) ?? tdoll.normal.assets.images.full;
+	// The backdrop's full art follows the same selection as the card portrait: the current skin when one is
+	// shown, otherwise the Normal/Mod form, and the damaged version whenever the portrait has been flipped to
+	// it. mod_skin* forms only ever publish card art, so the base Normal form stands in when the selected form
+	// has none of its own. A form missing only its damaged art keeps its own undamaged art rather than borrowing
+	// another outfit's.
+	const artKind = switchImage ? "full_damaged" : "full";
+	const artImages = showSkin ? skinForm(helperSkinSelected(), mode === 1)?.images : tdoll.selected.assets.images;
+	const heroArtUrl = artImages?.[artKind] ?? artImages?.full ?? tdoll.normal.assets.images[artKind] ?? tdoll.normal.assets.images.full;
 
 	// Helper function to reset selected animation tab back to the default tab.
 	const helperResetAnimationTabs = () => {
@@ -362,34 +404,34 @@ function TDollContent({ doll }: TDollContentProps) {
 
 	return (
 		<main>
+			<PageBackdrop artUrl={heroArtUrl} />
 			<ScrollToTop />
 			<Container sx={styles.page} maxWidth={false}>
-				{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
-				<DollHero
-					name={tdoll.selected.name}
-					id={tdoll.selected.id}
-					type={tdoll.selected.type}
-					rarity={tdoll.selected.rarity}
-					isMod={isModForm}
-					artUrl={heroArtUrl}
-					cardImage={tdollImage}
-					onCardImageClick={switchBetweenNormalDamagedCardImages}
-					normalId={tdoll.normal.id}
-					skins={tdoll.skins}
-					skinValue={showSkin ? skinSelected : false}
-					onSkinChange={switchSkinSelected}
-					hasMod={hasMod}
-					modOn={isModForm}
-					onToggleMod={switchModes}
-				/>
-
-				{/************** Every section on the page at once. These used to be four tabs, which hid the tile
-				                buffs and the animations behind a click and left a 135px panel occupying a whole screen. **************/}
-				{/************** Every section on the page at once, four across on a wide screen. These used to be
-				                four tabs, which hid the tile buffs and the animations behind a click. **************/}
-				<Grid container spacing={2} sx={{ alignItems: "flex-start" }}>
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-						<Paper sx={styles.section} variant="outlined">
+				{/************** Every section on the page at once. From a medium screen up the animations share the hero's
+				                row and Stats and Abilities sit below it, so a 1920x1080 screen shows the whole page. On a phone
+				                everything stacks, with the animations last since they are the heaviest to load. **************/}
+				<Grid container spacing={2}>
+					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
+					<Grid size={{ xs: 12, md: 7, lg: 8, xl: 9 }} sx={{ order: 0 }}>
+						<DollHero
+							name={tdoll.selected.name}
+							id={tdoll.selected.id}
+							type={tdoll.selected.type}
+							rarity={tdoll.selected.rarity}
+							isMod={isModForm}
+							cardImage={tdollImage}
+							onCardImageClick={switchBetweenNormalDamagedCardImages}
+							normalId={tdoll.normal.id}
+							skins={tdoll.skins}
+							skinValue={showSkin ? skinSelected : false}
+							onSkinChange={switchSkinSelected}
+							hasMod={hasMod}
+							modOn={isModForm}
+							onToggleMod={switchModes}
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
+						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
 							</Typography>
@@ -397,37 +439,43 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-						<Paper sx={styles.section} variant="outlined">
+					{/************** Skill and tile buffs in one card. They are both what the doll does in a fight, and
+					                apart they left the tile buffs as a mostly empty card in a row of taller ones. **************/}
+					<Grid size={{ xs: 12, md: 7, lg: 8 }} sx={{ order: { xs: 2, sm: 3 } }}>
+						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								Tile buffs
+								Abilities
 							</Typography>
-							<TilesPanel tileSet={tdoll.selected.tile_set} />
+							<Box sx={styles.abilities}>
+								<Box sx={[styles.abilityPart, { flex: { lg: "1 1 auto" } }]}>
+									<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.abilityHeading}>
+										Skill
+									</Typography>
+									<SkillsPanel
+										showModSkill={showModSkill}
+										selectedSkill={selectedSkill}
+										onSelectedSkillChange={setSelectedSkill}
+										skillLevel={skillLevel}
+										onSkillLevelChange={setSkillLevel}
+										skill={tdoll.selected.skill}
+										skill2={tdoll.selected.skill2}
+										normalSkillDescription={tdoll.normal.skill.description}
+										modSkill2Description={tdoll.mod?.skill2?.description}
+										dollId={tdoll.selected.id}
+										skillImages={tdoll.skillImages}
+									/>
+								</Box>
+								<Box sx={[styles.abilityPart, { flex: { lg: "0 0 300px" } }]}>
+									<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.abilityHeading}>
+										Tile buffs
+									</Typography>
+									<TilesPanel tileSet={tdoll.selected.tile_set} />
+								</Box>
+							</Box>
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-						<Paper sx={styles.section} variant="outlined">
-							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								Skills
-							</Typography>
-							<SkillsPanel
-								showModSkill={showModSkill}
-								selectedSkill={selectedSkill}
-								onSelectedSkillChange={setSelectedSkill}
-								skillLevel={skillLevel}
-								onSkillLevelChange={setSkillLevel}
-								skill={tdoll.selected.skill}
-								skill2={tdoll.selected.skill2}
-								normalSkillDescription={tdoll.normal.skill.description}
-								modSkill2Description={tdoll.mod?.skill2?.description}
-								dollId={tdoll.selected.id}
-								skillImages={tdoll.skillImages}
-							/>
-						</Paper>
-					</Grid>
-
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+					<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Animations

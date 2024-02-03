@@ -13,6 +13,9 @@ const DEFAULT_MIN = 1;
 const DEFAULT_MAX = 6;
 const DEFAULT_DOUBLE = 2.5;
 
+/** How far, in CSS pixels, a pointer has to travel before its gesture counts as a drag rather than a click. */
+const DRAG_THRESHOLD = 4;
+
 /** Where the content currently sits. */
 export interface ZoomPanTransform {
 	/** Current scale, between `minScale` and `maxScale`. */
@@ -31,6 +34,8 @@ export interface UseZoomPanOptions {
 	maxScale?: number;
 	/** Scale a double click or double tap jumps to when currently fitted. Defaults to 2.5. */
 	doubleScale?: number;
+	/** Whether a double click toggles the zoom. Defaults to true. Turn it off where a single click already means something, or two quick clicks do both. */
+	doubleClickZoom?: boolean;
 }
 
 /** What `useZoomPan` hands back. `T` is the concrete type of the gesture container, e.g. `HTMLDivElement`. */
@@ -56,6 +61,8 @@ export interface UseZoomPanResult<T extends HTMLElement = HTMLElement> {
 	reset: () => void;
 	/** Whether the content is currently scaled past `minScale`. */
 	isZoomed: boolean;
+	/** Whether the gesture that just ended moved the content, so the click it produces should not count as a click. */
+	wasDragged: () => boolean;
 }
 
 /**
@@ -74,6 +81,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 	const minScale = options.minScale ?? DEFAULT_MIN;
 	const maxScale = options.maxScale ?? DEFAULT_MAX;
 	const doubleScale = options.doubleScale ?? DEFAULT_DOUBLE;
+	const doubleClickZoom = options.doubleClickZoom ?? true;
 
 	const [transform, setTransform] = useState<ZoomPanTransform>({ scale: minScale, x: 0, y: 0 });
 
@@ -88,6 +96,10 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 	// move events still ends up exactly under the cursor. Per-event deltas moved the art a tenth of the
 	// way and left it behind the pointer.
 	const dragStart = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null);
+
+	// Set once the current gesture has panned or pinched. Every drag ends in a click event, and callers that
+	// also act on a click need to tell those apart from a click that never moved.
+	const moved = useRef(false);
 
 	// True only while at least one pointer is down. Drives the cursor, nothing else: the listeners below are
 	// attached by hand rather than by an effect keyed on this, because an effect only runs after the next
@@ -168,6 +180,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 					pinchStart.current = { distance, scale: transformRef.current.scale };
 					return;
 				}
+				moved.current = true;
 				const ratio = distance / (pinchStart.current.distance || 1);
 				const scale = clamp(pinchStart.current.scale * ratio);
 				setTransform((current) => (scale === minScale ? { scale, x: 0, y: 0 } : { ...current, scale }));
@@ -178,6 +191,9 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 			const origin = dragStart.current;
 			if (!origin || transformRef.current.scale <= minScale) {
 				return;
+			}
+			if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > DRAG_THRESHOLD) {
+				moved.current = true;
 			}
 			setTransform((current) => ({ ...current, x: origin.originX + (event.clientX - origin.x), y: origin.originY + (event.clientY - origin.y) }));
 		};
@@ -207,6 +223,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 		(event: ReactPointerEvent<HTMLElement>) => {
 			pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
 			if (pointers.current.size === 1) {
+				moved.current = false;
 				const current = transformRef.current;
 				dragStart.current = { x: event.clientX, y: event.clientY, originX: current.x, originY: current.y };
 			} else {
@@ -219,12 +236,17 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 		[attach]
 	);
 
+	const wasDragged = useCallback(() => moved.current, []);
+
 	const onDoubleClick = useCallback(
 		(event: ReactMouseEvent<HTMLElement>) => {
+			if (!doubleClickZoom) {
+				return;
+			}
 			event.preventDefault();
 			setTransform((current) => (current.scale > minScale ? { scale: minScale, x: 0, y: 0 } : { scale: clamp(doubleScale), x: 0, y: 0 }));
 		},
-		[clamp, doubleScale, minScale]
+		[clamp, doubleClickZoom, doubleScale, minScale]
 	);
 
 	const containerStyle = useMemo<CSSProperties>(
@@ -254,6 +276,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 		contentStyle,
 		zoomBy,
 		reset,
-		isZoomed: transform.scale > minScale
+		isZoomed: transform.scale > minScale,
+		wasDragged
 	};
 }

@@ -28,7 +28,8 @@ const formation_logo = uiUrl("formation_logo.jpg");
  */
 const styles = {
 	root: { py: 3 },
-	heroContent: { backgroundColor: "background.paper", pt: 8, pb: 6 },
+	// Padding lives inside the carousel, so its side buttons reach the hero's top and bottom edges.
+	heroContent: { backgroundColor: "background.paper" },
 	cardGrid: { py: 8 },
 	card: { height: "100%", display: "flex", flexDirection: "column" },
 	// 16:9, held open by padding because the image is a background.
@@ -37,8 +38,8 @@ const styles = {
 	cardButton: { display: "flex", margin: "10px", justifyContent: "flex-end" }
 } satisfies Record<string, SxProps<Theme>>;
 
-/** How many dolls the carousel holds. It shows five at a time, so the ring has to be comfortably larger than that. */
-const CAROUSEL_SIZE = 10;
+/** How many dolls the carousel holds: four sets of three before it asks for a fresh pool. */
+const CAROUSEL_SIZE = 12;
 
 /** Id ranges the T-Doll shards cover. */
 const ID_RANGES: ReadonlyArray<{ min: number; max: number }> = [
@@ -118,10 +119,9 @@ export default function Home() {
 
 			{/* Hero Unit */}
 			<Box sx={{ boxShadow: 1 }}>
+				{/* No container here: the carousel spans the hero, since each side of it is a button. */}
 				<Box component="div" sx={styles.heroContent}>
-					<Container maxWidth="md">
-						<DollCarousel ids={carouselIds} onShuffle={() => setCarouselIds(randomDollIds(CAROUSEL_SIZE))} />
-					</Container>
+					<DollCarousel ids={carouselIds} onShuffle={() => setCarouselIds(randomDollIds(CAROUSEL_SIZE))} />
 				</Box>
 			</Box>
 			{/* End of Hero Unit */}

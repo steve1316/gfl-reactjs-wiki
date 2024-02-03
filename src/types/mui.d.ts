@@ -17,8 +17,8 @@ declare module "@mui/material/styles" {
 		weaponType: Record<keyof typeof WEAPON_TYPE_COLOURS, string>;
 		/** Drink-ingredient colours named in the VA-11 Hall-A collaboration skill text. */
 		ingredient: Record<keyof typeof INGREDIENT_COLOURS, string>;
-		/** The formation tile grid: an unused square, the doll's own square, and a buffed one. */
-		tile: { empty: string; self: string; buff: string };
+		/** The formation tile grid: an unused square, the lines between squares, the doll's own square, and a buffed one. */
+		tile: { empty: string; line: string; self: string; buff: string };
 		/** The two tones of the diagonal stripe behind the animation panel. */
 		stripe: { dark: string; light: string };
 	}
@@ -32,8 +32,8 @@ declare module "@mui/material/styles" {
 		weaponType?: Record<keyof typeof WEAPON_TYPE_COLOURS, string>;
 		/** Drink-ingredient colours named in the VA-11 Hall-A collaboration skill text. */
 		ingredient?: Record<keyof typeof INGREDIENT_COLOURS, string>;
-		/** The formation tile grid: an unused square, the doll's own square, and a buffed one. */
-		tile?: { empty: string; self: string; buff: string };
+		/** The formation tile grid: an unused square, the lines between squares, the doll's own square, and a buffed one. */
+		tile?: { empty: string; line: string; self: string; buff: string };
 		/** The two tones of the diagonal stripe behind the animation panel. */
 		stripe?: { dark: string; light: string };
 	}
