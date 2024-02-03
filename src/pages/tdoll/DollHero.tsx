@@ -118,8 +118,8 @@ interface DollHeroProps {
 	cardImage: string | undefined;
 	/** Called when the portrait is clicked, which toggles between the normal and damaged art. */
 	onCardImageClick: () => void;
-	/** The doll's base id, used to link to its full art page. */
-	normalId: number;
+	/** Route of the full art viewer, already pointing at the form and damaged state on screen. */
+	artLink: string;
 	/** The doll's skins, or null when it has none. */
 	skins: RawSkins | null;
 	/** The doubled index of the selected skin pill, or false when no skin is selected. */
@@ -143,7 +143,7 @@ interface DollHeroProps {
  * @param props Component props.
  * @returns The hero block.
  */
-export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, artLink, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
 	// Shared by every skin pill, which carries its doubled index in `data-skin`. A new arrow per pill per render
 	// would hand each Chip a fresh prop and re-render the whole row on any change to the page.
 	const handleSkinClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, Number(event.currentTarget.dataset.skin)), [onSkinChange]);
@@ -161,7 +161,7 @@ export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage
 
 					{/* Sibling of the action area rather than a child, or opening the full art would also flip
 					    the portrait to its damaged version on the way out. */}
-					<Fab color="primary" component={Link} to={`/tdoll/${normalId}/art`} sx={styles.fabExpand} aria-label="view full art">
+					<Fab color="primary" component={Link} to={artLink} sx={styles.fabExpand} aria-label="view full art">
 						<ZoomOutMapIcon />
 					</Fab>
 				</Card>

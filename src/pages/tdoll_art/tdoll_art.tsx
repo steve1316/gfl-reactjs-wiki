@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -10,6 +10,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { containArtSx } from "../../lib/artLayout";
 import { loadDoll } from "../../lib/data";
+import NotFound404 from "../../not_found_404";
 import type { TDoll } from "../../types/tdoll";
 
 /**
@@ -69,9 +70,14 @@ function formLabel(key: string, skinNames: string[]): string {
 export default function TDollArt() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const [doll, setDoll] = useState<TDoll | undefined>(undefined);
-	const [damaged, setDamaged] = useState(false);
-	const [formKey, setFormKey] = useState("normal");
+	const location = useLocation();
+	// Undefined while loading and null when no doll has this id.
+	const [doll, setDoll] = useState<TDoll | null | undefined>(undefined);
+	// The doll page links here with the form and damaged state it was showing, so the viewer opens on the same art.
+	// A form without full art falls back to the first one below.
+	const [searchParams] = useSearchParams();
+	const [damaged, setDamaged] = useState(() => searchParams.get("damaged") === "1");
+	const [formKey, setFormKey] = useState(() => searchParams.get("form") ?? "normal");
 
 	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
 
@@ -79,7 +85,7 @@ export default function TDollArt() {
 		let active = true;
 		void loadDoll(Number(id)).then((found) => {
 			if (active) {
-				setDoll(found);
+				setDoll(found ?? null);
 			}
 		});
 		return () => {
@@ -87,9 +93,28 @@ export default function TDollArt() {
 		};
 	}, [id]);
 
+	// Opened from the doll page, going back returns to it exactly as it was left, since that page keeps its skin, Mod and
+	// damaged choice in its address. Opened from a pasted link there is nothing to go back to, so the doll page opens on
+	// the art being viewed instead.
 	const close = useCallback(() => {
-		void navigate(`/tdoll/${id ?? ""}`);
-	}, [navigate, id]);
+		if (location.key !== "default") {
+			void navigate(-1);
+			return;
+		}
+		const back = new URLSearchParams();
+		const skin = /^skin(\d+)$/.exec(formKey);
+		if (formKey === "mod") {
+			back.set("mod", "1");
+		}
+		if (skin?.[1]) {
+			back.set("skin", skin[1]);
+		}
+		if (damaged) {
+			back.set("damaged", "1");
+		}
+		const query = back.toString();
+		void navigate(`/tdoll/${id ?? ""}${query ? `?${query}` : ""}`, { replace: true });
+	}, [location.key, navigate, id, formKey, damaged]);
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
@@ -137,6 +162,10 @@ export default function TDollArt() {
 			setDamaged(Boolean(value));
 		}
 	}, []);
+
+	if (doll === null) {
+		return <NotFound404 message={`There is no T-Doll with the id ${id ?? ""}.`} />;
+	}
 
 	return (
 		<Box sx={{ position: "fixed", inset: 0, bgcolor: "common.black", zIndex: (theme) => theme.zIndex.modal, display: "flex", flexDirection: "column" }}>
