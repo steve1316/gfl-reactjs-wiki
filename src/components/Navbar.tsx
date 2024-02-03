@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { memo, useCallback, useState } from "react";
+import type { FormEvent, HTMLAttributes, Key, SyntheticEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // MaterialUI imports
@@ -8,6 +8,7 @@ import type { SxProps, Theme } from "@mui/material";
 
 // Autocomplete imports
 import Autocomplete from "@mui/material/Autocomplete";
+import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
 import parse from "autosuggest-highlight/parse";
 import match from "autosuggest-highlight/match";
 
@@ -74,6 +75,155 @@ const styles = {
 	link: { textDecoration: "none", color: "text.primary" }
 } satisfies Record<string, SxProps<Theme>>;
 
+/** The drawer's destinations. Static, so declared once here rather than rebuilt on every keystroke in the search. */
+const NAV_ITEMS = [
+	{
+		title: "Home",
+		link: "/",
+		image: HomeIcon,
+		height: 25,
+		width: 25
+	},
+	{
+		title: "T-Doll Index",
+		link: "/index",
+		image: IndexIcon,
+		height: 25,
+		width: 25
+	},
+	{
+		title: "Equipment Index",
+		link: "/equipment-index",
+		image: EquipmentIcon,
+		height: 25,
+		width: 25
+	},
+	{
+		title: "HOC Index",
+		link: "/hoc-index",
+		image: HOCIcon,
+		height: 25,
+		width: 24 // This is 24 because of the icon getting its right side cut off if it was set to 25 width.
+	},
+	{
+		title: "Fairy Index",
+		link: "/fairy-index",
+		image: FairyIcon,
+		height: 25,
+		width: 25
+	},
+	{
+		title: "Formation Simulator",
+		link: "/formation",
+		image: FormationIcon,
+		height: 25,
+		width: 25
+	}
+];
+
+/**
+ * The heading a search option groups under.
+ *
+ * @param option The option.
+ * @returns Its leading letter, or "0-9".
+ */
+const groupByLetter = (option: SearchOption) => option.firstLetter;
+
+/**
+ * The text a search option shows and is matched on.
+ *
+ * @param option The option.
+ * @returns The doll's name.
+ */
+const optionLabel = (option: SearchOption) => option.name;
+
+/**
+ * Whether two options are the same doll. Names repeat across forms, so options are compared by id.
+ *
+ * @param option An option.
+ * @param value The selected value.
+ * @returns True when both are the same doll.
+ */
+const sameDoll = (option: SearchOption, value: SearchOption) => option.id === value.id;
+
+/**
+ * One row of the search dropdown, with the typed text in bold.
+ *
+ * @param optionProps Props MUI supplies for the row, including its key.
+ * @param option The option to render.
+ * @param state MUI's render state, carrying the typed text.
+ * @returns The row.
+ */
+const renderSearchOption = (optionProps: HTMLAttributes<HTMLLIElement> & { key: Key }, option: SearchOption, state: { inputValue: string }) => {
+	const parts = parse(option.name, match(option.name, state.inputValue));
+	const { key, ...rest } = optionProps;
+	return (
+		<li key={key} {...rest}>
+			{parts.map((part, index) => (
+				<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
+					{part.text}
+				</span>
+			))}
+		</li>
+	);
+};
+
+/**
+ * The search field's pill styling.
+ *
+ * One shape, not two. The wrapper used to draw a 64px pill behind an 8px rectangle, so the pill's corners showed
+ * around a near-square box.
+ *
+ * @param theme The theme.
+ * @returns The sx for the field.
+ */
+const searchFieldSx = (theme: Theme) => ({
+	"& .MuiOutlinedInput-root": {
+		borderRadius: "999px",
+		backgroundColor: alpha(theme.palette.common.white, 0.11),
+		"&:hover": { backgroundColor: alpha(theme.palette.common.white, 0.17) },
+		"& fieldset": { borderColor: "transparent" },
+		"&:hover fieldset": { borderColor: "transparent" },
+		"&.Mui-focused fieldset": { borderColor: theme.palette.secondary.main, borderWidth: 2 }
+	}
+});
+
+/** Props for NavList. */
+interface NavListProps {
+	/** Called when a destination is picked, to close the drawer. */
+	onNavigate: () => void;
+}
+
+/**
+ * The drawer's list of destinations.
+ *
+ * Memoised because the navbar re-renders on every keystroke in the search field, which used to rebuild this list too.
+ *
+ * @param props Component props.
+ * @returns The list.
+ */
+const NavList = memo(function NavList({ onNavigate }: NavListProps) {
+	return (
+		<List>
+			{NAV_ITEMS.map((item) => (
+				<div key={item.title}>
+					<Box component={Link} to={item.link} sx={styles.link} onClick={onNavigate}>
+						<ListItemButton>
+							<ListItemIcon>
+								<Icon>
+									<img src={item.image} height={item.height} width={item.width} alt={item.title} />
+								</Icon>
+							</ListItemIcon>
+							<ListItemText primary={item.title} />
+						</ListItemButton>
+					</Box>
+					<Divider />
+				</div>
+			))}
+		</List>
+	);
+});
+
 /**
  * The top bar: drawer trigger, title and search.
  *
@@ -92,141 +242,83 @@ export default function Navbar() {
 	const [hasError, setHasError] = useState(false);
 
 	// Controls opening and closing the Drawer.
-	const handleDrawerToggle = () => {
-		setDrawerOpen(!drawerOpen);
-	};
+	// Every handler is stable, so the memoised drawer list and the Autocomplete's callback props do not change
+	// identity on every keystroke in the search field.
+	const handleDrawerToggle = useCallback(() => setDrawerOpen((open) => !open), []);
+	const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+	const openSearch = useCallback(() => setSearchOpen(true), []);
+	const closeSearch = useCallback(() => setSearchOpen(false), []);
 
 	// Send the reader to a doll and leave search mode. Shared by picking a suggestion and by submitting
 	// the form, so both routes behave the same.
-	const goTo = (option: SearchOption) => {
-		// Collapse the field again, or the reader lands on the doll with the bar still in search mode.
-		setSearchOpen(false);
-		void navigate(`/tdoll/${option.id}`);
-	};
+	const goTo = useCallback(
+		(option: SearchOption) => {
+			// Collapse the field again, or the reader lands on the doll with the bar still in search mode.
+			setSearchOpen(false);
+			void navigate(`/tdoll/${option.id}`);
+		},
+		[navigate]
+	);
 
 	// Submitting without picking a suggestion. An exact name wins, otherwise the first option the typed
 	// text appears in, which is the row the dropdown would have had highlighted.
-	const handleSubmit = (event?: FormEvent) => {
-		event?.preventDefault();
-		const typed = searchValue.trim().toLowerCase();
-		if (typed === "") {
-			return;
-		}
-		const selected = options.find((option) => option.name.toLowerCase() === typed) ?? options.find((option) => option.name.toLowerCase().includes(typed));
-		if (!selected) {
-			setHasError(true);
-			return;
-		}
-		goTo(selected);
-	};
+	const handleSubmit = useCallback(
+		(event?: FormEvent) => {
+			event?.preventDefault();
+			const typed = searchValue.trim().toLowerCase();
+			if (typed === "") {
+				return;
+			}
+			const selected = options.find((option) => option.name.toLowerCase() === typed) ?? options.find((option) => option.name.toLowerCase().includes(typed));
+			if (!selected) {
+				setHasError(true);
+				return;
+			}
+			goTo(selected);
+		},
+		[searchValue, goTo]
+	);
 
-	const listItems = [
-		{
-			title: "Home",
-			link: "/",
-			image: HomeIcon,
-			height: 25,
-			width: 25
+	const handleInputChange = useCallback((_event: SyntheticEvent, newInputValue: string) => {
+		setSearchValue(newInputValue);
+		// Without this the failed-search label stays until the next successful submit.
+		setHasError(false);
+	}, []);
+
+	// Picking a suggestion used to only fill the text box, leaving the reader to press Enter themselves.
+	const handleOptionChange = useCallback(
+		(_event: SyntheticEvent, option: SearchOption | null) => {
+			if (option) {
+				goTo(option);
+			}
 		},
-		{
-			title: "T-Doll Index",
-			link: "/index",
-			image: IndexIcon,
-			height: 25,
-			width: 25
-		},
-		{
-			title: "Equipment Index",
-			link: "/equipment-index",
-			image: EquipmentIcon,
-			height: 25,
-			width: 25
-		},
-		{
-			title: "HOC Index",
-			link: "/hoc-index",
-			image: HOCIcon,
-			height: 25,
-			width: 24 // This is 24 because of the icon getting its right side cut off if it was set to 25 width.
-		},
-		{
-			title: "Fairy Index",
-			link: "/fairy-index",
-			image: FairyIcon,
-			height: 25,
-			width: 25
-		},
-		{
-			title: "Formation Simulator",
-			link: "/formation",
-			image: FormationIcon,
-			height: 25,
-			width: 25
-		}
-	];
+		[goTo]
+	);
+
+	const renderSearchInput = useCallback(
+		(params: AutocompleteRenderInputParams) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} variant="outlined" sx={searchFieldSx} />,
+		[hasError]
+	);
 
 	const searchField = (
 		<form onSubmit={handleSubmit} style={{ width: "100%" }}>
 			<Autocomplete
 				options={options}
-				groupBy={(option) => option.firstLetter}
-				getOptionLabel={(option) => option.name}
+				groupBy={groupByLetter}
+				getOptionLabel={optionLabel}
 				size="small"
 				sx={{ width: "100%", minWidth: { xs: 0, sm: 300 } }}
 				inputValue={searchValue}
-				onInputChange={(_event, newInputValue) => {
-					setSearchValue(newInputValue);
-					// Without this the failed-search label stays until the next successful submit.
-					setHasError(false);
-				}}
-				// Picking a suggestion used to only fill the text box, leaving the reader to press Enter
-				// themselves. Names repeat across forms, so options are compared by id rather than by label.
-				onChange={(_event, option) => {
-					if (option) {
-						goTo(option);
-					}
-				}}
-				isOptionEqualToValue={(option, value) => option.id === value.id}
+				onInputChange={handleInputChange}
+				onChange={handleOptionChange}
+				isOptionEqualToValue={sameDoll}
 				// MUI swallows the first Enter to select the highlighted row, so without a row highlighted
 				// the reader had to press Enter twice before the form ever saw it.
 				autoHighlight
 				blurOnSelect
 				clearOnEscape
-				renderInput={(params) => (
-					<TextField
-						{...params}
-						color="secondary"
-						label={hasError ? "Does not match any T-Doll" : "Search..."}
-						variant="outlined"
-						sx={(theme) => ({
-							// One shape, not two. The wrapper used to draw a 64px pill behind an 8px
-							// rectangle, so the pill's corners showed around a near-square box.
-							"& .MuiOutlinedInput-root": {
-								borderRadius: "999px",
-								backgroundColor: alpha(theme.palette.common.white, 0.11),
-								"&:hover": { backgroundColor: alpha(theme.palette.common.white, 0.17) },
-								"& fieldset": { borderColor: "transparent" },
-								"&:hover fieldset": { borderColor: "transparent" },
-								"&.Mui-focused fieldset": { borderColor: theme.palette.secondary.main, borderWidth: 2 }
-							}
-						})}
-					/>
-				)}
-				renderOption={(optionProps, option, { inputValue }) => {
-					const matches = match(option.name, inputValue);
-					const parts = parse(option.name, matches);
-					const { key, ...rest } = optionProps;
-
-					return (
-						<li key={key} {...rest}>
-							{parts.map((part, index) => (
-								<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
-									{part.text}
-								</span>
-							))}
-						</li>
-					);
-				}}
+				renderInput={renderSearchInput}
+				renderOption={renderSearchOption}
 			/>
 		</form>
 	);
@@ -237,7 +329,7 @@ export default function Navbar() {
 				<Toolbar>
 					{isNarrow && searchOpen ? (
 						<>
-							<IconButton edge="start" onClick={() => setSearchOpen(false)} color="inherit" aria-label="close search" size="large">
+							<IconButton edge="start" onClick={closeSearch} color="inherit" aria-label="close search" size="large">
 								<ArrowBackIcon />
 							</IconButton>
 							{searchField}
@@ -251,7 +343,7 @@ export default function Navbar() {
 								Girls' Frontline Database
 							</Typography>
 							{isNarrow ? (
-								<IconButton onClick={() => setSearchOpen(true)} color="inherit" aria-label="search" size="large">
+								<IconButton onClick={openSearch} color="inherit" aria-label="search" size="large">
 									<SearchIcon />
 								</IconButton>
 							) : (
@@ -270,25 +362,7 @@ export default function Navbar() {
 
 			{/* Drawer */}
 			<Drawer style={{ width: "200px" }} anchor="left" open={drawerOpen} onClose={handleDrawerToggle} variant="temporary" slotProps={{ paper: { sx: styles.drawerPaper } }}>
-				<List>
-					{listItems.map((item) => {
-						return (
-							<div key={item.title}>
-								<Box component={Link} to={item.link} sx={styles.link} onClick={() => setDrawerOpen(false)}>
-									<ListItemButton>
-										<ListItemIcon>
-											<Icon>
-												<img src={item.image} height={item.height} width={item.width} alt={item.title} />
-											</Icon>
-										</ListItemIcon>
-										<ListItemText primary={item.title} />
-									</ListItemButton>
-								</Box>
-								<Divider />
-							</div>
-						);
-					})}
-				</List>
+				<NavList onNavigate={closeDrawer} />
 			</Drawer>
 			{/* End of Drawer */}
 		</Box>

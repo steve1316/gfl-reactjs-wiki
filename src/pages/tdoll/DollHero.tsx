@@ -1,3 +1,5 @@
+import { memo, useCallback } from "react";
+import type { MouseEvent } from "react";
 import { Link } from "react-router-dom";
 
 // MaterialUI imports
@@ -141,7 +143,12 @@ interface DollHeroProps {
  * @param props Component props.
  * @returns The hero block.
  */
-export default function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+	// Shared by every skin pill, which carries its doubled index in `data-skin`. A new arrow per pill per render
+	// would hand each Chip a fresh prop and re-render the whole row on any change to the page.
+	const handleSkinClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, Number(event.currentTarget.dataset.skin)), [onSkinChange]);
+	const handleBaseClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, false), [onSkinChange]);
+
 	const skinNames = skins?.skin_names ?? [];
 
 	return (
@@ -165,7 +172,7 @@ export default function DollHero({ name, id, type, rarity, isMod, cardImage, onC
 						<RarityStars rarity={rarity} isMod={isMod} />
 
 						{hasMod ? (
-							<ToggleButton value="mod" selected={modOn} onChange={() => onToggleMod()} size="small" sx={styles.modToggle} aria-label="toggle Mod form">
+							<ToggleButton value="mod" selected={modOn} onChange={onToggleMod} size="small" sx={styles.modToggle} aria-label="toggle Mod form">
 								<Box component="img" src={modIcon} alt="" sx={styles.modIcon} />
 								MOD
 							</ToggleButton>
@@ -182,14 +189,7 @@ export default function DollHero({ name, id, type, rarity, isMod, cardImage, onC
 
 					{skinNames.length > 0 ? (
 						<Box sx={styles.pillRow} role="group" aria-label="Skins">
-							<Chip
-								label="Base"
-								size="small"
-								clickable
-								onClick={(event) => onSkinChange(event, false)}
-								aria-pressed={skinValue === false}
-								sx={skinValue === false ? styles.pillSelected : styles.pill}
-							/>
+							<Chip label="Base" size="small" clickable onClick={handleBaseClick} aria-pressed={skinValue === false} sx={skinValue === false ? styles.pillSelected : styles.pill} />
 							{skinNames.map((skinName, index) => {
 								const value = index * 2;
 								const selected = skinValue === value;
@@ -199,7 +199,8 @@ export default function DollHero({ name, id, type, rarity, isMod, cardImage, onC
 										label={skinName}
 										size="small"
 										clickable
-										onClick={(event) => onSkinChange(event, value)}
+										data-skin={value}
+										onClick={handleSkinClick}
 										aria-pressed={selected}
 										sx={selected ? styles.pillSelected : styles.pill}
 									/>
@@ -211,4 +212,4 @@ export default function DollHero({ name, id, type, rarity, isMod, cardImage, onC
 			</Box>
 		</Box>
 	);
-}
+});

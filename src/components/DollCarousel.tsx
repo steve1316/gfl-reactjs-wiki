@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { TouchEvent } from "react";
 
 import { Box, ButtonBase, Skeleton, useMediaQuery } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
@@ -14,7 +15,7 @@ import type { TDoll } from "../types/tdoll";
 // Configuration
 
 /** How long each set of dolls is shown before the carousel moves on, in ms. */
-const ADVANCE_MS = 6000;
+const ADVANCE_MS = 15000;
 
 /** Horizontal travel, in pixels, that counts as a swipe rather than a tap. */
 const SWIPE_THRESHOLD = 40;
@@ -83,6 +84,10 @@ const styles = {
 	})
 } satisfies Record<string, SxProps<Theme>>;
 
+/** The combined side styles, built once rather than as a fresh array on every render. */
+const SIDE_LEFT_SX = [styles.side, styles.sideLeft];
+const SIDE_RIGHT_SX = [styles.side, styles.sideRight];
+
 /** Props for DollCarousel. */
 interface DollCarouselProps {
 	/** The pool of doll ids to draw from, already in random order. */
@@ -133,12 +138,13 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * The countdown bar and the swap are one CSS animation. The bar used to be a progress value fed by an interval,
  * and MUI eases every value change, so each reset to 0 slid back down from full and every new set appeared to
  * start already filled. Advancing on `animationend` also means pausing the bar pauses the timer, with nothing
- * to keep in sync. The pool arrives shuffled, so a set is simply the next slice of it.
+ * to keep in sync. Only a finger held on the carousel pauses it, since hovering or focusing it should not stop the
+ * cycle. The pool arrives shuffled, so a set is simply the next slice of it.
  *
  * @param props Component props.
  * @returns The carousel.
  */
-export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
+export default memo(function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 	const isNarrow = useMediaQuery("(max-width:599.95px)");
 	const isMedium = useMediaQuery("(max-width:899.95px)");
 	const reduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -169,10 +175,10 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 
 	const perSet = isNarrow ? 1 : 3;
 	const width = isNarrow ? 200 : isMedium ? 150 : 200;
-	const shown = entries.slice(start, start + perSet);
+	const shown = useMemo(() => entries.slice(start, start + perSet), [entries, start, perSet]);
 
 	/** Show the next set, or ask for a fresh pool once this one has run out. */
-	const advance = () => {
+	const advance = useCallback(() => {
 		const next = start + perSet;
 		if (next >= entries.length) {
 			if (onShuffle) {
@@ -183,10 +189,43 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 			return;
 		}
 		setStart(next);
-	};
+	}, [start, perSet, entries.length, onShuffle]);
 
 	/** Show the previous set. Does nothing on the first. */
-	const back = () => setStart((current) => Math.max(0, current - perSet));
+	const back = useCallback(() => setStart((current) => Math.max(0, current - perSet)), [perSet]);
+
+	const handleTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+		setPaused(true);
+		const touch = event.touches[0];
+		touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+	}, []);
+
+	const handleTouchEnd = useCallback(
+		(event: TouchEvent<HTMLDivElement>) => {
+			const origin = touchStart.current;
+			const end = event.changedTouches[0] ?? null;
+			if (origin !== null && end !== null) {
+				const dx = end.clientX - origin.x;
+				const dy = end.clientY - origin.y;
+				// Without the vertical check a page scroll that drifts sideways also turns the carousel.
+				if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+					if (dx < 0) {
+						advance();
+					} else {
+						back();
+					}
+				}
+			}
+			touchStart.current = null;
+			setPaused(false);
+		},
+		[advance, back]
+	);
+
+	const handleTouchCancel = useCallback(() => {
+		touchStart.current = null;
+		setPaused(false);
+	}, []);
 
 	// Held in a ref so the one window listener always calls the current handlers.
 	const handlers = useRef({ advance, back });
@@ -213,41 +252,8 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 	const cycling = !reduceMotion && entries.length > perSet;
 
 	return (
-		<Box
-			sx={styles.root}
-			onMouseEnter={() => setPaused(true)}
-			onMouseLeave={() => setPaused(false)}
-			onFocusCapture={() => setPaused(true)}
-			onBlurCapture={() => setPaused(false)}
-			onTouchStart={(event) => {
-				setPaused(true);
-				const touch = event.touches[0];
-				touchStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
-			}}
-			onTouchEnd={(event) => {
-				const origin = touchStart.current;
-				const end = event.changedTouches[0] ?? null;
-				if (origin !== null && end !== null) {
-					const dx = end.clientX - origin.x;
-					const dy = end.clientY - origin.y;
-					// Without the vertical check a page scroll that drifts sideways also turns the carousel.
-					if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-						if (dx < 0) {
-							advance();
-						} else {
-							back();
-						}
-					}
-				}
-				touchStart.current = null;
-				setPaused(false);
-			}}
-			onTouchCancel={() => {
-				touchStart.current = null;
-				setPaused(false);
-			}}
-		>
-			<ButtonBase onClick={back} disabled={loading || start === 0} aria-label="previous" sx={[styles.side, styles.sideLeft]}>
+		<Box sx={styles.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchCancel}>
+			<ButtonBase onClick={back} disabled={loading || start === 0} aria-label="previous" sx={SIDE_LEFT_SX}>
 				<ChevronLeftIcon />
 			</ButtonBase>
 
@@ -294,9 +300,9 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 				</Box>
 			</Box>
 
-			<ButtonBase onClick={advance} disabled={loading || entries.length <= perSet} aria-label="next" sx={[styles.side, styles.sideRight]}>
+			<ButtonBase onClick={advance} disabled={loading || entries.length <= perSet} aria-label="next" sx={SIDE_RIGHT_SX}>
 				<ChevronRightIcon />
 			</ButtonBase>
 		</Box>
 	);
-}
+});

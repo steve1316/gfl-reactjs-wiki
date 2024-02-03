@@ -124,6 +124,20 @@ export default function TDollArt() {
 		}
 	}, [doll]);
 
+	// Stable handlers, in step with the rest of the site.
+	const zoomIn = useCallback(() => zoom.zoomBy(1.4), [zoom.zoomBy]);
+	const zoomOut = useCallback(() => zoom.zoomBy(1 / 1.4), [zoom.zoomBy]);
+	const handleFormChange = useCallback((_event: unknown, value: string | null) => {
+		if (value) {
+			setFormKey(String(value));
+		}
+	}, []);
+	const handleDamagedChange = useCallback((_event: unknown, value: boolean | null) => {
+		if (value !== null) {
+			setDamaged(Boolean(value));
+		}
+	}, []);
+
 	return (
 		<Box sx={{ position: "fixed", inset: 0, bgcolor: "common.black", zIndex: (theme) => theme.zIndex.modal, display: "flex", flexDirection: "column" }}>
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 1, color: "common.white" }}>
@@ -133,10 +147,10 @@ export default function TDollArt() {
 				<Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
 					{doll?.normal.name ?? "Loading..."}
 				</Typography>
-				<IconButton onClick={() => zoom.zoomBy(1 / 1.4)} aria-label="zoom out" sx={{ color: "inherit" }}>
+				<IconButton onClick={zoomOut} aria-label="zoom out" sx={{ color: "inherit" }}>
 					<RemoveIcon />
 				</IconButton>
-				<IconButton onClick={() => zoom.zoomBy(1.4)} aria-label="zoom in" sx={{ color: "inherit" }}>
+				<IconButton onClick={zoomIn} aria-label="zoom in" sx={{ color: "inherit" }}>
 					<AddIcon />
 				</IconButton>
 				<IconButton onClick={zoom.reset} aria-label="reset zoom" sx={{ color: "inherit" }}>
@@ -149,14 +163,14 @@ export default function TDollArt() {
 			</Box>
 
 			<Box sx={{ display: "flex", gap: 1, p: 1, flexWrap: "wrap", justifyContent: "center" }}>
-				<ToggleButtonGroup size="small" exclusive value={formKey} onChange={(_event, value) => value && setFormKey(String(value))}>
+				<ToggleButtonGroup size="small" exclusive value={formKey} onChange={handleFormChange}>
 					{forms.map((form) => (
 						<ToggleButton key={form.key} value={form.key} sx={{ color: "common.white" }}>
 							{form.label}
 						</ToggleButton>
 					))}
 				</ToggleButtonGroup>
-				<ToggleButtonGroup size="small" exclusive value={damaged} onChange={(_event, value) => value !== null && setDamaged(Boolean(value))}>
+				<ToggleButtonGroup size="small" exclusive value={damaged} onChange={handleDamagedChange}>
 					<ToggleButton value={false} sx={{ color: "common.white" }}>
 						Normal
 					</ToggleButton>

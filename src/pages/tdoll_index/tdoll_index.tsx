@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
@@ -10,6 +10,7 @@ import { Box, Container, Grid, Chip, Divider, Typography, Button } from "@mui/ma
 import type { SxProps, Theme } from "@mui/material";
 
 import { loadAllDolls } from "../../lib/data";
+import { normaliseName } from "../../lib/nameSearch";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
@@ -87,12 +88,24 @@ export default function TDoll_Index() {
 	 * This used to be built inside an effect that stored rendered JSX elements in state, so every filter
 	 * change re-rendered the whole list twice and the element array was a second copy of the data.
 	 */
+	/** What the reader has typed into the name search. */
+	const [nameQuery, setNameQuery] = useState("");
+
+	// The list re-filters from a deferred copy, so typing stays responsive while a few hundred cards re-render.
+	const deferredQuery = useDeferredValue(nameQuery);
+
 	const matches = useMemo(() => {
 		const typeOn = typeFilter.some((entry) => entry.selected);
 		const rarityOn = rarityFilter.some((entry) => entry.selected);
 		const modOn = modFilter.selected;
+		const query = normaliseName(deferredQuery);
 
 		return allDolls.flatMap<IndexEntry>((data) => {
+			// The name search narrows every other filter. Both forms' names count, so "m4sopmod" finds the doll
+			// whichever form the Mod filter is showing.
+			if (query && !normaliseName(data.normal.name).includes(query) && !(data.mod && normaliseName(data.mod.name).includes(query))) {
+				return [];
+			}
 			if (!typeOn && !rarityOn && !modOn) {
 				return [{ ...data, selected: data.normal }];
 			}
@@ -117,7 +130,7 @@ export default function TDoll_Index() {
 			}
 			return (typeOn ? matchesType : matchesRarity) ? entry : [];
 		});
-	}, [allDolls, typeFilter, rarityFilter, modFilter]);
+	}, [allDolls, typeFilter, rarityFilter, modFilter, deferredQuery]);
 
 	// The slice of matches actually rendered, grown by PAGE_SIZE each time the load-more button is clicked.
 	const visible = useMemo(() => matches.slice(0, shown), [matches, shown]);
@@ -145,6 +158,8 @@ export default function TDoll_Index() {
 			setRarityFilter(temp.rarityFilter);
 			setTypeFilter(temp.typeFilter);
 			setModFilter(temp.modFilter);
+			// Absent from filters saved before the name search existed.
+			setNameQuery(typeof temp.nameQuery === "string" ? temp.nameQuery : "");
 		}
 	}, []);
 
@@ -156,47 +171,49 @@ export default function TDoll_Index() {
 		const tempFilters = {
 			rarityFilter: rarityFilter,
 			typeFilter: typeFilter,
-			modFilter: modFilter
+			modFilter: modFilter,
+			nameQuery: nameQuery
 		};
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-	}, [modFilter, rarityFilter, typeFilter]);
+	}, [modFilter, rarityFilter, typeFilter, nameQuery]);
 
-	// The following handler functions below are setting the filters selected as active.
-	const handleOnClickRarity = (rarityToBeUpdated: { key: number; selected: boolean }) => () => {
-		const key = rarityToBeUpdated.key;
-		const newSelected = !rarityToBeUpdated.selected;
+	// Every handler below is stable across renders and toggles from the current state rather than a captured copy,
+	// so the memoised FilterPanel, its chips and the result cards can all skip renders they have no part in.
+	const handleToggleRarity = useCallback((key?: string | number) => {
+		setRarityFilter((rarities) => rarities.map((rarity) => (rarity.key === key ? { ...rarity, selected: !rarity.selected } : rarity)));
+	}, []);
 
-		// Match the rarity's key with the given rarity's key and only set its selected boolean to the opposite of what it was.
-		setRarityFilter((rarities) => rarities.map((rarity) => (rarity.key === key ? { ...rarity, selected: newSelected } : rarity)));
-	};
+	const handleToggleType = useCallback((key?: string | number) => {
+		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: !type.selected } : type)));
+	}, []);
 
-	const handleOnClickType = (typeToBeUpdated: { key: number; selected: boolean }) => () => {
-		const key = typeToBeUpdated.key;
-		const newSelected = !typeToBeUpdated.selected;
-		setTypeFilter((type) => type.map((type) => (type.key === key ? { ...type, selected: newSelected } : type)));
-	};
+	const handleToggleMod = useCallback(() => {
+		setModFilter((mod) => ({ ...mod, selected: !mod.selected }));
+	}, []);
 
-	const handleOnClickMod = () => {
-		setModFilter({
-			...modFilter,
-			selected: !modFilter.selected
-		});
-	};
+	const handleClearName = useCallback(() => setNameQuery(""), []);
 
-	// Deselects every filter at once, for the sheet's Clear all button.
-	const handleClearAll = () => {
+	const handleLoadMore = useCallback(() => setShown((current) => current + PAGE_SIZE), []);
+
+	// Deselects every filter at once, for the panel's Clear all button.
+	const handleClearAll = useCallback(() => {
 		setRarityFilter((rarities) => rarities.map((rarity) => ({ ...rarity, selected: false })));
 		setTypeFilter((types) => types.map((type) => ({ ...type, selected: false })));
-		setModFilter({ ...modFilter, selected: false });
-	};
+		setModFilter((mod) => ({ ...mod, selected: false }));
+		setNameQuery("");
+	}, []);
 
 	// The currently active filters, flattened into one list the summary bar can render as removable chips.
-	// Each entry keeps a reference to its own toggle handler so its delete button clears just that filter.
-	const activeFilters = [
-		...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: handleOnClickRarity(rarity) })),
-		...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: handleOnClickType(type) })),
-		...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleOnClickMod }] : [])
-	];
+	// Each entry keeps its own delete handler so it clears just that filter.
+	const activeFilters = useMemo(
+		() => [
+			...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: () => handleToggleRarity(rarity.key) })),
+			...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: () => handleToggleType(type.key) })),
+			...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleToggleMod }] : []),
+			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : [])
+		],
+		[rarityFilter, typeFilter, modFilter, nameQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName]
+	);
 
 	return (
 		<Box component="main" sx={styles.root}>
@@ -209,9 +226,11 @@ export default function TDoll_Index() {
 					typeFilter={typeFilter}
 					modFilter={modFilter}
 					activeCount={activeFilters.length}
-					onToggleRarity={handleOnClickRarity}
-					onToggleType={handleOnClickType}
-					onToggleMod={handleOnClickMod}
+					nameQuery={nameQuery}
+					onNameQueryChange={setNameQuery}
+					onToggleRarity={handleToggleRarity}
+					onToggleType={handleToggleType}
+					onToggleMod={handleToggleMod}
 					onClear={handleClearAll}
 				/>
 
@@ -249,6 +268,7 @@ export default function TDoll_Index() {
 								isMod={tdoll.selected === tdoll.mod}
 								image={tdoll.selected.assets.images.card ?? ""}
 								to={`/tdoll/${tdoll.normal.id}`}
+								highlight={deferredQuery}
 							/>
 						</Grid>
 					))}
@@ -256,7 +276,7 @@ export default function TDoll_Index() {
 
 				{visible.length < matches.length && (
 					<Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-						<Button variant="outlined" onClick={() => setShown((current) => current + PAGE_SIZE)}>
+						<Button variant="outlined" onClick={handleLoadMore}>
 							Load {Math.min(PAGE_SIZE, matches.length - visible.length)} more
 						</Button>
 					</Box>

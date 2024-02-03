@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 // MaterialUI imports
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
@@ -43,7 +45,7 @@ interface StatsPanelProps {
  * @param props Component props.
  * @returns The stat table.
  */
-export default function StatsPanel({ stats }: StatsPanelProps) {
+export default memo(function StatsPanel({ stats }: StatsPanelProps) {
 	return (
 		<TableContainer sx={styles.tableContainer} component={Paper}>
 			<Table sx={styles.table} size="small">
@@ -66,4 +68,4 @@ export default function StatsPanel({ stats }: StatsPanelProps) {
 			</Table>
 		</TableContainer>
 	);
-}
+});

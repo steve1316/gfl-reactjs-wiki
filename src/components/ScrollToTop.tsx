@@ -1,7 +1,7 @@
 /*
 Source: https://github.com/codegeous/react-component-depot/blob/master/src/components/ScrollIndicator/index.js
 */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Fab, Zoom } from "@mui/material";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
@@ -20,6 +20,8 @@ export default function ScrollToTop() {
 
 	// This was `useWindowScroll` from react-use, a whole dependency for one hook that had not been
 	// released for React 19. Listening directly is shorter and only re-renders when the button flips.
+	const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: "smooth" }), []);
+
 	useEffect(() => {
 		const onScroll = () => setVisible(window.scrollY > REVEAL_AFTER_PX);
 		onScroll();
@@ -29,13 +31,7 @@ export default function ScrollToTop() {
 
 	return (
 		<Zoom in={visible}>
-			<Fab
-				size="small"
-				color="primary"
-				aria-label="scroll back to top"
-				onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-				sx={{ position: "fixed", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar - 1 }}
-			>
+			<Fab size="small" color="primary" aria-label="scroll back to top" onClick={scrollToTop} sx={{ position: "fixed", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar - 1 }}>
 				<KeyboardArrowUpIcon />
 			</Fab>
 		</Zoom>

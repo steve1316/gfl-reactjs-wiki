@@ -1,15 +1,28 @@
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
+import type { ChangeEvent } from "react";
 
-import { Avatar, Badge, Box, Button, Collapse, Divider, IconButton, Paper, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Avatar, Badge, Box, Button, Collapse, Divider, IconButton, InputAdornment, Paper, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // MaterialUI icon imports
+import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SearchIcon from "@mui/icons-material/Search";
 
 import FilterChip from "./FilterChip";
 import { uiUrl } from "../lib/assets";
 
 const mod_button = uiUrl("mod.png");
+
+// Avatars are props of memoised chips, so they are built once here. A fresh element per render would re-render every chip.
+/** The number avatar for each rarity, keyed by the rarity it shows. */
+const RARITY_AVATARS = new Map([1, 2, 3, 4, 5, 6].map((rarity) => [rarity, <Avatar key={rarity}>{rarity}</Avatar>]));
+/** The Mod chip's icon avatar. */
+const MOD_AVATAR = (
+	<Avatar>
+		<img src={mod_button} alt="" style={{ width: 20, height: 20 }} />
+	</Avatar>
+);
 
 const styles = {
 	root: {
@@ -27,6 +40,9 @@ const styles = {
 		alignItems: "center",
 		gap: 1.5,
 		fontWeight: 700
+	},
+	search: {
+		mt: 1.5
 	},
 	rows: {
 		display: "flex",
@@ -73,10 +89,14 @@ interface FilterPanelProps {
 	modFilter: SimpleFilterEntry;
 	/** How many filters are currently active, shown on the collapsed header so nothing is hidden silently. */
 	activeCount: number;
-	/** Toggles one rarity entry; curried so it can be handed straight to a chip's onToggle. */
-	onToggleRarity: (entry: RarityFilterEntry) => () => void;
-	/** Toggles one weapon-type entry; curried so it can be handed straight to a chip's onToggle. */
-	onToggleType: (entry: SimpleFilterEntry) => () => void;
+	/** The text in the name search. */
+	nameQuery: string;
+	/** Called with the new text on every keystroke, so the list filters as the reader types. */
+	onNameQueryChange: (query: string) => void;
+	/** Toggles the rarity entry with this key. One stable handler for the whole row, which each chip calls with its key. */
+	onToggleRarity: (key?: string | number) => void;
+	/** Toggles the weapon-type entry with this key. One stable handler for the whole row, which each chip calls with its key. */
+	onToggleType: (key?: string | number) => void;
 	/** Toggles the Mod filter. */
 	onToggleMod: () => void;
 	/** Clears every filter at once. */
@@ -94,10 +114,14 @@ interface FilterPanelProps {
  * @param props Component props.
  * @returns The filter rows, always open from `sm` up and collapsible below it.
  */
-export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activeCount, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterPanelProps) {
+export default memo(function FilterPanel({ rarityFilter, typeFilter, modFilter, activeCount, nameQuery, onNameQueryChange, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterPanelProps) {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const [expanded, setExpanded] = useState(false);
+
+	const toggleExpanded = useCallback(() => setExpanded((current) => !current), []);
+	const clearNameQuery = useCallback(() => onNameQueryChange(""), [onNameQueryChange]);
+	const handleNameInput = useCallback((event: ChangeEvent<HTMLInputElement>) => onNameQueryChange(event.target.value), [onNameQueryChange]);
 
 	// Only the phone collapses. On a wider screen the rows cost little enough to leave open.
 	const open = !isMobile || expanded;
@@ -110,9 +134,10 @@ export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activ
 						<FilterChip
 							label={rarity.label}
 							selected={rarity.selected}
-							onToggle={onToggleRarity(rarity)}
+							value={rarity.key}
+							onToggle={onToggleRarity}
 							colour={theme.palette.rarity[rarity.rarity as keyof typeof theme.palette.rarity]}
-							avatar={<Avatar>{rarity.rarity}</Avatar>}
+							avatar={RARITY_AVATARS.get(rarity.rarity)}
 						/>
 					</li>
 				))}
@@ -123,7 +148,13 @@ export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activ
 			<Box component="ul" sx={styles.chipList}>
 				{typeFilter.map((type) => (
 					<li key={type.key}>
-						<FilterChip label={type.label} selected={type.selected} onToggle={onToggleType(type)} colour={theme.palette.weaponType[type.label as keyof typeof theme.palette.weaponType]} />
+						<FilterChip
+							label={type.label}
+							selected={type.selected}
+							value={type.key}
+							onToggle={onToggleType}
+							colour={theme.palette.weaponType[type.label as keyof typeof theme.palette.weaponType]}
+						/>
 					</li>
 				))}
 			</Box>
@@ -132,16 +163,7 @@ export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activ
 
 			<Box component="ul" sx={styles.chipList}>
 				<li>
-					<FilterChip
-						label={modFilter.label}
-						selected={modFilter.selected}
-						onToggle={onToggleMod}
-						avatar={
-							<Avatar>
-								<img src={mod_button} alt="" style={{ width: 20, height: 20 }} />
-							</Avatar>
-						}
-					/>
+					<FilterChip label={modFilter.label} selected={modFilter.selected} onToggle={onToggleMod} avatar={MOD_AVATAR} />
 				</li>
 			</Box>
 		</Box>
@@ -161,7 +183,7 @@ export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activ
 					</Button>
 					{isMobile && (
 						<IconButton
-							onClick={() => setExpanded((current) => !current)}
+							onClick={toggleExpanded}
 							aria-label={expanded ? "Hide filters" : "Show filters"}
 							aria-expanded={expanded}
 							size="small"
@@ -173,8 +195,35 @@ export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activ
 				</Box>
 			</Box>
 
+			{/* Outside the collapsing rows, so a phone can search without opening the chips first. */}
+			<TextField
+				value={nameQuery}
+				onChange={handleNameInput}
+				placeholder="Search by name"
+				size="small"
+				fullWidth
+				sx={styles.search}
+				slotProps={{
+					htmlInput: { "aria-label": "Search T-Dolls by name" },
+					input: {
+						startAdornment: (
+							<InputAdornment position="start">
+								<SearchIcon fontSize="small" />
+							</InputAdornment>
+						),
+						endAdornment: nameQuery ? (
+							<InputAdornment position="end">
+								<IconButton size="small" onClick={clearNameQuery} aria-label="clear name search" edge="end">
+									<ClearIcon fontSize="small" />
+								</IconButton>
+							</InputAdornment>
+						) : null
+					}
+				}}
+			/>
+
 			{/* Mounted either way, so toggling the breakpoint never drops the rows entirely. */}
 			<Collapse in={open}>{rows}</Collapse>
 		</Paper>
 	);
-}
+});

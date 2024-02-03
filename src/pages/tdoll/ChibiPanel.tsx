@@ -1,3 +1,5 @@
+import { memo, useCallback } from "react";
+
 // MaterialUI imports
 import { Box, Card, Fab } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
@@ -10,6 +12,9 @@ import type { SpineRig } from "../../types/spine";
 
 const dorm_button = uiUrl("dorm_button.png");
 const combat_button = uiUrl("combat_button.png");
+
+/** Style for the clickable stage wrapper. A module constant, since an inline object is a new prop on every render. */
+const STAGE_STYLE = { cursor: "pointer" } as const;
 
 const styles = {
 	pillList: {
@@ -74,7 +79,10 @@ interface ChibiPanelProps {
  * @param props Component props.
  * @returns The animation toggle, pill row and player.
  */
-export default function ChibiPanel({ animationMode, spineAnimationName, spineTabs, onSwitchAnimations, onSwitchAnimationMode, spineRig, normalId, onPlayerSwitchAnimations }: ChibiPanelProps) {
+export default memo(function ChibiPanel({ animationMode, spineAnimationName, spineTabs, onSwitchAnimations, onSwitchAnimationMode, spineRig, normalId, onPlayerSwitchAnimations }: ChibiPanelProps) {
+	// FilterChip hands back its value, so one stable handler serves every chip instead of a new arrow per chip per render.
+	const handleChipToggle = useCallback((value?: string | number) => onSwitchAnimations(String(value)), [onSwitchAnimations]);
+
 	return (
 		<>
 			{/* T-Doll's animations: the combat/dorm toggle leads the row its pills wrap within */}
@@ -90,7 +98,7 @@ export default function ChibiPanel({ animationMode, spineAnimationName, spineTab
 				<Box component="ul" sx={styles.pillList} role="group" aria-label="Animations">
 					{spineTabs.map((tab) => (
 						<li key={tab.value}>
-							<FilterChip label={tab.label} selected={tab.value === spineAnimationName} onToggle={() => onSwitchAnimations(tab.value)} />
+							<FilterChip label={tab.label} selected={tab.value === spineAnimationName} value={tab.value} onToggle={handleChipToggle} />
 						</li>
 					))}
 				</Box>
@@ -98,7 +106,7 @@ export default function ChibiPanel({ animationMode, spineAnimationName, spineTab
 
 			<Card sx={styles.cardForAnimation}>
 				{spineRig && (
-					<div onClick={() => onPlayerSwitchAnimations()} style={{ cursor: "pointer" }}>
+					<div onClick={onPlayerSwitchAnimations} style={STAGE_STYLE}>
 						<SpineAnimation
 							skelUrl={spineUrl(normalId, spineRig.skel, "skel")}
 							atlasUrl={spineUrl(normalId, spineRig.atlas, "atlas")}
@@ -111,4 +119,4 @@ export default function ChibiPanel({ animationMode, spineAnimationName, spineTab
 			</Card>
 		</>
 	);
-}
+});

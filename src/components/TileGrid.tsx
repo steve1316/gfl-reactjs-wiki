@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { Box } from "@mui/material";
 
 /** Props for TileGrid. */
@@ -15,7 +17,7 @@ interface TileGridProps {
  * @param props Component props.
  * @returns The grid.
  */
-export default function TileGrid({ rows }: TileGridProps) {
+export default memo(function TileGrid({ rows }: TileGridProps) {
 	return (
 		<Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1px", width: 102, aspectRatio: "1 / 1" }} role="img" aria-label="Tile buff pattern">
 			{rows.flatMap((row, rowIndex) =>
@@ -33,4 +35,4 @@ export default function TileGrid({ rows }: TileGridProps) {
 			)}
 		</Box>
 	);
-}
+});

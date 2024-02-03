@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { Box, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
@@ -42,11 +44,11 @@ interface PageBackdropProps {
  * @param props Component props.
  * @returns The fixed backdrop layer.
  */
-export default function PageBackdrop({ artUrl }: PageBackdropProps) {
+export default memo(function PageBackdrop({ artUrl }: PageBackdropProps) {
 	return (
 		<Box sx={styles.root} aria-hidden>
 			{artUrl ? <Box component="img" src={artUrl} alt="" sx={styles.art} /> : null}
 			<Box sx={styles.scrim} />
 		</Box>
 	);
-}
+});

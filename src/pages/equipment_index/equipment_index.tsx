@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import type { ChangeEvent } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 // MaterialUI imports
 import {
@@ -7,53 +6,33 @@ import {
 	Typography,
 	Divider,
 	Grid,
-	Card,
 	Zoom,
 	Fade,
 	Box,
-	CardActionArea,
-	CardMedia,
-	CardContent,
-	CardHeader,
 	Slider,
-	Accordion,
-	AccordionSummary,
-	AccordionDetails,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 import FilterChip from "../../components/FilterChip";
+import EquipmentCard from "./EquipmentCard";
 
 import { loadEquipment } from "../../lib/data";
 import type { Equipment } from "../../types/equipment";
 
-/** Styles for this page, as `sx` entries. Declared at module scope so they are created once rather than on every render. */
-/**
- * Display names for the stat keys in the equipment data.
- *
- * This was a thirteen-branch if/else chain rebuilt inside the render for every stat of every card.
- * Anything missing from the map falls back to the raw key, which is at least visible rather than the
- * empty string the chain produced.
- */
-const STAT_NAMES: Record<string, string> = {
-	criticalHitRate: "Critical hit rate",
-	damage: "Damage",
-	accuracy: "Accuracy",
-	criticalDamage: "Critical damage",
-	rateOfFire: "Rate of fire",
-	evasion: "Evasion",
-	nightVision: "Night vision",
-	boostAbilityEffectiveness: "Boost ability effectiveness",
-	armorPiercing: "Armor piercing",
-	target: "Target",
-	clipSize: "Clip size",
-	movementSpeed: "Movement speed",
-	armor: "Armor"
-};
+/** Labels under the level slider: the ends spelled out, the steps between as bare numbers. Static, so built once here. */
+const SLIDER_MARKS = Array.from({ length: 10 }, (_value, index) => ({ value: index + 1, label: index === 0 ? "Lvl 1" : index === 9 ? "Lvl 10" : String(index + 1) }));
 
+/**
+ * The slider's value as text, for its label and screen readers.
+ *
+ * @param value The slider value.
+ * @returns The value as a string.
+ */
+const sliderValueText = (value: number) => `${value}`;
+
+/** Styles for this page, as `sx` entries. Declared at module scope so they are created once rather than on every render. */
 const styles = {
 	root: { py: 3 },
 	bottomDividerForCards: {
@@ -83,10 +62,6 @@ const styles = {
 	dividerForChips: {
 		margin: "5px"
 	},
-	heading: (theme: Theme) => ({
-		fontSize: theme.typography.pxToRem(15),
-		fontWeight: theme.typography.fontWeightRegular as number
-	}),
 	topDividerForCards: {
 		marginTop: "10px",
 		marginBottom: "25px"
@@ -126,57 +101,12 @@ export default function EquipmentIndex() {
 		selected: false
 	})
 
-	const [currentSearchResults, setCurrentSearchResults] = useState(0)
-	const [searchResults, setSearchResults] = useState<Equipment[]>([])
 	const [currentLevel, setCurrentLevel] = useState(1)
-	const [expanded, setExpanded] = useState("")
 
-	const customSliderMarks = [
-		{
-			value: 1,
-			label: "Lvl 1"
-		},
-		{
-			value: 2,
-			label: "2"
-		},
-		{
-			value: 3,
-			label: "3"
-		},
-		{
-			value: 4,
-			label: "4"
-		},
-		{
-			value: 5,
-			label: "5"
-		},
-		{
-			value: 6,
-			label: "6"
-		},
-		{
-			value: 7,
-			label: "7"
-		},
-		{
-			value: 8,
-			label: "8"
-		},
-		{
-			value: 9,
-			label: "9"
-		},
-		{
-			value: 10,
-			label: "Lvl 10"
-		},
-	];
+	// The cards read a deferred copy of the level, so the slider thumb keeps up with the pointer while 178 cards
+	// catch up behind it, instead of every step of a drag waiting for all of them to re-render first.
+	const deferredLevel = useDeferredValue(currentLevel)
 
-	const handleChange = (panel: string) => (_event: ChangeEvent<{}>, isExpanded: boolean) => {
-		setExpanded(isExpanded ? panel : "");
-	};
 
 	// Equipment is fetched once, on mount, rather than pulled in at module scope.
 	useEffect(() => {
@@ -189,28 +119,19 @@ export default function EquipmentIndex() {
 		document.querySelector('meta[name="description"]')?.setAttribute("content", "Index of sortable equipment");
 	}, [])
 
-	/* eslint-disable */
-	// Update the search results every time the filters and the page selected changes.
-	useEffect(() => {
-		setSearchResults(filterEquipment());
-	}, [typeFilter, exclusiveFilter, equipmentByCategory]);
 
-	const handleOnClickType = (selectedType: { key: number; selected: boolean }) => {
-		const key = selectedType.key
-		const newSelected = !selectedType.selected
+	// Stable handlers that toggle from the current state, so the memoised chips only re-render when their own filter changes.
+	const handleOnClickType = useCallback((key?: string | number) => {
+		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: !type.selected } : type)))
+	}, [])
 
-		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: newSelected } : type)))
-	}
+	const handleOnClickExclusive = useCallback(() => {
+		setExclusiveFilter((exclusive) => ({ ...exclusive, selected: !exclusive.selected }))
+	}, [])
 
-	const handleOnClickExclusive = () => {
-		setExclusiveFilter({
-			...exclusiveFilter,
-			selected: !exclusiveFilter.selected
-		})
-	}
-
-	// Return T-Doll equipments based on filters selected.
-	const filterEquipment = (): Equipment[] => {
+	// T-Doll equipment matching the filters. Derived rather than copied into state from an effect, which rendered
+	// the whole grid twice for every filter change.
+	const searchResults = useMemo((): Equipment[] => {
 		const tempArray: Equipment[] = []
 		let typeSelected = 0
 		var exclusiveSelected = false
@@ -251,36 +172,12 @@ export default function EquipmentIndex() {
 			}
 		}
 
-		// Update number of search results.
-		setCurrentSearchResults(tempArray.length)
-
 		return tempArray
-	}
+	}, [typeFilter, exclusiveFilter, equipmentByCategory])
 
-	const valuetext = (value: number) => {
-		return `${value}`
-	}
-
-	const handleSlider = (_event: Event, newValue: number | number[]) => {
+	const handleSlider = useCallback((_event: Event, newValue: number | number[]) => {
 		setCurrentLevel(Array.isArray(newValue) ? (newValue[0] ?? 1) : newValue);
-	};
-
-	const calculateTimeout = (index: number) => {
-		var stagger = 0
-		
-		if(index === 0){
-			stagger += 500
-		}
-		else{
-			stagger += (500 * index)
-		}
-
-		if(stagger >= 2000){
-			stagger = 1000
-		}
-
-		return stagger
-	}
+	}, []);
 
 	return (
 		<Box component="main" sx={styles.root}>
@@ -295,7 +192,7 @@ export default function EquipmentIndex() {
 							<li key={type.key}>
 								<Zoom in={true} timeout={400}>
 									<span>
-										<FilterChip label={type.label} selected={type.selected} onToggle={() => handleOnClickType(type)} />
+										<FilterChip label={type.label} selected={type.selected} value={type.key} onToggle={handleOnClickType} />
 									</span>
 								</Zoom>
 							</li>
@@ -317,88 +214,25 @@ export default function EquipmentIndex() {
 
 			<Box sx={{ display: "flex", width: "80%", m: "auto", marginTop: 5 }}>
 				<Fade in={true} timeout={500}>
-					<Slider step={1} defaultValue={1} value={currentLevel} onChange={handleSlider} valueLabelDisplay="auto" getAriaValueText={valuetext} valueLabelFormat={valuetext} marks={customSliderMarks} min={1} max={10} />
+					<Slider step={1} defaultValue={1} value={currentLevel} onChange={handleSlider} valueLabelDisplay="auto" getAriaValueText={sliderValueText} valueLabelFormat={sliderValueText} marks={SLIDER_MARKS} min={1} max={10} />
 				</Fade>
 			</Box>
 
 			<Container sx={styles.cardGrid} maxWidth="md">
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
-					Now showing {currentSearchResults} search results
+					Now showing {searchResults.length} search results
 				</Typography>
 
 				<Divider sx={styles.topDividerForCards} />
 
 				{/* Filtered Equipment Results */}
 				<Grid container spacing={4}>
-					{searchResults.map((equipment, index) => {
-						return(
-							<Grid key={equipment.name + equipment.rarity} size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 2 }}>
-								<Fade in={true} timeout={calculateTimeout(index)}>
-									<Card>
-										{/* Equipment Name and what types of T-Dolls can use it */}
-										<CardHeader title={equipment.name} subheader={equipment.usable.map((item, index) => {
-											if(index === 0 && !equipment.exclusive){
-												return <span key={item}>Equippable by {item}</span>
-											}else if(index === 0 && equipment.exclusive){
-												return <span key={item}>Equippable by <Box component="span" sx={{ color: "primary.main" }}><ins>{item}</ins></Box></span>
-											} else if(index !== 0 && equipment.exclusive){
-												return <span key={item}><Box component="span" sx={{ color: "primary.main" }}>, <ins>{item}</ins></Box></span>
-											} else{
-												return <span key={item}>, {item}</span>
-											}
-										})}/>
-
-										{/* Equipment Image */}
-										<CardActionArea>
-											<CardMedia component="img" image={equipment.image} title={equipment.name} />
-										</CardActionArea>
-										
-										{/* Equipment Stats */}
-									<CardContent sx={{ maxHeight: 140, overflow: "auto", py: 0 }}>
-										{Object.keys(equipment.stats).map((key) => {
-											const values = equipment.stats[key] ?? [];
-											const atLevel = values[currentLevel - 1];
-											// Highlighted when levelling has actually moved this stat off its level-one value.
-											const improved = currentLevel !== 1 && atLevel !== values[0];
-
-											return (
-												<Box
-													key={key}
-													sx={{
-														display: "flex",
-														justifyContent: "space-between",
-														gap: 2,
-														py: 0.9,
-														borderBottom: 1,
-														borderColor: "divider",
-														"&:last-of-type": { borderBottom: 0 }
-													}}
-												>
-													<Typography variant="body2" color="text.secondary">
-														{STAT_NAMES[key] ?? key}
-													</Typography>
-													<Typography variant="body2" sx={{ fontWeight: 650, color: improved ? "primary.main" : "text.primary" }}>
-														{atLevel}
-													</Typography>
-												</Box>
-											);
-										})}
-									</CardContent>
-
-										{/* Equipment Description */}
-										<Accordion expanded={expanded === equipment.name + equipment.rarity} onChange={handleChange(equipment.name + equipment.rarity)}>
-											<AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-												<Typography sx={styles.heading}>Description</Typography>
-											</AccordionSummary>
-											<AccordionDetails>
-												<Typography component="p" sx={{ mb: 2 }}>{equipment.description}</Typography>
-											</AccordionDetails>
-										</Accordion>
-									</Card>
-								</Fade>
-							</Grid>
-						)
-					})}
+					{/* No fade per card: they were staggered up to a second apart, so the page took that long to look loaded. */}
+					{searchResults.map((equipment) => (
+						<Grid key={equipment.name + equipment.rarity} size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 2 }}>
+							<EquipmentCard equipment={equipment} level={deferredLevel} />
+						</Grid>
+					))}
 				</Grid>
 
 				<Divider sx={styles.bottomDividerForCards} />
