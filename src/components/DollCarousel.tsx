@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Box, ButtonBase, IconButton, Skeleton, Tooltip, useMediaQuery, useTheme } from "@mui/material";
+import { Box, IconButton, LinearProgress, Skeleton, useMediaQuery } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
 
 import DollCard from "./DollCard";
 import { loadDoll } from "../lib/data";
@@ -13,34 +12,26 @@ import type { TDoll } from "../types/tdoll";
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Configuration
 
-/** How long each doll is shown before the carousel advances, in ms. */
+/** How long each doll is shown before the carousel moves on, in ms. */
 const ADVANCE_MS = 6000;
+
+/** How often the countdown bar redraws. Fine enough to look continuous, coarse enough to stay cheap. */
+const TICK_MS = 50;
 
 /** Horizontal travel, in pixels, that counts as a swipe rather than a tap. */
 const SWIPE_THRESHOLD = 40;
 
-/** Width of the centre card in CSS pixels, per breakpoint. Everything else is scaled down from this. */
-const CARD_WIDTH = { narrow: 180, medium: 190, wide: 200 };
+/** Width of the card in CSS pixels, per breakpoint. */
+const CARD_WIDTH = { narrow: 200, wide: 240 };
 
-/** Room under the 1:2 art for the name, the badges and the id. */
-const CARD_TEXT_HEIGHT = 64;
-
-/** Horizontal distance between neighbouring cards, as a fraction of the card width. Below 1 they overlap. */
-const SLOT_RATIO = 0.74;
-
-/** How the ring shrinks and fades away from the centre, indexed by distance from it. The last entry is the off-screen slot. */
-const DEPTH = [
-	{ scale: 1, opacity: 1 },
-	{ scale: 0.64, opacity: 0.55 },
-	{ scale: 0.52, opacity: 0.3 },
-	{ scale: 0.46, opacity: 0 }
-];
+/** Room under the 1:2 art for the name, the badges and the id. Measured at 83px, rounded up so nothing clips. */
+const CARD_TEXT_HEIGHT = 84;
 
 /** Props for DollCarousel. */
 interface DollCarouselProps {
-	/** Doll ids to cycle through. Loaded once, then kept, so going back shows the same doll again. */
+	/** The pool of doll ids to draw from. */
 	ids: number[];
-	/** Replaces the whole set with a fresh random one. Omitted when the caller has nothing to reshuffle. */
+	/** Asks for a fresh pool. Called once every doll in the current one has been shown. */
 	onShuffle?: () => void;
 }
 
@@ -81,33 +72,36 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * A rotating strip of dolls.
+ * One doll at a time, replaced at random on a timer.
  *
- * What this replaces was not a carousel. One doll rerolled itself every five seconds and there was no
- * way back to the one just shown, because each tick picked a fresh random id rather than stepping
- * through a list. Holding the ids means previous is a real previous.
- *
- * Cards are positioned absolutely and keyed by doll id, so when the index moves React keeps each node
- * and only its transform changes. That is what makes the ring slide rather than redraw.
+ * The bar under the card is the point of it: a doll that swaps itself out with no warning reads as a
+ * glitch, so the countdown says one is coming and roughly when. Dolls are drawn without repeats until
+ * the pool is used up, which is when a fresh pool is requested.
  *
  * @param props Component props.
  * @returns The carousel.
  */
 export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
-	const theme = useTheme();
-	const isNarrow = useMediaQuery(theme.breakpoints.down("sm"));
-	const isMedium = useMediaQuery(theme.breakpoints.down("md"));
+	const isNarrow = useMediaQuery("(max-width:599.95px)");
 	const reduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
 	const [dolls, setDolls] = useState<(TDoll | undefined)[]>([]);
 	const [index, setIndex] = useState(0);
 	const [paused, setPaused] = useState(false);
+	const [elapsed, setElapsed] = useState(0);
 	const touchStart = useRef<{ x: number; y: number } | null>(null);
+
+	// Which of the pool have already been shown, and the order they were shown in. The first gives random
+	// cycling without immediate repeats; the second is what makes the back arrow a real back.
+	const [seen, setSeen] = useState<number[]>([0]);
+	const [history, setHistory] = useState<number[]>([]);
 
 	useEffect(() => {
 		let active = true;
-		// A fresh set starts at its own beginning rather than wherever the previous one had got to.
 		setIndex(0);
+		setSeen([0]);
+		setHistory([]);
+		setElapsed(0);
 		setDolls([]);
 		void Promise.all(ids.map((id) => loadDoll(id))).then((loaded) => {
 			if (active) {
@@ -122,23 +116,57 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 	// Only dolls that actually exist. MICA Team skips ids, so a random pick can land on a gap.
 	const entries = useMemo(() => dolls.filter((doll): doll is TDoll => doll !== undefined), [dolls]);
 
-	const step = useCallback(
-		(delta: number) => {
-			setIndex((current) => {
-				const count = entries.length;
-				return count === 0 ? 0 : (current + delta + count) % count;
-			});
-		},
-		[entries.length]
-	);
+	/** Move to a random doll that has not been shown yet, asking for a new pool once none are left. */
+	const advance = useCallback(() => {
+		setElapsed(0);
+		if (entries.length < 2) {
+			return;
+		}
+		const remaining = entries.map((_entry, position) => position).filter((position) => !seen.includes(position));
+		if (remaining.length === 0) {
+			// Every doll in the pool has had its turn. A new pool is more interesting than a second lap.
+			if (onShuffle) {
+				onShuffle();
+				return;
+			}
+			setSeen([index]);
+			return;
+		}
+		const next = remaining[Math.floor(Math.random() * remaining.length)] ?? 0;
+		setHistory((current) => [...current, index]);
+		setSeen((current) => [...current, next]);
+		setIndex(next);
+	}, [entries, seen, index, onShuffle]);
 
+	/** Step back to the doll shown before this one. Does nothing at the start of the run. */
+	const back = useCallback(() => {
+		setElapsed(0);
+		setHistory((current) => {
+			const previous = current[current.length - 1];
+			if (previous === undefined) {
+				return current;
+			}
+			setIndex(previous);
+			return current.slice(0, -1);
+		});
+	}, []);
+
+	// One timer drives both the countdown and the advance, so the bar can never disagree with the swap.
 	useEffect(() => {
 		if (paused || reduceMotion || entries.length < 2) {
 			return;
 		}
-		const timer = setInterval(() => step(1), ADVANCE_MS);
+		const timer = setInterval(() => {
+			setElapsed((current) => {
+				if (current + TICK_MS >= ADVANCE_MS) {
+					advance();
+					return 0;
+				}
+				return current + TICK_MS;
+			});
+		}, TICK_MS);
 		return () => clearInterval(timer);
-	}, [paused, reduceMotion, entries.length, step]);
+	}, [paused, reduceMotion, entries.length, advance]);
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
@@ -146,26 +174,18 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 				return;
 			}
 			if (event.key === "ArrowLeft") {
-				step(-1);
+				back();
 			}
 			if (event.key === "ArrowRight") {
-				step(1);
+				advance();
 			}
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	}, [step]);
+	}, [advance, back]);
 
-	const width = isNarrow ? CARD_WIDTH.narrow : isMedium ? CARD_WIDTH.medium : CARD_WIDTH.wide;
-	const slot = Math.round(width * SLOT_RATIO);
-	// The art is 1:2, so the tallest card in the ring is the unscaled centre one.
+	const width = isNarrow ? CARD_WIDTH.narrow : CARD_WIDTH.wide;
 	const height = width * 2 + CARD_TEXT_HEIGHT;
-
-	// How many cards the reader should see: 5 on a desktop, 3 on a tablet, 1 on a phone.
-	const visibleRadius = isNarrow ? 0 : isMedium ? 1 : 2;
-	// One extra slot each side so cards fade in and out at the edges rather than popping. Never more
-	// slots than there are dolls, or the same doll would be rendered twice and React would see two of one key.
-	const radius = Math.min(visibleRadius + 1, Math.max(0, Math.floor((entries.length - 1) / 2)));
 
 	if (entries.length === 0) {
 		return (
@@ -175,9 +195,10 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 		);
 	}
 
-	const at = (offset: number) => entries[(index + offset + entries.length) % entries.length];
-	const offsets = Array.from({ length: radius * 2 + 1 }, (_value, position) => position - radius);
-	const transition = reduceMotion ? "none" : "transform 380ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 380ms ease";
+	const current = entries[index] ?? entries[0];
+	if (!current) {
+		return <Box sx={{ height }} />;
+	}
 
 	return (
 		<Box
@@ -196,9 +217,13 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 				if (start !== null && end !== null) {
 					const dx = end.clientX - start.x;
 					const dy = end.clientY - start.y;
-					// Without the vertical check a page scroll that drifts sideways also turns the ring.
+					// Without the vertical check a page scroll that drifts sideways also turns the carousel.
 					if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-						step(dx < 0 ? 1 : -1);
+						if (dx < 0) {
+							advance();
+						} else {
+							back();
+						}
 					}
 				}
 				touchStart.current = null;
@@ -208,81 +233,43 @@ export default function DollCarousel({ ids, onShuffle }: DollCarouselProps) {
 				touchStart.current = null;
 				setPaused(false);
 			}}
-			sx={{ py: 2 }}
+			sx={{ py: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}
 		>
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: { xs: 0, sm: 1 } }}>
-				<IconButton onClick={() => step(-1)} aria-label="previous" size="large">
+			<Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 2 } }}>
+				<IconButton onClick={back} aria-label="previous" size="large" disabled={history.length === 0}>
 					<ChevronLeftIcon />
 				</IconButton>
 
-				{/* The ring itself. Cards sit on top of each other and are pushed apart by their transform,
-				    which is what lets them animate between slots instead of being relaid out. */}
-				<Box sx={{ position: "relative", flexGrow: 1, height, maxWidth: slot * (visibleRadius * 2 + 1) + width * 0.3, overflow: "hidden" }}>
-					{offsets.map((offset) => {
-						const entry = at(offset);
-						if (!entry) {
-							return null;
+				{/* Keyed by doll id so a swap remounts the card, which is what replays the entry animation. */}
+				<Box
+					key={current.normal.id}
+					sx={{
+						width,
+						flexShrink: 0,
+						animation: reduceMotion ? "none" : "dollCarouselIn 360ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+						"@keyframes dollCarouselIn": {
+							from: { opacity: 0, transform: "translateX(24px) scale(0.97)" },
+							to: { opacity: 1, transform: "none" }
 						}
-						// Anything past the visible radius is the extra slot that only exists to fade in and out,
-						// so it takes the last DEPTH entry whatever its distance.
-						const distance = Math.abs(offset);
-						const depth = (distance > visibleRadius ? DEPTH[DEPTH.length - 1] : DEPTH[Math.min(distance, DEPTH.length - 2)]) ?? DEPTH[0];
-						return (
-							<Box
-								key={entry.normal.id}
-								aria-hidden={offset !== 0}
-								sx={{
-									position: "absolute",
-									top: 0,
-									left: "50%",
-									width,
-									transform: `translateX(-50%) translateX(${offset * slot}px) scale(${depth?.scale ?? 1})`,
-									opacity: depth?.opacity ?? 1,
-									zIndex: DEPTH.length - Math.abs(offset),
-									transition,
-									pointerEvents: offset === 0 ? "auto" : "none"
-								}}
-							>
-								<DollCard {...cardProps(entry)} dense={offset !== 0} />
-							</Box>
-						);
-					})}
+					}}
+				>
+					<DollCard {...cardProps(current)} />
 				</Box>
 
-				<IconButton onClick={() => step(1)} aria-label="next" size="large">
+				<IconButton onClick={advance} aria-label="next" size="large">
 					<ChevronRightIcon />
 				</IconButton>
 			</Box>
 
-			{/* Position indicator, plus the way to a different set entirely. */}
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mt: 1 }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }} role="tablist" aria-label="Carousel position">
-					{entries.map((entry, position) => (
-						<ButtonBase
-							key={entry.normal.id}
-							role="tab"
-							aria-label={`Show ${entry.normal.name}`}
-							aria-selected={position === index}
-							onClick={() => setIndex(position)}
-							sx={{
-								height: 8,
-								width: position === index ? 22 : 8,
-								borderRadius: "999px",
-								backgroundColor: position === index ? "primary.main" : "action.disabled",
-								transition: reduceMotion ? "none" : "width 240ms ease, background-color 240ms ease"
-							}}
-						/>
-					))}
-				</Box>
-
-				{onShuffle && (
-					<Tooltip title="Show a different set">
-						<IconButton onClick={onShuffle} aria-label="Show a different set" size="small">
-							<AutorenewIcon fontSize="small" />
-						</IconButton>
-					</Tooltip>
-				)}
-			</Box>
+			{/* The countdown to the next doll. Hidden when nothing is counting down, rather than sitting at zero. */}
+			{!reduceMotion && entries.length > 1 && (
+				<LinearProgress
+					variant="determinate"
+					value={(elapsed / ADVANCE_MS) * 100}
+					aria-hidden
+					sx={{ width, height: 4, borderRadius: "999px", opacity: paused ? 0.35 : 1, transition: "opacity 200ms" }}
+				/>
+			)}
 		</Box>
 	);
 }

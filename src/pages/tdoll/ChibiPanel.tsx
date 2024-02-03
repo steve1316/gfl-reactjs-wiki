@@ -13,6 +13,7 @@ const combat_button = uiUrl("combat_button.png");
 
 const styles = {
 	pillList: {
+		flexGrow: 1,
 		display: "flex",
 		flexWrap: "wrap",
 		listStyle: "none",
@@ -34,8 +35,16 @@ const styles = {
 		cursor: "pointer"
 	}),
 	dormToggle: {
-		mb: 1,
+		flexShrink: 0,
 		opacity: "85%"
+	},
+	// The toggle and the pills share one row. It used to sit on a line of its own above them, which cost
+	// 48px of height for a single 40px button in a column that has to fit beside three others.
+	controlRow: {
+		display: "flex",
+		alignItems: "flex-start",
+		gap: 1,
+		mb: 1
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -68,21 +77,23 @@ interface ChibiPanelProps {
 export default function ChibiPanel({ animationMode, spineAnimationName, spineTabs, onSwitchAnimations, onSwitchAnimationMode, spineRig, normalId, onPlayerSwitchAnimations }: ChibiPanelProps) {
 	return (
 		<>
-			{/* T-Doll's animations: the toggle sits in normal flow above the pills, so it never overlaps them */}
-			<Fab color="primary" size="small" sx={styles.dormToggle} onClick={onSwitchAnimationMode} aria-label={animationMode === 0 ? "Switch to Dorm Animations" : "Switch to Normal Animations"}>
-				{animationMode === 0 ? (
-					<img src={combat_button} alt="" style={{ height: 32, width: 32, paddingTop: 3 }} />
-				) : (
-					<img src={dorm_button} alt="" style={{ height: 29, width: 29, paddingTop: 3 }} />
-				)}
-			</Fab>
+			{/* T-Doll's animations: the combat/dorm toggle leads the row its pills wrap within */}
+			<Box sx={styles.controlRow}>
+				<Fab color="primary" size="small" sx={styles.dormToggle} onClick={onSwitchAnimationMode} aria-label={animationMode === 0 ? "Switch to Dorm Animations" : "Switch to Normal Animations"}>
+					{animationMode === 0 ? (
+						<img src={combat_button} alt="" style={{ height: 32, width: 32, paddingTop: 3 }} />
+					) : (
+						<img src={dorm_button} alt="" style={{ height: 29, width: 29, paddingTop: 3 }} />
+					)}
+				</Fab>
 
-			<Box component="ul" sx={styles.pillList} role="group" aria-label="Animations">
-				{spineTabs.map((tab) => (
-					<li key={tab.value}>
-						<FilterChip label={tab.label} selected={tab.value === spineAnimationName} onToggle={() => onSwitchAnimations(tab.value)} />
-					</li>
-				))}
+				<Box component="ul" sx={styles.pillList} role="group" aria-label="Animations">
+					{spineTabs.map((tab) => (
+						<li key={tab.value}>
+							<FilterChip label={tab.label} selected={tab.value === spineAnimationName} onToggle={() => onSwitchAnimations(tab.value)} />
+						</li>
+					))}
+				</Box>
 			</Box>
 
 			<Card sx={styles.cardForAnimation}>
@@ -93,6 +104,7 @@ export default function ChibiPanel({ animationMode, spineAnimationName, spineTab
 							atlasUrl={spineUrl(normalId, spineRig.atlas, "atlas")}
 							imageBase={spineImageBase(normalId, spineRig.atlas)}
 							animation={spineAnimationName}
+							maxSize={340}
 						/>
 					</div>
 				)}
