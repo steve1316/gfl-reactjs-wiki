@@ -41,7 +41,13 @@ const CLEAR_ART_MARGIN = 0.05;
 const normalise = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 /** Reduce a name to the words worth comparing, dropping single letters as too common to mean anything. */
-const words = (value) => new Set(value.toLowerCase().split(/[^a-z0-9]+/i).filter((word) => word.length > 1));
+const words = (value) =>
+	new Set(
+		value
+			.toLowerCase()
+			.split(/[^a-z0-9]+/i)
+			.filter((word) => word.length > 1)
+	);
 
 /**
  * Read skin id, name and owning doll out of `skin.hjson`.

@@ -1,16 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 // MaterialUI imports
-import {
-	Container,
-	Typography,
-	Divider,
-	Grid,
-	Zoom,
-	Fade,
-	Box,
-	Slider,
-} from "@mui/material";
+import { Container, Typography, Divider, Grid, Zoom, Fade, Box, Slider } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
@@ -68,7 +59,6 @@ const styles = {
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
-
 /**
  * The equipment index: filterable cards for every piece of equipment.
  *
@@ -92,21 +82,20 @@ export default function EquipmentIndex() {
 		{ key: 11, label: "Ammo Box", selected: false, property: "ammunitionBox" },
 		{ key: 12, label: "Camouflage Cloak", selected: false, property: "camouflageCloak" },
 		{ key: 13, label: "Chip", selected: false, property: "chip" },
-		{ key: 14, label: "Special", selected: false, property: "special" },
+		{ key: 14, label: "Special", selected: false, property: "special" }
 	]);
 
 	const [exclusiveFilter, setExclusiveFilter] = useState({
 		key: 0,
 		label: "Exclusive",
 		selected: false
-	})
+	});
 
-	const [currentLevel, setCurrentLevel] = useState(1)
+	const [currentLevel, setCurrentLevel] = useState(1);
 
 	// The cards read a deferred copy of the level, so the slider thumb keeps up with the pointer while 178 cards
 	// catch up behind it, instead of every step of a drag waiting for all of them to re-render first.
-	const deferredLevel = useDeferredValue(currentLevel)
-
+	const deferredLevel = useDeferredValue(currentLevel);
 
 	// Equipment is fetched once, on mount, rather than pulled in at module scope.
 	useEffect(() => {
@@ -115,65 +104,64 @@ export default function EquipmentIndex() {
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
-		document.title = "Equipment Index"
+		document.title = "Equipment Index";
 		document.querySelector('meta[name="description"]')?.setAttribute("content", "Index of sortable equipment");
-	}, [])
-
+	}, []);
 
 	// Stable handlers that toggle from the current state, so the memoised chips only re-render when their own filter changes.
 	const handleOnClickType = useCallback((key?: string | number) => {
-		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: !type.selected } : type)))
-	}, [])
+		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: !type.selected } : type)));
+	}, []);
 
 	const handleOnClickExclusive = useCallback(() => {
-		setExclusiveFilter((exclusive) => ({ ...exclusive, selected: !exclusive.selected }))
-	}, [])
+		setExclusiveFilter((exclusive) => ({ ...exclusive, selected: !exclusive.selected }));
+	}, []);
 
 	// T-Doll equipment matching the filters. Derived rather than copied into state from an effect, which rendered
 	// the whole grid twice for every filter change.
 	const searchResults = useMemo((): Equipment[] => {
-		const tempArray: Equipment[] = []
-		let typeSelected = 0
-		var exclusiveSelected = false
-		
+		const tempArray: Equipment[] = [];
+		let typeSelected = 0;
+		var exclusiveSelected = false;
+
 		// Grab the equipment categories as keys.
-		const keys = Object.keys(equipmentByCategory)
+		const keys = Object.keys(equipmentByCategory);
 
 		// Check to see if filters are enabled and how many.
-		typeSelected = typeFilter.filter((type) => type.selected).length
+		typeSelected = typeFilter.filter((type) => type.selected).length;
 
-		if(exclusiveFilter.selected === true){
-			exclusiveSelected = true
+		if (exclusiveFilter.selected === true) {
+			exclusiveSelected = true;
 		}
 
-		if(typeSelected === 0){
-			for(var i = 0; i < keys.length; i++){
+		if (typeSelected === 0) {
+			for (var i = 0; i < keys.length; i++) {
 				(equipmentByCategory[keys[i] ?? ""] ?? []).forEach((equipment) => {
-					if(exclusiveSelected && equipment.exclusive){
-						tempArray.push(equipment)
-					}else if(!exclusiveSelected){
-						tempArray.push(equipment)
+					if (exclusiveSelected && equipment.exclusive) {
+						tempArray.push(equipment);
+					} else if (!exclusiveSelected) {
+						tempArray.push(equipment);
 					}
-				})
+				});
 			}
-		}else{
-			for(var i = 0; i < keys.length; i++){
+		} else {
+			for (var i = 0; i < keys.length; i++) {
 				typeFilter.map((type) => {
-					if(type.selected && type.property === keys[i]){
+					if (type.selected && type.property === keys[i]) {
 						(equipmentByCategory[keys[i] ?? ""] ?? []).forEach((equipment) => {
-							if(exclusiveSelected && equipment.exclusive){
-								tempArray.push(equipment)
-							}else if(!exclusiveSelected){
-								tempArray.push(equipment)
+							if (exclusiveSelected && equipment.exclusive) {
+								tempArray.push(equipment);
+							} else if (!exclusiveSelected) {
+								tempArray.push(equipment);
 							}
-						})
+						});
 					}
-				})
+				});
 			}
 		}
 
-		return tempArray
-	}, [typeFilter, exclusiveFilter, equipmentByCategory])
+		return tempArray;
+	}, [typeFilter, exclusiveFilter, equipmentByCategory]);
 
 	const handleSlider = useCallback((_event: Event, newValue: number | number[]) => {
 		setCurrentLevel(Array.isArray(newValue) ? (newValue[0] ?? 1) : newValue);
@@ -196,7 +184,7 @@ export default function EquipmentIndex() {
 									</span>
 								</Zoom>
 							</li>
-						)
+						);
 					})}
 				</Box>
 
@@ -209,12 +197,22 @@ export default function EquipmentIndex() {
 						</span>
 					</Zoom>
 				</Box>
-
 			</Container>
 
 			<Box sx={{ display: "flex", width: "80%", m: "auto", marginTop: 5 }}>
 				<Fade in={true} timeout={500}>
-					<Slider step={1} defaultValue={1} value={currentLevel} onChange={handleSlider} valueLabelDisplay="auto" getAriaValueText={sliderValueText} valueLabelFormat={sliderValueText} marks={SLIDER_MARKS} min={1} max={10} />
+					<Slider
+						step={1}
+						defaultValue={1}
+						value={currentLevel}
+						onChange={handleSlider}
+						valueLabelDisplay="auto"
+						getAriaValueText={sliderValueText}
+						valueLabelFormat={sliderValueText}
+						marks={SLIDER_MARKS}
+						min={1}
+						max={10}
+					/>
 				</Fade>
 			</Box>
 
@@ -237,7 +235,6 @@ export default function EquipmentIndex() {
 
 				<Divider sx={styles.bottomDividerForCards} />
 			</Container>
-
 		</Box>
 	);
 }

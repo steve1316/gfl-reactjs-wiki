@@ -17,7 +17,7 @@ import type { ThemeOptions } from "@mui/material";
 const DESKTOP = "@media (min-width:600px)";
 
 /** Fonts present on every platform the site is read on, in preference order. */
-export const FONT_STACK = ['Roboto', '"Segoe UI"', "system-ui", "-apple-system", '"Helvetica Neue"', "Arial", "sans-serif"].join(", ");
+export const FONT_STACK = ["Roboto", '"Segoe UI"', "system-ui", "-apple-system", '"Helvetica Neue"', "Arial", "sans-serif"].join(", ");
 
 /**
  * Build one step of the scale.
