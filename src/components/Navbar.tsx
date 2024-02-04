@@ -185,7 +185,9 @@ const searchFieldSx = (theme: Theme) => ({
 		"& fieldset": { borderColor: "transparent" },
 		"&:hover fieldset": { borderColor: "transparent" },
 		"&.Mui-focused fieldset": { borderColor: theme.palette.secondary.main, borderWidth: 2 }
-	}
+	},
+	// The secondary text colour reads 3.6:1 on the pill, under the 4.5:1 minimum for text this size.
+	"& .MuiInputLabel-root:not(.Mui-focused):not(.Mui-error)": { color: alpha(theme.palette.text.primary, 0.7) }
 });
 
 /** Props for NavList. */
