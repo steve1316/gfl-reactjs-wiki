@@ -34,5 +34,8 @@ __pycache__/
 # playwright mcp scratch output
 .playwright-mcp/
 
+# importer's cached upstream checkout
+tools/data/.cache/
+
 # superpowers brainstorming session files
 .superpowers/
