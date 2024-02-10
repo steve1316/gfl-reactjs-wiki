@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 
 import { cardArtSx } from "../lib/artLayout";
 import { findNameMatch } from "../lib/nameSearch";
+import ArtPlaceholder from "./ArtPlaceholder";
 import { RarityLabel, TypeBadge } from "./DollBadges";
 
 /** Style for the part of a name that matches the search. */
@@ -22,7 +23,7 @@ interface DollCardProps {
 	rarity: number;
 	/** Whether the form shown is the Mod, which changes the rarity colour. */
 	isMod: boolean;
-	/** URL of the 256x512 card art. */
+	/** URL of the 256x512 card art, or an empty string when the art is not hosted yet. */
 	image: string;
 	/** Route this card links to. */
 	to: string;
@@ -48,7 +49,7 @@ export default memo(function DollCard({ id, name, type, rarity, isMod, image, to
 	return (
 		<Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
 			<CardActionArea component={Link} to={to} sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch" }}>
-				<CardMedia component="img" sx={cardArtSx} image={image} alt={name} />
+				{image === "" ? <ArtPlaceholder name={name} /> : <CardMedia component="img" sx={cardArtSx} image={image} alt={name} />}
 				<Box sx={{ px: dense ? 0.75 : 1, py: dense ? 0.5 : 0.75 }}>
 					<Typography
 						component="div"

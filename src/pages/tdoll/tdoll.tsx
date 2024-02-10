@@ -201,8 +201,9 @@ function TDollContent({ doll }: TDollContentProps) {
 	const [initial] = useState(() => {
 		const selection = readSelection(searchParams, tdoll);
 		tdoll.selected = selection.mod && tdoll.mod ? tdoll.mod : tdoll.normal;
-		const images = selection.skin === null ? tdoll.selected.assets.images : tdoll.forms[`${selection.mod ? "mod_" : ""}skin${selection.skin}`]?.images;
-		return { ...selection, image: selection.damaged ? images?.card_damaged : images?.card };
+		// A skin without hosted art falls back to the form's own portrait.
+		const images = selection.skin === null ? tdoll.selected.assets.images : (tdoll.forms[`${selection.mod ? "mod_" : ""}skin${selection.skin}`] ?? tdoll.selected.assets).images;
+		return { ...selection, image: selection.damaged ? images.card_damaged : images.card };
 	});
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -247,6 +248,9 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
 	const spineEntry = spineFor(tdoll.normal.id);
+
+	// New dolls can arrive before their art is hosted. The page then shows placeholders and drops the Animations card.
+	const hasArt = Boolean(tdoll.normal.assets.images.card);
 
 	// Skin pills carry a doubled value, halved here the same way `skinIndex` is below.
 	const selectedSkinRigs = showSkin ? (spineEntry?.skinRigs?.[skinSelected / 2] ?? null) : null;
@@ -370,11 +374,11 @@ function TDollContent({ doll }: TDollContentProps) {
 			const skin = skinIndex;
 			if (switchImage) {
 				// Normal Skin image
-				setTDollImage(skinForm(skin, mode === 1)?.images.card);
+				setTDollImage((skinForm(skin, mode === 1) ?? tdoll.selected.assets).images.card);
 				setSwitchImage(false);
 			} else {
 				// Damaged Skin image
-				setTDollImage(skinForm(skin, mode === 1)?.images.card_damaged);
+				setTDollImage((skinForm(skin, mode === 1) ?? tdoll.selected.assets).images.card_damaged);
 				setSwitchImage(true);
 			}
 		} else {
@@ -415,12 +419,13 @@ function TDollContent({ doll }: TDollContentProps) {
 			setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
 			// newValue is the doubled tab value, so it has to be halved the same way skinIndex is.
-			setTDollImage(skinForm(newValue / 2, mode === 1)?.images.card);
+			// A skin without hosted art shows the form's own portrait instead of an empty card.
+			setTDollImage((skinForm(newValue / 2, mode === 1) ?? tdoll.selected.assets).images.card);
 
 			// Reset animation tab selected.
 			helperResetAnimationTabs();
 		},
-		[switchToBaseArt, skinForm, mode, helperResetAnimationTabs]
+		[switchToBaseArt, skinForm, mode, tdoll, helperResetAnimationTabs]
 	);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -466,7 +471,8 @@ function TDollContent({ doll }: TDollContentProps) {
 				                everything stacks, with the animations last since they are the heaviest to load. **************/}
 				<Grid container spacing={2}>
 					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
-					<Grid size={{ xs: 12, md: 7, lg: 8, xl: 9 }} sx={{ order: 0 }}>
+					{/* Without the Animations card the hero takes the whole first row, so Stats and Abilities still pair up below it. */}
+					<Grid size={spineEntry ? { xs: 12, md: 7, lg: 8, xl: 9 } : { xs: 12 }} sx={{ order: 0 }}>
 						<DollHero
 							name={tdoll.selected.name}
 							id={tdoll.selected.id}
@@ -476,6 +482,7 @@ function TDollContent({ doll }: TDollContentProps) {
 							cardImage={tdollImage}
 							onCardImageClick={switchBetweenNormalDamagedCardImages}
 							artLink={artLink}
+							hasArt={hasArt}
 							skins={tdoll.skins}
 							skinValue={showSkin ? skinSelected : false}
 							onSkinChange={switchSkinSelected}
@@ -484,7 +491,8 @@ function TDollContent({ doll }: TDollContentProps) {
 							onToggleMod={switchModes}
 						/>
 					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
+					{/* Stats shares its small-screen row with the Animations card, so it takes the full row when that card is absent. */}
+					<Grid size={{ xs: 12, sm: spineEntry ? 6 : 12, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
@@ -529,27 +537,29 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
-						<Paper sx={styles.section} variant="outlined">
-							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								Animations
-							</Typography>
-							<Box sx={styles.chibiColumn}>
-								<LazySection minHeight={320}>
-									<ChibiPanel
-										animationMode={animationMode}
-										spineAnimationName={spineAnimationName}
-										spineTabs={spineTabs}
-										onSwitchAnimations={switchAnimations}
-										onSwitchAnimationMode={switchAnimationMode}
-										spineRig={spineRig}
-										normalId={tdoll.normal.id}
-										onPlayerSwitchAnimations={playerSwitchAnimations}
-									/>
-								</LazySection>
-							</Box>
-						</Paper>
-					</Grid>
+					{spineEntry ? (
+						<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
+							<Paper sx={styles.section} variant="outlined">
+								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+									Animations
+								</Typography>
+								<Box sx={styles.chibiColumn}>
+									<LazySection minHeight={320}>
+										<ChibiPanel
+											animationMode={animationMode}
+											spineAnimationName={spineAnimationName}
+											spineTabs={spineTabs}
+											onSwitchAnimations={switchAnimations}
+											onSwitchAnimationMode={switchAnimationMode}
+											spineRig={spineRig}
+											normalId={tdoll.normal.id}
+											onPlayerSwitchAnimations={playerSwitchAnimations}
+										/>
+									</LazySection>
+								</Box>
+							</Paper>
+						</Grid>
+					) : null}
 				</Grid>
 			</Container>
 		</main>

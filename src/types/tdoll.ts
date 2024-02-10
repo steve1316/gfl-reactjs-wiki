@@ -1,8 +1,8 @@
 /**
  * The T-Doll data model, split into what the data files hold and what pages consume.
  *
- * The two are genuinely different shapes. The literals in `src/data/*.js` describe a doll's stats and
- * skills but say nothing about images, while pages need every asset URL resolved. Describing both
+ * The two are genuinely different shapes. The generated JSON from `tools/data/import.mjs` describes a doll's
+ * stats and skills but says nothing about images, while pages need every asset URL resolved. Describing both
  * with one interface would mean marking the asset fields optional everywhere and null-checking them
  * on every use, so they are kept apart: `Raw*` is what is written down, and the rest is what comes
  * out of `processData`.
@@ -15,10 +15,10 @@ export type StatValue = string | number;
 export type StatArray = StatValue[];
 
 /**
- * A skill as written in the data files.
+ * A skill as generated.
  *
- * Skills carry a variable number of stat arrays, `stat1` through `stat17`, most of them absent. They
- * pair with `number_of_stats` and fill the `#(n)` placeholders in `description` in order.
+ * Skills carry a variable number of stat arrays, `stat1` through `statN`, paired with `number_of_stats`. Each fills the matching `#1..#n`
+ * placeholder in `description`, with values taken from upstream per-level text.
  */
 export interface RawSkill {
 	name: string;
@@ -27,10 +27,6 @@ export interface RawSkill {
 	cooldown?: StatArray;
 	description: string;
 	number_of_stats: number;
-	/** Marks a skill whose description text describes a passive rather than an activated effect. */
-	passive_active_description?: boolean;
-	passive_passive_description?: boolean;
-	passive_passive_active_description?: boolean;
 	[stat: `stat${number}`]: StatArray | undefined;
 }
 
@@ -45,26 +41,14 @@ export interface RawTileSet {
 	stat2: string[];
 }
 
-/**
- * Which optional animations a form has.
- *
- * These flags are what the generated manifest replaces. They are kept on the raw type because the
- * data files still carry them, but `processData` prefers the manifest.
- */
-export interface RawAnimationFlags {
-	hasSkillAnimation: boolean;
-	hasVictoryLoopAnimation: boolean;
-	hasAttack2Animation?: boolean;
-	hasWait2Animation?: boolean;
-	hasActionAnimation?: boolean;
-}
-
-/** Skins are described in aggregate rather than as a list of individual skin objects. */
+/** A doll's visible skins. Skins with art come first, in the order of their `skinN` art slots. */
 export interface RawSkins {
+	/** How many skins the doll has, equal to the length of both lists. */
 	number_of_skins: number;
+	/** Official English skin names. */
 	skin_names: string[];
-	animations: Record<string, boolean>;
-	animations_dorm: Record<string, boolean>;
+	/** Upstream skin ids, parallel to `skin_names`. Null for a skin with hosted art but no upstream record, such as merch-only skins. */
+	skin_ids: (number | null)[];
 }
 
 /** One form of a doll: its base state, its Mod, or one of its skins. */
@@ -84,16 +68,17 @@ export interface RawForm {
 	/** Mod forms gain a second skill. */
 	skill2?: RawSkill;
 	tile_set: RawTileSet;
-	animations: RawAnimationFlags;
 }
 
-/** A doll exactly as written in `src/data/*.js`, before any asset resolution. */
+/** A doll exactly as generated, before any asset resolution. */
 export interface RawTDoll {
 	normal: RawForm;
 	/** `null` for the majority of dolls, which have no Mod. */
 	mod: RawForm | null;
 	/** `null` when the doll has no skins. */
 	skins: RawSkins | null;
+	/** Release date on the US server, `YYYY-MM-DD`. */
+	released: string;
 }
 
 /** Resolved asset URLs for one form. */

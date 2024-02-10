@@ -47,29 +47,7 @@ interface TilesPanelProps {
  */
 export default memo(function TilesPanel({ tileSet }: TilesPanelProps) {
 	// The buff text with HTML span tags inserted for visual clarity. Derived once per tile set rather than on every render.
-	const tileSetInformation = useMemo(() => {
-		var number_of_stats = tileSet.number_of_stats;
-		var tempStat = "";
-		switch (number_of_stats) {
-			case 1:
-				tempStat = tileSet.stat1[0] + '<span style="color: yellow;"><ins>' + tileSet.stat2[0] + "</ins></span>";
-				break;
-			case 2:
-				tempStat =
-					tileSet.stat1[0] +
-					'<span style="color: yellow;"><ins>' +
-					tileSet.stat2[0] +
-					"</ins></span> <br />" +
-					tileSet.stat1[1] +
-					'<span style="color: yellow;"><ins>' +
-					tileSet.stat2[1] +
-					"</ins></span>";
-				break;
-			default:
-		}
-
-		return tempStat;
-	}, [tileSet]);
+	const tileSetInformation = useMemo(() => tileSet.stat1.map((label, index) => `${label}<span style="color: yellow;"><ins>${tileSet.stat2[index] ?? ""}</ins></span>`).join(" <br />"), [tileSet]);
 
 	// A new array each render would re-render the memoised TileGrid every time.
 	const rows = useMemo(() => [tileSet.row1, tileSet.row2, tileSet.row3], [tileSet]);

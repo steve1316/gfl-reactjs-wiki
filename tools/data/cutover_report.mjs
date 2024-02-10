@@ -4,6 +4,8 @@
  *
  * Writes tools/data/.cache/cutover-report.md with expected, suspicious and missing differences.
  *
+ * This ran once before the hand-written shards were deleted and now only works from a checkout before that commit.
+ *
  * Usage:
  *     node tools/data/cutover_report.mjs
  */

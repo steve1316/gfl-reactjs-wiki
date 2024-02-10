@@ -19,6 +19,9 @@
  * The result is written into `spine-index.json` as `skinRigs`, indexed by the same position the tabs
  * use, with nulls where a skin has no rig.
  *
+ * This reads the hand-written doll shards for their old skin names, so it ran once before those were deleted and
+ * now only works from a checkout before that commit.
+ *
  * Usage:
  *     node tools/assets/map_skin_rigs.mjs --skins <skin.hjson> [--art <matches.json>] [--index src/data/spine-index.json]
  */

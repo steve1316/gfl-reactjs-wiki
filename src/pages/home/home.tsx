@@ -13,6 +13,7 @@ import type { SxProps, Theme } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 import { uiUrl } from "../../lib/assets";
+import { dollIdsWithArt } from "../../lib/data";
 
 const tdoll_index_logo = uiUrl("tdoll_index_logo.jpg");
 const equipment_index_logo = uiUrl("equipment_index_logo.jpg");
@@ -53,49 +54,22 @@ const GROW_STYLE = { transformOrigin: "0 0 0" };
 /** How many dolls the carousel holds: four sets of three before it asks for a fresh pool. */
 const CAROUSEL_SIZE = 12;
 
-/** Id ranges the T-Doll shards cover. */
-const ID_RANGES: ReadonlyArray<{ min: number; max: number }> = [
-	{ min: 1, max: 100 },
-	{ min: 101, max: 200 },
-	{ min: 201, max: 300 },
-	{ min: 301, max: 320 },
-	{ min: 1000, max: 1027 }
-];
-
-/** Ids with no doll behind them. MICA Team leaves gaps in the numbering, so these are skipped rather than shown as missing. */
-const NOT_VALID_IDS = new Set([0, 30, 45, 67, 76, 83, 219, 246, 1000, 1011, 1012, 1013, 1014, 1015, 1016]);
-
-/** Total ids across every range, so one draw can be spread evenly over all of them. */
-const ID_SPAN = ID_RANGES.reduce((total, range) => total + (range.max - range.min + 1), 0);
+/** Every doll id with hosted art, read once. */
+const DOLL_IDS_WITH_ART = dollIdsWithArt();
 
 /**
- * Pick a number of distinct, valid T-Doll ids at random.
+ * Pick distinct doll ids with art, uniformly at random.
  *
- * The draw is uniform across every id, not across the ranges. Picking a range first and then an id
- * inside it made the 20-wide 301-320 range as likely as the 100-wide 1-100 one, so the collab dolls
- * turned up five times more often than they should have.
- *
- * @param count How many distinct ids to return.
- * @returns Up to `count` distinct ids, each inside a real shard range and outside the invalid list.
+ * @param count How many ids to return.
+ * @returns Up to `count` distinct ids.
  */
 function randomDollIds(count: number): number[] {
-	const ids = new Set<number>();
-	// The invalid list can starve a draw, so the attempt cap stops this spinning if `count` is ever raised too far.
-	for (let attempts = 0; ids.size < count && attempts < count * 50; attempts += 1) {
-		let offset = Math.floor(Math.random() * ID_SPAN);
-		for (const range of ID_RANGES) {
-			const size = range.max - range.min + 1;
-			if (offset < size) {
-				const id = range.min + offset;
-				if (!NOT_VALID_IDS.has(id)) {
-					ids.add(id);
-				}
-				break;
-			}
-			offset -= size;
-		}
+	const pool = [...DOLL_IDS_WITH_ART];
+	for (let index = pool.length - 1; index > 0; index--) {
+		const swap = Math.floor(Math.random() * (index + 1));
+		[pool[index], pool[swap]] = [pool[swap] as number, pool[index] as number];
 	}
-	return [...ids];
+	return pool.slice(0, count);
 }
 
 /**
