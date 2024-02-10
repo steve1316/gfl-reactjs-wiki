@@ -1,3 +1,5 @@
+import { cleanName } from "./text.mjs";
+
 /**
  * Build a doll's skin list.
  *
@@ -23,12 +25,12 @@ export function buildSkins(upstream, dollId, assetSlots) {
 		if (!skin) {
 			throw new Error(`doll ${dollId}: skin ${slot} in skin-assets.json is not a visible upstream skin`);
 		}
-		return { id: slot, name: upstream.t(skin.name).trim() };
+		return { id: slot, name: cleanName(upstream.t(skin.name)) };
 	});
 	const taken = new Set(entries.map((entry) => entry.id));
 	for (const skin of visible) {
 		if (!taken.has(skin.id)) {
-			entries.push({ id: skin.id, name: upstream.t(skin.name).trim() });
+			entries.push({ id: skin.id, name: cleanName(upstream.t(skin.name)) });
 		}
 	}
 	if (entries.length === 0) {

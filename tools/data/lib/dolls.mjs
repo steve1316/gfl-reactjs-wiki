@@ -1,6 +1,7 @@
 import { buildSkill } from "./skills.mjs";
 import { buildSkins } from "./skins.mjs";
 import { computeStats } from "./stats.mjs";
+import { cleanName } from "./text.mjs";
 import { TYPE_NAMES, buildTiles } from "./tiles.mjs";
 
 /** Base form and Mod levels the site shows stats at. */
@@ -39,7 +40,7 @@ export function selectReleased(upstream, cutoff) {
  */
 function buildForm(upstream, gun, base, ctx) {
 	const isMod = gun.id >= MOD_OFFSET;
-	const name = upstream.t(base.name).trim();
+	const name = cleanName(upstream.t(base.name));
 	const form = {
 		id: base.id,
 		name: isMod ? `${name} Mod` : name,

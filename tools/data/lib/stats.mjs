@@ -21,6 +21,21 @@ export function readStatConfig(upstream) {
 }
 
 /**
+ * Look up a constant by its exact name.
+ *
+ * @param {Map<string, number[]>} params Parsed game_config_info.
+ * @param {string} name Parameter name.
+ * @returns {number[]} The constant's values.
+ */
+function requireParam(params, name) {
+	const value = params.get(name);
+	if (!value) {
+		throw new Error(`missing game_config_info parameter ${name}`);
+	}
+	return value;
+}
+
+/**
  * Look up a constant, switching to its `_after100` variant above level 100.
  *
  * @param {Map<string, number[]>} params Parsed game_config_info.
@@ -29,11 +44,7 @@ export function readStatConfig(upstream) {
  * @returns {number[]} The constant's values.
  */
 function param(params, name, level) {
-	const value = params.get(level > 100 ? `${name}_after100` : name);
-	if (!value) {
-		throw new Error(`missing game_config_info parameter ${name}`);
-	}
-	return value;
+	return requireParam(params, level > 100 ? `${name}_after100` : name);
 }
 
 /**
@@ -58,7 +69,7 @@ export function computeStats(gun, config, level) {
 		return Math.ceil(((base + (level - 1) * perLevel) * multiplier * ratio) / divisor);
 	};
 	const grown = (name, multiplier, ratio) => {
-		const [basic, basicDivisor] = params.get(`${name}_basic`);
+		const [basic, basicDivisor] = requireParam(params, `${name}_basic`);
 		const [grow, divisorA, divisorB, constant] = param(params, `${name}_grow`, level);
 		return Math.ceil((basic * multiplier * ratio) / basicDivisor) + Math.ceil(((grow * (level - 1) + constant) * multiplier * ratio * gun.eat_ratio) / divisorA / divisorB);
 	};

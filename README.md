@@ -112,6 +112,10 @@ yarn deploy
 
 <sup><a href="#girls-frontline-database">Go back to top</a></sup>
 
+## Data
+
+Doll and equipment data is generated from [gf-data-tools/gf-data-us](https://github.com/gf-data-tools/gf-data-us) by `tools/data/import.mjs`. That repository carries no licence. Game data and assets are © Sunborn / MICA Team, mirrored for fan-wiki use.
+
 # License
 
 [GNU GPL 3.0](https://choosealicense.com/licenses/gpl-3.0/)

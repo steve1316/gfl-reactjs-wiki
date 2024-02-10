@@ -3,7 +3,9 @@
  * Generate the site's doll and equipment data from gf-data-us.
  *
  * Writes the doll shards, equipment.json, upstream.json and the search index under src/data. Output is deterministic
- * for a given upstream commit and cutoff date, so a scheduled run only commits when something really changed.
+ * for a given upstream commit and set of released dolls, so a scheduled run only commits when something really changed.
+ * The search index keeps the pre-2026-09-13 wiki names from `tools/data/name-aliases.json` as aliases for renamed dolls.
+ * The run date only selects which dolls are released and is not written out, so an unchanged import produces no diff.
  *
  * Usage:
  *     node tools/data/import.mjs [--date YYYY-MM-DD]
@@ -89,7 +91,7 @@ function main() {
 
 	const { repo, sha } = readLock();
 	const counts = { dolls: dolls.length, mods: dolls.filter((doll) => doll.mod).length, equipment: Object.values(equipment.items).flat().length };
-	writeJson(`${OUT_DIR}/upstream.json`, { repo, sha, cutoff, counts });
+	writeJson(`${OUT_DIR}/upstream.json`, { repo, sha, counts });
 
 	execFileSync("node", ["tools/data/build_search_index.mjs"], { stdio: "inherit" });
 

@@ -21,10 +21,16 @@ import { hasDollArt, processDoll, processDolls } from "./processData";
 
 /** One entry in the lightweight search index. */
 export interface SearchEntry {
+	/** Doll id, shared by the base form and its Mod. */
 	id: number;
+	/** The base form's current name. */
 	name: string;
+	/** Doll type, such as "AR" or "HG". */
 	type: string;
+	/** Base form rarity, with 1 meaning the collaboration "Extra" rarity. */
 	rarity: number;
+	/** Names the wiki used before the 2026-09-13 upstream import renamed the doll, kept searchable. Absent when the name did not change. */
+	aliases?: string[];
 }
 
 /**
@@ -62,8 +68,8 @@ const SHARDS: ReadonlyArray<{ max: number; load: () => Promise<{ default: RawTDo
 	{ max: 200, load: () => import("../data/dolls-101-200.json") as Promise<{ default: RawTDoll[] }> },
 	{ max: 300, load: () => import("../data/dolls-201-300.json") as Promise<{ default: RawTDoll[] }> },
 	{ max: 400, load: () => import("../data/dolls-301-400.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: 999, load: () => import("../data/dolls-401-500.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: Number.POSITIVE_INFINITY, load: () => import("../data/dolls-1000-1099.json") as Promise<{ default: RawTDoll[] }> }
+	{ max: 999, load: () => import("../data/dolls-401-999.json") as Promise<{ default: RawTDoll[] }> },
+	{ max: Number.POSITIVE_INFINITY, load: () => import("../data/dolls-1000-1999.json") as Promise<{ default: RawTDoll[] }> }
 ];
 
 /** Cache of in-flight and settled shard loads, so a shard is fetched and processed at most once. */

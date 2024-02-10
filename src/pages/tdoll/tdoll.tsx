@@ -249,9 +249,6 @@ function TDollContent({ doll }: TDollContentProps) {
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
 	const spineEntry = spineFor(tdoll.normal.id);
 
-	// New dolls can arrive before their art is hosted. The page then shows placeholders and drops the Animations card.
-	const hasArt = Boolean(tdoll.normal.assets.images.card);
-
 	// Skin pills carry a doubled value, halved here the same way `skinIndex` is below.
 	const selectedSkinRigs = showSkin ? (spineEntry?.skinRigs?.[skinSelected / 2] ?? null) : null;
 	// A Mod doll is a different chibi with its own animations, so the base rig cannot stand in for it.
@@ -315,6 +312,9 @@ function TDollContent({ doll }: TDollContentProps) {
 	// same skin's base form, which is the same outfit.
 	const artForm = showSkin ? `skin${skinIndex + 1}` : isModForm ? "mod" : "normal";
 	const artLink = `/tdoll/${tdoll.normal.id}/art?form=${artForm}${switchImage ? "&damaged=1" : ""}`;
+	// New dolls and many upstream Mods arrive before their art is hosted. The viewer link is hidden when the outfit on screen has
+	// no full art, rather than opening onto a different outfit.
+	const hasFullArt = Boolean(tdoll.forms[artForm]?.images[artKind]);
 
 	// Every handler below is wrapped in useCallback. The panels they are passed to are memoised, and a handler
 	// recreated on each render would make every panel re-render on every change, whether or not it changed.
@@ -482,7 +482,7 @@ function TDollContent({ doll }: TDollContentProps) {
 							cardImage={tdollImage}
 							onCardImageClick={switchBetweenNormalDamagedCardImages}
 							artLink={artLink}
-							hasArt={hasArt}
+							hasFullArt={hasFullArt}
 							skins={tdoll.skins}
 							skinValue={showSkin ? skinSelected : false}
 							onSkinChange={switchSkinSelected}

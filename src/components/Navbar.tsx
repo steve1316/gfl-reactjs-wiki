@@ -9,6 +9,7 @@ import type { SxProps, Theme } from "@mui/material";
 // Autocomplete imports
 import Autocomplete from "@mui/material/Autocomplete";
 import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
+import type { FilterOptionsState } from "@mui/material/useAutocomplete";
 import parse from "autosuggest-highlight/parse";
 import match from "autosuggest-highlight/match";
 
@@ -19,6 +20,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { uiUrl } from "../lib/assets";
 import { searchIndex } from "../lib/data";
+import { matchesAnyName, normaliseName } from "../lib/nameSearch";
 
 const HomeIcon = uiUrl("home_icon.png");
 const IndexIcon = uiUrl("index_icon.png");
@@ -35,6 +37,8 @@ interface SearchOption {
 	id: number;
 	/** Doll name, shown and matched against. */
 	name: string;
+	/** The name and any old wiki names, passed through `normaliseName`, which the typed text is matched against. */
+	keys: string[];
 }
 
 /**
@@ -46,7 +50,8 @@ interface SearchOption {
 const options: SearchOption[] = searchIndex
 	.map((entry) => {
 		const firstLetter = entry.name.charAt(0).toUpperCase();
-		return { firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter, id: entry.id, name: entry.name };
+		const keys = [entry.name, ...(entry.aliases ?? [])].map(normaliseName);
+		return { firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter, id: entry.id, name: entry.name, keys };
 	})
 	.sort((a, b) => a.firstLetter.localeCompare(b.firstLetter) || a.name.localeCompare(b.name));
 
@@ -136,6 +141,18 @@ const groupByLetter = (option: SearchOption) => option.firstLetter;
  * @returns The doll's name.
  */
 const optionLabel = (option: SearchOption) => option.name;
+
+/**
+ * Narrow the dropdown to dolls whose name or old name holds the typed text, ignoring case, spaces and punctuation.
+ *
+ * @param list Every option.
+ * @param state MUI's filter state, carrying the typed text.
+ * @returns The matching options, in their original order.
+ */
+const filterByName = (list: SearchOption[], state: FilterOptionsState<SearchOption>) => {
+	const needle = normaliseName(state.inputValue);
+	return needle ? list.filter((option) => matchesAnyName(option.keys, needle)) : list;
+};
 
 /**
  * Whether two options are the same doll. Names repeat across forms, so options are compared by id.
@@ -262,16 +279,16 @@ export default function Navbar() {
 		[navigate]
 	);
 
-	// Submitting without picking a suggestion. An exact name wins, otherwise the first option the typed
+	// Submitting without picking a suggestion. An exact name or old name wins, otherwise the first option the typed
 	// text appears in, which is the row the dropdown would have had highlighted.
 	const handleSubmit = useCallback(
 		(event?: FormEvent) => {
 			event?.preventDefault();
-			const typed = searchValue.trim().toLowerCase();
+			const typed = normaliseName(searchValue);
 			if (typed === "") {
 				return;
 			}
-			const selected = options.find((option) => option.name.toLowerCase() === typed) ?? options.find((option) => option.name.toLowerCase().includes(typed));
+			const selected = options.find((option) => option.keys.includes(typed)) ?? options.find((option) => matchesAnyName(option.keys, typed));
 			if (!selected) {
 				setHasError(true);
 				return;
@@ -308,6 +325,7 @@ export default function Navbar() {
 				options={options}
 				groupBy={groupByLetter}
 				getOptionLabel={optionLabel}
+				filterOptions={filterByName}
 				size="small"
 				sx={{ width: "100%", minWidth: { xs: 0, sm: 300 } }}
 				inputValue={searchValue}
