@@ -77,8 +77,6 @@ export interface RawTDoll {
 	mod: RawForm | null;
 	/** `null` when the doll has no skins. */
 	skins: RawSkins | null;
-	/** Release date on the US server, `YYYY-MM-DD`. */
-	released: string;
 }
 
 /** Resolved asset URLs for one form. */

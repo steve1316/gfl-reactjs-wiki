@@ -1,0 +1,54 @@
+{{PlayableUnit
+| index = 1019
+| nationality = VA-11 Hall-A
+| classification = SMG
+| rarity = EXTRA
+| faction = [[Griffin & Kryuger]]
+| manufactureringame = [[I.O.P.]]
+| fullname = Dorothy Haze
+| artist = {{artist name|废人}}
+| voiceactor = 
+
+|releasedon = {{doll_server_alias|server=CN|alias=多萝西|year=2019|month=6}}, {{doll_server_alias|server=TW|alias=Dorothy}}, {{doll_server_alias|server=KR|alias=도로시 헤이즈}}, {{doll_server_alias|server=EN|alias=Dorothy Haze}}, {{doll_server_alias|server=JP|alias=ドロシー・ヘイズ}}
+
+| weaponinfo = Character introduced during Girls Frontline and VA-11 Hall-A collaboration event on June 13th 2019 (CN). 
+
+| min_dmg= 10
+| max_dmg= 28
+| min_eva= 10
+| max_eva= 87
+| min_acc= 2
+| max_acc= 15
+| min_rof= 52
+| max_rof= 79
+| min_hp= 88
+| max_hp= 176
+| mov= 12
+
+| nonormalcraft=1
+| noheavycraft=1
+| reward= Obtained by redeeming 150x "White Knight Armour Shards" in the Event Shop during [[Valhalla]]
+
+| aura1= Affects assault rifles (AR) and rifles (RF)
+| aura2= Increases damage by 15%
+| aura3= Increases accuracy by 25%
+| tile1= 1
+| tile5= 0
+| tile7= 1
+
+|costume1= Precious Christmas Uniform
+
+|gallery=<gallery>
+File:Dorothy S.png|Profile image
+File:Dorothy.png|Full artwork
+File:Dorothy D.png|Full damaged artwork
+File:Dorothy costume1.png|"Precious Christmas Uniform" Full artwork
+File:Dorothy costume1 D.png|"Precious Christmas Uniform" Full damaged artwork
+</gallery>
+
+|galleryAlt=<gallery>
+File:VA-11 Hall-A Login background.png|"VA-11 Hall-A" login wallpaper Illustrated by 废人
+</gallery>
+
+| trivia =
+|}}

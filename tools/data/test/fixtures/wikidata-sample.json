@@ -1,0 +1,46 @@
+{
+	"entitiesResponse": {
+		"entities": {
+			"-1": { "site": "enwiki", "title": "Unknown Weapon", "missing": "" },
+			"Q1000": {
+				"type": "item",
+				"id": "Q1000",
+				"claims": {
+					"P176": [
+						{
+							"mainsnak": {
+								"snaktype": "value",
+								"property": "P176",
+								"datavalue": { "value": { "entity-type": "item", "numeric-id": 2000, "id": "Q2000" }, "type": "wikibase-entityid" },
+								"datatype": "wikibase-item"
+							},
+							"type": "statement",
+							"rank": "normal"
+						}
+					],
+					"P495": [
+						{
+							"mainsnak": {
+								"snaktype": "value",
+								"property": "P495",
+								"datavalue": { "value": { "entity-type": "item", "numeric-id": 3000, "id": "Q3000" }, "type": "wikibase-entityid" },
+								"datatype": "wikibase-item"
+							},
+							"type": "statement",
+							"rank": "normal"
+						}
+					]
+				},
+				"sitelinks": { "enwiki": { "site": "enwiki", "title": "Test Rifle", "badges": [] } }
+			}
+		},
+		"success": 1
+	},
+	"labelsResponse": {
+		"entities": {
+			"Q2000": { "type": "item", "id": "Q2000", "labels": { "en": { "language": "en", "value": "Test Arms Co" } } },
+			"Q3000": { "type": "item", "id": "Q3000", "labels": { "en": { "language": "en", "value": "Testland" } } }
+		},
+		"success": 1
+	}
+}

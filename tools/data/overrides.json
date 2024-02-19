@@ -28,15 +28,15 @@
 					"number_of_stats": 2,
 					"stat1": ["Damage by ", "Evasion by "],
 					"stat2": ["20%", "30%"]
-				}
+				},
+				"specs": []
 			},
 			"mod": null,
 			"skins": {
 				"number_of_skins": 1,
 				"skin_names": ["Formal Dress"],
 				"skin_ids": [null]
-			},
-			"released": "2020-01-01"
+			}
 		},
 		{
 			"normal": {
@@ -66,11 +66,11 @@
 					"number_of_stats": 1,
 					"stat1": ["Reduces Skill CD by "],
 					"stat2": ["18%"]
-				}
+				},
+				"specs": []
 			},
 			"mod": null,
-			"skins": null,
-			"released": "2020-01-01"
+			"skins": null
 		},
 		{
 			"normal": {
@@ -100,15 +100,15 @@
 					"number_of_stats": 1,
 					"stat1": ["Reduces Skill CD by "],
 					"stat2": ["18%"]
-				}
+				},
+				"specs": []
 			},
 			"mod": null,
 			"skins": {
 				"number_of_skins": 1,
 				"skin_names": ["Bronya's Armor"],
 				"skin_ids": [null]
-			},
-			"released": "2020-01-01"
+			}
 		},
 		{
 			"normal": {
@@ -141,11 +141,11 @@
 					"number_of_stats": 2,
 					"stat1": ["Rate of Fire by ", "Accuracy by "],
 					"stat2": ["30%", "50%"]
-				}
+				},
+				"specs": []
 			},
 			"mod": null,
-			"skins": null,
-			"released": "2020-01-01"
+			"skins": null
 		},
 		{
 			"normal": {
@@ -177,11 +177,11 @@
 					"number_of_stats": 2,
 					"stat1": ["Damage by ", "Rate of Fire by "],
 					"stat2": ["20%", "20%"]
-				}
+				},
+				"specs": []
 			},
 			"mod": null,
-			"skins": null,
-			"released": "2020-01-01"
+			"skins": null
 		},
 		{
 			"normal": {
@@ -210,15 +210,15 @@
 					"number_of_stats": 2,
 					"stat1": ["Damage by ", "Accuracy by "],
 					"stat2": ["20%", "10%"]
-				}
+				},
+				"specs": []
 			},
 			"mod": null,
 			"skins": {
 				"number_of_skins": 1,
 				"skin_names": ["Festival"],
 				"skin_ids": [null]
-			},
-			"released": "2020-01-01"
+			}
 		}
 	],
 	"fields": []

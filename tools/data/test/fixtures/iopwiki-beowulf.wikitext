@@ -1,0 +1,63 @@
+{{PlayableUnit
+|index = 393
+|nationality = United States
+|classification = AR
+|rarity = 5
+|faction = [[Griffin & Kryuger]]
+|manufactureringame = [[I.O.P.]]
+|manufacturer = Alexander Arms
+|artist = {{artist name|そおの}}
+|voiceactor = {{voice actor name|Sakaya Oohara}}
+|fullname = .50 Beowulf
+|releasedon = {{doll_server_alias|server=CN|alias=贝奥武夫|year=2023|month=8}}, {{doll_server_alias|server=TW|alias=貝武夫}}, {{doll_server_alias|server=KR|alias=베오울프}}, {{doll_server_alias|server=EN|alias=Beowulf|year=2024|month=9}}, {{doll_server_alias|server=JP|alias=ベオウルフ|year=2024|month=4}}
+
+|weaponinfo =
+The Beowulf is a variant of the AR-15 designed to fire the proprietary .50 Beowulf (12.7x42mm) cartridge, created and developed by Bill Alexander of Alexander Arms around 2001. The .50 Beowulf is similar to the .500 Smith and Wesson cartridge used in the Smith and Wesson Model 500 and the .50 Action Express used by the Desert Eagle. The main purpose of the .50 Beowulf is for its hunting performance, mainly for hunting common North American game such as deer, moose, and black bears at short-medium ranges. <ref>[[Wikipedia:.50 Beowulf|The Wikipedia article about the .50 Beowulf]]</ref>
+
+The Beowulf cartridge is named after the Beowulf epic, one of the oldest surviving pieces of English literature <ref>[[Wikipedia:Beowulf (hero)|The Wikipedia article about the Beowulf hero]]</ref>.
+|design= 
+|personality =
+Before coming to Griffin, she was a wilderness-roaming hunter, eagerly pursuing the most tricky prey... Or at least, that's what she claims. Her expression is always as cold as ice and she doesn't talk much, which gives others the impression that she's unapproachable. The truth is, she IS hard to get along with. Only by patiently unpicking the many thorns surrounding her heart will you see the fire burning within.
+
+|min_hp= 61
+|max_hp= 121
+<!--|fix_min= 5 -->
+<!--|fix_max= 9-->
+|min_dmg= 23
+|max_dmg= 64
+|min_eva= 5
+|max_eva= 38
+|min_acc=6
+|max_acc= 47
+|min_rof= 52
+|max_rof= 78
+|mov= 10
+
+|craft=04:25:00
+
+|aura1= Affects submachine guns
+|aura2= Increases evasion by 25%
+|aura3= 
+|tile3= 1
+|tile5= 0
+|tile6= 1
+
+|costume1= Seafront Huntress
+
+|gallery=<gallery>
+File:Beowulf_S.png|Profile image
+File:Beowulf.png|Full artwork
+File:Beowulf_D.png|Full damaged artwork
+File:Beowulf_costume1.png|"Seafront Huntress" Full artwork
+File:Beowulf_costume1_D.png|"Seafront Huntress" Full damaged artwork
+</gallery>
+
+|galleryAlt=<gallery>
+File:CHARACTER_SETTINGS_BEOWULF.jpg|Official character sheet for Beowulf.
+</gallery>
+
+|trivia = 
+*When an enemy marked with "Dragon" is defeated, all subsequent enemies that aren't marked become marked with "Prey". There is no additional effect for defeating enemies marked with "Prey" however, because its considered a Marked effect, it benefits from the Damage increase from her Passive effect.
+*When starting battle against a singular enemy, they will have all 3 markers applied to them. If multiple enemies are present, they will be applied randomly according to the Passive's conditions. These marks and their effects can only be applied and acquired once.
+*Beowulf is the only Doll whose [[Oath]] dialogues involve her refusing the oath and not displaying any hint of intimacy.
+}}

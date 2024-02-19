@@ -1,1 +1,5 @@
-{ "repo": "gf-data-tools/gf-data-us", "sha": "73364c85a916f3136cfd03aa0f79bad60faa231b" }
+{
+	"repo": "gf-data-tools/gf-data-us",
+	"sha": "73364c85a916f3136cfd03aa0f79bad60faa231b",
+	"cn": { "repo": "gf-data-tools/gf-data-ch", "sha": "77f0379cbc504753c864d1a9a6091bbfd0536215" }
+}
