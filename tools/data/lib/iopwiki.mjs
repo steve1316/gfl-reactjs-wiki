@@ -257,8 +257,9 @@ export function parsePlayableUnit(wikitext) {
  *
  * Order: `<!-- ... -->` comments are stripped, `<ref>` tags (paired and self-closing) are removed, templates
  * are resolved innermost-first (see `resolveTemplate`), `[[a|b]]` links resolve to `b` and `[[a]]` to `a`,
- * `<br/>` becomes ", ", any other HTML tag is stripped, HTML entities are decoded, and finally whitespace is
- * collapsed and trimmed.
+ * `<br/>` becomes ", ", any other HTML tag is stripped, `''` / `'''` / `'''''` emphasis is removed (a run of four
+ * keeps one literal apostrophe, as MediaWiki does), HTML entities are decoded, and finally whitespace is collapsed
+ * and trimmed.
  *
  * @param {string} value A raw field value from `parsePlayableUnit`.
  * @returns {string} Plain text.
@@ -279,6 +280,7 @@ export function plainText(value) {
 	}
 	text = text.replace(/<br\s*\/?>/gi, ", ");
 	text = text.replace(/<[^>]+>/g, "");
+	text = text.replace(/'{2,}/g, (run) => (run.length === 4 ? "'" : "'".repeat(Math.max(0, run.length - 5))));
 	text = text.replace(/&[a-zA-Z#0-9]+;/g, (entity) => HTML_ENTITIES[entity.toLowerCase()] ?? entity);
 	return text.replace(/\s+/g, " ").trim();
 }

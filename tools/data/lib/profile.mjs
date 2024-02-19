@@ -16,8 +16,8 @@ const FACTION_SEPARATOR = /\s*(?:,|\s\/\s)\s*/y;
 /** Manufacturer separators: a comma (swallowing a following "and"), a semicolon or a spaced slash. */
 const MANUFACTURER_SEPARATOR = /\s*(?:,(?:\s*and\s)?|;|\s\/\s)\s*/y;
 
-/** Country separators: a comma, a slash, an ampersand or a spaced "and". */
-const COUNTRY_SEPARATOR = /\s*(?:[,/&]|\sand\s)\s*/y;
+/** Country separators: a comma or a slash, spaced or not. "and" and "&" are left alone, since they occur inside names such as "Bosnia and Herzegovina". */
+const COUNTRY_SEPARATOR = /\s*[,/]\s*/y;
 
 /** Values IOPWiki uses for "no manufacturer". */
 const MISSING_VALUE = /^(none|n\/a|unknown)\b/i;

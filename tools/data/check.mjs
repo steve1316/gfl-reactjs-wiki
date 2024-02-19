@@ -36,6 +36,28 @@ const REFERENCE_GRIDS = [
 	[109, "normal", [0, 0, 1], [2, 0, 0], [0, 0, 1]]
 ];
 
+/** Fewest dolls that must have a non-empty faction, manufacturer and base-form spec sheet. */
+const MIN_COVERAGE = { faction: 400, manufacturer: 380, specs: 380 };
+
+/** Pinned profile fields. HK416 is on the launch roster, Beowulf's US date is a copied CN date so IOPWiki's EN month wins. */
+const REFERENCE_PROFILES = {
+	hk416: { id: 65, faction: ["Squad 404"], manufacturer: "Heckler & Koch", country: ["Germany"], release: { date: "2018-05", precision: "launch" } },
+	beowulf: { id: 393, release: { date: "2024-09", precision: "month" } }
+};
+
+/** Wiki or HTML markup that must never survive into a generated profile or spec sheet string. */
+const MARKUP_TOKENS = ["'''", "''", "[[", "]]", "{{", "}}", "<", "&amp;"];
+
+/**
+ * Check a `YYYY-MM-DD` string is a real calendar date.
+ *
+ * @param {unknown} date Value to check.
+ * @returns {boolean} True when the value is a valid ISO date.
+ */
+function isIsoDate(date) {
+	return typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(Date.parse(date)) && new Date(date).toISOString().startsWith(date);
+}
+
 /**
  * Read the counts from the last committed upstream.json, if there is one.
  *
@@ -105,7 +127,7 @@ function main() {
 
 	for (const doll of dolls) {
 		for (const form of [doll.normal, doll.mod].filter(Boolean)) {
-			if (!form.name || !form.type || !form.rarity || !form.skill || !form.tile_set) {
+			if (!form.name || !form.type || !form.rarity || !form.skill || !form.tile_set || !Array.isArray(form.specs)) {
 				fail(`doll ${doll.normal.id} ${form.name || "(no name)"} is missing a required field`);
 			}
 			for (const skill of [form.skill, form.skill2].filter(Boolean)) {
@@ -120,6 +142,48 @@ function main() {
 				}
 			}
 		}
+	}
+
+	for (const doll of dolls) {
+		const release = doll.profile?.release;
+		if (!release || !Array.isArray(doll.profile.faction) || !Array.isArray(doll.profile.manufacturer) || !Array.isArray(doll.profile.country)) {
+			fail(`doll ${doll.normal.id} has no profile`);
+		} else if (release.precision === "day" && !isIsoDate(release.date)) {
+			fail(`doll ${doll.normal.id} has a day-precision release that is not a valid date: ${release.date}`);
+		}
+		const profile = doll.profile ?? {};
+		const profileTexts = [...(profile.faction ?? []), ...(profile.manufacturer ?? []), ...(profile.country ?? []), profile.fullName ?? ""];
+		const specTexts = [doll.normal, doll.mod].filter(Boolean).flatMap((form) => (form.specs ?? []).flatMap((row) => [row.label, row.value]));
+		for (const text of [...profileTexts, ...specTexts]) {
+			const token = MARKUP_TOKENS.find((candidate) => String(text).includes(candidate));
+			if (token) {
+				fail(`doll ${doll.normal.id} has markup "${token}" left in ${JSON.stringify(text)}`);
+			}
+		}
+	}
+	const coverage = {
+		faction: dolls.filter((doll) => doll.profile?.faction?.length > 0).length,
+		manufacturer: dolls.filter((doll) => doll.profile?.manufacturer?.length > 0).length,
+		specs: dolls.filter((doll) => doll.normal.specs?.length > 0).length
+	};
+	for (const [key, minimum] of Object.entries(MIN_COVERAGE)) {
+		if (coverage[key] < minimum) {
+			fail(`only ${coverage[key]} dolls have a ${key}, expected at least ${minimum}`);
+		}
+	}
+	const { hk416, beowulf } = REFERENCE_PROFILES;
+	const hk416Profile = byId.get(hk416.id)?.profile;
+	if (
+		JSON.stringify(hk416Profile?.faction) !== JSON.stringify(hk416.faction) ||
+		!(hk416Profile?.manufacturer ?? []).includes(hk416.manufacturer) ||
+		JSON.stringify(hk416Profile?.country) !== JSON.stringify(hk416.country) ||
+		JSON.stringify(hk416Profile?.release) !== JSON.stringify(hk416.release)
+	) {
+		fail(`HK416 profile differs from the pinned profile: ${JSON.stringify(hk416Profile)}`);
+	}
+	const beowulfRelease = byId.get(beowulf.id)?.profile?.release;
+	if (JSON.stringify(beowulfRelease) !== JSON.stringify(beowulf.release)) {
+		fail(`Beowulf release differs from the pinned ${JSON.stringify(beowulf.release)}: ${JSON.stringify(beowulfRelease)}`);
 	}
 
 	const overrideIds = new Set(JSON.parse(fs.readFileSync("tools/data/overrides.json", "utf8")).addDolls.map((doll) => doll.normal.id));
@@ -153,7 +217,7 @@ function main() {
 		console.error(`check failed (${failures.length}):\n- ${failures.join("\n- ")}`);
 		process.exit(1);
 	}
-	console.log(`check passed: ${dolls.length} dolls, ${items.length} equipment`);
+	console.log(`check passed: ${dolls.length} dolls, ${items.length} equipment, coverage ${JSON.stringify(coverage)}`);
 }
 
 main();

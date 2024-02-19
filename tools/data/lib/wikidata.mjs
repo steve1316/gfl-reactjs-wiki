@@ -186,9 +186,10 @@ async function resolveLabels(ids) {
  * Two rounds of batched `wbgetentities` calls: the first resolves each title to its P176 (manufacturer)
  * and P495 (country of origin) item ids, the second resolves those item ids to English labels. Requests are
  * sequential and at least a second apart. Results are cached to `tools/data/.cache/wikidata.json` (or
- * `options.cacheDir`) keyed by title. Set `WIKIDATA_CACHE=reuse` to read that cache back for the requested
- * titles without touching the network (titles missing from the cache are simply omitted); the default
- * always refetches and rewrites the cache, merged with whatever was already there.
+ * `options.cacheDir`) keyed by title, including titles that yielded no facts, so a reuse run can tell "no facts"
+ * from "never fetched". Set `WIKIDATA_CACHE=reuse` to read that cache back without touching the network; it fails
+ * when the cache file is missing or a requested title was never fetched. The default always refetches and
+ * rewrites the cache, merged with whatever was already there.
  *
  * @param {string[]} titles Enwiki article titles to resolve.
  * @param {object} [options] Options.
@@ -197,20 +198,22 @@ async function resolveLabels(ids) {
  * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.
  *   Tests must set this, so they never touch the real cache the importer relies on.
  * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Manufacturer and country
- *   labels per title. A title with no Wikidata item, or no claims, is omitted.
+ *   labels for every requested title. A title with no Wikidata item, or no claims, has empty lists.
+ * @throws {Error} In reuse mode, when the cache file is missing or does not hold a requested title.
  */
 export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS, cacheDir = DEFAULT_CACHE_DIR } = {}) {
 	const cacheFile = path.join(cacheDir, CACHE_FILENAME);
 	const uniqueTitles = [...new Set(titles)];
+	if (process.env.WIKIDATA_CACHE === "reuse" && !fs.existsSync(cacheFile)) {
+		throw new Error(`WIKIDATA_CACHE=reuse but there is no cache file at ${cacheFile}. Run once without it to fetch from Wikidata.`);
+	}
 	const cached = fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, "utf8")) : {};
 	if (process.env.WIKIDATA_CACHE === "reuse") {
-		const facts = new Map();
-		for (const title of uniqueTitles) {
-			if (cached[title]) {
-				facts.set(title, cached[title]);
-			}
+		const unfetched = uniqueTitles.filter((title) => !Object.hasOwn(cached, title));
+		if (unfetched.length > 0) {
+			throw new Error(`WIKIDATA_CACHE=reuse but ${cacheFile} was never fetched for: ${unfetched.join(", ")}. Run once without it.`);
 		}
-		return facts;
+		return new Map(uniqueTitles.map((title) => [title, cached[title]]));
 	}
 
 	// One shared flag across both call phases below, so requests to Wikidata stay at least a second apart
@@ -245,7 +248,8 @@ export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS, c
 	}
 
 	const facts = new Map();
-	for (const [title, claims] of claimsByTitle) {
+	for (const title of uniqueTitles) {
+		const claims = claimsByTitle.get(title) ?? { manufacturer: [], country: [] };
 		const manufacturer = claims.manufacturer.map((id) => labels.get(id)).filter((label) => Boolean(label));
 		const country = claims.country.map((id) => labels.get(id)).filter((label) => Boolean(label));
 		facts.set(title, { manufacturer, country });

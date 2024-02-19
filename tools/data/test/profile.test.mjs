@@ -54,12 +54,12 @@ test("manufacturer spells 'Heckler and Koch' as 'Heckler & Koch' instead of spli
 	assert.deepEqual(parseManufacturer("Heckler and Koch"), ["Heckler & Koch"]);
 });
 
-test("country splits on commas, slashes, 'and' and '&', keeping bracketed qualifiers", () => {
+test("country splits only on commas and slashes, keeping 'and', '&' and bracketed qualifiers inside a name", () => {
 	assert.deepEqual(parseCountry("Germany"), ["Germany"]);
 	assert.deepEqual(parseCountry("Belgium/United States"), ["Belgium", "United States"]);
 	assert.deepEqual(parseCountry("United States / Belgium, United States"), ["United States", "Belgium"]);
-	assert.deepEqual(parseCountry("United States and United Kingdom"), ["United States", "United Kingdom"]);
-	assert.deepEqual(parseCountry("Germany & Italy"), ["Germany", "Italy"]);
+	assert.deepEqual(parseCountry("Bosnia and Herzegovina"), ["Bosnia and Herzegovina"]);
+	assert.deepEqual(parseCountry("Trinidad & Tobago"), ["Trinidad & Tobago"]);
 	assert.deepEqual(parseCountry("Germany (Weimar Republic)"), ["Germany (Weimar Republic)"]);
 	assert.deepEqual(parseCountry('Germany<ref name="hk"/>'), ["Germany"]);
 	assert.deepEqual(parseCountry(""), []);
