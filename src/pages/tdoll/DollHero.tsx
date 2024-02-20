@@ -13,7 +13,8 @@ import { cardArtSx } from "../../lib/artLayout";
 import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import ArtPlaceholder from "../../components/ArtPlaceholder";
-import type { RawSkins } from "../../types/tdoll";
+import ProfilePanel from "./ProfilePanel";
+import type { DollProfile, RawSkins, SpecRow } from "../../types/tdoll";
 
 const modIcon = uiUrl("mod.png");
 
@@ -135,10 +136,14 @@ interface DollHeroProps {
 	modOn: boolean;
 	/** Called when the Mod toggle is clicked. */
 	onToggleMod: () => void;
+	/** The doll's faction, maker, country and release date, shown under the skin pills. */
+	profile: DollProfile;
+	/** The spec sheet of the form on screen, shown beside the profile. */
+	specs: SpecRow[];
 }
 
 /**
- * The doll page's hero: the portrait, the name and badges, the skin pills and the Mod toggle.
+ * The doll page's hero: the portrait, the name and badges, the skin pills, the Mod toggle, and the profile and spec sheet.
  *
  * The full art is not drawn here. It sits blurred behind the whole page in `PageBackdrop`, so the hero
  * carries only the sharp portrait and the doll's details on top of it.
@@ -146,7 +151,25 @@ interface DollHeroProps {
  * @param props Component props.
  * @returns The hero block.
  */
-export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, artLink, hasFullArt, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+export default memo(function DollHero({
+	name,
+	id,
+	type,
+	rarity,
+	isMod,
+	cardImage,
+	onCardImageClick,
+	artLink,
+	hasFullArt,
+	skins,
+	skinValue,
+	onSkinChange,
+	hasMod,
+	modOn,
+	onToggleMod,
+	profile,
+	specs
+}: DollHeroProps) {
 	// Shared by every skin pill, which carries its doubled index in `data-skin`. A new arrow per pill per render
 	// would hand each Chip a fresh prop and re-render the whole row on any change to the page.
 	const handleSkinClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, Number(event.currentTarget.dataset.skin)), [onSkinChange]);
@@ -219,6 +242,8 @@ export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage
 							})}
 						</Box>
 					) : null}
+
+					<ProfilePanel profile={profile} specs={specs} name={name} />
 				</Box>
 			</Box>
 		</Box>

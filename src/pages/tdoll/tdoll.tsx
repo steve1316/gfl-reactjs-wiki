@@ -470,7 +470,7 @@ function TDollContent({ doll }: TDollContentProps) {
 				                row and Stats and Abilities sit below it, so a 1920x1080 screen shows the whole page. On a phone
 				                everything stacks, with the animations last since they are the heaviest to load. **************/}
 				<Grid container spacing={2}>
-					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
+					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills, Mod toggle, profile and spec sheet **************/}
 					{/* Without the Animations card the hero takes the whole first row, so Stats and Abilities still pair up below it. */}
 					<Grid size={spineEntry ? { xs: 12, md: 7, lg: 8, xl: 9 } : { xs: 12 }} sx={{ order: 0 }}>
 						<DollHero
@@ -489,6 +489,8 @@ function TDollContent({ doll }: TDollContentProps) {
 							hasMod={hasMod}
 							modOn={isModForm}
 							onToggleMod={switchModes}
+							profile={tdoll.profile}
+							specs={tdoll.selected.specs.length > 0 ? tdoll.selected.specs : tdoll.normal.specs}
 						/>
 					</Grid>
 					{/* Stats shares its small-screen row with the Animations card, so it takes the full row when that card is absent. */}
