@@ -41,7 +41,7 @@ test("fetchIopwikiPages, fetchWikidataFacts and loadCnGuns never touch the real 
 		await fetchIopwikiPages({ cacheDir });
 
 		globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ entities: {} }) });
-		await fetchWikidataFacts(["Anything"], { delayMs: 0, cacheDir });
+		await fetchWikidataFacts(["Anything"], { cacheDir, wait: async () => {} });
 
 		globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => [] });
 		await loadCnGuns({ cacheDir });

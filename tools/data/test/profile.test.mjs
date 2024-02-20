@@ -65,13 +65,25 @@ test("country splits only on commas and slashes, keeping 'and', '&' and brackete
 	assert.deepEqual(parseCountry(""), []);
 });
 
+test("country shortens Russian Federation and Republic of Korea to the names the other pages use", () => {
+	assert.deepEqual(parseCountry("Russian Federation"), ["Russia"]);
+	assert.deepEqual(parseCountry("Republic of Korea / South Korea"), ["South Korea"]);
+	const filled = fillFromWikidata({ ...buildProfile(undefined, UNKNOWN), sources: ["iopwiki"] }, { manufacturer: [], country: ["Russian Federation"] }, []);
+	assert.deepEqual(filled.country, ["Russia"]);
+});
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Release precision
 
 test("a US date that differs from CN is a day-precision Global date", () => {
 	assert.deepEqual(releaseFor("2023-07-25 00:00:00", "2022-01-10 00:00:00", { year: 2024, month: 9 }), { date: "2023-07-25", precision: "day" });
-	assert.deepEqual(releaseFor("2019-08-06 00:00:00", undefined, null), { date: "2019-08-06", precision: "day" });
+});
+
+test("a doll missing from the CN table never gets day precision from its US date, falling through to the EN month, launch or unknown", () => {
+	assert.deepEqual(releaseFor("2019-08-06 00:00:00", undefined, { year: 2019, month: 8 }), { date: "2019-08", precision: "month" });
+	assert.deepEqual(releaseFor("1970-01-01 08:00:00", undefined, null), { date: "2018-05", precision: "launch" });
+	assert.deepEqual(releaseFor("2019-08-06 00:00:00", undefined, null), UNKNOWN);
 });
 
 test("a US date copied from CN falls back to the IOPWiki EN month, zero-padded", () => {
@@ -85,10 +97,14 @@ test("the 1970 placeholder is the Global launch month when IOPWiki has no EN mon
 	assert.deepEqual(releaseFor("1970-01-01 08:00:00", "2016-05-20 00:00:00", null), { date: "2018-05", precision: "launch" });
 });
 
-test("a copied CN date with no EN month, a 2030 placeholder or no US row at all is unknown", () => {
+test("a copied CN date with no EN month or a 2030 placeholder is unknown", () => {
 	assert.deepEqual(releaseFor("2025-01-01 00:00:00", "2025-01-01 00:00:00", null), UNKNOWN);
 	assert.deepEqual(releaseFor("2030-12-31 00:00:00", "2020-01-01 00:00:00", null), UNKNOWN);
-	assert.deepEqual(releaseFor(undefined, "2017-11-16 00:00:00", null), UNKNOWN);
+});
+
+test("a doll with no US row is unreleased on Global, whatever CN or IOPWiki say", () => {
+	assert.deepEqual(releaseFor(undefined, "2017-11-16 00:00:00", null), { date: null, precision: "unreleased" });
+	assert.deepEqual(releaseFor(undefined, undefined, { year: 2018, month: 2 }), { date: null, precision: "unreleased" });
 });
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

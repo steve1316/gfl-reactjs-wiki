@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-import { buildDoll, selectReleased } from "../lib/dolls.mjs";
+import { buildDoll, selectReleased, splitDetails } from "../lib/dolls.mjs";
 import { buildSkins } from "../lib/skins.mjs";
 import { readStatConfig } from "../lib/stats.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
@@ -59,4 +59,18 @@ test("named slots keep their art position with a null id", () => {
 
 test("a mapped id that is not a visible upstream skin fails loudly", () => {
 	assert.throws(() => buildSkins(upstream, 65, [999999]), /not a visible upstream skin/);
+});
+
+test("splitDetails moves the profile and spec sheets out of the record, keeping Mod specs only when they differ", () => {
+	const profile = { faction: ["Squad 404"] };
+	const form = (name, specs) => ({ id: 65, name, tile_set: {}, specs });
+	const sheet = [{ label: "Type", value: "Assault rifle" }];
+	const same = splitDetails({ normal: form("HK416", sheet), mod: form("HK416 Mod", [...sheet]), skins: null, profile });
+	assert.deepEqual(same.record, { normal: { id: 65, name: "HK416", tile_set: {} }, mod: { id: 65, name: "HK416 Mod", tile_set: {} }, skins: null });
+	assert.deepEqual(same.details, { profile, specs: { normal: sheet, mod: null } });
+	const modSheet = [{ label: "Type", value: "Carbine" }];
+	assert.deepEqual(splitDetails({ normal: form("A", sheet), mod: form("A Mod", modSheet), skins: null, profile }).details.specs, { normal: sheet, mod: modSheet });
+	const noMod = splitDetails({ normal: form("B", []), mod: null, skins: null, profile });
+	assert.equal(noMod.record.mod, null);
+	assert.deepEqual(noMod.details.specs, { normal: [], mod: null });
 });

@@ -8,6 +8,9 @@ import { fetchWikidataFacts } from "../lib/wikidata.mjs";
 
 const sample = JSON.parse(fs.readFileSync("tools/data/test/fixtures/wikidata-sample.json", "utf8"));
 
+/** Stands in for the real waits between requests and before a retry, so tests do not sleep. */
+const noWait = async () => {};
+
 // Every test gets its own throwaway cache directory, never the real tools/data/.cache the importer uses.
 let cacheDir;
 
@@ -58,7 +61,7 @@ function stubFetchRaw(response) {
 test("resolves manufacturer and country labels for a found title, and records a missing one as having no facts", async () => {
 	const restore = stubFetch([sample.entitiesResponse, sample.labelsResponse]);
 	try {
-		const facts = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0, cacheDir });
+		const facts = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { wait: noWait, cacheDir });
 		assert.deepEqual(facts.get("Test Rifle"), { manufacturer: ["Test Arms Co"], country: ["Testland"] });
 		assert.deepEqual(facts.get("Unknown Weapon"), { manufacturer: [], country: [] });
 		const cached = JSON.parse(fs.readFileSync(path.join(cacheDir, "wikidata.json"), "utf8"));
@@ -72,7 +75,7 @@ test("a reuse run gives back exactly what the network run returned, missing titl
 	const restore = stubFetch([sample.entitiesResponse, sample.labelsResponse]);
 	let fetched;
 	try {
-		fetched = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0, cacheDir });
+		fetched = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { wait: noWait, cacheDir });
 	} finally {
 		restore();
 	}
@@ -127,25 +130,43 @@ test("WIKIDATA_CACHE=reuse reads the cache file and never calls fetch", async ()
 test("rejects with the API's error code when Wikidata answers 200 with an error body", async () => {
 	const restore = stubFetchRaw({ ok: true, status: 200, body: { error: { code: "no-such-entity", info: "Could not find such an entity" } } });
 	try {
-		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0, cacheDir }), /no-such-entity/);
+		await assert.rejects(fetchWikidataFacts(["Anything"], { wait: noWait, cacheDir }), /no-such-entity/);
 	} finally {
 		restore();
 	}
 });
 
-test("rejects when Wikidata answers with an HTTP 500", async () => {
+test("rejects when Wikidata still answers with an HTTP 500 after the retry", async () => {
 	const restore = stubFetchRaw({ ok: false, status: 500, statusText: "Internal Server Error", body: {} });
 	try {
-		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0, cacheDir }));
+		await assert.rejects(fetchWikidataFacts(["Anything"], { wait: noWait, cacheDir }), /500/);
 	} finally {
 		restore();
+	}
+});
+
+test("a 503 from Wikidata is retried once and the retry's answer is used", async () => {
+	const original = globalThis.fetch;
+	const answers = [
+		{ ok: false, status: 503, statusText: "Service Unavailable", headers: new Headers({ "Retry-After": "1" }), json: async () => ({}) },
+		{ ok: true, status: 200, json: async () => sample.entitiesResponse },
+		{ ok: true, status: 200, json: async () => sample.labelsResponse }
+	];
+	const waits = [];
+	globalThis.fetch = async () => answers.shift();
+	try {
+		const facts = await fetchWikidataFacts(["Test Rifle"], { wait: async (ms) => waits.push(ms), cacheDir });
+		assert.deepEqual(facts.get("Test Rifle"), { manufacturer: ["Test Arms Co"], country: ["Testland"] });
+		assert.deepEqual(waits, [1000, 1000]);
+	} finally {
+		globalThis.fetch = original;
 	}
 });
 
 test("rejects when the response has no entities object", async () => {
 	const restore = stubFetchRaw({ ok: true, status: 200, body: { success: 1 } });
 	try {
-		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0, cacheDir }), /entities/);
+		await assert.rejects(fetchWikidataFacts(["Anything"], { wait: noWait, cacheDir }), /entities/);
 	} finally {
 		restore();
 	}
@@ -178,7 +199,7 @@ test("joins results back to the requested title across a case difference and a r
 	};
 	const restore = stubFetch([entitiesResponse, labelsResponse]);
 	try {
-		const facts = await fetchWikidataFacts(["walther p38", "Tommy gun"], { delayMs: 0, cacheDir });
+		const facts = await fetchWikidataFacts(["walther p38", "Tommy gun"], { wait: noWait, cacheDir });
 		assert.deepEqual(facts.get("walther p38"), { manufacturer: ["Carl Walther GmbH"], country: ["Germany"] });
 		assert.deepEqual(facts.get("Tommy gun"), { manufacturer: ["Auto-Ordnance Company"], country: [] });
 	} finally {
@@ -194,7 +215,7 @@ test("a batched title lookup does not send normalize, which Wikidata only allows
 		return { ok: true, status: 200, json: async () => (urls.length === 1 ? sample.entitiesResponse : sample.labelsResponse) };
 	};
 	try {
-		await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0, cacheDir });
+		await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { wait: noWait, cacheDir });
 		assert.ok(urls[0].includes("titles=Test+Rifle%7CUnknown+Weapon"), urls[0]);
 		assert.doesNotMatch(urls[0], /normalize=/);
 	} finally {

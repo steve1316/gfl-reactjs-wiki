@@ -63,3 +63,27 @@ test("refetches when the cached file's recorded sha differs from the pin", async
 		globalThis.fetch = original;
 	}
 });
+
+test("a failed fetch is retried once, and a second failure rejects", async () => {
+	const original = globalThis.fetch;
+	const answers = [new TypeError("fetch failed"), { ok: true, status: 200, json: async () => sampleRows }];
+	globalThis.fetch = async () => {
+		const answer = answers.shift();
+		if (answer instanceof Error) {
+			throw answer;
+		}
+		return answer;
+	};
+	try {
+		assert.equal((await loadCnGuns({ cacheDir, wait: async () => {} })).get(65), "2016-05-20 00:00:00");
+	} finally {
+		globalThis.fetch = original;
+	}
+	fs.rmSync(path.join(cacheDir, "gf-data-ch-gun.json"));
+	globalThis.fetch = async () => ({ ok: false, status: 502, statusText: "Bad Gateway", json: async () => ({}) });
+	try {
+		await assert.rejects(loadCnGuns({ cacheDir, wait: async () => {} }), /502/);
+	} finally {
+		globalThis.fetch = original;
+	}
+});

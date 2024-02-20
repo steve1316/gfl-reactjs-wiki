@@ -10,6 +10,9 @@ const hk416 = fs.readFileSync("tools/data/test/fixtures/iopwiki-hk416.wikitext",
 const beowulf = fs.readFileSync("tools/data/test/fixtures/iopwiki-beowulf.wikitext", "utf8");
 const dorothy = fs.readFileSync("tools/data/test/fixtures/iopwiki-dorothy.wikitext", "utf8");
 
+/** Stands in for the real waits between requests and before a retry, so tests do not sleep. */
+const noWait = async () => {};
+
 // Only the fetchIopwikiPages tests below touch a cache directory. Each gets its own throwaway one, never
 // the real tools/data/.cache the importer uses.
 let cacheDir;
@@ -124,6 +127,36 @@ test("plainText strips HTML comments, including a multi-line one with an embedde
 	assert.equal(plainText("Before <!-- a\nmulti-line > comment --> After"), "Before After");
 });
 
+test("IOPWIKI_CACHE=reuse fails when there is no cache file, without fetching", async () => {
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => {
+		throw new Error("network should not be called in reuse mode");
+	};
+	process.env.IOPWIKI_CACHE = "reuse";
+	try {
+		await assert.rejects(fetchIopwikiPages({ cacheDir }), /IOPWIKI_CACHE=reuse.*no cache file/);
+	} finally {
+		delete process.env.IOPWIKI_CACHE;
+		globalThis.fetch = original;
+	}
+});
+
+test("IOPWIKI_CACHE=reuse reads the cache file back without fetching", async () => {
+	const pages = [{ title: "Cached", wikitext: "{{PlayableUnit|index=2}}" }];
+	fs.writeFileSync(path.join(cacheDir, "iopwiki-pages.json"), JSON.stringify(pages));
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => {
+		throw new Error("network should not be called in reuse mode");
+	};
+	process.env.IOPWIKI_CACHE = "reuse";
+	try {
+		assert.deepEqual(await fetchIopwikiPages({ cacheDir }), pages);
+	} finally {
+		delete process.env.IOPWIKI_CACHE;
+		globalThis.fetch = original;
+	}
+});
+
 test("fetchIopwikiPages rejects with the API's error code when IOPWiki answers 200 with an error body", async () => {
 	const original = globalThis.fetch;
 	globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ error: { code: "badtitle", info: "Bad title" } }) });
@@ -134,11 +167,34 @@ test("fetchIopwikiPages rejects with the API's error code when IOPWiki answers 2
 	}
 });
 
-test("fetchIopwikiPages rejects when IOPWiki answers with an HTTP 500", async () => {
+test("fetchIopwikiPages rejects when IOPWiki still answers with an HTTP 500 after one retry", async () => {
 	const original = globalThis.fetch;
-	globalThis.fetch = async () => ({ ok: false, status: 500, statusText: "Internal Server Error", json: async () => ({}) });
+	let calls = 0;
+	globalThis.fetch = async () => {
+		calls++;
+		return { ok: false, status: 500, statusText: "Internal Server Error", json: async () => ({}) };
+	};
 	try {
-		await assert.rejects(fetchIopwikiPages({ cacheDir }));
+		await assert.rejects(fetchIopwikiPages({ cacheDir, wait: noWait }), /500/);
+		assert.equal(calls, 2);
+	} finally {
+		globalThis.fetch = original;
+	}
+});
+
+test("fetchIopwikiPages retries a network error once and carries on", async () => {
+	const original = globalThis.fetch;
+	let calls = 0;
+	globalThis.fetch = async () => {
+		calls++;
+		if (calls === 1) {
+			throw new TypeError("fetch failed");
+		}
+		return { ok: true, status: 200, json: async () => ({ query: { pages: [{ title: "Test", revisions: [{ slots: { main: { content: "{{PlayableUnit|index=1}}" } } }] }] } }) };
+	};
+	try {
+		assert.deepEqual(await fetchIopwikiPages({ cacheDir, wait: noWait }), [{ title: "Test", wikitext: "{{PlayableUnit|index=1}}" }]);
+		assert.equal(calls, 2);
 	} finally {
 		globalThis.fetch = original;
 	}
@@ -165,6 +221,40 @@ test("fetchIopwikiPages writes its cache under the given cacheDir, not the real 
 		const pages = await fetchIopwikiPages({ cacheDir });
 		assert.deepEqual(pages, [{ title: "Test", wikitext: "{{PlayableUnit|index=1}}" }]);
 		assert.ok(fs.existsSync(path.join(cacheDir, "iopwiki-pages.json")));
+	} finally {
+		globalThis.fetch = original;
+	}
+});
+
+test("fetchIopwikiPages sends the original request plus only the latest continue object each round", async () => {
+	const page = (title) => ({ title, revisions: [{ slots: { main: { content: `{{PlayableUnit|index=${title.length}}}` } } }] });
+	const bodies = [
+		{ query: { pages: [page("A")] }, continue: { rvcontinue: "r1", continue: "||" } },
+		{ query: { pages: [page("BB")] }, continue: { geicontinue: "g2", continue: "gcontinue||" } },
+		{ query: { pages: [page("CCC")] } }
+	];
+	const urls = [];
+	const original = globalThis.fetch;
+	globalThis.fetch = async (url) => {
+		urls.push(new URL(url).searchParams);
+		return { ok: true, status: 200, json: async () => bodies[urls.length - 1] };
+	};
+	try {
+		const pages = await fetchIopwikiPages({ cacheDir, wait: noWait });
+		assert.deepEqual(
+			pages.map((entry) => entry.title),
+			["A", "BB", "CCC"]
+		);
+		assert.equal(urls.length, 3);
+		assert.equal(urls[0].has("rvcontinue"), false);
+		assert.equal(urls[1].get("rvcontinue"), "r1");
+		assert.equal(urls[1].get("continue"), "||");
+		assert.equal(urls[2].get("geicontinue"), "g2");
+		assert.equal(urls[2].get("continue"), "gcontinue||");
+		assert.equal(urls[2].has("rvcontinue"), false, "the first round's rvcontinue must not carry over");
+		for (const params of urls) {
+			assert.equal(params.get("geititle"), "Template:PlayableUnit");
+		}
 	} finally {
 		globalThis.fetch = original;
 	}

@@ -25,9 +25,9 @@ function git(dir, args) {
 }
 
 /**
- * Read the pinned upstream commit.
+ * Read the pinned upstream commits: gf-data-us at the top level, and gf-data-ch under `cn` for spotting copied CN release dates.
  *
- * @returns {{ repo: string, sha: string }} The lock file contents.
+ * @returns {{ repo: string, sha: string, cn: { repo: string, sha: string } }} The lock file contents.
  */
 export function readLock() {
 	return JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));

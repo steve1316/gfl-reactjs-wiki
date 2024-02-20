@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { fetchWithRetry, sleep } from "./http.mjs";
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Module constants
@@ -38,35 +40,29 @@ const HTML_ENTITIES = {
 // Fetching
 
 /**
- * Wait before the next polite, sequential request.
- *
- * @param {number} ms Milliseconds to wait.
- * @returns {Promise<void>} Resolves after the delay.
- */
-function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
  * Fetch every IOPWiki page that embeds `Template:PlayableUnit`, which is every T-Doll page.
  *
- * Requests are sequential, at least a second apart, and follow the API's `continue` token until it
- * disappears. Set `IOPWIKI_CACHE=reuse` to read the cache file back instead of touching the network;
- * otherwise this always refetches and overwrites that cache. The cache lives at
- * `tools/data/.cache/iopwiki-pages.json` by default; pass `options.cacheDir` to use a different directory
- * (tests must, so they never touch the real cache the importer relies on).
+ * Requests are sequential, at least a second apart, and follow the API's `continue` token until it disappears. Each one times out and is
+ * retried once, see `fetchWithRetry`. Set `IOPWIKI_CACHE=reuse` to read the cache file back instead of touching the network, which fails
+ * when there is no cache file. Otherwise this always refetches and overwrites that cache. The cache lives at `tools/data/.cache/iopwiki-pages.json`
+ * by default. Pass `options.cacheDir` to use a different directory (tests must, so they never touch the real cache the importer relies on).
  *
  * @param {object} [options] Options.
  * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.
+ * @param {(ms: number) => Promise<void>} [options.wait] Waits between requests and before a retry. Tests pass a stub so they do not sleep.
  * @returns {Promise<{ title: string, wikitext: string }[]>} Every doll page's title and raw wikitext.
+ * @throws {Error} In reuse mode, when the cache file is missing.
  */
-export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
+export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR, wait = sleep } = {}) {
 	const cacheFile = path.join(cacheDir, CACHE_FILENAME);
-	if (process.env.IOPWIKI_CACHE === "reuse" && fs.existsSync(cacheFile)) {
+	if (process.env.IOPWIKI_CACHE === "reuse") {
+		if (!fs.existsSync(cacheFile)) {
+			throw new Error(`IOPWIKI_CACHE=reuse but there is no cache file at ${cacheFile}. Run once without it to fetch from IOPWiki.`);
+		}
 		return JSON.parse(fs.readFileSync(cacheFile, "utf8"));
 	}
 	const pages = [];
-	const params = new URLSearchParams({
+	const baseParams = {
 		action: "query",
 		generator: "embeddedin",
 		geititle: "Template:PlayableUnit",
@@ -77,14 +73,16 @@ export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
 		rvslots: "main",
 		format: "json",
 		formatversion: "2"
-	});
+	};
+	// Each round sends the original request plus only the latest `continue` object, as MediaWiki asks, so stale keys never carry over.
+	let params = new URLSearchParams(baseParams);
 	let first = true;
 	for (;;) {
 		if (!first) {
-			await sleep(REQUEST_DELAY_MS);
+			await wait(REQUEST_DELAY_MS);
 		}
 		first = false;
-		const response = await fetch(`${API_BASE}?${params.toString()}`, { headers: { "User-Agent": USER_AGENT } });
+		const response = await fetchWithRetry(`${API_BASE}?${params.toString()}`, { headers: { "User-Agent": USER_AGENT } }, { wait });
 		if (!response.ok) {
 			throw new Error(`IOPWiki API request failed: ${response.status} ${response.statusText}`);
 		}
@@ -104,9 +102,7 @@ export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
 		if (!body.continue) {
 			break;
 		}
-		for (const [key, value] of Object.entries(body.continue)) {
-			params.set(key, value);
-		}
+		params = new URLSearchParams({ ...baseParams, ...body.continue });
 	}
 	fs.mkdirSync(cacheDir, { recursive: true });
 	fs.writeFileSync(cacheFile, JSON.stringify(pages));

@@ -283,6 +283,24 @@
 			"path": "profile.manufacturer",
 			"value": ["J. Stevens Arms & Tool Co", "J. Stevens Arms Co", "Savage Arms Co"],
 			"reason": "IOPWiki joins two makers with an unspaced slash, which the manufacturer split keeps whole for names like Izhmash/Kalashnikov Concern."
+		},
+		{
+			"doll": 1010,
+			"path": "profile.country",
+			"value": ["DJMAX RESPECT"],
+			"reason": "IOPWiki writes the game as \"DJMAX: RESPECT\" here but \"DJMAX RESPECT\" on El Clear's page, and the official title has no colon."
+		},
+		{
+			"doll": 1029,
+			"path": "profile.country",
+			"value": ["United States"],
+			"reason": "IOPWiki writes \"America\", while every other American doll says \"United States\"."
+		},
+		{
+			"doll": 1046,
+			"path": "profile.country",
+			"value": ["Colom"],
+			"reason": "IOPWiki writes the misspelt demonym \"Colomian\". Hecate comes from Arena Breakout, where Colom is the fictional nation behind her Black Gold Universal faction."
 		}
 	]
 }

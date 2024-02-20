@@ -215,3 +215,12 @@ test("specsFor falls back to the base text only when the form's own text has no 
 	assert.deepEqual(specsFor("Type                       Carbine", base), [{ label: "Type", value: "Carbine" }]);
 	assert.deepEqual(specsFor("", ""), []);
 });
+
+test("a row repeating an earlier row's label and value is dropped, keeping the first", () => {
+	const text = "Cartridge                  7.62x39mm\nFeed system                30-round box magazine\nCartridge                  7.62x39mm\nCartridge                  7.62x51mm";
+	assert.deepEqual(parseSpecs(text), [
+		{ label: "Cartridge", value: "7.62x39mm" },
+		{ label: "Feed system", value: "30-round box magazine" },
+		{ label: "Cartridge", value: "7.62x51mm" }
+	]);
+});

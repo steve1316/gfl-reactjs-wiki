@@ -74,3 +74,18 @@ export function buildDoll(upstream, gun, ctx) {
 		skins: buildSkins(upstream, gun.id, ctx.skinAssets[String(gun.id)])
 	};
 }
+
+/**
+ * Split a finished doll into its shard record and its side-file details, so pages that list every doll do not download profiles
+ * and spec sheets.
+ *
+ * @param {object} doll A built doll with overrides applied: a `profile`, and a `specs` list on each form.
+ * @returns {{ record: object, details: { profile: object, specs: { normal: object[], mod: object[] | null } } }} The record without
+ *   `profile` or form `specs`, and the details. Mod specs are null when the doll has no Mod or the Mod's sheet matches the base form's.
+ */
+export function splitDetails(doll) {
+	const { profile, normal, mod, ...rest } = doll;
+	const withoutSpecs = ({ specs, ...form }) => form;
+	const modSpecs = mod && JSON.stringify(mod.specs) !== JSON.stringify(normal.specs) ? mod.specs : null;
+	return { record: { normal: withoutSpecs(normal), mod: mod && withoutSpecs(mod), ...rest }, details: { profile, specs: { normal: normal.specs, mod: modSpecs } } };
+}
