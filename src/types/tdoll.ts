@@ -51,7 +51,7 @@ export interface RawSkins {
 	skin_ids: (number | null)[];
 }
 
-/** One row of a form's real-world gun spec sheet, taken from IOPWiki. */
+/** One row of a form's real-world gun spec sheet, taken from the game's own profile text in gf-data-us. */
 export interface SpecRow {
 	/** The spec's name, such as `Cartridge` or `Rate of fire`. */
 	label: string;
@@ -59,12 +59,12 @@ export interface SpecRow {
 	value: string;
 }
 
-/** How precisely a doll's Global release date is known. */
-export type ReleasePrecision = "day" | "month" | "launch" | "unknown";
+/** How precisely a doll's Global release date is known. `unreleased` marks dolls that never came to Global. */
+export type ReleasePrecision = "day" | "month" | "launch" | "unknown" | "unreleased";
 
 /** When a doll arrived on the Global server. */
 export interface DollRelease {
-	/** `YYYY-MM-DD` for `day`, `YYYY-MM` for `month` and `launch`, and null for `unknown`. */
+	/** `YYYY-MM-DD` for `day`, `YYYY-MM` for `month` and `launch`, and null for `unknown` and `unreleased`. */
 	date: string | null;
 	/** How precise `date` is. `launch` marks the dolls on the Global launch roster of May 2018. */
 	precision: ReleasePrecision;
@@ -105,8 +105,6 @@ export interface RawForm {
 	/** Mod forms gain a second skill. */
 	skill2?: RawSkill;
 	tile_set: RawTileSet;
-	/** The gun's spec sheet in IOPWiki's order. Empty when IOPWiki has none, as for most collaboration dolls. */
-	specs: SpecRow[];
 }
 
 /** A doll exactly as generated, before any asset resolution. */
@@ -116,8 +114,26 @@ export interface RawTDoll {
 	mod: RawForm | null;
 	/** `null` when the doll has no skins. */
 	skins: RawSkins | null;
+}
+
+/** A doll's spec sheets, one per form. */
+export interface DollSpecs {
+	/** The base form's sheet in the game's order. Empty when the game has no spec text, as for most collaboration dolls. */
+	normal: SpecRow[];
+	/** The Mod's sheet, or null when the doll has no Mod or the Mod's sheet matches the base form's, so the page shows `normal`. */
+	mod: SpecRow[] | null;
+}
+
+/**
+ * A doll's profile and spec sheets, as generated in the `profiles-*.json` side file next to its shard.
+ *
+ * Kept out of `RawTDoll` so the T-Doll index, which loads every shard, never downloads them. Only the doll page loads the side file.
+ */
+export interface DollDetails {
 	/** Faction, maker, country, release date and IOPWiki page, shared by every form. */
 	profile: DollProfile;
+	/** The gun's spec sheets. */
+	specs: DollSpecs;
 }
 
 /** Resolved asset URLs for one form. */
@@ -153,8 +169,6 @@ export interface TDoll {
 	normal: TDollForm;
 	mod: TDollForm | null;
 	skins: RawSkins | null;
-	/** Faction, maker, country, release date and IOPWiki page, shared by every form. */
-	profile: DollProfile;
 	/** Every form the manifest knows about, keyed by form name. */
 	forms: Record<string, FormAssets>;
 	/** Skill icon URLs, keyed `skill1` and `skill2`. */
@@ -162,3 +176,6 @@ export interface TDoll {
 	/** Spine bundles for this doll, empty when none were published. */
 	spine: SpineBundle[];
 }
+
+/** A doll with its profile and spec sheets attached, as `loadDollDetails` returns it for the doll page. */
+export interface TDollWithDetails extends TDoll, DollDetails {}

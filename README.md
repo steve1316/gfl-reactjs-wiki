@@ -118,7 +118,7 @@ Doll and equipment data is generated from [gf-data-tools/gf-data-us](https://git
 
 - **Gun spec sheets** come from gf-data-us, which holds the game's own profile text for each doll.
 - **Global release dates** come from gf-data-us launch times, cross-checked against [gf-data-tools/gf-data-ch](https://github.com/gf-data-tools/gf-data-ch) to catch copied CN dates. Where the Global date cannot be trusted, [IOPWiki](https://iopwiki.com/) supplies the release month.
-- **Faction, manufacturer, country of origin and full gun name** come from IOPWiki, used under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Each doll page links back to its IOPWiki source page. Where IOPWiki gives no manufacturer or country, the gap is filled from [Wikidata](https://www.wikidata.org/), which is [CC0](https://creativecommons.org/publicdomain/zero/1.0/), and the doll page notes it.
+- **Faction, manufacturer, country of origin and full gun name** come from [IOPWiki](https://iopwiki.com/), used under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Where IOPWiki gives no manufacturer or country, the gap is filled from [Wikidata](https://www.wikidata.org/), which is [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
 
 # License
 
