@@ -1,0 +1,21 @@
+{
+ "types": [],
+ "items": {
+  "sight": [
+   {
+    "id": 1,
+    "name": "Scope"
+   }
+  ],
+  "ammo": [
+   {
+    "id": 2,
+    "name": "Ammo"
+   },
+   {
+    "id": 3,
+    "name": "Missing"
+   }
+  ]
+ }
+}

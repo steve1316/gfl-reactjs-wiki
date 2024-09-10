@@ -1,0 +1,40 @@
+[
+ {
+  "normal": {
+   "id": 1,
+   "name": "Doll 1"
+  },
+  "mod": {
+   "id": 1
+  },
+  "skins": {
+   "number_of_skins": 2,
+   "skin_names": [
+    "s",
+    "s"
+   ],
+   "skin_ids": [
+    301,
+    302
+   ]
+  }
+ },
+ {
+  "normal": {
+   "id": 163,
+   "name": "Doll 163"
+  },
+  "mod": null,
+  "skins": {
+   "number_of_skins": 2,
+   "skin_names": [
+    "s",
+    "s"
+   ],
+   "skin_ids": [
+    902,
+    null
+   ]
+  }
+ }
+]

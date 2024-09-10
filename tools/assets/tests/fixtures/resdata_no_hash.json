@@ -1,0 +1,515 @@
+{
+ "m_Name": "ResData",
+ "resVison": "2026082516",
+ "resUrl": "http://cdn.example/android/",
+ "passivityAssetBundles": [],
+ "BaseAssetBundles": [
+  {
+   "assetBundleName": "character_M1873",
+   "resname": "hashcharacterM1873",
+   "sizeOriginal": 1000,
+   "sizeCompress": 1000,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/M1873/Pic/pic_M1873.png",
+     "resName": "pic_M1873.png",
+     "abName": "character_m1873"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Pic/pic_M1873_D.png",
+     "resName": "pic_M1873_D.png",
+     "abName": "character_m1873"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Pic/pic_M1873_N.jpg",
+     "resName": "pic_M1873_N.jpg",
+     "abName": "character_m1873"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_M1873_spine",
+   "resname": "hashcharacterM1873spine",
+   "sizeOriginal": 200,
+   "sizeCompress": 200,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/M1873/Spine/M1873.atlas.txt",
+     "resName": "M1873.atlas.txt",
+     "abName": "character_m1873_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Spine/M1873.png",
+     "resName": "M1873.png",
+     "abName": "character_m1873_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Spine/M1873.skel.bytes",
+     "resName": "M1873.skel.bytes",
+     "abName": "character_m1873_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Spine/M1873_SkeletonData.asset",
+     "resName": "M1873_SkeletonData.asset",
+     "abName": "character_m1873_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Spine/RM1873.atlas.txt",
+     "resName": "RM1873.atlas.txt",
+     "abName": "character_m1873_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Spine/RM1873.png",
+     "resName": "RM1873.png",
+     "abName": "character_m1873_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873/Spine/RM1873.skel.bytes",
+     "resName": "RM1873.skel.bytes",
+     "abName": "character_m1873_spine"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_M1873Mod",
+   "resname": "hashcharacterM1873Mod",
+   "sizeOriginal": 1100,
+   "sizeCompress": 1100,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Pic/pic_M1873Mod.png",
+     "resName": "pic_M1873Mod.png",
+     "abName": "character_m1873mod"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Pic/pic_M1873Mod_D.png",
+     "resName": "pic_M1873Mod_D.png",
+     "abName": "character_m1873mod"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Pic/pic_M1873Mod_N.jpg",
+     "resName": "pic_M1873Mod_N.jpg",
+     "abName": "character_m1873mod"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_M1873Mod_spine",
+   "resname": "hashcharacterM1873Modspine",
+   "sizeOriginal": 210,
+   "sizeCompress": 210,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Spine/M1873Mod.atlas.txt",
+     "resName": "M1873Mod.atlas.txt",
+     "abName": "character_m1873mod_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Spine/M1873Mod.png",
+     "resName": "M1873Mod.png",
+     "abName": "character_m1873mod_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Spine/M1873Mod.skel.bytes",
+     "resName": "M1873Mod.skel.bytes",
+     "abName": "character_m1873mod_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Spine/M1873Mod_SkeletonData.asset",
+     "resName": "M1873Mod_SkeletonData.asset",
+     "abName": "character_m1873mod_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Spine/RM1873Mod.atlas.txt",
+     "resName": "RM1873Mod.atlas.txt",
+     "abName": "character_m1873mod_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Spine/RM1873Mod.png",
+     "resName": "RM1873Mod.png",
+     "abName": "character_m1873mod_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873Mod/Spine/RM1873Mod.skel.bytes",
+     "resName": "RM1873Mod.skel.bytes",
+     "abName": "character_m1873mod_spine"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_Px4Storm",
+   "resname": "hashcharacterPx4Storm",
+   "sizeOriginal": 50,
+   "sizeCompress": 50,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Pic/pic_Px4Storm_M_1.png",
+     "resName": "pic_Px4Storm_M_1.png",
+     "abName": "character_px4storm"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_Px4Storm_nom",
+   "resname": "hashcharacterPx4Stormnom",
+   "sizeOriginal": 900,
+   "sizeCompress": 900,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Pic/pic_Px4Storm.png",
+     "resName": "pic_Px4Storm.png",
+     "abName": "character_px4storm_nom"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Pic/pic_Px4Storm_D.png",
+     "resName": "pic_Px4Storm_D.png",
+     "abName": "character_px4storm_nom"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Pic/pic_Px4Storm_N.jpg",
+     "resName": "pic_Px4Storm_N.jpg",
+     "abName": "character_px4storm_nom"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_Px4Storm_he",
+   "resname": "hashcharacterPx4Stormhe",
+   "sizeOriginal": 950,
+   "sizeCompress": 950,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Pic_HE/pic_Px4Storm.png",
+     "resName": "pic_Px4Storm.png",
+     "abName": "character_px4storm_he"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Pic_HE/pic_Px4Storm_D.png",
+     "resName": "pic_Px4Storm_D.png",
+     "abName": "character_px4storm_he"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Pic_HE/pic_Px4Storm_N.jpg",
+     "resName": "pic_Px4Storm_N.jpg",
+     "abName": "character_px4storm_he"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_Px4Storm_spine",
+   "resname": "hashcharacterPx4Stormspine",
+   "sizeOriginal": 190,
+   "sizeCompress": 190,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Spine/Px4Storm.atlas.txt",
+     "resName": "Px4Storm.atlas.txt",
+     "abName": "character_px4storm_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Spine/Px4Storm.png",
+     "resName": "Px4Storm.png",
+     "abName": "character_px4storm_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Spine/Px4Storm.skel.bytes",
+     "resName": "Px4Storm.skel.bytes",
+     "abName": "character_px4storm_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Spine/Px4Storm_SkeletonData.asset",
+     "resName": "Px4Storm_SkeletonData.asset",
+     "abName": "character_px4storm_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Spine/RPx4Storm.atlas.txt",
+     "resName": "RPx4Storm.atlas.txt",
+     "abName": "character_px4storm_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Spine/RPx4Storm.png",
+     "resName": "RPx4Storm.png",
+     "abName": "character_px4storm_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm/Spine/RPx4Storm.skel.bytes",
+     "resName": "RPx4Storm.skel.bytes",
+     "abName": "character_px4storm_spine"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_AA12",
+   "resname": "hashcharacterAA12",
+   "sizeOriginal": 1300,
+   "sizeCompress": 1300,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/AA12/Pic/pic_AA12.png",
+     "resName": "pic_AA12.png",
+     "abName": "character_aa12"
+    },
+    {
+     "pathKey": "Assets/Characters/AA12/Pic/pic_AA12_D.png",
+     "resName": "pic_AA12_D.png",
+     "abName": "character_aa12"
+    },
+    {
+     "pathKey": "Assets/Characters/AA12/Pic/pic_AA12_N.jpg",
+     "resName": "pic_AA12_N.jpg",
+     "abName": "character_aa12"
+    },
+    {
+     "pathKey": "Assets/Characters/AA12/spine/AA12.atlas.txt",
+     "resName": "AA12.atlas.txt",
+     "abName": "character_aa12"
+    },
+    {
+     "pathKey": "Assets/Characters/AA12/spine/AA12.png",
+     "resName": "AA12.png",
+     "abName": "character_aa12"
+    },
+    {
+     "pathKey": "Assets/Characters/AA12/spine/AA12.skel.bytes",
+     "resName": "AA12.skel.bytes",
+     "abName": "character_aa12"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_Kiana",
+   "resname": "hashcharacterKiana",
+   "sizeOriginal": 800,
+   "sizeCompress": 800,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/Kiana/Pic/pic_Kiana.png",
+     "resName": "pic_Kiana.png",
+     "abName": "character_kiana"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Pic/pic_Kiana_D.png",
+     "resName": "pic_Kiana_D.png",
+     "abName": "character_kiana"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Pic/pic_Kiana_N.jpg",
+     "resName": "pic_Kiana_N.jpg",
+     "abName": "character_kiana"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_Kiana_spine",
+   "resname": "hashcharacterKianaspine",
+   "sizeOriginal": 180,
+   "sizeCompress": 180,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/Kiana/Spine/Kiana.atlas.txt",
+     "resName": "Kiana.atlas.txt",
+     "abName": "character_kiana_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Spine/Kiana.png",
+     "resName": "Kiana.png",
+     "abName": "character_kiana_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Spine/Kiana.skel.bytes",
+     "resName": "Kiana.skel.bytes",
+     "abName": "character_kiana_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Spine/Kiana_SkeletonData.asset",
+     "resName": "Kiana_SkeletonData.asset",
+     "abName": "character_kiana_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Spine/RKiana.atlas.txt",
+     "resName": "RKiana.atlas.txt",
+     "abName": "character_kiana_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Spine/RKiana.png",
+     "resName": "RKiana.png",
+     "abName": "character_kiana_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/Kiana/Spine/RKiana.skel.bytes",
+     "resName": "RKiana.skel.bytes",
+     "abName": "character_kiana_spine"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "sprites_ui",
+   "resname": "hashspritesui",
+   "sizeOriginal": 5000,
+   "sizeCompress": 5000,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Sprites/UI/Background/powBuff.png",
+     "resName": "powBuff.png",
+     "abName": "sprites_ui"
+    },
+    {
+     "pathKey": "Assets/Sprites/UI/Icon/SkillIcon/powBuff.png",
+     "resName": "powBuff.png",
+     "abName": "sprites_ui"
+    },
+    {
+     "pathKey": "Assets/Sprites/UI/Icon/SkillIcon/c93G.png",
+     "resName": "c93G.png",
+     "abName": "sprites_ui"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "resource_icon_equip",
+   "resname": "hashresourceiconequip",
+   "sizeOriginal": 3000,
+   "sizeCompress": 3000,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Resources/DaBao/Pics/Icons/Equip/scope_N.png",
+     "resName": "scope_N.png",
+     "abName": "resource_icon_equip"
+    },
+    {
+     "pathKey": "Assets/Resources/DaBao/Pics/Icons/Equip/scope_N_Alpha.png",
+     "resName": "scope_N_Alpha.png",
+     "abName": "resource_icon_equip"
+    },
+    {
+     "pathKey": "Assets/Resources/DaBao/Pics/Icons/Equip/ammo_S.png",
+     "resName": "ammo_S.png",
+     "abName": "resource_icon_equip"
+    }
+   ]
+  }
+ ],
+ "AddAssetBundles": [
+  {
+   "assetBundleName": "character_M1873_301",
+   "resname": "hashcharacterM1873301",
+   "sizeOriginal": 2000,
+   "sizeCompress": 2000,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/M1873_301/Pic/pic_M1873_301.png",
+     "resName": "pic_M1873_301.png",
+     "abName": "character_m1873_301"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_301/Pic/pic_M1873_301_D.png",
+     "resName": "pic_M1873_301_D.png",
+     "abName": "character_m1873_301"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_301/Pic/pic_M1873_301_N.jpg",
+     "resName": "pic_M1873_301_N.jpg",
+     "abName": "character_m1873_301"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_301/Pic/pic_M1873_301_N_mod.jpg",
+     "resName": "pic_M1873_301_N_mod.jpg",
+     "abName": "character_m1873_301"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_M1873_301_spine",
+   "resname": "hashcharacterM1873301spine",
+   "sizeOriginal": 90,
+   "sizeCompress": 90,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/M1873_301/Spine/M1873_301.atlas.txt",
+     "resName": "M1873_301.atlas.txt",
+     "abName": "character_m1873_301_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_301/Spine/M1873_301.png",
+     "resName": "M1873_301.png",
+     "abName": "character_m1873_301_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_301/Spine/M1873_301.skel.bytes",
+     "resName": "M1873_301.skel.bytes",
+     "abName": "character_m1873_301_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_301/Spine/M1873_301_SkeletonData.asset",
+     "resName": "M1873_301_SkeletonData.asset",
+     "abName": "character_m1873_301_spine"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_Px4Storm_2801_nom",
+   "resname": "hashcharacterPx4Storm2801nom",
+   "sizeOriginal": 1500,
+   "sizeCompress": 1500,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/Px4Storm_2801/Pic/pic_Px4Storm_2801.png",
+     "resName": "pic_Px4Storm_2801.png",
+     "abName": "character_px4storm_2801_nom"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm_2801/Pic/pic_Px4Storm_2801_D.png",
+     "resName": "pic_Px4Storm_2801_D.png",
+     "abName": "character_px4storm_2801_nom"
+    },
+    {
+     "pathKey": "Assets/Characters/Px4Storm_2801/Pic/pic_Px4Storm_2801_N.jpg",
+     "resName": "pic_Px4Storm_2801_N.jpg",
+     "abName": "character_px4storm_2801_nom"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_AA12_902",
+   "resname": "hashcharacterAA12902",
+   "sizeOriginal": 700,
+   "sizeCompress": 700,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/AA12_902/Pic/pic_AA12_902.png",
+     "resName": "pic_AA12_902.png",
+     "abName": "character_aa12_902"
+    }
+   ]
+  },
+  {
+   "assetBundleName": "character_M1873_302_spine",
+   "resname": "hashcharacterM1873302spine",
+   "sizeOriginal": 80,
+   "sizeCompress": 80,
+   "assetAllRes": [
+    {
+     "pathKey": "Assets/Characters/M1873_302/Spine/M-1873_302.atlas.txt",
+     "resName": "",
+     "abName": "character_m1873_302_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_302/Spine/M-1873_302.png",
+     "resName": "",
+     "abName": "character_m1873_302_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_302/Spine/M-1873_302.skel.bytes",
+     "resName": "",
+     "abName": "character_m1873_302_spine"
+    },
+    {
+     "pathKey": "Assets/Characters/M1873_302/Spine/RM-1873_302.skel.bytes",
+     "resName": "",
+     "abName": "character_m1873_302_spine"
+    }
+   ]
+  }
+ ],
+ "bytesData": []
+}
