@@ -63,7 +63,7 @@ function buildForm(upstream, gun, base, ctx) {
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @param {object} gun The base doll's gun row.
- * @param {{ config: object, skinAssets: Record<string, (number | { name: string })[]>, warnings: string[] }} ctx Shared build context.
+ * @param {{ config: object, warnings: string[] }} ctx Shared build context.
  * @returns {object} The doll in the site's raw shape.
  */
 export function buildDoll(upstream, gun, ctx) {
@@ -71,7 +71,7 @@ export function buildDoll(upstream, gun, ctx) {
 	return {
 		normal: buildForm(upstream, gun, gun, ctx),
 		mod: modGun ? buildForm(upstream, modGun, gun, ctx) : null,
-		skins: buildSkins(upstream, gun.id, ctx.skinAssets[String(gun.id)])
+		skins: buildSkins(upstream, gun.id)
 	};
 }
 

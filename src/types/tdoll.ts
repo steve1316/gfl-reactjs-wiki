@@ -41,14 +41,14 @@ export interface RawTileSet {
 	stat2: string[];
 }
 
-/** A doll's visible skins. Skins with art come first, in the order of their `skinN` art slots. */
+/** A doll's visible skins: skin table skins in id order, then the extra skins from `tools/data/extra-skins.json`. */
 export interface RawSkins {
 	/** How many skins the doll has, equal to the length of both lists. */
 	number_of_skins: number;
 	/** Official English skin names. */
 	skin_names: string[];
-	/** Upstream skin ids, parallel to `skin_names`. Null for a skin with hosted art but no upstream record, such as merch-only skins. */
-	skin_ids: (number | null)[];
+	/** Skin keys, parallel to `skin_names`: a numeric skin id, a `legacy-<slug>` key for art only the old repos hosted, or null for a hand-written skin. */
+	skin_ids: (number | string | null)[];
 }
 
 /** One row of a form's real-world gun spec sheet, taken from the game's own profile text in gf-data-us. */

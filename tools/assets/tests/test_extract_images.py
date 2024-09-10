@@ -267,6 +267,81 @@ class ExitDecisionTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Legacy skins
+
+
+def save_png(root, rel, size, mode="RGB"):
+    """Write a solid PNG into a fake clone.
+
+    Args:
+        root: The clone root.
+        rel: Path inside the clone.
+        size: Image size.
+        mode: Image mode.
+    """
+    path = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    Image.new(mode, size, (40, 80, 120) if mode == "RGB" else (40, 80, 120, 200)).save(path)
+
+
+class LegacySkinTests(unittest.TestCase):
+    """Skins whose art only the old asset repos host, converted from their `skinN` PNGs."""
+
+    EXTRA = {"doll": 103, "key": "legacy-winter-journey", "name": "Winter Journey", "source": "legacy", "legacySlot": 3, "reason": "r"}
+
+    def test_legacy_extras_are_read_from_the_extras_file(self):
+        """Only `legacy` entries are returned, in file order."""
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "extra-skins.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write('[{"doll": 44, "key": 502, "source": "game"}, {"doll": 2, "key": "legacy-b", "source": "legacy", "legacySlot": 1}, {"doll": 1, "key": "legacy-a", "source": "legacy", "legacySlot": 2}]')
+            self.assertEqual([extra["key"] for extra in extract.load_legacy_skins(path)], ["legacy-b", "legacy-a"])
+
+    def test_sources_map_old_slot_files_to_the_skin_key_folder(self):
+        """Cards, Mod cards and full art in slot N land under `skins/<key>/` in their trees."""
+        rows = extract.legacy_outputs(self.EXTRA, "/assets", "/art")
+        self.assertEqual(
+            rows,
+            [
+                ("card", "/assets/tdolls/103/103_skin3_card.png", "assets", "tdolls/103/skins/legacy-winter-journey/card.webp", True),
+                ("card_d", "/assets/tdolls/103/103_skin3_card_d.png", "assets", "tdolls/103/skins/legacy-winter-journey/card_d.webp", True),
+                ("mod_card", "/assets/tdolls/103/103_mod_skin3_card.png", "assets", "tdolls/103/skins/legacy-winter-journey/mod_card.webp", False),
+                ("mod_card_d", "/assets/tdolls/103/103_mod_skin3_card_d.png", "assets", "tdolls/103/skins/legacy-winter-journey/mod_card_d.webp", False),
+                ("full", "/art/tdolls/103/103_skin3_full.png", "art", "tdolls/103/skins/legacy-winter-journey/full.webp", True),
+                ("full_d", "/art/tdolls/103/103_skin3_full_d.png", "art", "tdolls/103/skins/legacy-winter-journey/full_d.webp", True),
+            ],
+        )
+
+    def test_conversion_writes_webp_at_native_size(self):
+        """Cards stay 256x512, full art keeps its native size and alpha, and an absent Mod card is skipped."""
+        with tempfile.TemporaryDirectory() as tmp:
+            assets, art, staging = (os.path.join(tmp, name) for name in ("assets", "art", "staging"))
+            save_png(assets, "tdolls/103/103_skin3_card.png", (256, 512))
+            save_png(assets, "tdolls/103/103_skin3_card_d.png", (256, 512))
+            save_png(art, "tdolls/103/103_skin3_full.png", (1024, 1024), "RGBA")
+            save_png(art, "tdolls/103/103_skin3_full_d.png", (1024, 1024), "RGBA")
+            result = extract.extract_legacy_skin(self.EXTRA, assets, art, staging)
+            self.assertEqual(result["missing"], [])
+            self.assertEqual(result["nonstandard"], [])
+            self.assertEqual(sorted(row[1] for row in result["files"]), sorted(["tdolls/103/skins/legacy-winter-journey/" + name for name in ("card.webp", "card_d.webp", "full.webp", "full_d.webp")]))
+            self.assertEqual({row[3] for row in result["files"]}, {"skin_card", "skin_full"})
+            with Image.open(os.path.join(staging, "assets/tdolls/103/skins/legacy-winter-journey/card.webp")) as card:
+                self.assertEqual((card.format, card.size), ("WEBP", (256, 512)))
+            with Image.open(os.path.join(staging, "art/tdolls/103/skins/legacy-winter-journey/full.webp")) as full:
+                self.assertEqual((full.format, full.size, full.mode), ("WEBP", (1024, 1024), "RGBA"))
+
+    def test_missing_required_files_are_reported(self):
+        """A missing card or full art is a missing entry keyed `legacy_skin:<doll>:<key>`, and an odd card size is non-standard."""
+        with tempfile.TemporaryDirectory() as tmp:
+            assets, art, staging = (os.path.join(tmp, name) for name in ("assets", "art", "staging"))
+            save_png(assets, "tdolls/103/103_skin3_card.png", (200, 400))
+            result = extract.extract_legacy_skin(self.EXTRA, assets, art, staging)
+        self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("legacy_skin:103:legacy-winter-journey", role) for role in ("card_d", "full", "full_d")])
+        self.assertEqual([row["role"] for row in result["nonstandard"]], ["card"])
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Texture lookup
 
 

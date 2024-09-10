@@ -52,6 +52,9 @@ SPINE_EXTENSIONS = (".skel", ".atlas", ".png")
 V3_IMAGE_FILES = (("card", "assets", "card.webp"), ("card_damaged", "assets", "card_d.webp"), ("full", "art", "full.webp"), ("full_damaged", "art", "full_d.webp"))
 V3_IMAGE_KINDS = [kind for kind, _tree, _name in V3_IMAGE_FILES]
 
+# Folder prefix of skins whose art only the old asset repos hosted, keyed `legacy-<slug>` instead of a skin id.
+LEGACY_SKIN_PREFIX = "legacy-"
+
 # Mod-coloured cards of a skin, stored next to the skin's own cards.
 V3_MOD_CARD_FILES = (("card", "mod_card.webp"), ("card_damaged", "mod_card_d.webp"))
 
@@ -277,6 +280,23 @@ def numeric_dirs(folder):
     return sorted((name for name in os.listdir(folder) if name.isdigit() and os.path.isdir(os.path.join(folder, name))), key=int)
 
 
+def skin_dirs(*folders):
+    """List the skin folders across one or more `skins/` folders: numeric skin ids in numeric order, then `legacy-<slug>` keys by name.
+
+    Args:
+        *folders: `skins/` folders, which may not exist.
+
+    Returns:
+        The distinct skin folder names.
+    """
+    names = set()
+    for folder in folders:
+        if os.path.isdir(folder):
+            names.update(name for name in os.listdir(folder) if os.path.isdir(os.path.join(folder, name)))
+    numeric = sorted((name for name in names if name.isdigit()), key=int)
+    return numeric + sorted(name for name in names if name.startswith(LEGACY_SKIN_PREFIX))
+
+
 def form_images(roots, rel):
     """List the image kinds present for one form folder.
 
@@ -298,7 +318,7 @@ def build_v3(assets_root, art_root):
         art_root: The art tree, holding `tdolls/` full art.
 
     Returns:
-        The manifest dict, dolls and skins in numeric order.
+        The manifest dict, dolls in numeric order and skins in `skin_dirs` order.
     """
     roots = {"assets": assets_root, "art": art_root}
     doll_ids = sorted(set(numeric_dirs(os.path.join(assets_root, "tdolls"))) | set(numeric_dirs(os.path.join(art_root, "tdolls"))), key=int)
@@ -308,7 +328,7 @@ def build_v3(assets_root, art_root):
         record = {"normal": {"images": form_images(roots, base)}}
         if any(os.path.isdir(os.path.join(root, base, "mod")) for root in roots.values()):
             record["mod"] = {"images": form_images(roots, f"{base}/mod")}
-        skin_ids = sorted(set(numeric_dirs(os.path.join(assets_root, base, "skins"))) | set(numeric_dirs(os.path.join(art_root, base, "skins"))), key=int)
+        skin_ids = skin_dirs(os.path.join(assets_root, base, "skins"), os.path.join(art_root, base, "skins"))
         skins = {}
         for skin_id in skin_ids:
             rel = f"{base}/skins/{skin_id}"

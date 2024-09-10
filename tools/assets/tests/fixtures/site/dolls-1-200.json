@@ -26,14 +26,16 @@
   },
   "mod": null,
   "skins": {
-   "number_of_skins": 2,
+   "number_of_skins": 3,
    "skin_names": [
+    "s",
     "s",
     "s"
    ],
    "skin_ids": [
     902,
-    null
+    null,
+    "legacy-old-art"
    ]
   }
  }

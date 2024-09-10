@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Resolve and download the game's Unity asset bundles behind every asset the wiki shows.
 
-The wanted set comes from the site data: every doll (base art, Mod art when the doll has a Mod, each skin with an id), its Spine rigs, its skill
-icons and every equipment icon. Each wanted asset is matched to a bundle by name and then confirmed against the file list the ResData manifest
-records for that bundle, so nothing is downloaded on a guess.
+The wanted set comes from the site data: every doll (base art, Mod art when the doll has a Mod, each skin with a numeric id), its Spine rigs,
+its skill icons and every equipment icon. Each wanted asset is matched to a bundle by name and then confirmed against the file list the ResData
+manifest records for that bundle, so nothing is downloaded on a guess.
 
 Naming rules, from the Phase 4B research:
 
@@ -340,7 +340,8 @@ def doll_items(index, doll, codes):
 
     skin_roles = ART_ROLES + ((MOD_CARD_ROLE,) if has_mod else ())
     for skin_id in (doll.get("skins") or {}).get("skin_ids") or []:
-        if skin_id is None:
+        # Null ids are hand-written skins and string keys are `legacy-<slug>` art from the old repos. Neither has a game bundle.
+        if not isinstance(skin_id, int):
             continue
         stem = f"{code}_{skin_id}"
         skin_art = f"character_{stem}"

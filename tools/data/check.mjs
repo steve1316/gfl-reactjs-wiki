@@ -12,6 +12,10 @@ import fs from "node:fs";
 import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
 import { SHARDS } from "./lib/shards.mjs";
+import { findSkinArtGaps } from "./lib/skins.mjs";
+
+/** The v3 asset manifest the skin art check reads. It sits in the extraction staging tree until the switch-over moves it to the repo root. */
+const MANIFEST_PATH = "tools/assets/.staging/assets/assets-manifest.json";
 
 /** Lines of combined stdout+stderr kept in the failure message when `pnpm build` fails. */
 const BUILD_FAILURE_LOG_LINES = 40;
@@ -157,7 +161,6 @@ async function main() {
 	const byId = new Map(dolls.map((doll) => [doll.normal.id, doll]));
 	const equipment = JSON.parse(fs.readFileSync("src/data/equipment.json", "utf8"));
 	const upstream = JSON.parse(fs.readFileSync("src/data/upstream.json", "utf8"));
-	const skinAssets = JSON.parse(fs.readFileSync("tools/data/skin-assets.json", "utf8"));
 
 	let previous = null;
 	try {
@@ -259,14 +262,30 @@ async function main() {
 		fail(`${missingFromCn.length} released dolls are missing from the pinned gf-data-ch table (${missingFromCn.join(", ")}), so the CN pin is probably stale`);
 	}
 
-	for (const [id, slots] of Object.entries(skinAssets)) {
-		if (overrideIds.has(Number(id))) {
-			continue;
-		}
-		const ids = byId.get(Number(id))?.skins?.skin_ids ?? [];
-		const expected = slots.map((slot) => (typeof slot === "number" ? slot : null));
-		if (JSON.stringify(ids.slice(0, slots.length)) !== JSON.stringify(expected)) {
-			fail(`doll ${id} skins no longer line up with their art slots`);
+	let artGaps = null;
+	if (!fs.existsSync(MANIFEST_PATH)) {
+		fail(`the v3 asset manifest ${MANIFEST_PATH} is missing, so skin art cannot be checked. Run tools/assets/extract_game_assets.py first`);
+	} else {
+		const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
+		if (manifest.version !== 3) {
+			fail(`${MANIFEST_PATH} is version ${manifest.version}, expected 3`);
+		} else {
+			artGaps = findSkinArtGaps(dolls, manifest);
+			// Override dolls keep hand-written skins with no upstream id, so only their null ids are allowed.
+			for (const { doll, name } of artGaps.nullIds.filter((entry) => !overrideIds.has(entry.doll))) {
+				fail(`doll ${doll} skin "${name}" has no skin id, so its art cannot be found`);
+			}
+			// Every skin key, table id or extra, must have v3 art. Only the allowed null-id skins above are exempt.
+			const allowedNamed = new Set(artGaps.nullIds.filter((entry) => overrideIds.has(entry.doll)).map((entry) => `${entry.doll}:${entry.name}`));
+			for (const label of artGaps.skinsWithoutArt.filter((entry) => !allowedNamed.has(entry))) {
+				fail(`skin ${label} has no v3 art in the manifest`);
+			}
+			for (const label of artGaps.unlistedArt) {
+				fail(`skin art ${label} is in the manifest but the doll's skins do not list it`);
+			}
+			for (const label of artGaps.artWithoutCard) {
+				fail(`skin art ${label} is in the manifest without a card`);
+			}
 		}
 	}
 
@@ -286,6 +305,11 @@ async function main() {
 	}
 
 	console.log(`released dolls missing from the CN table: ${missingFromCn.length} (at most ${MAX_MISSING_FROM_CN} allowed)`);
+	if (artGaps) {
+		console.log(
+			`skins without art: ${artGaps.skinsWithoutArt.length} (${artGaps.skinsWithoutArt.join(", ")}), dolls without art: ${artGaps.dollsWithoutArt.length} (${artGaps.dollsWithoutArt.join(", ")})`
+		);
+	}
 	if (failures.length > 0) {
 		console.error(`check failed (${failures.length}):\n- ${failures.join("\n- ")}`);
 		process.exit(1);

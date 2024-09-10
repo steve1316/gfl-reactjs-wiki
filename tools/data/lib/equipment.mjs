@@ -69,10 +69,9 @@ export function scaleStat(range, bonus) {
  * Build every shown equipment item, grouped by type.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
- * @param {Record<string, string>} equipmentAssets Equipment id to icon asset path.
  * @returns {{ types: { key: string, label: string }[], items: Record<string, object[]> }} Types in upstream order, and items by type key.
  */
-export function buildEquipment(upstream, equipmentAssets) {
+export function buildEquipment(upstream) {
 	const typeRows = upstream.stc("equip_type").filter((row) => TYPE_KEYS[row.code] !== undefined);
 	const typeByNumber = new Map(typeRows.map((row) => [row.type, row]));
 	const items = {};
@@ -112,8 +111,7 @@ export function buildEquipment(upstream, equipmentAssets) {
 						.map((code) => TYPE_NAMES[code]),
 			dolls: baseIds.map((id) => ({ id, mod: !fitGuns.includes(id) })),
 			description: stripMarkup(upstream.t(row.equip_introduction)).trim(),
-			stats,
-			image: equipmentAssets[String(row.id)] ?? null
+			stats
 		};
 		const key = TYPE_KEYS[type.code];
 		(items[key] ??= []).push(item);

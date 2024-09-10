@@ -24,6 +24,7 @@ import { buildEquipment } from "./lib/equipment.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
 import { buildProfile, fillFromWikidata, indexPages, releaseFor } from "./lib/profile.mjs";
 import { SHARDS } from "./lib/shards.mjs";
+import { addExtraSkins, validateExtraSkins } from "./lib/skins.mjs";
 import { readStatConfig } from "./lib/stats.mjs";
 import { loadUpstream, readLock, resolveUpstreamDir } from "./lib/upstream.mjs";
 import { fetchWikidataFacts } from "./lib/wikidata.mjs";
@@ -102,8 +103,7 @@ async function attachProfiles(dolls, upstream) {
 }
 
 /**
- * Run the importer: read upstream, the reviewed asset maps and the profile sources, build every doll and equipment item,
- * apply the overrides, and write the generated files under `src/data`.
+ * Run the importer: read upstream and the profile sources, build every doll and equipment item, apply the overrides, and write `src/data`.
  *
  * @returns {Promise<void>} Resolves once every file is written.
  */
@@ -111,16 +111,22 @@ async function main() {
 	const args = process.argv.slice(2);
 	const cutoff = args.includes("--date") ? args[args.indexOf("--date") + 1] : new Date().toISOString().slice(0, 10);
 	const upstream = loadUpstream(resolveUpstreamDir());
-	const skinAssets = JSON.parse(fs.readFileSync("tools/data/skin-assets.json", "utf8"));
-	const equipmentAssets = JSON.parse(fs.readFileSync("tools/data/equipment-assets.json", "utf8"));
 	const overrides = JSON.parse(fs.readFileSync("tools/data/overrides.json", "utf8"));
-	const ctx = { config: readStatConfig(upstream), skinAssets, warnings: [] };
+	const extraSkins = JSON.parse(fs.readFileSync("tools/data/extra-skins.json", "utf8"));
+	validateExtraSkins(extraSkins, upstream);
+	const ctx = { config: readStatConfig(upstream), warnings: [] };
 
 	const dolls = selectReleased(upstream, cutoff).map((gun) => buildDoll(upstream, gun, ctx));
 	for (const extra of overrides.addDolls) {
 		if (!dolls.some((doll) => doll.normal.id === extra.normal.id)) {
 			dolls.push(extra);
 		}
+	}
+	for (const extra of extraSkins.filter((entry) => !dolls.some((doll) => doll.normal.id === entry.doll))) {
+		throw new Error(`extra skin ${extra.doll}:${extra.key} belongs to a doll the data does not hold`);
+	}
+	for (const doll of dolls) {
+		doll.skins = addExtraSkins(doll.skins, doll.normal.id, extraSkins);
 	}
 	const profiles = await attachProfiles(dolls, upstream);
 	for (const fix of overrides.fields) {
@@ -140,7 +146,7 @@ async function main() {
 		);
 		writeJson(`${OUT_DIR}/${shard.profiles}.json`, Object.fromEntries(split.map((entry) => [entry.record.normal.id, entry.details])));
 	}
-	const equipment = buildEquipment(upstream, equipmentAssets);
+	const equipment = buildEquipment(upstream);
 	writeJson(`${OUT_DIR}/equipment.json`, equipment);
 
 	const { repo, sha } = readLock();

@@ -92,6 +92,10 @@ class SpineIndexV3Tests(unittest.TestCase):
                 "65/skins/805/RHK416_805.skel",
                 "65/skins/30033/HK416_30033.skel",
                 "65/skins/30033/HK416_30033.atlas",
+                "65/skins/legacy-old/HK416_old.skel",
+                "65/skins/legacy-old/HK416_old.atlas",
+                "65/skins/stray/HK416_x.skel",
+                "65/skins/stray/HK416_x.atlas",
                 "7/A.skel",
                 "7/A.atlas",
                 "notes.txt",
@@ -101,7 +105,8 @@ class SpineIndexV3Tests(unittest.TestCase):
         entry = index["65"]
         self.assertEqual(entry["dorm"], {"skel": "RHK416", "atlas": "HK416", "anims": []})
         self.assertEqual(entry["mod"], {"combat": {"skel": "mod/HK416Mod", "atlas": "mod/HK416Mod", "anims": []}})
-        self.assertEqual(list(entry["skins"]), ["805", "30033"])
+        self.assertEqual(list(entry["skins"]), ["805", "30033", "legacy-old"])
+        self.assertEqual(entry["skins"]["legacy-old"]["combat"], {"skel": "skins/legacy-old/HK416_old", "atlas": "skins/legacy-old/HK416_old", "anims": []})
         self.assertEqual(entry["skins"]["805"]["dorm"], {"skel": "skins/805/RHK416_805", "atlas": "skins/805/HK416_805", "anims": []})
         self.assertNotIn("dorm", entry["skins"]["30033"])
         self.assertNotIn("mod", index["7"])
@@ -131,13 +136,16 @@ class ManifestV3Tests(unittest.TestCase):
                 "tdolls/65/skins/805/mod_card.webp",
                 "tdolls/65/skins/805/mod_card_d.webp",
                 "tdolls/65/skins/30033/card.webp",
+                "tdolls/65/skins/legacy-b/card.webp",
+                "tdolls/65/skins/legacy-a/card.webp",
+                "tdolls/65/skins/notes/card.webp",
                 "tdolls/100/card.webp",
                 "equipment/120.png",
                 "equipment/3.png",
                 "equipment/readme.txt",
                 "spine/65/HK416.skel",
             )
-            touch(art, "tdolls/65/full.webp", "tdolls/65/full_d.webp", "tdolls/65/mod/full.webp", "tdolls/65/skins/805/full.webp", "tdolls/9/full.webp")
+            touch(art, "tdolls/65/full.webp", "tdolls/65/full_d.webp", "tdolls/65/mod/full.webp", "tdolls/65/skins/805/full.webp", "tdolls/65/skins/legacy-a/full.webp", "tdolls/9/full.webp")
             manifest = build_manifest.build_v3(assets, art)
         self.assertEqual(manifest["version"], 3)
         self.assertEqual(manifest["imageKinds"], ["card", "card_damaged", "full", "full_damaged"])
@@ -148,10 +156,16 @@ class ManifestV3Tests(unittest.TestCase):
             {
                 "normal": {"images": ["card", "card_damaged", "full", "full_damaged"]},
                 "mod": {"images": ["card", "full"]},
-                "skins": {"805": {"images": ["card", "card_damaged", "full"], "modImages": ["card", "card_damaged"]}, "30033": {"images": ["card"]}},
+                "skins": {
+                    "805": {"images": ["card", "card_damaged", "full"], "modImages": ["card", "card_damaged"]},
+                    "30033": {"images": ["card"]},
+                    "legacy-a": {"images": ["card", "full"]},
+                    "legacy-b": {"images": ["card"]},
+                },
                 "skills": ["skill1", "skill2"],
             },
         )
+        self.assertEqual(list(manifest["dolls"]["65"]["skins"]), ["805", "30033", "legacy-a", "legacy-b"])
         self.assertEqual(manifest["dolls"]["9"], {"normal": {"images": ["full"]}, "skills": []})
 
 
