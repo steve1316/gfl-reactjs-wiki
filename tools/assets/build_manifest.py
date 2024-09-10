@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
-"""Build `assets-manifest.json` by scanning the game asset tree.
+"""Build `assets-manifest.json` by scanning the skin-id staging trees.
 
-The app currently decides which images and animations exist using hardcoded conditionals in
-`src/data/processData.js` - flags like `hasSkillAnimation`, plus branches keyed on specific doll ids.
-That logic is incomplete. It never accounts for `spattack`, `landing`, `crouch` or `dorm_action`,
-which do exist on disk. This script replaces those conditionals with generated data by reporting
-exactly what the filesystem holds, so the app can stop guessing.
+Cards, skill icons and equipment icons are read from the asset tree and full art from the art tree, and the version 3 manifest records
+which of them exist. Every path the app builds is derived from the doll id, form and kind, so only presence is stored. The manifest is
+written to the repo root by default, the copy the site bundles.
 
-Every path in the manifest is relative to the asset base URL, never to this repo, so the same
-manifest works whether assets are served from a Pages site, a CDN, or a local directory.
-
-`--v3` scans the skin-id layout the asset rebuild stages instead, reading cards, skill icons and equipment from the asset tree and full art
-from the art tree, and writes the version 3 manifest.
+`build` still scans the retired `src/images` tree for `publish.py`, which Task 6 replaces. The command line only builds version 3.
 """
 
 import argparse
@@ -214,53 +208,6 @@ def build(images_root):
     }
 
 
-def compact(manifest):
-    """Reduce a manifest to the parts that cannot be derived from naming conventions.
-
-    Every asset path follows from the doll id, form and kind, so storing the paths themselves wastes
-    roughly 90 percent of the file. What genuinely varies is which animations each form has, which
-    image kinds exist, and which Spine bundles are present. Animation names come from a vocabulary of
-    18, so they are stored as indices into a shared list.
-
-    Args:
-        manifest: A manifest as returned by `build`.
-
-    Returns:
-        A dict in the compact version 2 format.
-    """
-    animation_vocab = sorted({key for doll in manifest["tdolls"].values() for form in doll["forms"].values() for key in form["animations"]})
-    dorm_vocab = sorted({key for doll in manifest["tdolls"].values() for form in doll["forms"].values() for key in form["dormAnimations"]})
-    animation_index = {name: position for position, name in enumerate(animation_vocab)}
-    dorm_index = {name: position for position, name in enumerate(dorm_vocab)}
-    image_kinds = ["card", "card_damaged", "full", "full_damaged"]
-
-    dolls = {}
-    for doll_id, doll in manifest["tdolls"].items():
-        forms = {}
-        for form_name, form in doll["forms"].items():
-            entry = {"images": [kind for kind in image_kinds if kind in form["images"]]}
-            if form["animations"]:
-                entry["a"] = sorted(animation_index[key] for key in form["animations"])
-            if form["dormAnimations"]:
-                entry["d"] = sorted(dorm_index[key] for key in form["dormAnimations"])
-            forms[form_name] = entry
-        record = {"forms": forms}
-        if doll["skillImages"]:
-            record["skills"] = sorted(doll["skillImages"])
-        if doll["spine"]:
-            record["spine"] = {name: sorted(files) for name, files in doll["spine"].items()}
-        dolls[doll_id] = record
-
-    return {
-        "version": 2,
-        "animationNames": animation_vocab,
-        "dormAnimationNames": dorm_vocab,
-        "imageKinds": image_kinds,
-        "equipment": {category: sorted(items) for category, items in manifest["equipment"].items()},
-        "dolls": dolls,
-    }
-
-
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # Skin-id layout (v3)
@@ -349,47 +296,28 @@ def build_v3(assets_root, art_root):
 
 
 def main():
-    """Parse arguments, build the manifest and write it to disk."""
-    parser = argparse.ArgumentParser(description="Generate assets-manifest.json from the image tree.")
-    parser.add_argument("--images", default="src/images", help="Directory holding tdolls/ and equipment/.")
-    parser.add_argument("--out", default="assets-manifest.json", help="Where to write the manifest.")
+    """Parse arguments, build the version 3 manifest and write it to disk."""
+    parser = argparse.ArgumentParser(description="Generate the version 3 assets-manifest.json from the staging trees.")
+    parser.add_argument("--assets", default="tools/assets/.staging/assets", help="The asset staging tree.")
+    parser.add_argument("--art", default="tools/assets/.staging/art", help="The art staging tree.")
+    parser.add_argument("--out", default="assets-manifest.json", help="Where to write the manifest. Defaults to the repo root copy the site bundles.")
     parser.add_argument("--indent", type=int, default=None, help="JSON indent. Omit for the compact form used in production.")
-    parser.add_argument("--format", choices=("full", "compact"), default="full", help="'full' keeps every path, 'compact' stores only what naming cannot derive.")
-    parser.add_argument("--v3", action="store_true", help="Build the version 3 manifest from the skin-id layout staging trees.")
-    parser.add_argument("--assets", help="With --v3, the asset staging tree.")
-    parser.add_argument("--art", help="With --v3, the art staging tree.")
+    parser.add_argument("--v3", action="store_true", help="Ignored. Version 3 is the only format.")
     args = parser.parse_args()
 
-    if args.v3:
-        if not (args.assets and args.art and os.path.isdir(args.assets) and os.path.isdir(args.art)):
-            sys.exit("--v3 needs existing --assets and --art trees")
-        manifest = build_v3(args.assets, args.art)
-        with open(args.out, "w", encoding="utf-8") as handle:
-            json.dump(manifest, handle, indent=args.indent)
-            handle.write("\n")
-        dolls = manifest["dolls"].values()
-        print(f"wrote {args.out} ({os.path.getsize(args.out) / 1024:.0f} KB, version 3)")
-        print(f"  dolls        {len(manifest['dolls'])}")
-        print(f"  mods         {sum(1 for doll in dolls if 'mod' in doll)}")
-        print(f"  skins        {sum(len(doll.get('skins', {})) for doll in dolls)}")
-        print(f"  equipment    {len(manifest['equipment'])}")
-        return
+    if not (os.path.isdir(args.assets) and os.path.isdir(args.art)):
+        sys.exit(f"the staging trees {args.assets} and {args.art} must both exist. Run tools/assets/extract_game_assets.py first")
 
-    if not os.path.isdir(args.images):
-        sys.exit(f"no such directory: {args.images}")
-
-    manifest = build(args.images)
-    counts = manifest["counts"]
-    if args.format == "compact":
-        manifest = compact(manifest)
-
+    manifest = build_v3(args.assets, args.art)
     with open(args.out, "w", encoding="utf-8") as handle:
-        json.dump(manifest, handle, indent=args.indent, sort_keys=True)
+        json.dump(manifest, handle, indent=args.indent)
         handle.write("\n")
-
-    print(f"wrote {args.out} ({os.path.getsize(args.out) / 1024:.0f} KB, format={args.format})")
-    for key, value in counts.items():
-        print(f"  {key:<22} {value}")
+    dolls = manifest["dolls"].values()
+    print(f"wrote {args.out} ({os.path.getsize(args.out) / 1024:.0f} KB, version 3)")
+    print(f"  dolls        {len(manifest['dolls'])}")
+    print(f"  mods         {sum(1 for doll in dolls if 'mod' in doll)}")
+    print(f"  skins        {sum(len(doll.get('skins', {})) for doll in dolls)}")
+    print(f"  equipment    {len(manifest['equipment'])}")
 
 
 if __name__ == "__main__":

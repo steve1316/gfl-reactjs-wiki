@@ -10,53 +10,62 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { containArtSx } from "../../lib/artLayout";
+import { skinFormKey, skinKeyOf } from "../../lib/assets";
 import { loadDoll } from "../../lib/data";
 import NotFound404 from "../../not_found_404";
-import type { TDoll } from "../../types/tdoll";
+import type { RawSkins, TDoll } from "../../types/tdoll";
 
 /**
- * Sort rank for a form key: Base first, then skins in order, then Mod last.
+ * Sort rank for a form key: Base first, then skins in the order `DollHero` shows their pills, then Mod last.
  *
- * @param key The form's key, such as `normal`, `skin1` or `mod`.
+ * @param key The form's key, such as `normal`, `skin-805` or `mod`.
+ * @param skinKeys The doll's skin keys, in pill order.
  * @returns A rank to sort by, ascending.
  */
-function formRank(key: string): number {
+function formRank(key: string, skinKeys: string[]): number {
 	if (key === "normal") {
 		return 0;
 	}
 	if (key === "mod") {
-		return 2;
+		return skinKeys.length + 2;
 	}
-	return 1;
-}
-
-/**
- * The skin number encoded in a `skinN` form key, for ordering skins amongst themselves.
- *
- * @param key The form's key.
- * @returns The skin's 1-based number, or 0 for a non-skin key.
- */
-function skinNumber(key: string): number {
-	const match = /^skin(\d+)$/.exec(key);
-	return match ? Number(match[1]) : 0;
+	const skinKey = skinKeyOf(key);
+	const position = skinKey === null ? -1 : skinKeys.indexOf(skinKey);
+	return position === -1 ? skinKeys.length + 1 : position + 1;
 }
 
 /**
  * The human-readable label for a form key, matching what `DollHero` shows for the same doll.
  *
- * @param key The form's key, such as `normal`, `skin1` or `mod`.
- * @param skinNames The doll's skin names, in skin order, from `skins.skin_names`.
+ * @param key The form's key, such as `normal`, `skin-805` or `mod`.
+ * @param skins The doll's skins, or null when it has none.
+ * @param skinKeys The doll's skin keys, parallel to `skins.skin_names`.
  * @returns The label to show on the form's toggle button.
  */
-function formLabel(key: string, skinNames: string[]): string {
+function formLabel(key: string, skins: RawSkins | null, skinKeys: string[]): string {
 	if (key === "normal") {
 		return "Base";
 	}
 	if (key === "mod") {
 		return "Mod";
 	}
-	const number = skinNumber(key);
-	return (number > 0 ? skinNames[number - 1] : undefined) ?? key;
+	const skinKey = skinKeyOf(key);
+	return (skinKey === null ? undefined : skins?.skin_names[skinKeys.indexOf(skinKey)]) ?? key;
+}
+
+/**
+ * Resolve the `form` parameter to a form key.
+ *
+ * Links from before the skin-id layout name a skin by its 1-based position, as `skinN`, so those are mapped onto the Nth skin's key.
+ *
+ * @param param The `form` parameter.
+ * @param doll The doll being viewed.
+ * @returns The form key, such as `skin-805`, or the parameter unchanged when it is not an old positional key.
+ */
+function resolveFormKey(param: string, doll: TDoll): string {
+	const position = /^skin(\d+)$/.exec(param)?.[1];
+	const skinId = position === undefined ? undefined : doll.skins?.skin_ids[Number(position) - 1];
+	return skinId === null || skinId === undefined ? param : skinFormKey(skinId);
 }
 
 /**
@@ -79,6 +88,8 @@ export default function TDollArt() {
 	const [searchParams] = useSearchParams();
 	const [damaged, setDamaged] = useState(() => searchParams.get("damaged") === "1");
 	const [formKey, setFormKey] = useState(() => searchParams.get("form") ?? "normal");
+	// The Mod wearing a skin has no full art of its own, so the doll page links to the skin with `mod=1`. Kept so closing returns to the Mod.
+	const [modSkin] = useState(() => searchParams.get("mod") === "1");
 
 	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
 
@@ -94,6 +105,25 @@ export default function TDollArt() {
 		};
 	}, [id]);
 
+	// Every form the doll actually published with full art. A form with only cards is filtered out here rather than offered as a
+	// button that opens onto a broken image. Labels and order match DollHero, which reads the same skin names from skins.skin_names.
+	const forms = useMemo(() => {
+		if (!doll) {
+			return [];
+		}
+		const skinKeys = (doll.skins?.skin_ids ?? []).map((skinId) => String(skinId));
+		return Object.entries(doll.forms)
+			.filter(([, form]) => form.images.full)
+			.map(([key, form]) => ({ key, label: formLabel(key, doll.skins, skinKeys), images: form.images }))
+			.sort((a, b) => formRank(a.key, skinKeys) - formRank(b.key, skinKeys));
+	}, [doll]);
+
+	const current = (doll ? forms.find((form) => form.key === resolveFormKey(formKey, doll)) : undefined) ?? forms[0];
+	const source = damaged ? current?.images.full_damaged : current?.images.full;
+	// A loaded doll with no full art at all, such as one released before its art is hosted. The viewer then shows a notice
+	// with only the close button, rather than a black screen and controls that do nothing.
+	const noArt = doll !== undefined && forms.length === 0;
+
 	// Opened from the doll page, going back returns to it exactly as it was left, since that page keeps its skin, Mod and
 	// damaged choice in its address. Opened from a pasted link there is nothing to go back to, so the doll page opens on
 	// the art being viewed instead.
@@ -103,19 +133,20 @@ export default function TDollArt() {
 			return;
 		}
 		const back = new URLSearchParams();
-		const skin = /^skin(\d+)$/.exec(formKey);
-		if (formKey === "mod") {
+		const key = current?.key ?? "normal";
+		const skinKey = skinKeyOf(key);
+		if (key === "mod" || (modSkin && skinKey !== null)) {
 			back.set("mod", "1");
 		}
-		if (skin?.[1]) {
-			back.set("skin", skin[1]);
+		if (skinKey !== null) {
+			back.set("skin", skinKey);
 		}
 		if (damaged) {
 			back.set("damaged", "1");
 		}
 		const query = back.toString();
 		void navigate(`/tdoll/${id ?? ""}${query ? `?${query}` : ""}`, { replace: true });
-	}, [location.key, navigate, id, formKey, damaged]);
+	}, [location.key, navigate, id, current?.key, modSkin, damaged]);
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
@@ -126,26 +157,6 @@ export default function TDollArt() {
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
 	}, [close]);
-
-	// Every form the doll actually published with full art. Mod-skin forms only ever carry card art, so
-	// they are filtered out here rather than offered as a button that opens onto a broken image. Labels
-	// and order match DollHero, which reads the same skin names from skins.skin_names.
-	const forms = useMemo(() => {
-		if (!doll) {
-			return [];
-		}
-		const skinNames = doll.skins?.skin_names ?? [];
-		return Object.entries(doll.forms)
-			.filter(([, form]) => form.images.full)
-			.map(([key, form]) => ({ key, label: formLabel(key, skinNames), images: form.images }))
-			.sort((a, b) => formRank(a.key) - formRank(b.key) || skinNumber(a.key) - skinNumber(b.key));
-	}, [doll]);
-
-	const current = forms.find((form) => form.key === formKey) ?? forms[0];
-	const source = damaged ? current?.images.full_damaged : current?.images.full;
-	// A loaded doll with no full art at all, such as one released before its art is hosted. The viewer then shows a notice
-	// with only the close button, rather than a black screen and controls that do nothing.
-	const noArt = doll !== undefined && forms.length === 0;
 
 	useEffect(() => {
 		if (doll) {
@@ -209,7 +220,8 @@ export default function TDollArt() {
 
 			{noArt ? null : (
 				<Box sx={{ display: "flex", gap: 1, p: 1, flexWrap: "wrap", justifyContent: "center" }}>
-					<ToggleButtonGroup size="small" exclusive value={formKey} onChange={handleFormChange}>
+					{/* Wraps so a doll with many skins keeps every button on a phone screen instead of spilling off both edges. */}
+					<ToggleButtonGroup size="small" exclusive value={current?.key ?? formKey} onChange={handleFormChange} sx={{ flexWrap: "wrap", justifyContent: "center" }}>
 						{forms.map((form) => (
 							<ToggleButton key={form.key} value={form.key} sx={{ color: "common.white" }}>
 								{form.label}

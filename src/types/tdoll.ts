@@ -8,6 +8,8 @@
  * out of `processData`.
  */
 
+import type { CardKind, ImageKind } from "./manifest";
+
 /** Skill and tile stat arrays mix numbers and formatted strings such as `"24%"`. */
 export type StatValue = string | number;
 
@@ -138,43 +140,34 @@ export interface DollDetails {
 
 /** Resolved asset URLs for one form. */
 export interface FormAssets {
-	/** Portrait URLs. Mod-skin forms have only `card` and `card_damaged`. */
-	images: Partial<Record<"card" | "card_damaged" | "full" | "full_damaged", string>>;
-	/** Combat animation URLs, keyed by animation name. */
-	animations: Record<string, string>;
-	/** Dorm animation URLs, keyed by animation name. */
-	dormAnimations: Record<string, string>;
+	/** Portrait URLs, keyed by the kinds the manifest lists for the form. */
+	images: Partial<Record<ImageKind, string>>;
+	/** Card URLs for a skin worn by the Mod. Present only on skin forms that have Mod-coloured cards. */
+	modImages?: Partial<Record<CardKind, string>>;
 }
 
 /** A form with its assets attached. */
 export interface TDollForm extends RawForm {
+	/** The form's resolved portrait URLs, empty when no art is hosted. */
 	assets: FormAssets;
-}
-
-/** One Spine bundle: the skeleton, its atlas and its page image. */
-export interface SpineBundle {
-	name: string;
-	skel?: string;
-	atlas?: string;
-	png?: string;
 }
 
 /**
  * A doll as pages consume it.
  *
- * Every asset URL is resolved, and the extra forms discovered in the manifest, such as `skin1` and
- * `mod_skin1`, are present alongside the two the data files name directly.
+ * Every asset URL is resolved, and every skin with hosted art is present in `forms` under its `skin-<skinKey>` key beside `normal` and `mod`.
  */
 export interface TDoll {
+	/** The base form. */
 	normal: TDollForm;
+	/** The Mod form, or null when the doll has no Mod. */
 	mod: TDollForm | null;
+	/** The doll's skins, or null when it has none. */
 	skins: RawSkins | null;
-	/** Every form the manifest knows about, keyed by form name. */
+	/** Every form the manifest knows about, keyed `normal`, `mod` or `skin-<skinKey>`. */
 	forms: Record<string, FormAssets>;
 	/** Skill icon URLs, keyed `skill1` and `skill2`. */
 	skillImages: Partial<Record<"skill1" | "skill2", string>>;
-	/** Spine bundles for this doll, empty when none were published. */
-	spine: SpineBundle[];
 }
 
 /** A doll with its profile and spec sheets attached, as `loadDollDetails` returns it for the doll page. */

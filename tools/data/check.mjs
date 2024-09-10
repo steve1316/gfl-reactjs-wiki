@@ -13,9 +13,13 @@ import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 import { findSkinArtGaps } from "./lib/skins.mjs";
+import { findSpineIndexProblems } from "./lib/spineIndex.mjs";
 
-/** The v3 asset manifest the skin art check reads. It sits in the extraction staging tree until the switch-over moves it to the repo root. */
-const MANIFEST_PATH = "tools/assets/.staging/assets/assets-manifest.json";
+/** The v3 asset manifest the site bundles and the skin art check reads. */
+const MANIFEST_PATH = "assets-manifest.json";
+
+/** The skin-id Spine index the site bundles. */
+const SPINE_INDEX_PATH = "src/data/spine-index.json";
 
 /** Lines of combined stdout+stderr kept in the failure message when `pnpm build` fails. */
 const BUILD_FAILURE_LOG_LINES = 40;
@@ -264,20 +268,15 @@ async function main() {
 
 	let artGaps = null;
 	if (!fs.existsSync(MANIFEST_PATH)) {
-		fail(`the v3 asset manifest ${MANIFEST_PATH} is missing, so skin art cannot be checked. Run tools/assets/extract_game_assets.py first`);
+		fail(`the v3 asset manifest ${MANIFEST_PATH} is missing, so skin art cannot be checked. Run tools/assets/build_manifest.py --v3 first`);
 	} else {
 		const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf8"));
 		if (manifest.version !== 3) {
 			fail(`${MANIFEST_PATH} is version ${manifest.version}, expected 3`);
 		} else {
 			artGaps = findSkinArtGaps(dolls, manifest);
-			// Override dolls keep hand-written skins with no upstream id, so only their null ids are allowed.
-			for (const { doll, name } of artGaps.nullIds.filter((entry) => !overrideIds.has(entry.doll))) {
-				fail(`doll ${doll} skin "${name}" has no skin id, so its art cannot be found`);
-			}
-			// Every skin key, table id or extra, must have v3 art. Only the allowed null-id skins above are exempt.
-			const allowedNamed = new Set(artGaps.nullIds.filter((entry) => overrideIds.has(entry.doll)).map((entry) => `${entry.doll}:${entry.name}`));
-			for (const label of artGaps.skinsWithoutArt.filter((entry) => !allowedNamed.has(entry))) {
+			// Every skin key, table id or extra, must have v3 art. A skin with no id is listed by name, since its art cannot be found at all.
+			for (const label of artGaps.skinsWithoutArt) {
 				fail(`skin ${label} has no v3 art in the manifest`);
 			}
 			for (const label of artGaps.unlistedArt) {
@@ -286,6 +285,14 @@ async function main() {
 			for (const label of artGaps.artWithoutCard) {
 				fail(`skin art ${label} is in the manifest without a card`);
 			}
+		}
+	}
+
+	if (!fs.existsSync(SPINE_INDEX_PATH)) {
+		fail(`the Spine index ${SPINE_INDEX_PATH} is missing. Run tools/assets/build_spine_index.py and add_spine_animations.mjs`);
+	} else {
+		for (const problem of findSpineIndexProblems(JSON.parse(fs.readFileSync(SPINE_INDEX_PATH, "utf8")))) {
+			fail(`${SPINE_INDEX_PATH}: ${problem}`);
 		}
 	}
 

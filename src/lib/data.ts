@@ -1,19 +1,21 @@
 /**
  * The single place the app reads doll and equipment data.
  *
- * Shards are loaded through dynamic imports so a route pays only for what it renders. Viewing one
+ * Shards are fetched on demand so a route pays only for what it renders. Viewing one
  * doll fetches the shard holding it rather than all five, and the navbar, which renders on every
  * route, reads the small search index instead of the full dataset. That split is only possible
  * because the data modules no longer run `processData` at import time.
+ *
+ * The large files ship as plain JSON assets read with `fetch` rather than as dynamic imports. A browser remembers a failed dynamic import
+ * for the rest of the session, so an import that fails once on a flaky connection could never be retried without a reload.
  */
 
 import searchIndexJson from "../data/search-index.json";
-import spineIndexJson from "../data/spine-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
-import { equipmentAssetUrl } from "./assets";
-import { hasDollArt, processDoll, processDolls } from "./processData";
+import { equipmentIconUrl } from "./assets";
+import { hasDollArt, hasEquipmentIcon, processDoll, processDolls } from "./processData";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,10 +39,10 @@ export interface SearchEntry {
 interface Shard {
 	/** Highest doll id the shard holds. */
 	max: number;
-	/** Loads the shard's doll records. */
-	load: () => Promise<{ default: RawTDoll[] }>;
-	/** Loads the shard's profiles and spec sheets, keyed by doll id. */
-	loadDetails: () => Promise<{ default: Record<string, DollDetails> }>;
+	/** Basename of the shard's doll records under `src/data/`. */
+	file: string;
+	/** Basename of the shard's profiles and spec sheets under `src/data/`, keyed by doll id. */
+	profiles: string;
 }
 
 /**
@@ -50,23 +52,12 @@ interface Shard {
  */
 export const searchIndex: SearchEntry[] = searchIndexJson as SearchEntry[];
 
-/**
- * Which Spine rigs exist for each doll.
- *
- * Small enough to ship with the app: 45 KB raw, under 8 KB gzipped. Paths inside it are relative to
- * the doll's Spine directory and are turned into URLs by `src/lib/assets.ts`.
- */
-const spineIndex: SpineIndex = spineIndexJson as SpineIndex;
-
-/**
- * Look up a doll's Spine rigs.
- *
- * @param id Doll id.
- * @returns The doll's rigs, or undefined when nothing was published for it.
- */
-export function spineFor(id: number): SpineDollEntry | undefined {
-	return spineIndex[String(id)];
-}
+/** Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are bundled. */
+const DATA_URLS = import.meta.glob<string>(["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json"], {
+	query: "?url",
+	import: "default",
+	eager: true
+});
 
 /**
  * The generated data shards, in id order. This table mirrors `tools/data/lib/shards.mjs`.
@@ -74,50 +65,66 @@ export function spineFor(id: number): SpineDollEntry | undefined {
  * The collaboration dolls sit in the 1000 range, so the last shard catches everything above 999.
  */
 const SHARDS: ReadonlyArray<Shard> = [
-	{
-		max: 100,
-		load: () => import("../data/dolls-1-100.json") as Promise<{ default: RawTDoll[] }>,
-		loadDetails: () => import("../data/profiles-1-100.json") as Promise<{ default: Record<string, DollDetails> }>
-	},
-	{
-		max: 200,
-		load: () => import("../data/dolls-101-200.json") as Promise<{ default: RawTDoll[] }>,
-		loadDetails: () => import("../data/profiles-101-200.json") as Promise<{ default: Record<string, DollDetails> }>
-	},
-	{
-		max: 300,
-		load: () => import("../data/dolls-201-300.json") as Promise<{ default: RawTDoll[] }>,
-		loadDetails: () => import("../data/profiles-201-300.json") as Promise<{ default: Record<string, DollDetails> }>
-	},
-	{
-		max: 400,
-		load: () => import("../data/dolls-301-400.json") as Promise<{ default: RawTDoll[] }>,
-		loadDetails: () => import("../data/profiles-301-400.json") as Promise<{ default: Record<string, DollDetails> }>
-	},
-	{
-		max: 999,
-		load: () => import("../data/dolls-401-999.json") as Promise<{ default: RawTDoll[] }>,
-		loadDetails: () => import("../data/profiles-401-999.json") as Promise<{ default: Record<string, DollDetails> }>
-	},
-	{
-		max: Number.POSITIVE_INFINITY,
-		load: () => import("../data/dolls-1000-1999.json") as Promise<{ default: RawTDoll[] }>,
-		loadDetails: () => import("../data/profiles-1000-1999.json") as Promise<{ default: Record<string, DollDetails> }>
-	}
+	{ max: 100, file: "dolls-1-100", profiles: "profiles-1-100" },
+	{ max: 200, file: "dolls-101-200", profiles: "profiles-101-200" },
+	{ max: 300, file: "dolls-201-300", profiles: "profiles-201-300" },
+	{ max: 400, file: "dolls-301-400", profiles: "profiles-301-400" },
+	{ max: 999, file: "dolls-401-999", profiles: "profiles-401-999" },
+	{ max: Number.POSITIVE_INFINITY, file: "dolls-1000-1999", profiles: "profiles-1000-1999" }
 ];
 
-/** Cache of in-flight and settled shard loads, so a shard is fetched and processed at most once. */
+/** Cache of in-flight and loaded shards, so a shard is fetched and processed at most once. A failed load is dropped so it can be retried. */
 const shardCache = new Map<number, Promise<TDoll[]>>();
 
-/** Cache of in-flight and settled profile side file loads, so each is fetched at most once. */
+/** Cache of in-flight and loaded profile side files, so each is fetched at most once. A failed load is dropped so it can be retried. */
 const detailsCache = new Map<number, Promise<Record<string, DollDetails>>>();
 
-/** Cache of the in-flight or settled equipment load. */
-let equipmentCache: Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }> | undefined;
+/** Cache of the in-flight or loaded Spine index, under the single key `0`. A failed load is dropped so it can be retried. */
+const spineIndexCache = new Map<0, Promise<SpineIndex>>();
+
+/** Cache of the in-flight or loaded equipment, under the single key `0`. A failed load is dropped so it can be retried. */
+const equipmentCache = new Map<0, Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }>>();
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Dolls
+
+/**
+ * Fetch one generated data file.
+ *
+ * @param name The file's basename under `src/data/`, such as `dolls-1-100`.
+ * @returns The parsed JSON.
+ * @throws When the file is not bundled, the request fails or the response is not OK.
+ */
+async function fetchData<T>(name: string): Promise<T> {
+	const url = DATA_URLS[`../data/${name}.json`];
+	if (url === undefined) {
+		throw new Error(`${name}.json is not a bundled data file`);
+	}
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`${name}.json failed to load with HTTP ${response.status}`);
+	}
+	return (await response.json()) as T;
+}
+
+/**
+ * Cache a load under a key, and forget it if it fails so a later call fetches again instead of reusing the rejection.
+ *
+ * @param cache The cache to store the load in.
+ * @param key The cache key.
+ * @param pending The load.
+ * @returns The same load.
+ */
+function cacheUntilFailure<K, V>(cache: Map<K, Promise<V>>, key: K, pending: Promise<V>): Promise<V> {
+	cache.set(key, pending);
+	pending.catch(() => {
+		if (cache.get(key) === pending) {
+			cache.delete(key);
+		}
+	});
+	return pending;
+}
 
 /**
  * Load and process one shard, reusing an earlier load when there is one.
@@ -134,9 +141,7 @@ function loadShard(index: number): Promise<TDoll[]> {
 	if (!shard) {
 		return Promise.resolve([]);
 	}
-	const pending = shard.load().then((module) => processDolls(module.default));
-	shardCache.set(index, pending);
-	return pending;
+	return cacheUntilFailure(shardCache, index, fetchData<RawTDoll[]>(shard.file).then(processDolls));
 }
 
 /**
@@ -154,9 +159,7 @@ function loadShardDetails(index: number): Promise<Record<string, DollDetails>> {
 	if (!shard) {
 		return Promise.resolve({});
 	}
-	const pending = shard.loadDetails().then((module) => module.default);
-	detailsCache.set(index, pending);
-	return pending;
+	return cacheUntilFailure(detailsCache, index, fetchData<Record<string, DollDetails>>(shard.profiles));
 }
 
 /**
@@ -190,7 +193,8 @@ export async function loadDoll(id: number): Promise<TDoll | undefined> {
  *
  * @param id Doll id.
  * @returns The doll with its details attached, or `undefined` when no doll has that id.
- * @throws When the doll exists but its side file has no entry for it, which `tools/data/check.mjs` guards against.
+ * @throws When the shard or side file fails to load, or the doll exists but its side file has no entry for it, which `tools/data/check.mjs`
+ *   guards against.
  */
 export async function loadDollDetails(id: number): Promise<TDollWithDetails | undefined> {
 	const index = shardIndexFor(id);
@@ -221,7 +225,7 @@ export async function loadAllDolls(): Promise<TDoll[]> {
 /**
  * Ids of dolls whose art is hosted, for places that should only show dolls with artwork.
  *
- * @returns Doll ids present in the asset manifest.
+ * @returns Doll ids whose base card is in the asset manifest.
  */
 export function dollIdsWithArt(): number[] {
 	return searchIndex.map((entry) => entry.id).filter((id) => hasDollArt(id));
@@ -237,6 +241,25 @@ export { processDoll };
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
+// Spine
+
+/**
+ * Look up a doll's Spine rigs.
+ *
+ * The index runs to a few hundred KB and only the doll page reads it, so it is its own file, fetched once and cached. Paths inside it are
+ * relative to the doll's Spine directory and are turned into URLs by `src/lib/assets.ts`.
+ *
+ * @param id Doll id.
+ * @returns The doll's rigs, or undefined when nothing was published for it.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadSpineRigs(id: number): Promise<SpineDollEntry | undefined> {
+	const index = await (spineIndexCache.get(0) ?? cacheUntilFailure(spineIndexCache, 0, fetchData<SpineIndex>("spine-index")));
+	return index[String(id)];
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 // Equipment
 
 /**
@@ -245,15 +268,19 @@ export { processDoll };
  * @returns Equipment types in display order, and items keyed by type key with icon URLs resolved.
  */
 export async function loadEquipment(): Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }> {
-	if (!equipmentCache) {
-		equipmentCache = import("../data/equipment.json").then((module) => {
-			const source = module.default as unknown as { types: EquipmentType[]; items: Record<string, RawEquipment[]> };
+	const cached = equipmentCache.get(0);
+	if (cached) {
+		return cached;
+	}
+	return cacheUntilFailure(
+		equipmentCache,
+		0,
+		fetchData<{ types: EquipmentType[]; items: Record<string, RawEquipment[]> }>("equipment").then((source) => {
 			const items: Record<string, Equipment[]> = {};
 			for (const [key, list] of Object.entries(source.items)) {
-				items[key] = list.map((item) => ({ ...item, image: item.image ? equipmentAssetUrl(item.image) : null }));
+				items[key] = list.map((item) => ({ ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null }));
 			}
 			return { types: source.types, items };
-		});
-	}
-	return equipmentCache;
+		})
+	);
 }

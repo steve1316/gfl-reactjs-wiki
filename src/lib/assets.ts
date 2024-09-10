@@ -6,11 +6,11 @@
  * bundled every file matching the pattern, which is why the build output ran to gigabytes. Rollup
  * cannot resolve them at all, so they had to go regardless.
  *
- * Paths are derived rather than looked up, because the naming is fully determined by the doll id,
- * form and kind. The manifest is consulted only for what naming cannot tell us: which assets exist.
+ * Paths are derived rather than looked up, because the skin-id layout fully determines them from the doll id, form and kind. The manifest
+ * is consulted only for what naming cannot tell us: which assets exist.
  */
 
-import type { ImageKind } from "../types/manifest";
+import type { CardKind, ImageKind } from "../types/manifest";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,16 +22,19 @@ const ASSET_BASE = import.meta.env.VITE_ASSET_BASE_URL;
 /** Full art, split onto its own host to stay under the 1 GB per-site GitHub Pages cap. */
 const ART_BASE = import.meta.env.VITE_ART_BASE_URL;
 
-/** Filename suffixes for each portrait kind. */
-const IMAGE_SUFFIX: Record<ImageKind, string> = {
-	card: "card",
-	card_damaged: "card_d",
-	full: "full",
-	full_damaged: "full_d"
+/** Filenames for each portrait kind inside a form folder. */
+const IMAGE_FILE: Record<ImageKind, string> = {
+	card: "card.webp",
+	card_damaged: "card_d.webp",
+	full: "full.webp",
+	full_damaged: "full_d.webp"
 };
 
 /** Full art lives on a different host from everything else. */
 const ART_KINDS: ReadonlySet<string> = new Set<ImageKind>(["full", "full_damaged"]);
+
+/** Prefix of a skin's form key, as in `skin-805` or `skin-legacy-marching-band`. */
+const SKIN_FORM_PREFIX = "skin-";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -39,10 +42,6 @@ const ART_KINDS: ReadonlySet<string> = new Set<ImageKind>(["full", "full_damaged
 
 /**
  * Join a path onto a base URL, encoding each segment.
- *
- * Encoding matters more than it looks. Equipment filenames contain spaces and plus signs, as in
- * `Performance+ Cartridge.png`. `encodeURI` leaves the plus alone and some servers then read it as a
- * space, so each segment goes through `encodeURIComponent` instead.
  *
  * @param base Base URL, with or without a trailing slash.
  * @param path Unencoded path relative to the base.
@@ -54,54 +53,63 @@ function join(base: string, path: string): string {
 }
 
 /**
- * Build the filename prefix for a form.
+ * The form key of a skin, shared by the doll page, the art viewer's `form=` parameter and `TDoll.forms`.
  *
- * Portraits omit the form for the base state (`110_card.png`), while animations always spell it out
- * (`110_normal_attack.gif`). The two are not interchangeable.
+ * @param skinKey The skin's id, or a `legacy-<slug>` key for art only the old asset repos hosted.
+ * @returns The form key, such as `skin-805`.
+ */
+export function skinFormKey(skinKey: string | number): string {
+	return `${SKIN_FORM_PREFIX}${skinKey}`;
+}
+
+/**
+ * The skin key inside a skin's form key.
+ *
+ * @param form A form key such as `normal`, `mod` or `skin-805`.
+ * @returns The skin key, or null when the form is not a skin.
+ */
+export function skinKeyOf(form: string): string | null {
+	return form.startsWith(SKIN_FORM_PREFIX) ? form.slice(SKIN_FORM_PREFIX.length) : null;
+}
+
+/**
+ * Folder holding one form's portraits, relative to either host.
  *
  * @param id Doll id.
- * @param form Form name such as `normal`, `mod` or `mod_skin1`.
- * @returns The filename prefix, without a trailing underscore.
+ * @param form Form key: `normal`, `mod` or a `skinFormKey`.
+ * @returns The folder, such as `tdolls/65/skins/805`.
  */
-function formPrefix(id: number, form: string): string {
-	return form === "normal" ? `${id}` : `${id}_${form}`;
+function formFolder(id: number, form: string): string {
+	const skinKey = skinKeyOf(form);
+	if (skinKey !== null) {
+		return `tdolls/${id}/skins/${skinKey}`;
+	}
+	return form === "mod" ? `tdolls/${id}/mod` : `tdolls/${id}`;
 }
 
 /**
  * URL for one portrait.
  *
  * @param id Doll id.
- * @param form Form name.
+ * @param form Form key: `normal`, `mod` or a `skinFormKey`.
  * @param kind Which portrait to build.
  * @returns An absolute URL on whichever host serves that kind.
  */
 export function imageUrl(id: number, form: string, kind: ImageKind): string {
 	const base = ART_KINDS.has(kind) ? ART_BASE : ASSET_BASE;
-	return join(base, `tdolls/${id}/${formPrefix(id, form)}_${IMAGE_SUFFIX[kind]}.png`);
+	return join(base, `${formFolder(id, form)}/${IMAGE_FILE[kind]}`);
 }
 
 /**
- * URL for one combat animation.
+ * URL for a skin's card as worn by the Mod, which sits next to the skin's own card.
  *
  * @param id Doll id.
- * @param form Form name.
- * @param name Animation name such as `attack` or `victoryloop`.
+ * @param skinKey The skin's key.
+ * @param kind Which card to build.
  * @returns An absolute URL.
  */
-export function animationUrl(id: number, form: string, name: string): string {
-	return join(ASSET_BASE, `tdolls/${id}/animations/${id}_${form}_${name}.gif`);
-}
-
-/**
- * URL for one dorm animation.
- *
- * @param id Doll id.
- * @param form Form name.
- * @param name Dorm animation name such as `sit` or `lying`.
- * @returns An absolute URL.
- */
-export function dormAnimationUrl(id: number, form: string, name: string): string {
-	return join(ASSET_BASE, `tdolls/${id}/animations/${id}_${form}_dorm_${name}.gif`);
+export function modSkinCardUrl(id: number, skinKey: string, kind: CardKind): string {
+	return join(ASSET_BASE, `${formFolder(id, skinFormKey(skinKey))}/mod_${IMAGE_FILE[kind]}`);
 }
 
 /**
@@ -112,30 +120,29 @@ export function dormAnimationUrl(id: number, form: string, name: string): string
  * @returns An absolute URL.
  */
 export function skillImageUrl(id: number, skill: string): string {
-	return join(ASSET_BASE, `tdolls/${id}/${id}_${skill}.png`);
+	return join(ASSET_BASE, `tdolls/${id}/${skill}.png`);
 }
 
 /**
  * URL for one file inside a Spine bundle.
  *
  * @param id Doll id.
- * @param bundle Bundle name, such as `FG42`.
+ * @param rigPath Rig path from the Spine index, relative to the doll's Spine folder, such as `skins/805/HK416_805`.
  * @param extension File extension without the dot, one of `skel`, `atlas` or `png`.
  * @returns An absolute URL.
  */
-export function spineUrl(id: number, bundle: string, extension: string): string {
-	return join(ASSET_BASE, `spine/${id}/${bundle}.${extension}`);
+export function spineUrl(id: number, rigPath: string, extension: string): string {
+	return join(ASSET_BASE, `spine/${id}/${rigPath}.${extension}`);
 }
 
 /**
  * Directory holding a Spine atlas's page images, with a trailing slash.
  *
- * The atlas refers to its page by bare filename, so the runtime needs the directory to resolve it.
- * Some dolls keep their Spine files in a subdirectory, which is why this is derived from the atlas
- * path rather than assumed to be the doll's root.
+ * The atlas refers to its page by bare filename, so the runtime needs the directory to resolve it. Mod and skin rigs keep their files in
+ * a subfolder, which is why this is derived from the atlas path rather than assumed to be the doll's root.
  *
  * @param id Doll id.
- * @param atlasPath Atlas basename from the Spine index, possibly including a subdirectory.
+ * @param atlasPath Atlas path from the Spine index, possibly including a subfolder.
  * @returns An absolute URL ending in a slash.
  */
 export function spineImageBase(id: number, atlasPath: string): string {
@@ -146,11 +153,11 @@ export function spineImageBase(id: number, atlasPath: string): string {
 /**
  * URL for an equipment icon.
  *
- * @param path Asset path from the generated data, such as `equipment/opticalSight/16Lab 6-24X56.png`.
+ * @param id Equipment id.
  * @returns An absolute URL.
  */
-export function equipmentAssetUrl(path: string): string {
-	return join(ASSET_BASE, path);
+export function equipmentIconUrl(id: number): string {
+	return join(ASSET_BASE, `equipment/${id}.png`);
 }
 
 /**

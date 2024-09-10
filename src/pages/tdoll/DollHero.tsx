@@ -126,10 +126,10 @@ interface DollHeroProps {
 	hasFullArt: boolean;
 	/** The doll's skins, or null when it has none. */
 	skins: RawSkins | null;
-	/** The doubled index of the selected skin pill, or false when no skin is selected. */
-	skinValue: number | false;
-	/** Called with the doubled skin index when a skin pill is clicked, or false when the Base pill is clicked. */
-	onSkinChange: (event: unknown, newValue: number | false) => void;
+	/** The key of the selected skin, its skin id as a string, or false when no skin is selected. */
+	skinValue: string | false;
+	/** Called with the skin's key when a skin pill is clicked, or false when the Base pill is clicked. */
+	onSkinChange: (event: unknown, newValue: string | false) => void;
 	/** Whether the doll has a Mod, which shows the Mod toggle. */
 	hasMod: boolean;
 	/** Whether the Mod toggle is currently on. */
@@ -170,12 +170,13 @@ export default memo(function DollHero({
 	profile,
 	specs
 }: DollHeroProps) {
-	// Shared by every skin pill, which carries its doubled index in `data-skin`. A new arrow per pill per render
+	// Shared by every skin pill, which carries its skin key in `data-skin`. A new arrow per pill per render
 	// would hand each Chip a fresh prop and re-render the whole row on any change to the page.
-	const handleSkinClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, Number(event.currentTarget.dataset.skin)), [onSkinChange]);
+	const handleSkinClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, event.currentTarget.dataset.skin ?? false), [onSkinChange]);
 	const handleBaseClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, false), [onSkinChange]);
 
 	const skinNames = skins?.skin_names ?? [];
+	const skinIds = skins?.skin_ids ?? [];
 
 	return (
 		<Box data-testid="doll-hero" sx={styles.root}>
@@ -225,14 +226,17 @@ export default memo(function DollHero({
 						<Box sx={styles.pillRow} role="group" aria-label="Skins">
 							<Chip label="Base" size="small" clickable onClick={handleBaseClick} aria-pressed={skinValue === false} sx={skinValue === false ? styles.pillSelected : styles.pill} />
 							{skinNames.map((skinName, index) => {
-								const value = index * 2;
-								const selected = skinValue === value;
+								// A hand-written skin with no id has no art to show, so its pill is disabled.
+								const skinId = skinIds[index];
+								const value = skinId === null || skinId === undefined ? undefined : String(skinId);
+								const selected = value !== undefined && skinValue === value;
 								return (
 									<Chip
-										key={value}
+										key={value ?? `unkeyed-${index}`}
 										label={skinName}
 										size="small"
 										clickable
+										disabled={value === undefined}
 										data-skin={value}
 										onClick={handleSkinClick}
 										aria-pressed={selected}
