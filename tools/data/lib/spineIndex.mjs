@@ -2,7 +2,8 @@
  * Shape check for the generated `src/data/spine-index.json`.
  *
  * The site reads the skin-id (v3) index: skin rigs keyed by skin id under `skins`. An index written by a retired slot-map tool, with
- * `skinRigs` arrays, or one missing combat rigs would still load but show the wrong chibi or none, so the check fails on it instead.
+ * `skinRigs` arrays, or one missing combat rigs would still load but show the wrong chibi or none, so the check fails on it instead. A rig
+ * with no animation names is rejected too, since the page would offer a chibi with nothing to play.
  */
 
 /**
@@ -13,6 +14,26 @@
  */
 function isRig(rig) {
 	return typeof rig === "object" && rig !== null && typeof rig.skel === "string" && typeof rig.atlas === "string" && Array.isArray(rig.anims);
+}
+
+/**
+ * List every rig a doll's entry holds, labelled for messages.
+ *
+ * @param {object} entry One doll's index entry.
+ * @returns {Array<[string, object]>} Label and rig pairs for the rigs that are present and rig-shaped.
+ */
+function labelledRigs(entry) {
+	const skins = typeof entry.skins === "object" && entry.skins !== null && !Array.isArray(entry.skins) ? Object.entries(entry.skins) : [];
+	return [
+		["combat", entry.combat],
+		["dorm", entry.dorm],
+		["Mod combat", entry.mod?.combat],
+		["Mod dorm", entry.mod?.dorm],
+		...skins.flatMap(([key, pair]) => [
+			[`skin ${key} combat`, pair?.combat],
+			[`skin ${key} dorm`, pair?.dorm]
+		])
+	].filter(([, rig]) => isRig(rig));
 }
 
 /**
@@ -42,6 +63,11 @@ export function findSpineIndexProblems(index) {
 		}
 		if (entry.mod !== undefined && !isRig(entry.mod?.combat)) {
 			problems.push(`doll ${id} Mod has no combat rig`);
+		}
+		for (const [label, rig] of labelledRigs(entry)) {
+			if (rig.anims.length === 0) {
+				problems.push(`doll ${id} ${label} rig ${rig.skel} has no animations`);
+			}
 		}
 		if (entry.skins !== undefined) {
 			if (typeof entry.skins !== "object" || entry.skins === null || Array.isArray(entry.skins)) {

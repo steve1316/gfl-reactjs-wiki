@@ -10,8 +10,13 @@ Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and th
 - `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes per tree.
 - `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes per tree after the Spine pass.
 
-Skins listed as `legacy` in `tools/data/extra-skins.json` have no game bundle. Their cards and full art are converted from the old `skinN` PNGs in the
-current asset and art repo clones into `skins/<key>/`. None of them has a Spine rig that clearly belongs to it, so no legacy rigs are copied.
+Skins listed as `legacy` in `tools/data/extra-skins.json` have no game bundle. Their cards and full art are converted from the old `skinN` PNGs of the
+old-layout asset and art repos into `skins/<key>/`. None of them has a Spine rig that clearly belongs to it, so no legacy rigs are copied. The
+collaboration dolls 1003-1008 have no skill codename, so their skill icons are carried over from the old asset repo the same way.
+
+Every input from the old-layout repos (legacy skins, collaboration skill icons, UI images, equipment proof icons and a sample of old cards for the
+card check) is read from a snapshot in the git-ignored `tools/assets/.cache/legacy/`, so the extractor still runs once the repos are rebuilt.
+`snapshot-legacy` writes it from the clones' `main` with `git cat-file`, and `snapshot.json` records the source commits, paths and blob hashes.
 
 Cards are the two halves of the game's 512x512 `pic_<Code>_N` atlas. Equipment icons are composited onto the game's own rarity pattern sprites
 from `atlasclips_listequipment`. The exclusive "ONLY" badge is already drawn into the game icon, so no badge sprite is added.
@@ -22,22 +27,30 @@ so the site's Spine 2.1 runtime reads them unchanged. Atlas page lines that diff
 
 Subcommands:
 
-- `run` checks 20 hosted cards against the bundles, then extracts every image tier with a process pool and converts the legacy skins.
+- `snapshot-legacy` copies the old-layout inputs from the clones' `main` into `tools/assets/.cache/legacy/`.
+- `run` checks 20 snapshot cards against the bundles (skip with `--skip-card-check`), then extracts every image tier with a process pool and
+  converts the legacy skins and skill icons.
 - `spine` extracts every Spine rig into `assets/spine/`, replacing what was there.
-- `verify-cards` runs only the hosted card check.
+- `verify-cards` runs only the card check.
 - `proof-equip` writes side-by-side comparisons of composited and hosted equipment icons.
+
+`run`, `verify-cards` and `proof-equip` read the snapshot. Passing `--reference-clone` and `--art-clone` instead reads the clones' `--legacy-ref`
+(default `main`) into a temporary snapshot for that run only. `--staging` picks the output root.
 """
 
 import argparse
 import collections
 import concurrent.futures
+import hashlib
 import io
 import json
 import os
 import random
 import re
 import shutil
+import subprocess
 import sys
+import tempfile
 import time
 
 from PIL import Image
@@ -53,6 +66,9 @@ from game_bundles import BUNDLE_CACHE_DIR, BYTES_PER_MB, INVENTORY_PATH, REPO_RO
 # Constants
 
 STAGING_DIR = os.path.join(TOOLS_DIR, ".staging")
+LEGACY_DIR = os.path.join(TOOLS_DIR, ".cache", "legacy")
+LEGACY_MANIFEST_NAME = "snapshot.json"
+LEGACY_REF = "main"
 EXTRA_SKINS_PATH = os.path.join(REPO_ROOT, "tools", "data", "extra-skins.json")
 TREES = ("assets", "art")
 
@@ -116,9 +132,14 @@ LEGACY_FILES = (
 LEGACY_TIERS = {role: tier for role, _clone, _template, _name, _required, tier in LEGACY_FILES}
 CARD_SIZE = (256, 512)
 
+# Old path of a collaboration doll's skill icon in the old asset repo. `{slot}` is `skill1` or `skill2`.
+LEGACY_SKILL_TEMPLATE = "tdolls/{id}/{id}_{slot}.png"
+
 HOSTED_CARD_RE = re.compile(r"^\d+_(?:(mod)_)?(?:skin(\d+)_)?card\.png$")
 CARD_CHECK_COUNT = 20
 CARD_CHECK_SEED = 4
+# Old base and Mod cards kept in the legacy snapshot for the card check.
+CARD_SNAPSHOT_COUNT = 40
 # Hosted icons the equipment proofs compare against, by equipment id. The site data no longer carries hosted icon paths.
 PROOF_EQUIP_ICONS = {
     1: "equipment/opticalSight/BM 3-12X40.png",
@@ -128,7 +149,7 @@ PROOF_EQUIP_ICONS = {
     59: "equipment/armorPiercingAmmo/National Match-Grade Armor-Piercing Ammo.png",
 }
 
-# Files at the root of the asset repo clone that are not UI images.
+# Files at the root of the old asset repo that are not UI images.
 UI_SKIP = frozenset(("README.md", "assets-manifest.json", "CNAME", ".nojekyll"))
 
 
@@ -814,33 +835,83 @@ def load_legacy_skins(path=EXTRA_SKINS_PATH):
     return [extra for extra in read_json(path) if extra["source"] == "legacy"]
 
 
-def legacy_outputs(extra, assets_clone, art_clone):
+def legacy_skin_paths(extra):
+    """List a legacy skin's old slot files, relative to their old-layout repo.
+
+    Args:
+        extra: A legacy entry with `doll`, `key` and `legacySlot`.
+
+    Returns:
+        A list of `(role, tree, old path, output name, required)`, in `LEGACY_FILES` order.
+    """
+    doll_id = extra["doll"]
+    return [(role, tree, f"tdolls/{doll_id}/{template.format(id=doll_id, slot=extra['legacySlot'])}", name, required) for role, tree, template, name, required, _tier in LEGACY_FILES]
+
+
+def legacy_outputs(extra, assets_root, art_root):
     """Map a legacy skin's old slot files to their outputs in the skin-id layout.
 
     Args:
         extra: A legacy entry with `doll`, `key` and `legacySlot`.
-        assets_clone: The local clone of the current asset repo, holding the old cards.
-        art_clone: The local clone of the current art repo, holding the old full art.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot, holding the old cards.
+        art_root: The old art repo files, normally the `art` folder of the legacy snapshot, holding the old full art.
 
     Returns:
         A list of `(role, source path, tree, output path, required)`, in `LEGACY_FILES` order.
     """
-    doll_id, clones = extra["doll"], {"assets": assets_clone, "art": art_clone}
-    folder = f"tdolls/{doll_id}/skins/{extra['key']}"
-    rows = []
-    for role, tree, template, name, required, _tier in LEGACY_FILES:
-        source = os.path.join(clones[tree], "tdolls", str(doll_id), template.format(id=doll_id, slot=extra["legacySlot"]))
-        rows.append((role, source, tree, f"{folder}/{name}", required))
-    return rows
+    roots = {"assets": assets_root, "art": art_root}
+    folder = f"tdolls/{extra['doll']}/skins/{extra['key']}"
+    return [(role, os.path.join(roots[tree], *rel.split("/")), tree, f"{folder}/{name}", required) for role, tree, rel, name, required in legacy_skin_paths(extra)]
 
 
-def extract_legacy_skin(extra, assets_clone, art_clone, staging):
+def legacy_skill_paths(item):
+    """List the old and new paths of a legacy skill icon item, one pair per doll slot using it.
+
+    Args:
+        item: A `skill_icon` inventory item with `source` of `legacy` and `users`.
+
+    Returns:
+        A list of `(old path, output path)`.
+    """
+    return [(LEGACY_SKILL_TEMPLATE.format(id=doll_id, slot=slot), f"tdolls/{doll_id}/{slot}.png") for doll_id, slot in item["users"]]
+
+
+def extract_legacy_skill_icons(items, assets_root, staging):
+    """Carry the skill icons of collaboration dolls over from the old asset repo, re-encoded as PNG like every other skill icon.
+
+    Args:
+        items: `skill_icon` inventory items with `source` of `legacy`.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot.
+        staging: The staging root.
+
+    Returns:
+        A worker result. A missing old icon is a `missing` entry under the item's key, which fails the run.
+    """
+    result = new_result()
+    for item in items:
+        for old, rel in legacy_skill_paths(item):
+            source = os.path.join(assets_root, *old.split("/"))
+            if not os.path.isfile(source):
+                result["missing"].append({"key": item["key"], "role": "icon", "reason": f"no old file {old}"})
+                continue
+            try:
+                with Image.open(source) as image:
+                    if image.size != SKILL_SIZE:
+                        result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(image.size), "expected": list(SKILL_SIZE)})
+                    data = encode_png(image)
+                write_file(staging, "assets", rel, data, "skill_icon", result)
+            except Exception as exc:
+                result["missing"].append({"key": item["key"], "role": "icon", "reason": f"convert failed: {exc!r}"})
+    return result
+
+
+def extract_legacy_skin(extra, assets_root, art_root, staging):
     """Convert one legacy skin's old PNGs: cards to WebP at `CARD_QUALITY`, full art to WebP at `FULL_QUALITY` at its native size.
 
     Args:
         extra: A legacy entry with `doll`, `key` and `legacySlot`.
-        assets_clone: The local clone of the current asset repo.
-        art_clone: The local clone of the current art repo.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot.
+        art_root: The old art repo files, normally the `art` folder of the legacy snapshot.
         staging: The staging root.
 
     Returns:
@@ -848,7 +919,7 @@ def extract_legacy_skin(extra, assets_clone, art_clone, staging):
     """
     result = new_result()
     key = f"legacy_skin:{extra['doll']}:{extra['key']}"
-    for role, source, tree, rel, required in legacy_outputs(extra, assets_clone, art_clone):
+    for role, source, tree, rel, required in legacy_outputs(extra, assets_root, art_root):
         if not os.path.isfile(source):
             if required:
                 result["missing"].append({"key": key, "role": role, "reason": f"no old file {source}"})
@@ -901,62 +972,82 @@ def mean_abs_diff(first, second):
     return sum(ImageStat.Stat(diff).mean) / len(diff.getbands())
 
 
-def hosted_card_targets(inventory, clone):
-    """Map every hosted base and Mod card in the asset repo clone to the inventory asset it should match.
+def hosted_card_targets(inventory, paths):
+    """Map every old base and Mod card among some old asset repo paths to the inventory asset it should match.
 
-    Hosted skin cards sit in positional `skinN` slots, and the slot map that tied them to skin ids is retired, so they are left out.
+    Old skin cards sit in positional `skinN` slots, and the slot map that tied them to skin ids is retired, so they are left out. A card whose
+    damaged twin is not among the paths is left out too.
 
     Args:
         inventory: The inventory dict.
-        clone: The local clone of the current asset repo.
+        paths: Paths relative to the old asset repo root, such as `tdolls/65/65_card.png`.
 
     Returns:
-        A sorted list of `(hosted path, item, role)`.
+        A list of `(old path, item, role)` sorted by path.
     """
     items = {item["key"]: item for item in inventory["items"]}
+    present = set(paths)
     targets = []
-    root = os.path.join(clone, "tdolls")
-    for doll in sorted(os.listdir(root)):
-        for filename in sorted(os.listdir(os.path.join(root, doll))):
-            parsed = parse_hosted_card(filename)
-            if not parsed or parsed[1]:
-                continue
-            item = items.get(f"art:{doll}" if parsed[0] == "normal" else f"mod_art:{doll}")
-            if item and "card" in item["assets"]:
-                targets.append((os.path.join(root, doll, filename), item, "card"))
+    for rel in sorted(present):
+        parts = rel.split("/")
+        if len(parts) != 3 or parts[0] != "tdolls":
+            continue
+        parsed = parse_hosted_card(parts[2])
+        if not parsed or parsed[1] or rel.replace("_card.png", "_card_d.png") not in present:
+            continue
+        item = items.get(f"art:{parts[1]}" if parsed[0] == "normal" else f"mod_art:{parts[1]}")
+        if item and "card" in item["assets"]:
+            targets.append((rel, item, "card"))
     return targets
 
 
-def verify_hosted_cards(inventory, clone, cache_dir, count=CARD_CHECK_COUNT, seed=CARD_CHECK_SEED):
-    """Check that atlas halves match a random sample of hosted cards pixel for pixel.
+def relative_files(root):
+    """List every file under a folder as forward-slash paths relative to it.
+
+    Args:
+        root: The folder, which may not exist.
+
+    Returns:
+        Sorted relative paths.
+    """
+    found = []
+    for folder, _dirs, names in os.walk(root):
+        found.extend(os.path.relpath(os.path.join(folder, name), root).replace(os.sep, "/") for name in names)
+    return sorted(found)
+
+
+def verify_hosted_cards(inventory, assets_root, cache_dir, count=CARD_CHECK_COUNT, seed=CARD_CHECK_SEED):
+    """Check that atlas halves match a random sample of old cards pixel for pixel.
 
     Args:
         inventory: The inventory dict.
-        clone: The local clone of the current asset repo.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot.
         cache_dir: The bundle cache directory.
-        count: How many hosted cards to sample.
+        count: How many old cards to sample, capped at the number available.
         seed: Random seed, so the sample is repeatable.
 
     Returns:
         A list of `{hosted, key, role, diff_card, diff_card_d}` rows.
     """
+    targets = hosted_card_targets(inventory, relative_files(assets_root))
     rows = []
-    for hosted, item, role in random.Random(seed).sample(hosted_card_targets(inventory, clone), count):
+    for hosted, item, role in random.Random(seed).sample(targets, min(count, len(targets))):
         textures = load_textures(item["bundles"], cache_dir)
         normal, damaged = split_card_atlas(decode(textures, item["assets"][role]).convert("RGB"))
-        diffs = [mean_abs_diff(half, Image.open(path)) for half, path in ((normal, hosted), (damaged, hosted.replace("_card.png", "_card_d.png")))]
-        rows.append({"hosted": os.path.relpath(hosted, clone), "key": item["key"], "role": role, "diff_card": diffs[0], "diff_card_d": diffs[1]})
+        paths = [os.path.join(assets_root, *rel.split("/")) for rel in (hosted, hosted.replace("_card.png", "_card_d.png"))]
+        diffs = [mean_abs_diff(half, Image.open(path)) for half, path in zip((normal, damaged), paths)]
+        rows.append({"hosted": hosted, "key": item["key"], "role": role, "diff_card": diffs[0], "diff_card_d": diffs[1]})
     return rows
 
 
-def proof_equip(inventory, clone, site_dir, cache_dir, out_dir):
+def proof_equip(inventory, assets_root, site_dir, cache_dir, out_dir):
     """Write side-by-side proofs of composited against hosted equipment icons.
 
     Each proof is our icon, the hosted icon and their difference amplified 4x, left to right.
 
     Args:
         inventory: The inventory dict.
-        clone: The local clone of the current asset repo.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot.
         site_dir: Directory holding `equipment.json`.
         cache_dir: The bundle cache directory.
         out_dir: Where to write the proof PNGs.
@@ -974,7 +1065,7 @@ def proof_equip(inventory, clone, site_dir, cache_dir, out_dir):
     rows = []
     for equip_id, hosted_path in PROOF_EQUIP_ICONS.items():
         ours, _size = build_equip_icon(textures, backgrounds, items[equip_id], rarities[equip_id])
-        hosted = Image.open(os.path.join(clone, hosted_path)).convert("RGB")
+        hosted = Image.open(os.path.join(assets_root, *hosted_path.split("/"))).convert("RGB")
         diff = ImageChops.difference(ours, hosted).point(lambda value: min(255, value * 4))
         sheet = Image.new("RGB", (EQUIP_SIZE[0] * 3, EQUIP_SIZE[1]))
         for column, image in enumerate((ours, hosted, diff)):
@@ -983,6 +1074,155 @@ def proof_equip(inventory, clone, site_dir, cache_dir, out_dir):
         sheet.save(proof)
         rows.append({"equip_id": equip_id, "rarity": rarities[equip_id], "hosted": hosted_path, "diff": mean_abs_diff(ours, hosted), "proof": proof})
     return rows
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Legacy snapshot
+
+
+def git_blob_sha(data):
+    """Hash bytes the way git names a blob, so snapshot files can be checked against the commit they came from.
+
+    Args:
+        data: The file contents.
+
+    Returns:
+        The blob's SHA-1 hex digest.
+    """
+    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def git_output(clone, *args):
+    """Run a read-only git command in a clone and return its raw output.
+
+    Args:
+        clone: The repository path.
+        *args: Arguments after `git -C <clone>`.
+
+    Raises:
+        SystemExit: When the command fails.
+
+    Returns:
+        The standard output as bytes.
+    """
+    result = subprocess.run(["git", "-C", clone, *args], capture_output=True)
+    if result.returncode != 0:
+        sys.exit(f"git {' '.join(args)} failed in {clone}: {result.stderr.decode('utf-8', 'replace').strip()}")
+    return result.stdout
+
+
+def legacy_wanted(inventory, legacy_skins, assets_paths, art_paths):
+    """Choose the old-layout files the pipeline still needs.
+
+    Args:
+        inventory: The inventory dict.
+        legacy_skins: Legacy entries from `load_legacy_skins`.
+        assets_paths: Every path in the old asset repo.
+        art_paths: Every path in the old art repo.
+
+    Returns:
+        A `(wanted, absent)` pair. `wanted` is a sorted list of `(tree, path)`. `absent` lists required `tree/path` entries neither repo has.
+    """
+    present = {"assets": set(assets_paths), "art": set(art_paths)}
+    wanted, absent = set(), []
+
+    def want(tree, rel, required=True):
+        """Add one file, noting it when a required one is absent."""
+        if rel in present[tree]:
+            wanted.add((tree, rel))
+        elif required:
+            absent.append(f"{tree}/{rel}")
+
+    for rel in present["assets"]:
+        if "/" not in rel and rel not in UI_SKIP and not rel.startswith("."):
+            want("assets", rel)
+    for extra in legacy_skins:
+        for _role, tree, rel, _name, required in legacy_skin_paths(extra):
+            want(tree, rel, required)
+    for item in inventory["items"]:
+        if item["tier"] == "skill_icon" and item.get("source") == "legacy":
+            for old, _rel in legacy_skill_paths(item):
+                want("assets", old)
+    for rel in PROOF_EQUIP_ICONS.values():
+        want("assets", rel)
+    targets = hosted_card_targets(inventory, present["assets"])
+    for rel, _item, _role in random.Random(CARD_CHECK_SEED).sample(targets, min(CARD_SNAPSHOT_COUNT, len(targets))):
+        want("assets", rel)
+        want("assets", rel.replace("_card.png", "_card_d.png"))
+    return sorted(wanted), sorted(absent)
+
+
+def snapshot_legacy(inventory, legacy_skins, clones, ref, out_dir):
+    """Copy the old-layout inputs out of the clones' `ref` into a snapshot folder, replacing any previous snapshot.
+
+    The working trees are never read, so the clones can sit on any branch. Files land at `<out_dir>/<tree>/<old path>` and `snapshot.json`
+    records the ref, source commits, card sample settings and each file's size and blob hash.
+
+    Args:
+        inventory: The inventory dict.
+        legacy_skins: Legacy entries from `load_legacy_skins`.
+        clones: Map of `assets` and `art` to the old-layout clones.
+        ref: The ref holding the old layout, normally `main`.
+        out_dir: The snapshot folder.
+
+    Raises:
+        SystemExit: When a git command fails or a required file is absent at `ref`.
+
+    Returns:
+        The snapshot manifest dict.
+    """
+    sources, paths = {}, {}
+    for tree in TREES:
+        clone = os.path.abspath(clones[tree])
+        sources[tree] = {"clone": clone, "commit": git_output(clone, "rev-parse", "--verify", f"{ref}^{{commit}}").decode().strip()}
+        paths[tree] = [rel for rel in git_output(clone, "ls-tree", "-r", "--name-only", "-z", sources[tree]["commit"]).decode("utf-8").split("\0") if rel]
+    wanted, absent = legacy_wanted(inventory, legacy_skins, paths["assets"], paths["art"])
+    if absent:
+        sys.exit(f"the old layout at {ref} lacks required files: {', '.join(absent)}")
+
+    staging = f"{out_dir.rstrip(os.sep)}.partial"
+    shutil.rmtree(staging, ignore_errors=True)
+    files = []
+    for tree, rel in wanted:
+        data = git_output(sources[tree]["clone"], "cat-file", "blob", f"{sources[tree]['commit']}:{rel}")
+        path = os.path.join(staging, tree, *rel.split("/"))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as handle:
+            handle.write(data)
+        files.append({"tree": tree, "path": rel, "bytes": len(data), "blob": git_blob_sha(data)})
+    manifest = {"ref": ref, "sources": sources, "cardSample": {"count": CARD_SNAPSHOT_COUNT, "seed": CARD_CHECK_SEED}, "files": files}
+    with open(os.path.join(staging, LEGACY_MANIFEST_NAME), "w", encoding="utf-8") as handle:
+        json.dump(manifest, handle, indent=1)
+        handle.write("\n")
+    shutil.rmtree(out_dir, ignore_errors=True)
+    os.replace(staging, out_dir)
+    return manifest
+
+
+def check_legacy_snapshot(legacy_dir):
+    """Confirm a legacy snapshot is complete and unchanged since it was written.
+
+    Args:
+        legacy_dir: The snapshot folder.
+
+    Returns:
+        A `(manifest, problems)` pair: the snapshot manifest, or None when there is none, and a list of problem messages.
+    """
+    manifest_path = os.path.join(legacy_dir, LEGACY_MANIFEST_NAME)
+    if not os.path.isfile(manifest_path):
+        return None, [f"no legacy snapshot at {legacy_dir}. Run `snapshot-legacy --reference-clone <assets clone> --art-clone <art clone>` first"]
+    manifest = read_json(manifest_path)
+    problems = []
+    for entry in manifest["files"]:
+        path = os.path.join(legacy_dir, entry["tree"], *entry["path"].split("/"))
+        if not os.path.isfile(path):
+            problems.append(f"{entry['tree']}/{entry['path']} is missing")
+            continue
+        with open(path, "rb") as handle:
+            if git_blob_sha(handle.read()) != entry["blob"]:
+                problems.append(f"{entry['tree']}/{entry['path']} does not match blob {entry['blob']}")
+    return manifest, problems
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1038,20 +1278,20 @@ def reset_staging(staging):
         os.makedirs(os.path.join(staging, tree), exist_ok=True)
 
 
-def copy_ui(clone, staging):
-    """Copy the UI images at the root of the current asset repo into the asset tree unchanged.
+def copy_ui(assets_root, staging):
+    """Copy the UI images at the root of the old asset repo into the asset tree unchanged.
 
     Args:
-        clone: The local clone of the current asset repo.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot.
         staging: The staging root.
 
     Returns:
         The copied filenames.
     """
-    names = sorted(name for name in os.listdir(clone) if os.path.isfile(os.path.join(clone, name)) and name not in UI_SKIP and not name.startswith("."))
+    names = sorted(name for name in os.listdir(assets_root) if os.path.isfile(os.path.join(assets_root, name)) and name not in UI_SKIP and not name.startswith("."))
     for name in names:
-        check_file_size("assets", name, os.path.getsize(os.path.join(clone, name)))
-        shutil.copyfile(os.path.join(clone, name), os.path.join(staging, "assets", name))
+        check_file_size("assets", name, os.path.getsize(os.path.join(assets_root, name)))
+        shutil.copyfile(os.path.join(assets_root, name), os.path.join(staging, "assets", name))
     return names
 
 
@@ -1072,13 +1312,12 @@ def tier_counts(files):
     return counts
 
 
-def run_extraction(inventory, clone, art_clone, legacy_skins, site_dir, cache_dir, staging, workers):
-    """Extract every image tier and the legacy skins into the staging trees and write the report.
+def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, staging, workers):
+    """Extract every image tier, the legacy skins and the legacy skill icons into the staging trees and write the report.
 
     Args:
         inventory: The inventory dict.
-        clone: The local clone of the current asset repo, for the UI images and legacy cards.
-        art_clone: The local clone of the current art repo, for legacy full art.
+        legacy_dir: The legacy snapshot folder, holding the old UI images, cards and skill icons under `assets/` and full art under `art/`.
         legacy_skins: Legacy entries from `load_legacy_skins`.
         site_dir: Directory holding `equipment.json`.
         cache_dir: The bundle cache directory.
@@ -1089,15 +1328,19 @@ def run_extraction(inventory, clone, art_clone, legacy_skins, site_dir, cache_di
         The report dict.
     """
     started = time.monotonic()
+    legacy_assets, legacy_art = os.path.join(legacy_dir, "assets"), os.path.join(legacy_dir, "art")
     reset_staging(staging)
-    ui_files = copy_ui(clone, staging)
+    ui_files = copy_ui(legacy_assets, staging)
     rarities = load_rarities(site_dir)
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
-    art_items, skill_items, equip_items = [], [], []
+    art_items, skill_items, equip_items, legacy_skill_items = [], [], [], []
     for item in inventory["items"]:
         wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon")
         if not wanted:
+            continue
+        if item["tier"] == "skill_icon" and item.get("source") == "legacy":
+            legacy_skill_items.append(item)
             continue
         if item["status"] != "resolved" and not item["assets"]:
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
@@ -1123,12 +1366,13 @@ def run_extraction(inventory, clone, art_clone, legacy_skins, site_dir, cache_di
             if done % 100 == 0 or done == len(futures):
                 print(f"[{done}/{len(futures)}] {len(files)} files, {time.monotonic() - started:.0f}s", flush=True)
 
-    for extra in legacy_skins:
-        result = extract_legacy_skin(extra, clone, art_clone, staging)
+    legacy_results = [extract_legacy_skin(extra, legacy_assets, legacy_art, staging) for extra in legacy_skins]
+    legacy_results.append(extract_legacy_skill_icons(legacy_skill_items, legacy_assets, staging))
+    for result in legacy_results:
         files.extend(result["files"])
         report["missing"].extend(result["missing"])
         report["nonstandard"].extend(result["nonstandard"])
-    print(f"legacy skins: {len(legacy_skins)}", flush=True)
+    print(f"legacy skins: {len(legacy_skins)}, legacy skill icons: {len(legacy_skill_items)}", flush=True)
 
     counts = tier_counts(files)
     counts["ui"] = {"tree": "assets", "files": len(ui_files), "bytes": sum(os.path.getsize(os.path.join(staging, "assets", name)) for name in ui_files)}
@@ -1253,16 +1497,18 @@ def print_report(report):
         print(f"  size {row['key']} {row['role']}: {row['size']} (expected {row['expected']})")
 
 
-def check_cards(inventory, clone, cache_dir, allow_diffs=False):
-    """Run the hosted card check and stop the program when any card differs.
+def check_cards(inventory, assets_root, cache_dir, allow_diffs=False):
+    """Run the card check and stop the program when any card differs.
 
     Args:
         inventory: The inventory dict.
-        clone: The local clone of the current asset repo.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot.
         cache_dir: The bundle cache directory.
         allow_diffs: Print differing cards but carry on. Only for runs where the differences were inspected and are art revisions.
     """
-    rows = verify_hosted_cards(inventory, clone, cache_dir)
+    rows = verify_hosted_cards(inventory, assets_root, cache_dir)
+    if not rows:
+        sys.exit("card check found no old cards to compare. Refresh the legacy snapshot, or pass --skip-card-check")
     for row in rows:
         print(f"card check {row['hosted']} <- {row['key']} {row['role']}: diff {row['diff_card']:.4f} / {row['diff_card_d']:.4f}")
     bad = [row for row in rows if row["diff_card"] or row["diff_card_d"]]
@@ -1274,15 +1520,79 @@ def check_cards(inventory, clone, cache_dir, allow_diffs=False):
     print(f"card check passed: {len(rows)} hosted cards match their atlas halves exactly")
 
 
+def run_with_legacy(args, inventory):
+    """Run `run`, `verify-cards` or `proof-equip` against the legacy snapshot, or against a temporary one read from the clones when both are given.
+
+    Args:
+        args: Parsed command-line arguments.
+        inventory: The inventory dict.
+
+    Raises:
+        SystemExit: When the inputs are incomplete or the command fails.
+    """
+    if args.reference_clone or args.art_clone:
+        if not (args.reference_clone and args.art_clone):
+            sys.exit("reading the old layout from clones needs both --reference-clone and --art-clone")
+        with tempfile.TemporaryDirectory(prefix="legacy-snapshot-") as scratch:
+            legacy_dir = os.path.join(scratch, "legacy")
+            manifest = snapshot_legacy(inventory, load_legacy_skins(), {"assets": args.reference_clone, "art": args.art_clone}, args.legacy_ref, legacy_dir)
+            print(f"read {len(manifest['files'])} old-layout files from {args.legacy_ref} of the clones into a temporary snapshot", flush=True)
+            run_legacy_command(args, inventory, legacy_dir)
+        return
+    manifest, problems = check_legacy_snapshot(args.legacy)
+    if problems:
+        sys.exit("legacy snapshot problems:\n  " + "\n  ".join(problems))
+    commits = ", ".join(f"{tree} {source['commit'][:7]}" for tree, source in manifest["sources"].items())
+    print(f"legacy snapshot {args.legacy}: {len(manifest['files'])} files from {manifest['ref']} ({commits})", flush=True)
+    run_legacy_command(args, inventory, args.legacy)
+
+
+def run_legacy_command(args, inventory, legacy_dir):
+    """Run `run`, `verify-cards` or `proof-equip` with a checked legacy snapshot.
+
+    Args:
+        args: Parsed command-line arguments.
+        inventory: The inventory dict.
+        legacy_dir: The snapshot folder.
+
+    Raises:
+        SystemExit: When a command fails.
+    """
+    legacy_assets = os.path.join(legacy_dir, "assets")
+    if args.command == "proof-equip":
+        if not args.out_dir:
+            sys.exit("proof-equip needs --out-dir")
+        for row in proof_equip(inventory, legacy_assets, args.site_data, args.cache, args.out_dir):
+            print(f"equip {row['equip_id']} rarity {row['rarity']} ({row['hosted']}): mean abs diff {row['diff']:.2f} -> {row['proof']}")
+        return
+
+    if args.command == "verify-cards" or not args.skip_card_check:
+        check_cards(inventory, legacy_assets, args.cache, args.allow_card_diffs)
+    else:
+        print("card check skipped because --skip-card-check was passed", flush=True)
+    if args.command == "verify-cards":
+        return
+
+    print(f"extracting with {args.workers} workers into {args.staging}", flush=True)
+    report = run_extraction(inventory, legacy_dir, load_legacy_skins(), args.site_data, args.cache, args.staging, args.workers)
+    print_report(report)
+    reasons = failure_reasons(report)
+    if reasons:
+        sys.exit(f"extraction failed: {'; '.join(reasons)}")
+
+
 def main():
     """Parse arguments and run the requested subcommand."""
     parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging trees.")
-    parser.add_argument("command", choices=("run", "spine", "verify-cards", "proof-equip"))
-    parser.add_argument("--reference-clone", help="Local clone of the current gfl-wiki-assets repo. Required by every command but `spine`.")
-    parser.add_argument("--art-clone", help="Local clone of the current gfl-wiki-assets-art repo, for legacy skin full art. Required by `run`.")
+    parser.add_argument("command", choices=("snapshot-legacy", "run", "spine", "verify-cards", "proof-equip"))
+    parser.add_argument("--legacy", default=LEGACY_DIR, help="The legacy snapshot folder read by `run`, `verify-cards` and `proof-equip`.")
+    parser.add_argument("--reference-clone", help="Old-layout gfl-wiki-assets clone. Needed by `snapshot-legacy`, otherwise read instead of the snapshot.")
+    parser.add_argument("--art-clone", help="Old-layout gfl-wiki-assets-art clone. Needed by `snapshot-legacy`, otherwise read instead of the snapshot.")
+    parser.add_argument("--legacy-ref", default=LEGACY_REF, help="Ref holding the old layout in the clones.")
+    parser.add_argument("--skip-card-check", action="store_true", help="Skip the card check before `run` extracts.")
     parser.add_argument("--site-data", default=SITE_DATA_DIR, help="Directory holding the site's equipment.json.")
     parser.add_argument("--cache", default=BUNDLE_CACHE_DIR, help="Bundle cache directory.")
-    parser.add_argument("--staging", default=STAGING_DIR, help="Staging root holding the assets and art trees.")
+    parser.add_argument("--staging", default=STAGING_DIR, help="Output root holding the assets and art trees.")
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1), help="Process pool size, defaults to cores - 1.")
     parser.add_argument("--out-dir", help="Output folder for proof-equip.")
     parser.add_argument("--allow-card-diffs", action="store_true", help="Report hosted cards that differ from the game atlas instead of stopping.")
@@ -1290,35 +1600,23 @@ def main():
     inventory = read_json(INVENTORY_PATH)
 
     if args.command == "spine":
-        print(f"extracting Spine rigs with {args.workers} workers", flush=True)
+        print(f"extracting Spine rigs with {args.workers} workers into {args.staging}", flush=True)
         report = run_spine(inventory, args.cache, args.staging, args.workers)
         print_report(report)
         reasons = failure_reasons(report)
         if reasons:
             sys.exit(f"Spine extraction failed: {'; '.join(reasons)}")
         return
-    if not args.reference_clone:
-        sys.exit(f"{args.command} needs --reference-clone")
-    if args.command == "run" and not args.art_clone:
-        sys.exit("run needs --art-clone")
-
-    if args.command == "proof-equip":
-        if not args.out_dir:
-            sys.exit("proof-equip needs --out-dir")
-        for row in proof_equip(inventory, args.reference_clone, args.site_data, args.cache, args.out_dir):
-            print(f"equip {row['equip_id']} rarity {row['rarity']} ({row['hosted']}): mean abs diff {row['diff']:.2f} -> {row['proof']}")
+    if args.command == "snapshot-legacy":
+        if not (args.reference_clone and args.art_clone):
+            sys.exit("snapshot-legacy needs --reference-clone and --art-clone")
+        manifest = snapshot_legacy(inventory, load_legacy_skins(), {"assets": args.reference_clone, "art": args.art_clone}, args.legacy_ref, args.legacy)
+        for tree, source in manifest["sources"].items():
+            count = sum(1 for entry in manifest["files"] if entry["tree"] == tree)
+            print(f"{tree}: {count} files from {source['clone']} at {args.legacy_ref} ({source['commit']})")
+        print(f"wrote {args.legacy} ({sum(entry['bytes'] for entry in manifest['files']) / BYTES_PER_MB:.1f} MB)")
         return
-
-    check_cards(inventory, args.reference_clone, args.cache, args.allow_card_diffs)
-    if args.command == "verify-cards":
-        return
-
-    print(f"extracting with {args.workers} workers", flush=True)
-    report = run_extraction(inventory, args.reference_clone, args.art_clone, load_legacy_skins(), args.site_data, args.cache, args.staging, args.workers)
-    print_report(report)
-    reasons = failure_reasons(report)
-    if reasons:
-        sys.exit(f"extraction failed: {'; '.join(reasons)}")
+    run_with_legacy(args, inventory)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 Everything runs against the small fixture tree next to this file. No test touches the network.
 """
 
+import hashlib
 import os
 import sys
 import tempfile
@@ -136,18 +137,31 @@ class ResolutionTests(unittest.TestCase):
         summary = self.inventory["summary"]
         expected = {entry["key"] for entry in summary["unresolved_expected"]}
         unexpected = {entry["key"] for entry in summary["unresolved_unexpected"]}
-        self.assertEqual(expected, {"skill_icon:ma", "skill_icon:doll:1003:skill1"})
+        self.assertEqual(expected, {"skill_icon:ma"})
         self.assertEqual(
             unexpected,
             {"art:999", "spine:999", "skill_icon:ghostSkill", "skin_art:1:302", "skin_spine:163:902", "skin_spine:233:2801", "equip_icon:3"},
         )
 
+    def test_collab_skill_slots_are_legacy_sourced(self):
+        """A collaboration doll's skill slot has no codename, so it is carried from the old repo rather than counted as a gap."""
+        item = self.items["skill_icon:doll:1003:skill1"]
+        self.assertEqual((item["status"], item["source"], item["users"], item["bundles"]), ("legacy", "legacy", [[1003, "skill1"]], []))
+        self.assertEqual([entry["key"] for entry in self.inventory["summary"]["legacy"]], ["skill_icon:doll:1003:skill1"])
+        self.assertEqual(self.inventory["summary"]["tiers"]["skill_icon"]["legacy"], 1)
+
+    def test_file_hash_is_normalised(self):
+        """ResData's dashed upper-case `fileHash` becomes a plain SHA-1 digest, and anything else is dropped."""
+        self.assertEqual(game_bundles.normalise_file_hash("DA-D3-32-A0-79-8A-F6-10-B9-64-A8-ED-C0-B5-8F-30-17-05-B1-D2"), "dad332a0798af610b964a8edc0b58f301705b1d2")
+        self.assertIsNone(game_bundles.normalise_file_hash(None))
+        self.assertIsNone(game_bundles.normalise_file_hash("12-34"))
+
     def test_summary_counts_and_bundle_totals(self):
         """Tier counts and the deduplicated download total match the fixture."""
         summary = self.inventory["summary"]
-        self.assertEqual(summary["tiers"]["art"], {"items": 5, "resolved": 4, "partial": 0, "unresolved": 1})
-        self.assertEqual(summary["tiers"]["skin_art"], {"items": 4, "resolved": 2, "partial": 1, "unresolved": 1})
-        self.assertEqual(summary["tiers"]["equip_icon"], {"items": 3, "resolved": 2, "partial": 0, "unresolved": 1})
+        self.assertEqual(summary["tiers"]["art"], {"items": 5, "resolved": 4, "partial": 0, "unresolved": 1, "legacy": 0})
+        self.assertEqual(summary["tiers"]["skin_art"], {"items": 4, "resolved": 2, "partial": 1, "unresolved": 1, "legacy": 0})
+        self.assertEqual(summary["tiers"]["equip_icon"], {"items": 3, "resolved": 2, "partial": 0, "unresolved": 1, "legacy": 0})
         self.assertEqual(summary["bundle_count"], 16)
         self.assertEqual(summary["download_bytes"], 18250)
         self.assertEqual(self.inventory["bundles"]["sprites_ui"], {"resname": "hashspritesui", "sizeOriginal": 5000})
@@ -203,6 +217,18 @@ class FakeFetcher:
             handle.write(b"x" * size)
 
 
+def bundle_names(cache):
+    """List the cached bundle files, leaving out the cache index sidecar.
+
+    Args:
+        cache: The bundle cache directory.
+
+    Returns:
+        Sorted `.ab` file names.
+    """
+    return sorted(name for name in os.listdir(cache) if name.endswith(".ab"))
+
+
 class DownloadTests(unittest.TestCase):
     """Cache skipping, retries and verification with an injected fetcher."""
 
@@ -249,9 +275,9 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(os.path.getsize(os.path.join(self.cache, "character_b.ab")), 20)
         self.assertFalse([f for f in os.listdir(self.cache) if f.endswith(".part")])
 
-    def test_skips_cached_bundle_with_matching_size(self):
-        """A cached bundle of the right size is not fetched again, a wrong-sized one is."""
-        self.write_cached("character_a", 10)
+    def test_skips_bundle_cached_under_the_same_resname(self):
+        """A bundle recorded under its current resname at the right size is not fetched again, a wrong-sized one is."""
+        self.run_download(FakeFetcher(self.urls))
         self.write_cached("character_b", 5)
         fetcher = FakeFetcher(self.urls)
         result = self.run_download(fetcher)
@@ -259,6 +285,44 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(result["skipped"], ["character_a"])
         self.assertEqual(result["downloaded"], ["character_b"])
         self.assertEqual(os.path.getsize(os.path.join(self.cache, "character_b.ab")), 20)
+
+    def test_a_new_resname_of_the_same_size_is_downloaded_again(self):
+        """An updated bundle keeps its name and can keep its size, so a changed resname alone forces a fresh download."""
+        self.run_download(FakeFetcher(self.urls))
+        self.bundles["character_a"] = {"resname": "resA2", "sizeOriginal": 10}
+        fetcher = FakeFetcher({"http://cdn/resA2.ab": 10})
+        result = self.run_download(fetcher)
+        self.assertEqual(fetcher.calls, ["http://cdn/resA2.ab"])
+        self.assertEqual(game_bundles.read_cache_index(self.cache)["character_a"], {"resname": "resA2", "size": 10})
+
+    def test_unrecorded_bundle_is_adopted_only_when_its_sha1_matches(self):
+        """A bundle cached before the index existed is adopted without a download when its hash matches ResData, and fetched otherwise."""
+        self.write_cached("character_a", 10)
+        self.write_cached("character_b", 20)
+        self.bundles["character_a"]["sha1"] = hashlib.sha1(b"y" * 10).hexdigest()
+        self.bundles["character_b"]["sha1"] = hashlib.sha1(b"x" * 20).hexdigest()
+        fetcher = FakeFetcher(self.urls)
+        result = self.run_download(fetcher)
+        self.assertEqual(fetcher.calls, ["http://cdn/resB.ab"])
+        self.assertEqual((result["skipped"], result["migrated"], result["downloaded"]), (["character_a"], ["character_a"], ["character_b"]))
+        index = game_bundles.read_cache_index(self.cache)
+        self.assertEqual(index["character_a"], {"resname": "resA", "size": 10, "sha1": self.bundles["character_a"]["sha1"]})
+        fetcher = FakeFetcher(self.urls)
+        self.assertEqual((self.run_download(fetcher)["downloaded"], fetcher.calls), ([], []))
+
+    def test_unrecorded_bundle_without_a_hash_is_downloaded(self):
+        """With no `fileHash` to prove an unrecorded file, size alone is not trusted."""
+        self.write_cached("character_a", 10)
+        fetcher = FakeFetcher(self.urls)
+        self.run_download(fetcher)
+        self.assertIn("http://cdn/resA.ab", fetcher.calls)
+
+    def test_download_with_the_wrong_sha1_counts_as_a_failed_attempt(self):
+        """A download whose bytes do not hash to ResData's `fileHash` is never cached."""
+        self.bundles["character_a"]["sha1"] = "0" * 40
+        result = self.run_download(FakeFetcher(self.urls))
+        self.assertEqual([entry["name"] for entry in result["failed"]], ["character_a"])
+        self.assertNotIn("character_a", game_bundles.read_cache_index(self.cache))
 
     def test_retries_with_exponential_backoff(self):
         """Transient failures are retried with doubling sleeps."""
@@ -274,7 +338,7 @@ class DownloadTests(unittest.TestCase):
         result = self.run_download(fetcher)
         self.assertEqual(fetcher.calls.count("http://cdn/resA.ab"), game_bundles.ATTEMPTS)
         self.assertEqual([entry["name"] for entry in result["failed"]], ["character_a"])
-        self.assertEqual(os.listdir(self.cache), ["character_b.ab"])
+        self.assertEqual(bundle_names(self.cache), ["character_b.ab"])
 
     def test_size_mismatch_counts_as_a_failed_attempt(self):
         """A short download is retried rather than cached."""
@@ -285,11 +349,13 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(os.path.getsize(os.path.join(self.cache, "character_b.ab")), 20)
 
     def test_verify_cache(self):
-        """Verification lists bundles that are missing or the wrong size."""
-        self.write_cached("character_a", 10)
-        self.assertEqual(game_bundles.verify_cache(self.bundles, self.cache), [{"name": "character_b", "expected": 20, "actual": None}])
+        """Verification lists bundles that are missing, the wrong size, or recorded under another resname."""
+        self.run_download(FakeFetcher({"http://cdn/resA.ab": 10}, failures={"http://cdn/resB.ab": 5}))
+        self.assertEqual(game_bundles.verify_cache(self.bundles, self.cache), [{"name": "character_b", "check": "size", "expected": 20, "actual": None}])
         self.write_cached("character_b", 19)
-        self.assertEqual(game_bundles.verify_cache(self.bundles, self.cache), [{"name": "character_b", "expected": 20, "actual": 19}])
+        self.assertEqual(game_bundles.verify_cache(self.bundles, self.cache), [{"name": "character_b", "check": "size", "expected": 20, "actual": 19}])
+        self.write_cached("character_b", 20)
+        self.assertEqual(game_bundles.verify_cache(self.bundles, self.cache), [{"name": "character_b", "check": "resname", "expected": "resB", "actual": None}])
 
 
 if __name__ == "__main__":

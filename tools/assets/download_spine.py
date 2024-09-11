@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Download Spine chibi bundles from the game CDN and unpack them, keyed by doll id.
 
-`import_spine.py` covers the dolls present in the pre-extracted `gf-spine-simulator` snapshot, which
-stops at roughly id 200. Everything newer has to come from the CDN, where Spine data ships inside
-Unity asset bundles. `gf-resource-downloader` fetches those bundles but deliberately does not open
-them, so this script does both halves: fetch the handful of bundles that matter, then extract the
-Spine files with UnityPy.
+Spine data ships inside Unity asset bundles on the CDN. `gf-resource-downloader` fetches those bundles
+but deliberately does not open them, so this script does both halves: fetch the handful of bundles that
+matter, then extract the Spine files with UnityPy. The full asset rebuild uses `game_bundles.py` and
+`extract_game_assets.py` instead, and imports its naming helpers from here.
 
 Only the bundles for the requested dolls are fetched, not the whole 478 MB chibi tier, which keeps a
 refresh to tens of megabytes.
