@@ -1,4 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 
 // Component imports
 import LoadError from "../../components/LoadError";
@@ -7,8 +8,10 @@ import FilterPanel from "../../components/FilterPanel";
 import DollCard from "../../components/DollCard";
 
 // MaterialUI imports
-import { Box, Container, Grid, Chip, Divider, Typography, Button } from "@mui/material";
+import { Box, Container, Grid, Chip, Divider, Typography, Button, IconButton, MenuItem, TextField, Tooltip } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 import { loadAllDolls, searchIndex } from "../../lib/data";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
@@ -20,10 +23,77 @@ const PAGE_SIZE = 30;
 /** Old wiki names by doll id, from the search index, so a doll stays findable by the name it had before upstream renamed it. */
 const ALIASES_BY_ID = new Map(searchIndex.map((entry) => [entry.id, entry.aliases ?? []]));
 
+/** What the results can be sorted by. */
+type SortKey = "id" | "name" | "rarity" | "release";
+
+/** The sort menu's entries, in menu order. */
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+	{ value: "id", label: "ID" },
+	{ value: "name", label: "Name" },
+	{ value: "rarity", label: "Rarity" },
+	{ value: "release", label: "Global release" }
+];
+
+/** Compares names so digits order by value, putting "9A-91" before "43M", and case is ignored. Built once rather than per comparison. */
+const NAME_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
 /** A doll paired with the form the current filters mean we should show. */
 interface IndexEntry extends TDoll {
 	/** Either the base form or the Mod, depending on the Mod filter. */
 	selected: TDollForm;
+}
+
+/**
+ * Whether a value is one of the sort keys, for sort choices read back from session storage.
+ *
+ * @param value The stored value.
+ * @returns True when it names a sort key.
+ */
+function isSortKey(value: unknown): value is SortKey {
+	return SORT_OPTIONS.some((option) => option.value === value);
+}
+
+/**
+ * Sort the matching dolls. Ties fall back to ascending id, and dolls with no known Global release date stay last in either direction.
+ *
+ * @param entries The matching dolls, left unchanged.
+ * @param key What to sort by. Name and rarity come from the shown form, so a Mod counts as 6 stars while the Mod filter is on.
+ * @param descending Whether to reverse the order.
+ * @returns A sorted copy, or `entries` itself when the order asked for is ascending id, which it is already in.
+ */
+function sortEntries(entries: IndexEntry[], key: SortKey, descending: boolean): IndexEntry[] {
+	// The shards are already in ascending id order, and filtering keeps it.
+	if (key === "id" && !descending) {
+		return entries;
+	}
+	const direction = descending ? -1 : 1;
+	return [...entries].sort((a, b) => {
+		let order: number;
+		switch (key) {
+			case "name":
+				order = NAME_COLLATOR.compare(a.selected.name, b.selected.name);
+				break;
+			case "rarity":
+				order = a.selected.rarity - b.selected.rarity;
+				break;
+			case "release": {
+				// Decided before the direction applies, so dolls with no known date stay last either way.
+				const missing = Number(a.release.date === null) - Number(b.release.date === null);
+				if (missing !== 0) {
+					return missing;
+				}
+				// ISO dates compare as text. A month-precision date sorts before the days of that month.
+				const aDate = a.release.date ?? "";
+				const bDate = b.release.date ?? "";
+				order = aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
+				break;
+			}
+			case "id":
+				order = a.normal.id - b.normal.id;
+				break;
+		}
+		return direction * order || a.normal.id - b.normal.id;
+	});
 }
 
 const styles = {
@@ -36,6 +106,20 @@ const styles = {
 		justifyContent: "space-between",
 		gap: 1,
 		mt: 2
+	},
+	summaryStart: {
+		display: "flex",
+		flexWrap: "wrap",
+		alignItems: "center",
+		gap: 1
+	},
+	sortControls: {
+		display: "flex",
+		alignItems: "center",
+		gap: 0.5
+	},
+	sortSelect: {
+		minWidth: 160
 	},
 	activeChipList: {
 		display: "flex",
@@ -89,6 +173,10 @@ export default function TDoll_Index() {
 
 	/** How many results are on screen. Raised by the load-more button rather than by paging. */
 	const [shown, setShown] = useState(PAGE_SIZE);
+
+	/** What the results are sorted by, and whether the order is reversed. Not reset by Clear all, since it is not a filter. */
+	const [sortKey, setSortKey] = useState<SortKey>("id");
+	const [sortDescending, setSortDescending] = useState(false);
 
 	/**
 	 * The dolls matching the current filters.
@@ -146,8 +234,10 @@ export default function TDoll_Index() {
 		});
 	}, [allDolls, searchKeys, typeFilter, rarityFilter, modFilter, deferredQuery]);
 
-	// The slice of matches actually rendered, grown by PAGE_SIZE each time the load-more button is clicked.
-	const visible = useMemo(() => matches.slice(0, shown), [matches, shown]);
+	const sorted = useMemo(() => sortEntries(matches, sortKey, sortDescending), [matches, sortKey, sortDescending]);
+
+	// The slice of sorted matches actually rendered, grown by PAGE_SIZE each time the load-more button is clicked.
+	const visible = useMemo(() => sorted.slice(0, shown), [sorted, shown]);
 
 	// The old version computed this with a loop and an off-by-one, so page 2 read "30-60" rather than
 	// "31-60" and every later page was wrong by the same one.
@@ -182,11 +272,14 @@ export default function TDoll_Index() {
 			setModFilter(temp.modFilter);
 			// Absent from filters saved before the name search existed.
 			setNameQuery(typeof temp.nameQuery === "string" ? temp.nameQuery : "");
+			// Absent from filters saved before sorting existed.
+			setSortKey(isSortKey(temp.sortKey) ? temp.sortKey : "id");
+			setSortDescending(temp.sortDescending === true);
 		}
 	}, []);
 
-	// Reset the visible slice and persist the filters every time they change, so a narrower filter never
-	// leaves a stale, too-large slice on screen.
+	// Reset the visible slice and persist the filters and sort every time they change, so a narrower filter never
+	// leaves a stale, too-large slice on screen and a new order starts from its top.
 	useEffect(() => {
 		setShown(PAGE_SIZE);
 
@@ -194,10 +287,12 @@ export default function TDoll_Index() {
 			rarityFilter: rarityFilter,
 			typeFilter: typeFilter,
 			modFilter: modFilter,
-			nameQuery: nameQuery
+			nameQuery: nameQuery,
+			sortKey: sortKey,
+			sortDescending: sortDescending
 		};
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-	}, [modFilter, rarityFilter, typeFilter, nameQuery]);
+	}, [modFilter, rarityFilter, typeFilter, nameQuery, sortKey, sortDescending]);
 
 	// Every handler below is stable across renders and toggles from the current state rather than a captured copy,
 	// so the memoised FilterPanel, its chips and the result cards can all skip renders they have no part in.
@@ -214,6 +309,14 @@ export default function TDoll_Index() {
 	}, []);
 
 	const handleClearName = useCallback(() => setNameQuery(""), []);
+
+	const handleSortKeyChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+		if (isSortKey(event.target.value)) {
+			setSortKey(event.target.value);
+		}
+	}, []);
+
+	const handleToggleSortDirection = useCallback(() => setSortDescending((descending) => !descending), []);
 
 	const handleLoadMore = useCallback(() => setShown((current) => current + PAGE_SIZE), []);
 
@@ -259,19 +362,36 @@ export default function TDoll_Index() {
 				/>
 
 				<Box sx={styles.summaryRow}>
-					<Typography variant="body1" color="textSecondary">
-						Showing {rangeLabel} of {matches.length}
-					</Typography>
+					<Box sx={styles.summaryStart}>
+						<Typography variant="body1" color="textSecondary">
+							Showing {rangeLabel} of {matches.length}
+						</Typography>
 
-					{/* The active chips stay on screen even while the panel is collapsed on a phone, so a
-					    narrowed result set never looks like a bug. */}
-					{activeFilters.length > 0 && (
-						<Box sx={styles.activeChipList}>
-							{activeFilters.map((filter) => (
-								<Chip key={filter.id} label={filter.label} onDelete={filter.onDelete} size="small" />
+						{/* The active chips stay on screen even while the panel is collapsed on a phone, so a
+						    narrowed result set never looks like a bug. */}
+						{activeFilters.length > 0 && (
+							<Box sx={styles.activeChipList}>
+								{activeFilters.map((filter) => (
+									<Chip key={filter.id} label={filter.label} onDelete={filter.onDelete} size="small" />
+								))}
+							</Box>
+						)}
+					</Box>
+
+					<Box sx={styles.sortControls}>
+						<TextField id="tdoll-sort" select size="small" label="Sort by" value={sortKey} onChange={handleSortKeyChange} sx={styles.sortSelect}>
+							{SORT_OPTIONS.map((option) => (
+								<MenuItem key={option.value} value={option.value}>
+									{option.label}
+								</MenuItem>
 							))}
-						</Box>
-					)}
+						</TextField>
+						<Tooltip title={sortDescending ? "Descending" : "Ascending"}>
+							<IconButton onClick={handleToggleSortDirection} aria-label="Descending order" aria-pressed={sortDescending}>
+								{sortDescending ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
+							</IconButton>
+						</Tooltip>
+					</Box>
 				</Box>
 			</Container>
 			{/* End of filters and summary bar */}
