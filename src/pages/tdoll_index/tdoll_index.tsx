@@ -1,6 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 // Component imports
+import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import FilterPanel from "../../components/FilterPanel";
 import DollCard from "../../components/DollCard";
@@ -58,6 +59,10 @@ const styles = {
 
 export default function TDoll_Index() {
 	const [allDolls, setAllDolls] = useState<TDoll[]>([]);
+	// True when a doll shard failed to load, which swaps the results for a retry notice.
+	const [loadFailed, setLoadFailed] = useState(false);
+	// Bumped by the retry button to load the shards again. Shards that did load stay cached.
+	const [loadAttempt, setLoadAttempt] = useState(0);
 
 	const [rarityFilter, setRarityFilter] = useState([
 		{ key: 0, label: "General", rarity: 2, selected: false },
@@ -150,8 +155,16 @@ export default function TDoll_Index() {
 
 	// The index renders every doll, so it is the one route that legitimately loads all shards.
 	useEffect(() => {
-		void loadAllDolls().then(setAllDolls);
-	}, []);
+		let active = true;
+		setLoadFailed(false);
+		loadAllDolls().then(
+			(dolls) => active && setAllDolls(dolls),
+			() => active && setLoadFailed(true)
+		);
+		return () => {
+			active = false;
+		};
+	}, [loadAttempt]);
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
@@ -203,6 +216,8 @@ export default function TDoll_Index() {
 	const handleClearName = useCallback(() => setNameQuery(""), []);
 
 	const handleLoadMore = useCallback(() => setShown((current) => current + PAGE_SIZE), []);
+
+	const handleRetryLoad = useCallback(() => setLoadAttempt((current) => current + 1), []);
 
 	// Deselects every filter at once, for the panel's Clear all button.
 	const handleClearAll = useCallback(() => {
@@ -264,6 +279,8 @@ export default function TDoll_Index() {
 			{/* T-Dolls List */}
 			<Container sx={styles.cardGrid} maxWidth="lg">
 				<Divider sx={styles.topDividerForCards} />
+
+				{loadFailed && <LoadError what="the T-Dolls" onRetry={handleRetryLoad} />}
 
 				{/* Search Results */}
 				<Grid container spacing={4}>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
@@ -8,6 +8,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
+import LoadError from "../../components/LoadError";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { containArtSx } from "../../lib/artLayout";
 import { skinFormKey, skinKeyOf } from "../../lib/assets";
@@ -83,6 +84,10 @@ export default function TDollArt() {
 	const location = useLocation();
 	// Undefined while loading and null when no doll has this id.
 	const [doll, setDoll] = useState<TDoll | null | undefined>(undefined);
+	// True when the doll's shard failed to load, which shows a retry notice with only the close button.
+	const [loadFailed, setLoadFailed] = useState(false);
+	// Bumped by the retry button to load the doll again.
+	const [loadAttempt, setLoadAttempt] = useState(0);
 	// The doll page links here with the form and damaged state it was showing, so the viewer opens on the same art.
 	// A form without full art falls back to the first one below.
 	const [searchParams] = useSearchParams();
@@ -91,19 +96,36 @@ export default function TDollArt() {
 	// The Mod wearing a skin has no full art of its own, so the doll page links to the skin with `mod=1`. Kept so closing returns to the Mod.
 	const [modSkin] = useState(() => searchParams.get("mod") === "1");
 
-	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
+	// The art element fills the stage, so its box is the stage's size and its natural size gives the drawn picture's shape.
+	const artRef = useRef<HTMLImageElement | null>(null);
+
+	// Zoomed past the stage, the art's edge may be dragged to the middle of the screen. Smaller than the stage, as when fitted,
+	// its centre may be dragged to the screen's edge, leaving half of it on screen. Both are half of the larger of art and stage.
+	const panBounds = useCallback((scale: number) => {
+		const art = artRef.current;
+		if (!art) {
+			return { x: 0, y: 0 };
+		}
+		// Before the art loads its natural size is 0, so it is treated as a square until then.
+		const fit = Math.min(art.clientWidth / (art.naturalWidth || 1), art.clientHeight / (art.naturalHeight || 1));
+		const width = (art.naturalWidth || 1) * fit * scale;
+		const height = (art.naturalHeight || 1) * fit * scale;
+		return { x: Math.max(width, art.clientWidth) / 2, y: Math.max(height, art.clientHeight) / 2 };
+	}, []);
+
+	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5, panBounds });
 
 	useEffect(() => {
 		let active = true;
-		void loadDoll(Number(id)).then((found) => {
-			if (active) {
-				setDoll(found ?? null);
-			}
-		});
+		setLoadFailed(false);
+		loadDoll(Number(id)).then(
+			(found) => active && setDoll(found ?? null),
+			() => active && setLoadFailed(true)
+		);
 		return () => {
 			active = false;
 		};
-	}, [id]);
+	}, [id, loadAttempt]);
 
 	// Every form the doll actually published with full art. A form with only cards is filtered out here rather than offered as a
 	// button that opens onto a broken image. Labels and order match DollHero, which reads the same skin names from skins.skin_names.
@@ -123,6 +145,8 @@ export default function TDollArt() {
 	// A loaded doll with no full art at all, such as one released before its art is hosted. The viewer then shows a notice
 	// with only the close button, rather than a black screen and controls that do nothing.
 	const noArt = doll !== undefined && forms.length === 0;
+	// Zoom and form controls only make sense once there is art to act on.
+	const showControls = !noArt && !loadFailed;
 
 	// Opened from the doll page, going back returns to it exactly as it was left, since that page keeps its skin, Mod and
 	// damaged choice in its address. Opened from a pasted link there is nothing to go back to, so the doll page opens on
@@ -177,6 +201,7 @@ export default function TDollArt() {
 			setDamaged(Boolean(value));
 		}
 	}, []);
+	const handleRetryLoad = useCallback(() => setLoadAttempt((current) => current + 1), []);
 
 	if (doll === null) {
 		return <NotFound404 message={`There is no T-Doll with the id ${id ?? ""}.`} />;
@@ -189,9 +214,9 @@ export default function TDollArt() {
 					<CloseIcon />
 				</IconButton>
 				<Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-					{doll?.normal.name ?? "Loading..."}
+					{doll?.normal.name ?? (loadFailed ? "" : "Loading...")}
 				</Typography>
-				{noArt ? null : (
+				{!showControls ? null : (
 					<>
 						<IconButton onClick={zoomOut} aria-label="zoom out" sx={{ color: "inherit" }}>
 							<RemoveIcon />
@@ -206,19 +231,24 @@ export default function TDollArt() {
 				)}
 			</Box>
 
-			{noArt ? (
+			{loadFailed ? (
+				<Box sx={{ flexGrow: 1, display: "grid", placeItems: "center" }}>
+					<LoadError what="this T-Doll's art" onRetry={handleRetryLoad} titleComponent="h1" />
+				</Box>
+			) : noArt ? (
 				<Box sx={{ flexGrow: 1, display: "grid", placeItems: "center", p: 2 }}>
 					<Box sx={{ width: 256, maxWidth: "60vw" }}>
 						<ArtPlaceholder name={doll.normal.name} />
 					</Box>
 				</Box>
 			) : (
-				<Box ref={zoom.containerRef} sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
-					{source ? <Box component="img" src={source} alt="" sx={containArtSx} style={zoom.contentStyle} /> : null}
+				<Box ref={zoom.containerRef} sx={{ flexGrow: 1, position: "relative", overflow: "hidden" }} style={zoom.containerStyle} {...zoom.handlers}>
+					{/* Not draggable: a mouse drag on an image otherwise starts the browser's own image drag, which cancels the pan. */}
+					{source ? <Box component="img" ref={artRef} src={source} alt="" draggable={false} sx={containArtSx} style={zoom.contentStyle} /> : null}
 				</Box>
 			)}
 
-			{noArt ? null : (
+			{!showControls ? null : (
 				<Box sx={{ display: "flex", gap: 1, p: 1, flexWrap: "wrap", justifyContent: "center" }}>
 					{/* Wraps so a doll with many skins keeps every button on a phone screen instead of spilling off both edges. */}
 					<ToggleButtonGroup size="small" exclusive value={current?.key ?? formKey} onChange={handleFormChange} sx={{ flexWrap: "wrap", justifyContent: "center" }}>

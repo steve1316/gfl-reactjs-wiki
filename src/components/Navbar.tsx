@@ -15,6 +15,7 @@ import match from "autosuggest-highlight/match";
 
 // MaterialUI icon imports
 import MenuIcon from "@mui/icons-material/Menu";
+import HomeGlyphIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -64,7 +65,7 @@ const options: SearchOption[] = searchIndex
  */
 const styles = {
 	root: { flexGrow: 1 },
-	menuButton: { mr: 2 },
+	homeButton: { mr: 2 },
 	title: { flexGrow: 1 },
 	search: (theme: Theme) => ({
 		position: "relative",
@@ -356,8 +357,11 @@ export default function Navbar() {
 						</>
 					) : (
 						<>
-							<IconButton edge="start" onClick={handleDrawerToggle} sx={styles.menuButton} color="inherit" aria-label="menu" size="large">
+							<IconButton edge="start" onClick={handleDrawerToggle} color="inherit" aria-label="menu" size="large">
 								<MenuIcon />
+							</IconButton>
+							<IconButton component={Link} to="/" sx={styles.homeButton} color="inherit" aria-label="home" size="large">
+								<HomeGlyphIcon />
 							</IconButton>
 							<Typography variant="h6" sx={styles.title} noWrap>
 								Girls' Frontline Database

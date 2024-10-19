@@ -7,6 +7,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 import DollCard from "./DollCard";
+import LoadError from "./LoadError";
 import { loadDoll } from "../lib/data";
 import type { TDoll } from "../types/tdoll";
 
@@ -150,6 +151,10 @@ export default memo(function DollCarousel({ ids, onShuffle }: DollCarouselProps)
 	const reduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
 	const [dolls, setDolls] = useState<(TDoll | undefined)[]>([]);
+	// True when a doll shard failed to load, which swaps the cards for a retry notice.
+	const [loadFailed, setLoadFailed] = useState(false);
+	// Bumped by the retry button to load the dolls again.
+	const [loadAttempt, setLoadAttempt] = useState(0);
 	// Index of the first doll on screen, rather than a page number, so a breakpoint change that alters how many
 	// cards fit keeps the same doll at the front instead of jumping.
 	const [start, setStart] = useState(0);
@@ -160,15 +165,15 @@ export default memo(function DollCarousel({ ids, onShuffle }: DollCarouselProps)
 		let active = true;
 		setStart(0);
 		setDolls([]);
-		void Promise.all(ids.map((id) => loadDoll(id))).then((loaded) => {
-			if (active) {
-				setDolls(loaded);
-			}
-		});
+		setLoadFailed(false);
+		Promise.all(ids.map((id) => loadDoll(id))).then(
+			(loaded) => active && setDolls(loaded),
+			() => active && setLoadFailed(true)
+		);
 		return () => {
 			active = false;
 		};
-	}, [ids]);
+	}, [ids, loadAttempt]);
 
 	// Only dolls that actually exist. MICA Team skips ids, so a random pick can land on a gap.
 	const entries = useMemo(() => dolls.filter((doll): doll is TDoll => doll !== undefined), [dolls]);
@@ -190,6 +195,9 @@ export default memo(function DollCarousel({ ids, onShuffle }: DollCarouselProps)
 		}
 		setStart(next);
 	}, [start, perSet, entries.length, onShuffle]);
+
+	/** Load the dolls again after a failed load. */
+	const retryLoad = useCallback(() => setLoadAttempt((current) => current + 1), []);
 
 	/** Show the previous set. Does nothing on the first. */
 	const back = useCallback(() => setStart((current) => Math.max(0, current - perSet)), [perSet]);
@@ -259,27 +267,31 @@ export default memo(function DollCarousel({ ids, onShuffle }: DollCarouselProps)
 
 			<Box sx={styles.centre}>
 				{/* Keyed by the first doll so a new set remounts, which replays the entry animation. */}
-				<Box
-					key={loading ? "loading" : shown[0]?.normal.id}
-					sx={[
-						styles.cards,
-						{
-							animation: reduceMotion ? "none" : "dollCarouselIn 360ms cubic-bezier(0.22, 0.61, 0.36, 1)",
-							"@keyframes dollCarouselIn": {
-								from: { opacity: 0, transform: "translateX(24px)" },
-								to: { opacity: 1, transform: "none" }
+				{loadFailed ? (
+					<LoadError what="these T-Dolls" onRetry={retryLoad} />
+				) : (
+					<Box
+						key={loading ? "loading" : shown[0]?.normal.id}
+						sx={[
+							styles.cards,
+							{
+								animation: reduceMotion ? "none" : "dollCarouselIn 360ms cubic-bezier(0.22, 0.61, 0.36, 1)",
+								"@keyframes dollCarouselIn": {
+									from: { opacity: 0, transform: "translateX(24px)" },
+									to: { opacity: 1, transform: "none" }
+								}
 							}
-						}
-					]}
-				>
-					{loading
-						? Array.from({ length: perSet }, (_value, position) => <Skeleton key={position} variant="rounded" width={width} height={cardHeight} />)
-						: shown.map((doll) => (
-								<Box key={doll.normal.id} sx={{ width, flexShrink: 0 }}>
-									<DollCard {...cardProps(doll)} />
-								</Box>
-							))}
-				</Box>
+						]}
+					>
+						{loading
+							? Array.from({ length: perSet }, (_value, position) => <Skeleton key={position} variant="rounded" width={width} height={cardHeight} />)
+							: shown.map((doll) => (
+									<Box key={doll.normal.id} sx={{ width, flexShrink: 0 }}>
+										<DollCard {...cardProps(doll)} />
+									</Box>
+								))}
+					</Box>
+				)}
 
 				{/* The countdown to the next set. Keyed by the set so it restarts from empty, and the carousel moves
 				    on when it finishes filling. Hidden when nothing counts down, rather than sitting at zero. */}
