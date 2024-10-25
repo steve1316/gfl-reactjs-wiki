@@ -56,6 +56,9 @@ CACHE_DIR = os.path.join(TOOLS_DIR, ".cache")
 BUNDLE_CACHE_DIR = os.path.join(CACHE_DIR, "bundles")
 INVENTORY_PATH = os.path.join(CACHE_DIR, "inventory.json")
 
+# The committed manifest an `--only-missing` run compares against.
+MANIFEST_PATH = os.path.join(REPO_ROOT, "assets-manifest.json")
+
 # Sidecar file in the bundle cache recording the `resname`, size and SHA-1 each bundle was cached under.
 CACHE_INDEX_NAME = "cache-index.json"
 
@@ -456,6 +459,90 @@ def equip_items(index, equipment_ids, equip_codes):
     return items
 
 
+def new_targets(dolls, equipment_ids, manifest):
+    """Work out which dolls, Mods, skins and equipment the committed manifest does not list yet.
+
+    A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed.
+
+    Args:
+        dolls: Site doll records.
+        equipment_ids: Equipment ids from the site data.
+        manifest: The committed version 3 manifest.
+
+    Returns:
+        A dict of `dolls`, `mods` and `equipment` id sets and a `skins` set of `(doll_id, skin_id)` pairs. Only numeric skin ids count.
+    """
+    listed = manifest["dolls"]
+    targets = {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()}
+    for doll in dolls:
+        doll_id = doll["normal"]["id"]
+        entry = listed.get(str(doll_id))
+        if entry is None:
+            targets["dolls"].add(doll_id)
+        if doll.get("mod") is not None and "mod" not in (entry or {}):
+            targets["mods"].add(doll_id)
+        hosted_skins = (entry or {}).get("skins", {})
+        for skin_id in (doll.get("skins") or {}).get("skin_ids") or []:
+            if isinstance(skin_id, int) and str(skin_id) not in hosted_skins:
+                targets["skins"].add((doll_id, skin_id))
+    hosted_equipment = set(manifest["equipment"])
+    targets["equipment"] = {equip_id for equip_id in equipment_ids if equip_id not in hosted_equipment}
+    return targets
+
+
+def select_new_items(items, targets):
+    """Keep only the items that belong to a new target.
+
+    Art and rigs follow their form. A skill icon keeps only the slots of new dolls (`skill1`) and new Mods (`skill2`), as a copy, so the icon is
+    never rewritten for a doll that already hosts it. Legacy items are never selected, since only the old asset repos had them.
+
+    Args:
+        items: Item dicts from `build_inventory`.
+        targets: The dict from `new_targets`.
+
+    Returns:
+        The selected items, in their original order.
+    """
+    selected = []
+    for item in items:
+        if item.get("source") == "legacy":
+            continue
+        tier = item["tier"]
+        if tier == "skill_icon":
+            users = [user for user in item.get("users", []) if (user[1] == "skill1" and user[0] in targets["dolls"]) or (user[1] == "skill2" and user[0] in targets["mods"])]
+            if users:
+                selected.append({**item, "users": users})
+            continue
+        if tier in ("art", "spine"):
+            keep = item.get("doll_id") in targets["dolls"]
+        elif tier in ("mod_art", "mod_spine"):
+            keep = item.get("doll_id") in targets["mods"]
+        elif tier in ("skin_art", "skin_spine"):
+            keep = (item.get("doll_id"), item.get("skin_id")) in targets["skins"]
+        elif tier == "equip_icon":
+            keep = item.get("equip_id") in targets["equipment"]
+        else:
+            keep = False
+        if keep:
+            selected.append(item)
+    return selected
+
+
+def only_missing_problems(inventory):
+    """List why an `--only-missing` inventory cannot be extracted.
+
+    Args:
+        inventory: An inventory dict.
+
+    Returns:
+        One message per unexpected unresolved item and per partial item, empty when every selected item resolved or is a known gap.
+    """
+    summary = inventory["summary"]
+    problems = [f"{entry['key']} is unresolved: {entry['reason']}" for entry in summary["unresolved_unexpected"]]
+    problems.extend(f"{entry['key']} is missing {', '.join(entry['missing'])}" for entry in summary["partial"])
+    return problems
+
+
 def is_expected_gap(item):
     """Tell whether an unresolved item is a known, accepted gap.
 
@@ -468,19 +555,20 @@ def is_expected_gap(item):
     return item["tier"] == "skill_icon" and item.get("code", "").lower() in EXPECTED_MISSING_SKILL_CODES
 
 
-def summarise(items, index):
+def summarise(items, index, include_ui=True):
     """Total the items per tier and collect the bundles to download.
 
     Args:
         items: Every resolved or unresolved item.
         index: The bundle index from `load_index`.
+        include_ui: Whether to add the whole UI bundles the extractor needs, such as the equipment rarity backgrounds.
 
     Returns:
         A `(summary, bundles)` pair. `bundles` maps each needed bundle name to its `resname`, `sizeOriginal` and, when known, `sha1`.
     """
     tiers = {tier: {"items": 0, "resolved": 0, "partial": 0, "unresolved": 0, "legacy": 0} for tier in TIERS}
     summary = {"tiers": tiers, "partial": [], "legacy": [], "unresolved_expected": [], "unresolved_unexpected": []}
-    names = {name for name in UI_BUNDLES if name in index}
+    names = {name for name in UI_BUNDLES if name in index} if include_ui else set()
     for item in items:
         tiers[item["tier"]]["items"] += 1
         tiers[item["tier"]][item["status"]] += 1
@@ -499,7 +587,7 @@ def summarise(items, index):
     return summary, bundles
 
 
-def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes):
+def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None):
     """Resolve every wanted asset against the ResData manifest.
 
     Args:
@@ -509,6 +597,7 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         guns: Gun rows by id.
         skill_codes: Skill codename by skill group id.
         equip_codes: Equipment codename by id.
+        select: Optional callable narrowing the item list before bundles are collected. The UI bundles are then added only for equipment icons.
 
     Returns:
         The inventory dict with `resVersion`, `resUrl`, `summary`, `bundles` and `items`.
@@ -520,23 +609,33 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         items.extend(doll_items(index, doll, codes))
     items.extend(skill_items(index, dolls, guns, skill_codes))
     items.extend(equip_items(index, equipment_ids, equip_codes))
-    summary, bundles = summarise(items, index)
+    if select is not None:
+        items = select(items)
+    include_ui = select is None or any(item["tier"] == "equip_icon" for item in items)
+    summary, bundles = summarise(items, index, include_ui)
     return {"resVersion": resdata.get("resVison"), "resUrl": res_url, "summary": summary, "bundles": bundles, "items": items}
 
 
-def inventory_from_paths(resdata_path, gf_data_dir, site_dir):
+def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None):
     """Load every input from disk and build the inventory.
 
     Args:
         resdata_path: Path to `resdata_no_hash.json`.
         gf_data_dir: The `gf-data-us` checkout.
         site_dir: Directory holding the site's `dolls-*.json` and `equipment.json`.
+        manifest_path: The committed manifest. When given, only items for targets it does not list are kept and the inventory is flagged
+            `onlyMissing`.
 
     Returns:
         The inventory dict from `build_inventory`.
     """
     dolls, equipment_ids = load_site(site_dir)
-    return build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir))
+    if manifest_path is None:
+        return build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir))
+    targets = new_targets(dolls, equipment_ids, read_json(manifest_path))
+    inventory = build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), select=lambda items: select_new_items(items, targets))
+    inventory["onlyMissing"] = True
+    return inventory
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -813,14 +912,23 @@ def main():
     parser.add_argument("--site-data", default=SITE_DATA_DIR, help="Directory holding the site's dolls-*.json and equipment.json.")
     parser.add_argument("--cache", default=BUNDLE_CACHE_DIR, help="Bundle cache directory.")
     parser.add_argument("--workers", type=int, default=MAX_WORKERS, help=f"Parallel downloads, at most {MAX_WORKERS}.")
+    parser.add_argument("--only-missing", action="store_true", help="Keep only items for dolls, Mods, skins and equipment the committed manifest does not list.")
+    parser.add_argument("--manifest", default=MANIFEST_PATH, help="The committed manifest `--only-missing` compares against.")
     args = parser.parse_args()
     if not args.gf_data:
         sys.exit("pass --gf-data or set GF_DATA_DIR")
 
-    inventory = inventory_from_paths(os.path.join(args.gf_data, "resdata_no_hash.json"), args.gf_data, args.site_data)
+    manifest_path = args.manifest if args.only_missing else None
+    inventory = inventory_from_paths(os.path.join(args.gf_data, "resdata_no_hash.json"), args.gf_data, args.site_data, manifest_path)
     os.makedirs(CACHE_DIR, exist_ok=True)
     with open(INVENTORY_PATH, "w", encoding="utf-8") as handle:
         json.dump(inventory, handle, indent=1, ensure_ascii=False)
+
+    if args.only_missing:
+        print(f"only missing: {len(inventory['items'])} items, {inventory['summary']['bundle_count']} bundles ({inventory['summary']['download_mb']} MB)")
+        problems = only_missing_problems(inventory)
+        if problems:
+            sys.exit("new assets cannot be extracted yet:\n  " + "\n  ".join(problems))
 
     if args.command == "inventory":
         print_summary(inventory)

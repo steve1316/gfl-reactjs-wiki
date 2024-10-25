@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.error
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -432,6 +433,224 @@ class BackupTests(unittest.TestCase):
             self.assertIn("all 3 refs match", output)
             with self.assertRaises(SystemExit):
                 quiet(publish.backup, clone, tmp)
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Incremental add
+
+
+def git_in(cwd, *args, stdin=None):
+    """Run git with the test identity and return its output.
+
+    Args:
+        cwd: Working directory.
+        *args: Git arguments.
+        stdin: Optional text piped to the command.
+
+    Returns:
+        The stripped standard output.
+    """
+    result = subprocess.run(["git", *args], cwd=cwd, input=stdin, capture_output=True, text=True, env={**os.environ, **GIT_IDENTITY}, check=True)
+    return result.stdout.strip()
+
+
+def make_remote(scratch, files):
+    """Create a bare repo on `main` that allows partial clones, seeded with files.
+
+    Args:
+        scratch: Temporary directory.
+        files: Map of relative path to bytes.
+
+    Returns:
+        A `file://` URL of the bare repo and its path.
+    """
+    bare = os.path.join(scratch, "remote.git")
+    git_in(scratch, "init", "-q", "--bare", "-b", "main", bare)
+    git_in(bare, "config", "uploadpack.allowfilter", "true")
+    git_in(bare, "config", "uploadpack.allowanysha1inwant", "true")
+    seed = os.path.join(scratch, "seed")
+    git_in(scratch, "clone", "-q", bare, seed)
+    for rel, data in files.items():
+        path = os.path.join(seed, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as handle:
+            handle.write(data)
+    git_in(seed, "add", "-A")
+    git_in(seed, "commit", "-q", "-m", "seed")
+    git_in(seed, "push", "-q", "origin", "HEAD:main")
+    return f"file://{bare}", bare
+
+
+def stage(root, files):
+    """Write staged files.
+
+    Args:
+        root: The staging tree.
+        files: Map of relative path to bytes.
+    """
+    for rel, data in files.items():
+        path = os.path.join(root, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as handle:
+            handle.write(data)
+
+
+def no_sizes(_title, _branch):
+    """Report an empty hosted tree.
+
+    Args:
+        _title: Ignored repo title.
+        _branch: Ignored branch.
+
+    Returns:
+        An empty dict.
+    """
+    return {}
+
+
+class CommitMessageTests(unittest.TestCase):
+    """Naming what an add commit holds."""
+
+    def test_one_doll(self):
+        """Card, full art and rig files of one doll name that doll."""
+        self.assertEqual(publish.commit_message(["tdolls/424/card.webp", "spine/424/Foo.skel"]), "Add art for doll 424")
+
+    def test_mixed(self):
+        """Dolls, skins and equipment are grouped, numbered and joined."""
+        paths = ["tdolls/425/card.webp", "tdolls/424/mod/card.webp", "tdolls/65/skins/9001/card.webp", "spine/65/skins/9001/a.skel", "equipment/301.png"]
+        self.assertEqual(publish.commit_message(paths), "Add art for dolls 424, 425, skin 65:9001 and equipment 301")
+
+
+class PlannedTreeTests(unittest.TestCase):
+    """Combining hosted and staged sizes for the Pages limit."""
+
+    def test_staged_file_replaces_hosted_size(self):
+        """A staged file at a hosted path counts once, at its staged size."""
+        self.assertEqual(publish.planned_tree({"a": 5, "b": 7}, [("b", 9), ("c", 1)]), [("a", 5), ("b", 9), ("c", 1)])
+
+
+@mock.patch.dict(os.environ, GIT_IDENTITY)
+class AddTests(unittest.TestCase):
+    """`add` commits staged files onto the remote branch through a blobless sparse clone."""
+
+    def test_adds_new_files_and_keeps_the_rest(self):
+        """New files are committed and pushed with a named message, and unrelated hosted files stay."""
+        with tempfile.TemporaryDirectory() as scratch:
+            remote, bare = make_remote(scratch, {"tdolls/1/card.webp": b"old", ".nojekyll": b""})
+            tree = os.path.join(scratch, "staging", "assets")
+            stage(tree, {"tdolls/424/card.webp": b"new card", "tdolls/424/card_d.webp": b"damaged"})
+            with contextlib.redirect_stdout(io.StringIO()):
+                paths = publish.add("assets", tree, remote, sizes=no_sizes)
+            self.assertEqual(paths, ["tdolls/424/card.webp", "tdolls/424/card_d.webp"])
+            self.assertEqual(git_in(bare, "log", "-1", "--format=%s", "main"), "Add art for doll 424")
+            self.assertEqual(
+                git_in(bare, "ls-tree", "-r", "--name-only", "main").split("\n"),
+                [".nojekyll", "tdolls/1/card.webp", "tdolls/424/card.webp", "tdolls/424/card_d.webp"],
+            )
+
+    def test_overwrites_a_leftover_and_skips_identical(self):
+        """A leftover with other bytes is replaced, and a retry with identical bytes makes no commit."""
+        with tempfile.TemporaryDirectory() as scratch:
+            remote, bare = make_remote(scratch, {"tdolls/424/card.webp": b"leftover"})
+            tree = os.path.join(scratch, "staging", "assets")
+            stage(tree, {"tdolls/424/card.webp": b"fresh"})
+            with contextlib.redirect_stdout(io.StringIO()):
+                publish.add("assets", tree, remote, sizes=no_sizes)
+                head = git_in(bare, "rev-parse", "main")
+                self.assertEqual(git_in(bare, "show", "main:tdolls/424/card.webp"), "fresh")
+                publish.add("assets", tree, remote, sizes=no_sizes)
+            self.assertEqual(git_in(bare, "rev-parse", "main"), head)
+
+    def test_dry_run_does_not_push(self):
+        """A dry run commits in the throwaway clone only."""
+        with tempfile.TemporaryDirectory() as scratch:
+            remote, bare = make_remote(scratch, {".nojekyll": b""})
+            head = git_in(bare, "rev-parse", "main")
+            tree = os.path.join(scratch, "staging", "art")
+            stage(tree, {"tdolls/424/full.webp": b"art"})
+            with contextlib.redirect_stdout(io.StringIO()):
+                publish.add("art", tree, remote, dry_run=True, sizes=no_sizes)
+            self.assertEqual(git_in(bare, "rev-parse", "main"), head)
+
+    def test_oversized_tree_is_refused_before_cloning(self):
+        """A tree that would pass the Pages limit stops before anything is cloned or pushed."""
+        with tempfile.TemporaryDirectory() as scratch:
+            remote, bare = make_remote(scratch, {".nojekyll": b""})
+            head = git_in(bare, "rev-parse", "main")
+            tree = os.path.join(scratch, "staging", "art")
+            stage(tree, {"tdolls/424/full.webp": b"art"})
+            with self.assertRaises(SystemExit), contextlib.redirect_stdout(io.StringIO()):
+                publish.add("art", tree, remote, sizes=lambda _title, _branch: {"huge.bin": 1000 * MB})
+            self.assertEqual(git_in(bare, "rev-parse", "main"), head)
+
+    def test_nothing_staged(self):
+        """A missing or empty staging tree returns no paths without touching the remote."""
+        with tempfile.TemporaryDirectory() as scratch, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(publish.add("assets", os.path.join(scratch, "missing"), "file:///nowhere", sizes=no_sizes), [])
+
+
+class WaitLiveTests(unittest.TestCase):
+    """Polling new asset URLs until Pages serves them."""
+
+    def test_url_encoding(self):
+        """Each path segment is percent-encoded onto the base."""
+        self.assertEqual(publish.url_for("https://x.io/repo/", "spine/65/a b.png"), "https://x.io/repo/spine/65/a%20b.png")
+
+    def test_waits_until_all_are_live(self):
+        """URLs still returning 404 are polled again after the interval until they return 200."""
+        answers = {"https://x.io/a": [404, 200], "https://x.io/b": [200]}
+        sleeps = []
+        pending = publish.wait_live(
+            "https://x.io", ["a", "b"], timeout=100, interval=5, status=lambda url: answers[url].pop(0), clock=lambda: 0, sleep=sleeps.append
+        )
+        self.assertEqual(pending, [])
+        self.assertEqual(sleeps, [5])
+
+    def test_gives_up_after_the_timeout(self):
+        """URLs that never go live are returned once the deadline passes."""
+        now = iter([0, 50, 101])
+        pending = publish.wait_live("https://x.io", ["a"], timeout=100, interval=5, status=lambda _url: 404, clock=lambda: next(now), sleep=lambda _seconds: None)
+        self.assertEqual(pending, ["https://x.io/a"])
+
+
+class TreeSizeTests(unittest.TestCase):
+    """Reading hosted sizes from the Git Trees API."""
+
+    def response(self, body):
+        """Build a fake `urlopen` returning a JSON body.
+
+        Args:
+            body: The JSON value.
+
+        Returns:
+            A callable standing in for `urllib.request.urlopen`.
+        """
+
+        @contextlib.contextmanager
+        def opener(_request, timeout=None):
+            yield io.BytesIO(json.dumps(body).encode())
+
+        return opener
+
+    def test_blob_sizes(self):
+        """Only blobs are counted."""
+        body = {"truncated": False, "tree": [{"path": "a", "type": "blob", "size": 3}, {"path": "d", "type": "tree"}]}
+        self.assertEqual(publish.fetch_tree_sizes("gfl-wiki-assets", opener=self.response(body)), {"a": 3})
+
+    def test_truncated_tree_stops(self):
+        """A truncated listing cannot be trusted for the size limit."""
+        with self.assertRaises(SystemExit):
+            publish.fetch_tree_sizes("gfl-wiki-assets", opener=self.response({"truncated": True, "tree": []}))
+
+    def test_http_error_exits(self):
+        """An HTTP error from the API exits with a readable message instead of a raw traceback."""
+
+        def failing_opener(_request, timeout=None):
+            raise urllib.error.HTTPError("https://api.github.com/x", 403, "rate limited", {}, None)
+
+        with self.assertRaises(SystemExit):
+            publish.fetch_tree_sizes("gfl-wiki-assets", opener=failing_opener)
 
 
 if __name__ == "__main__":

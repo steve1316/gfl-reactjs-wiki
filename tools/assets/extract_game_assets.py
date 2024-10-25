@@ -31,6 +31,7 @@ Subcommands:
 - `run` checks 20 snapshot cards against the bundles (skip with `--skip-card-check`), then extracts every image tier with a process pool and
   converts the legacy skins and skill icons.
 - `spine` extracts every Spine rig into `assets/spine/`, replacing what was there.
+- `add` extracts only an `--only-missing` inventory, art and Spine, into a fresh `--staging` folder, with no legacy snapshot and no card check.
 - `verify-cards` runs only the card check.
 - `proof-equip` writes side-by-side comparisons of composited and hosted equipment icons.
 
@@ -1312,12 +1313,33 @@ def tier_counts(files):
     return counts
 
 
+def require_add_inputs(inventory, staging):
+    """Check the inputs of `add` before anything is written.
+
+    Args:
+        inventory: The inventory dict.
+        staging: The staging root `add` writes into.
+
+    Returns:
+        A list of problems, empty when `add` may run.
+    """
+    problems = []
+    if not inventory.get("onlyMissing"):
+        problems.append("the inventory was not written with --only-missing. Run tools/assets/game_bundles.py download --only-missing first")
+    if os.path.abspath(staging) == os.path.abspath(STAGING_DIR):
+        problems.append(f"add never writes into the full rebuild staging folder {STAGING_DIR}. Pass --staging with a fresh folder")
+    elif os.path.isdir(staging) and os.listdir(staging):
+        problems.append(f"{staging} is not empty. add only writes into a fresh staging folder")
+    return problems
+
+
 def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, staging, workers):
     """Extract every image tier, the legacy skins and the legacy skill icons into the staging trees and write the report.
 
     Args:
         inventory: The inventory dict.
-        legacy_dir: The legacy snapshot folder, holding the old UI images, cards and skill icons under `assets/` and full art under `art/`.
+        legacy_dir: The legacy snapshot folder, holding the old UI images, cards and skill icons under `assets/` and full art under `art/`,
+            or None for `add`, which copies no UI images and converts no legacy items.
         legacy_skins: Legacy entries from `load_legacy_skins`.
         site_dir: Directory holding `equipment.json`.
         cache_dir: The bundle cache directory.
@@ -1328,10 +1350,10 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
         The report dict.
     """
     started = time.monotonic()
-    legacy_assets, legacy_art = os.path.join(legacy_dir, "assets"), os.path.join(legacy_dir, "art")
+    legacy_assets = os.path.join(legacy_dir, "assets") if legacy_dir else None
+    legacy_art = os.path.join(legacy_dir, "art") if legacy_dir else None
     reset_staging(staging)
-    ui_files = copy_ui(legacy_assets, staging)
-    rarities = load_rarities(site_dir)
+    ui_files = copy_ui(legacy_assets, staging) if legacy_dir else []
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
     art_items, skill_items, equip_items, legacy_skill_items = [], [], [], []
@@ -1350,8 +1372,12 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
 
     files, done = [], 0
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(extract_skill_icons, skill_items, cache_dir, staging): "worker:skill_icon"}
-        futures[pool.submit(extract_equip_icons, equip_items, rarities, cache_dir, staging)] = "worker:equip_icon"
+        # The icon workers load whole bundles, so they only start when they have items. An `add` run with no equipment never needs the frames.
+        futures = {}
+        if skill_items:
+            futures[pool.submit(extract_skill_icons, skill_items, cache_dir, staging)] = "worker:skill_icon"
+        if equip_items:
+            futures[pool.submit(extract_equip_icons, equip_items, load_rarities(site_dir), cache_dir, staging)] = "worker:equip_icon"
         futures.update({pool.submit(extract_art_item, item, cache_dir, staging): item["key"] for item in art_items})
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -1367,7 +1393,10 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
                 print(f"[{done}/{len(futures)}] {len(files)} files, {time.monotonic() - started:.0f}s", flush=True)
 
     legacy_results = [extract_legacy_skin(extra, legacy_assets, legacy_art, staging) for extra in legacy_skins]
-    legacy_results.append(extract_legacy_skill_icons(legacy_skill_items, legacy_assets, staging))
+    if legacy_dir:
+        legacy_results.append(extract_legacy_skill_icons(legacy_skill_items, legacy_assets, staging))
+    else:
+        report["missing"].extend({"key": item["key"], "role": "*", "reason": "a legacy skill icon needs the legacy snapshot"} for item in legacy_skill_items)
     for result in legacy_results:
         files.extend(result["files"])
         report["missing"].extend(result["missing"])
@@ -1584,7 +1613,7 @@ def run_legacy_command(args, inventory, legacy_dir):
 def main():
     """Parse arguments and run the requested subcommand."""
     parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging trees.")
-    parser.add_argument("command", choices=("snapshot-legacy", "run", "spine", "verify-cards", "proof-equip"))
+    parser.add_argument("command", choices=("snapshot-legacy", "run", "add", "spine", "verify-cards", "proof-equip"))
     parser.add_argument("--legacy", default=LEGACY_DIR, help="The legacy snapshot folder read by `run`, `verify-cards` and `proof-equip`.")
     parser.add_argument("--reference-clone", help="Old-layout gfl-wiki-assets clone. Needed by `snapshot-legacy`, otherwise read instead of the snapshot.")
     parser.add_argument("--art-clone", help="Old-layout gfl-wiki-assets-art clone. Needed by `snapshot-legacy`, otherwise read instead of the snapshot.")
@@ -1592,13 +1621,26 @@ def main():
     parser.add_argument("--skip-card-check", action="store_true", help="Skip the card check before `run` extracts.")
     parser.add_argument("--site-data", default=SITE_DATA_DIR, help="Directory holding the site's equipment.json.")
     parser.add_argument("--cache", default=BUNDLE_CACHE_DIR, help="Bundle cache directory.")
-    parser.add_argument("--staging", default=STAGING_DIR, help="Output root holding the assets and art trees.")
+    parser.add_argument("--staging", default=STAGING_DIR, help="Output root holding the assets and art trees. add needs a fresh folder.")
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1), help="Process pool size, defaults to cores - 1.")
     parser.add_argument("--out-dir", help="Output folder for proof-equip.")
     parser.add_argument("--allow-card-diffs", action="store_true", help="Report hosted cards that differ from the game atlas instead of stopping.")
     args = parser.parse_args()
     inventory = read_json(INVENTORY_PATH)
 
+    if args.command == "add":
+        problems = require_add_inputs(inventory, args.staging)
+        if problems:
+            sys.exit("add cannot run:\n  " + "\n  ".join(problems))
+        print(f"adding {len(inventory['items'])} items with {args.workers} workers into {args.staging}", flush=True)
+        report = run_extraction(inventory, None, [], args.site_data, args.cache, args.staging, args.workers)
+        print_report(report)
+        spine_report = run_spine(inventory, args.cache, args.staging, args.workers)
+        print_report(spine_report)
+        reasons = failure_reasons(report) + failure_reasons(spine_report)
+        if reasons:
+            sys.exit(f"add failed: {'; '.join(reasons)}")
+        return
     if args.command == "spine":
         print(f"extracting Spine rigs with {args.workers} workers into {args.staging}", flush=True)
         report = run_spine(inventory, args.cache, args.staging, args.workers)
