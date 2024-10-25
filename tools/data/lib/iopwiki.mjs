@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { createFlareSolverrClient } from "./flaresolverr.mjs";
 import { fetchWithRetry, sleep } from "./http.mjs";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,14 +47,17 @@ const HTML_ENTITIES = {
  * retried once, see `fetchWithRetry`. Set `IOPWIKI_CACHE=reuse` to read the cache file back instead of touching the network, which fails
  * when there is no cache file. Otherwise this always refetches and overwrites that cache. The cache lives at `tools/data/.cache/iopwiki-pages.json`
  * by default. Pass `options.cacheDir` to use a different directory (tests must, so they never touch the real cache the importer relies on).
+ * IOPWiki's Cloudflare challenges GitHub's runners, so the scheduled refresh sets FLARESOLVERR_URL.
  *
  * @param {object} [options] Options.
  * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.
  * @param {(ms: number) => Promise<void>} [options.wait] Waits between requests and before a retry. Tests pass a stub so they do not sleep.
+ * @param {string} [options.flareSolverrUrl] FlareSolverr's base URL. When set, every API request goes through a FlareSolverr browser
+ *   session. Defaults to $FLARESOLVERR_URL, which only the CI refresh sets.
  * @returns {Promise<{ title: string, wikitext: string }[]>} Every doll page's title and raw wikitext.
  * @throws {Error} In reuse mode, when the cache file is missing.
  */
-export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR, wait = sleep } = {}) {
+export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR, wait = sleep, flareSolverrUrl = process.env.FLARESOLVERR_URL } = {}) {
 	const cacheFile = path.join(cacheDir, CACHE_FILENAME);
 	if (process.env.IOPWIKI_CACHE === "reuse") {
 		if (!fs.existsSync(cacheFile)) {
@@ -77,32 +81,40 @@ export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR, wait = s
 	// Each round sends the original request plus only the latest `continue` object, as MediaWiki asks, so stale keys never carry over.
 	let params = new URLSearchParams(baseParams);
 	let first = true;
-	for (;;) {
-		if (!first) {
-			await wait(REQUEST_DELAY_MS);
-		}
-		first = false;
-		const response = await fetchWithRetry(`${API_BASE}?${params.toString()}`, { headers: { "User-Agent": USER_AGENT } }, { wait });
-		if (!response.ok) {
-			throw new Error(`IOPWiki API request failed: ${response.status} ${response.statusText}`);
-		}
-		const body = await response.json();
-		if (body.error) {
-			throw new Error(`IOPWiki API error ${body.error.code ?? "unknown"}: ${body.error.info ?? JSON.stringify(body.error)}`);
-		}
-		if (!body.query) {
-			throw new Error(`IOPWiki API response is missing "query": ${JSON.stringify(body)}`);
-		}
-		for (const page of body.query.pages ?? []) {
-			const content = page.revisions?.[0]?.slots?.main?.content;
-			if (typeof content === "string") {
-				pages.push({ title: page.title, wikitext: content });
+	const solver = flareSolverrUrl ? await createFlareSolverrClient(flareSolverrUrl, { wait }) : null;
+	try {
+		for (;;) {
+			if (!first) {
+				await wait(REQUEST_DELAY_MS);
 			}
+			first = false;
+			const url = `${API_BASE}?${params.toString()}`;
+			const response = solver ? await solver.get(url) : await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } }, { wait });
+			if (!response.ok) {
+				throw new Error(`IOPWiki API request failed: ${response.status} ${response.statusText}`);
+			}
+			const body = await response.json();
+			if (body.error) {
+				throw new Error(`IOPWiki API error ${body.error.code ?? "unknown"}: ${body.error.info ?? JSON.stringify(body.error)}`);
+			}
+			if (!body.query) {
+				throw new Error(`IOPWiki API response is missing "query": ${JSON.stringify(body)}`);
+			}
+			for (const page of body.query.pages ?? []) {
+				const content = page.revisions?.[0]?.slots?.main?.content;
+				if (typeof content === "string") {
+					pages.push({ title: page.title, wikitext: content });
+				}
+			}
+			if (!body.continue) {
+				break;
+			}
+			params = new URLSearchParams({ ...baseParams, ...body.continue });
 		}
-		if (!body.continue) {
-			break;
+	} finally {
+		if (solver) {
+			await solver.close().catch((error) => console.warn(`warning: closing the FlareSolverr session failed (${error.message})`));
 		}
-		params = new URLSearchParams({ ...baseParams, ...body.continue });
 	}
 	fs.mkdirSync(cacheDir, { recursive: true });
 	fs.writeFileSync(cacheFile, JSON.stringify(pages));
