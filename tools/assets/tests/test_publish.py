@@ -613,6 +613,11 @@ class WaitLiveTests(unittest.TestCase):
         pending = publish.wait_live("https://x.io", ["a"], timeout=100, interval=5, status=lambda _url: 404, clock=lambda: next(now), sleep=lambda _seconds: None)
         self.assertEqual(pending, ["https://x.io/a"])
 
+    def test_dropped_connection_counts_as_not_live(self):
+        """A connection reset mid-request is a network failure, not a crash."""
+        with mock.patch("urllib.request.urlopen", side_effect=ConnectionResetError):
+            self.assertIsNone(publish.http_status("https://x.io/a"))
+
 
 class TreeSizeTests(unittest.TestCase):
     """Reading hosted sizes from the Git Trees API."""

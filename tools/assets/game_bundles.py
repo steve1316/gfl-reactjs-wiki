@@ -102,6 +102,9 @@ EQUIP_ROLES = (("icon", ("Equip/{stem}.png",), True), ("alpha", ("Equip/{stem}_A
 # Skill codes with no icon anywhere in `sprites_ui`, confirmed by the research pass.
 EXPECTED_MISSING_SKILL_CODES = frozenset(code.lower() for code in ("ma", "mg4", "rmb", "xm3", "m2wnl", "TaeSkill"))
 
+# Skin rigs the game does not ship at all. Anything else missing fails the Spine pass.
+EXPECTED_MISSING_RIGS = frozenset(("skin_spine:95:1809",))
+
 # Skill codes whose icon file carries another name. `c93G` was checked pixel-identical to the hosted C93 skill icon.
 SKILL_ICON_ALIASES = {"c93": "c93G"}
 
@@ -550,9 +553,9 @@ def is_expected_gap(item):
         item: An unresolved item dict.
 
     Returns:
-        True for the skill codes with no icon anywhere in the game.
+        True for the skill codes with no icon anywhere in the game and for the skin rigs the game does not ship.
     """
-    return item["tier"] == "skill_icon" and item.get("code", "").lower() in EXPECTED_MISSING_SKILL_CODES
+    return item["key"] in EXPECTED_MISSING_RIGS or (item["tier"] == "skill_icon" and item.get("code", "").lower() in EXPECTED_MISSING_SKILL_CODES)
 
 
 def summarise(items, index, include_ui=True):

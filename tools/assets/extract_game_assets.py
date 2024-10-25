@@ -59,7 +59,7 @@ from PIL import Image
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TOOLS_DIR)
 
-from game_bundles import BUNDLE_CACHE_DIR, BYTES_PER_MB, INVENTORY_PATH, REPO_ROOT, SITE_DATA_DIR, read_json  # noqa: E402
+from game_bundles import BUNDLE_CACHE_DIR, BYTES_PER_MB, EXPECTED_MISSING_RIGS, INVENTORY_PATH, REPO_ROOT, SITE_DATA_DIR, read_json  # noqa: E402
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,9 +103,6 @@ ROLE_OUTPUTS = (
 )
 ART_TIERS = ("art", "mod_art", "skin_art")
 SPINE_TIERS = ("spine", "mod_spine", "skin_spine")
-
-# Skin rigs the game does not ship at all. Anything else missing fails the Spine pass.
-EXPECTED_MISSING_RIGS = frozenset(("skin_spine:95:1809",))
 
 # Report tiers, keyed by inventory tier and role.
 REPORT_TIERS = {

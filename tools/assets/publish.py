@@ -767,7 +767,7 @@ def http_status(url):
         url: The URL.
 
     Returns:
-        The status code, or None on a network failure.
+        The status code, or None on a network failure such as a timeout or a dropped connection.
     """
     request = urllib.request.Request(url, method="HEAD", headers={"User-Agent": USER_AGENT})
     try:
@@ -775,7 +775,7 @@ def http_status(url):
             return response.status
     except urllib.error.HTTPError as error:
         return error.code
-    except (urllib.error.URLError, TimeoutError):
+    except OSError:
         return None
 
 

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """Add the partial asset manifest and Spine index of an `add` staging folder into the committed files.
 
-The scheduled refresh extracts only new dolls, Mods, skins and equipment, builds a manifest and a
-Spine index from that staging folder alone, and merges them here. The merge only adds. Anything the
-committed files already list stops it, so hosted art is never replaced by accident. Both outputs
+The scheduled refresh extracts only new dolls, Mods, skins and equipment, builds a manifest and a Spine index from that staging folder alone, and
+merges them here. The merge only adds. Anything the committed files already list stops it, so hosted art is never replaced by accident. Both outputs
 keep the exact format and key order the full builders write.
 
 Usage:
-    python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file>
-    [--manifest assets-manifest.json] [--spine-index src/data/spine-index.json]
+    python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] [--spine-index src/data/spine-index.json]
 """
 
 import argparse
@@ -23,8 +21,7 @@ from build_manifest import SKILL_KINDS, dumps
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # Ordering
 
-# Key order of a manifest doll entry and a Spine index entry, as `build_manifest.build_v3` and
-# `build_spine_index.build_v3` write them.
+# Key order of a manifest doll entry and a Spine index entry, as `build_manifest.build_v3` and `build_spine_index.build_v3` write them.
 MANIFEST_DOLL_KEYS = ("normal", "mod", "skins", "skills")
 SPINE_ENTRY_KEYS = ("combat", "dorm", "mod", "skins")
 
@@ -88,11 +85,9 @@ def in_order(entry, keys):
 
 
 def merge_manifest(committed, partial):
-    """Add a partial manifest's new dolls, Mods, skins, skill icons and equipment into the committed
-    manifest.
+    """Add a partial manifest's new dolls, Mods, skins, skill icons and equipment into the committed manifest.
 
-    A partial entry for a hosted doll carries an empty base form and skill list when only a skin or
-    Mod is new, and those empty lists are ignored.
+    A partial entry for a hosted doll carries an empty base form and skill list when only a skin or Mod is new, and those empty lists are ignored.
 
     Args:
         committed: The committed manifest.
@@ -105,11 +100,7 @@ def merge_manifest(committed, partial):
         MergeConflict: When the partial lists anything the committed manifest already lists.
     """
     merged = copy.deepcopy(committed)
-    conflicts = [
-        f"equipment {equip_id}"
-        for equip_id in partial["equipment"]
-        if equip_id in set(merged["equipment"])
-    ]
+    conflicts = [f"equipment {equip_id}" for equip_id in partial["equipment"] if equip_id in set(merged["equipment"])]
     merged["equipment"] = sorted(set(merged["equipment"]) | set(partial["equipment"]))
     for doll_id, record in partial["dolls"].items():
         entry = merged["dolls"].get(doll_id)
@@ -129,14 +120,8 @@ def merge_manifest(committed, partial):
                 conflicts.append(f"doll {doll_id} skin {skin_id}")
             else:
                 skins[skin_id] = skin
-        conflicts.extend(
-            f"doll {doll_id} {skill} icon"
-            for skill in record["skills"]
-            if skill in entry["skills"]
-        )
-        entry["skills"] = [
-            skill for skill in SKILL_KINDS if skill in entry["skills"] or skill in record["skills"]
-        ]
+        conflicts.extend(f"doll {doll_id} {skill} icon" for skill in record["skills"] if skill in entry["skills"])
+        entry["skills"] = [skill for skill in SKILL_KINDS if skill in entry["skills"] or skill in record["skills"]]
         merged["dolls"][doll_id] = in_order(entry, MANIFEST_DOLL_KEYS)
     if conflicts:
         raise MergeConflict(conflicts)
@@ -218,9 +203,7 @@ def read_json(path):
 
 def main():
     """Merge both partial files into the committed ones and print what was added."""
-    parser = argparse.ArgumentParser(
-        description="Add the partial manifest and Spine index of an add staging folder into the committed files."
-    )
+    parser = argparse.ArgumentParser(description="Add the partial manifest and Spine index of an add staging folder into the committed files.")
     parser.add_argument("--manifest-partial", required=True, help="Manifest built from the add staging folder.")
     parser.add_argument("--spine-partial", required=True, help="Spine index built and annotated from the add staging folder.")
     parser.add_argument("--manifest", default="assets-manifest.json", help="The committed manifest to update.")
@@ -238,10 +221,7 @@ def main():
         handle.write(dumps(manifest))
     with open(args.spine_index, "w", encoding="utf-8") as handle:
         handle.write(dump_spine_index(spine_index))
-    print(
-        f"merged {len(manifest_partial['dolls'])} manifest doll entries and "
-        f"{len(manifest_partial['equipment'])} equipment ids into {args.manifest}"
-    )
+    print(f"merged {len(manifest_partial['dolls'])} manifest doll entries and {len(manifest_partial['equipment'])} equipment ids into {args.manifest}")
     print(f"merged {len(spine_partial)} Spine index entries into {args.spine_index}")
 
 

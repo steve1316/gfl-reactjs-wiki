@@ -1,5 +1,6 @@
 """Unit tests for `merge_indexes`, run with `python3 -m unittest discover tools/assets/tests`."""
 
+import copy
 import json
 import os
 import sys
@@ -14,6 +15,26 @@ import merge_indexes  # noqa: E402
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # Fixtures
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+MANIFEST_PATH = os.path.join(REPO_ROOT, "assets-manifest.json")
+SPINE_INDEX_PATH = os.path.join(REPO_ROOT, "src", "data", "spine-index.json")
+
+# Every this many doll ids, in numeric order, is taken out of the committed files and merged back.
+SAMPLE_STEP = 25
+
+
+def read_text(path):
+    """Read a file's exact text, without newline translation.
+
+    Args:
+        path: File path.
+
+    Returns:
+        The decoded contents.
+    """
+    with open(path, "rb") as handle:
+        return handle.read().decode("utf-8")
 
 
 def committed_manifest():
@@ -181,6 +202,45 @@ class SpineMergeTests(unittest.TestCase):
         with self.assertRaises(merge_indexes.MergeConflict) as caught:
             merge_indexes.merge_spine_index(self.committed(), partial)
         self.assertEqual(caught.exception.conflicts, ["doll 100 rig", "doll 65 skin 805 rig"])
+
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Committed files
+
+
+class CommittedRoundTripTests(unittest.TestCase):
+    """Taking a doll out of the real committed files and merging it back reproduces them byte for byte."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Read the committed manifest and Spine index once and pick the sample doll ids."""
+        cls.manifest_text = read_text(MANIFEST_PATH)
+        cls.spine_text = read_text(SPINE_INDEX_PATH)
+        cls.manifest = json.loads(cls.manifest_text)
+        cls.spine_index = json.loads(cls.spine_text)
+        ids = sorted(cls.manifest["dolls"], key=int)
+        cls.sample = list(dict.fromkeys(ids[::SAMPLE_STEP] + [ids[-1]]))
+
+    def test_manifest_round_trip(self):
+        """Each sampled doll merged back into a manifest without it gives the committed file text."""
+        for doll_id in self.sample:
+            with self.subTest(doll_id=doll_id):
+                committed = copy.deepcopy(self.manifest)
+                entry = committed["dolls"].pop(doll_id)
+                partial = {"version": 3, "imageKinds": list(self.manifest["imageKinds"]), "equipment": [], "dolls": {doll_id: entry}}
+                merged = merge_indexes.merge_manifest(committed, partial)
+                self.assertEqual(build_manifest.dumps(merged), self.manifest_text)
+
+    def test_spine_index_round_trip(self):
+        """Each sampled doll merged back into a Spine index without it gives the committed file text."""
+        for doll_id in self.sample:
+            with self.subTest(doll_id=doll_id):
+                committed = copy.deepcopy(self.spine_index)
+                partial = {doll_id: committed.pop(doll_id)} if doll_id in committed else {}
+                merged = merge_indexes.merge_spine_index(committed, partial)
+                self.assertEqual(merge_indexes.dump_spine_index(merged), self.spine_text)
 
 
 if __name__ == "__main__":

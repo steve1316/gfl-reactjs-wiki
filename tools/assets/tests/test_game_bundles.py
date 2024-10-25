@@ -434,6 +434,14 @@ class NewTargetTests(unittest.TestCase):
         problems = game_bundles.only_missing_problems({"summary": summary})
         self.assertEqual(problems, ["art:424 is unresolved: no bundle holds the files", "skin_art:65:9001 is missing card"])
 
+    def test_expected_missing_rig_is_not_a_problem(self):
+        """A skin rig the game does not ship is an expected gap, so it never stops an only-missing run."""
+        item = {"key": "skin_spine:95:1809", "tier": "skin_spine", "doll_id": 95, "skin_id": 1809, "status": "unresolved", "bundles": []}
+        summary, _bundles = game_bundles.summarise([item], {}, include_ui=False)
+        self.assertEqual([entry["key"] for entry in summary["unresolved_expected"]], ["skin_spine:95:1809"])
+        self.assertEqual(summary["unresolved_unexpected"], [])
+        self.assertEqual(game_bundles.only_missing_problems({"summary": summary}), [])
+
     def test_ui_bundle_only_with_equipment(self):
         """The equipment UI bundle is left out when asked, and kept by default."""
         index = {"atlasclips_listequipment": {"resname": "x", "sizeOriginal": 5}}
@@ -463,6 +471,12 @@ class NewTargetTests(unittest.TestCase):
             inventory = game_bundles.inventory_from_paths(os.path.join(FIXTURES, "resdata_no_hash.json"), GF_DATA, SITE_DATA, listed)
             self.assertEqual(inventory["items"], [])
             self.assertEqual(inventory["bundles"], {})
+
+
+    def test_committed_data_has_no_new_targets(self):
+        """The committed site data and manifest agree, so the daily refresh never selects a hosted form."""
+        targets = game_bundles.new_targets(*game_bundles.load_site(game_bundles.SITE_DATA_DIR), game_bundles.read_json(game_bundles.MANIFEST_PATH))
+        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()})
 
 
 if __name__ == "__main__":
