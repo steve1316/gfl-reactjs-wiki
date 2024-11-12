@@ -119,3 +119,31 @@ export function buildEquipment(upstream) {
 	const types = typeRows.filter((row) => items[TYPE_KEYS[row.code]]).map((row) => ({ key: TYPE_KEYS[row.code], label: cleanName(upstream.t(row.name)) }));
 	return { types, items };
 }
+
+/**
+ * Group the exclusive equipment by the dolls that can equip it, for the doll page's exclusive equipment card.
+ *
+ * Each entry keeps only what the card shows, with each stat at its maximum level, so a doll page never downloads the whole equipment list.
+ *
+ * @param {{ items: Record<string, object[]> }} equipment The built equipment from `buildEquipment`.
+ * @returns {Map<number, { id: number, name: string, rarity: number, mod: boolean, stats: Record<string, string> }[]>} Entries by base doll id,
+ *   items every form can equip before Mod-only ones, then by equipment id.
+ */
+export function exclusivesByDoll(equipment) {
+	const byDoll = new Map();
+	for (const item of Object.values(equipment.items).flat()) {
+		if (!item.exclusive) {
+			continue;
+		}
+		const stats = Object.fromEntries(Object.entries(item.stats).map(([key, values]) => [key, values[values.length - 1]]));
+		for (const doll of item.dolls) {
+			const entries = byDoll.get(doll.id) ?? [];
+			entries.push({ id: item.id, name: item.name, rarity: item.rarity, mod: doll.mod, stats });
+			byDoll.set(doll.id, entries);
+		}
+	}
+	for (const entries of byDoll.values()) {
+		entries.sort((a, b) => Number(a.mod) - Number(b.mod) || a.id - b.id);
+	}
+	return byDoll;
+}

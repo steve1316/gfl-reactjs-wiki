@@ -49,8 +49,8 @@ This project serves to provide a mobile-friendly web application of a wiki hoste
   - [x] ~~Rework the logic such that clicking on the GIF plays the next animation and loops back around when you reach the last animation.~~
 - [x] ~~Add T-Dolls #11 to 320~~ (currently as of October 10, 2020)
 - [x] ~~Add all Special T-Dolls #1000 to 1027.~~ (currently as of October 10, 2020)
-- [ ] ~~(HIGH PRIORITY) Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~
-- [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ (Doing so will mess up the image resolution and make it too blurry)
+- [x] ~~(HIGH PRIORITY) Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~ (Done as a "Load 30 more" button on the T-Doll Index)
+- [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ **Won't do.** (Doing so will mess up the image resolution and make it too blurry)
 - [x] ~~(HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.~~
   - [x] ~~Create logic for the 2 buttons below it and link it to the component.~~
 - [x] ~~Create initial structure of JSON data object that will hold all equipment.~~
@@ -58,8 +58,8 @@ This project serves to provide a mobile-friendly web application of a wiki hoste
   - [x] ~~(HIGH PRIORITY) Create the Equipment Index page.~~
     - [x] ~~(MEDIUM PRIORTIY) Set up filters and searching for equipment.~~
     - [ ] (LOW PRIORITY) Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
-    - [ ] (MEDIUM PRIORITY) Add a way to go to the T-Doll from its exclusive equipment.
-    - [ ] (MEDIUM PRIORITY) Display all exclusive equipment linked to a T-Doll on its page.
+    - [x] ~~(MEDIUM PRIORITY) Add a way to go to the T-Doll from its exclusive equipment.~~
+    - [x] ~~(MEDIUM PRIORITY) Display all exclusive equipment linked to a T-Doll on its page.~~
 - [ ] (MEDIUM PRIORITY) Create data model for HOCs.
   - [ ] (MEDIUM PRIORITY) Create the HOC Index page.
   - [ ] (LOW PRIORITY) Add in the animations of the HOCs.

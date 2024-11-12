@@ -120,7 +120,8 @@ function previousCounts() {
  * Read the doll shards and their profile side files, checking the two line up and that the shards carry no profile or spec sheet.
  *
  * @param {(message: string) => void} fail Records a failure.
- * @returns {object[]} Every doll with its profile and spec sheets merged back in, a Mod with no sheet of its own taking the base form's.
+ * @returns {object[]} Every doll with its profile, exclusive equipment and spec sheets merged back in,
+ *   a Mod with no sheet of its own taking the base form's.
  */
 function readDolls(fail) {
 	const withSpecs = (form, specs) => form && { ...form, specs };
@@ -147,7 +148,13 @@ function readDolls(fail) {
 			if (mod !== null && (!record.mod || !Array.isArray(mod) || JSON.stringify(mod) === JSON.stringify(normal))) {
 				fail(`doll ${id} Mod specs must be null when the doll has no Mod or its sheet matches the base form's`);
 			}
-			dolls.push({ ...record, normal: withSpecs(record.normal, normal), mod: withSpecs(record.mod, mod ?? normal), profile: details.profile });
+			dolls.push({
+				...record,
+				normal: withSpecs(record.normal, normal),
+				mod: withSpecs(record.mod, mod ?? normal),
+				profile: details.profile,
+				exclusiveEquipment: details.exclusiveEquipment
+			});
 		}
 	}
 	return dolls;
@@ -299,6 +306,28 @@ async function main() {
 	const items = Object.values(equipment.items).flat();
 	if (items.some((item) => !item.id || !item.name || !Array.isArray(item.usable))) {
 		fail("an equipment item is missing id, name or usable");
+	}
+
+	// Every exclusive item a doll page lists must be an exclusive item that names that doll, with the same Mod flag, and none may be missing.
+	const itemById = new Map(items.map((item) => [item.id, item]));
+	let exclusiveLinks = 0;
+	for (const doll of dolls) {
+		const id = doll.normal.id;
+		if (!Array.isArray(doll.exclusiveEquipment)) {
+			fail(`doll ${id} has no exclusiveEquipment list in its profile entry`);
+			continue;
+		}
+		for (const entry of doll.exclusiveEquipment) {
+			const link = itemById.get(entry.id)?.dolls?.find((candidate) => candidate.id === id);
+			if (!link || link.mod !== entry.mod) {
+				fail(`doll ${id} lists exclusive equipment ${entry.id}, which equipment.json does not link to it that way`);
+			}
+		}
+		exclusiveLinks += doll.exclusiveEquipment.length;
+	}
+	const expectedLinks = items.filter((item) => item.exclusive).reduce((total, item) => total + item.dolls.filter((link) => byId.has(link.id)).length, 0);
+	if (exclusiveLinks !== expectedLinks) {
+		fail(`doll pages list ${exclusiveLinks} exclusive equipment links, but equipment.json has ${expectedLinks} for released dolls`);
 	}
 
 	if (!process.argv.includes("--skip-build")) {

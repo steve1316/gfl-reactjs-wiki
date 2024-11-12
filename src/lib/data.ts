@@ -127,6 +127,16 @@ function cacheUntilFailure<K, V>(cache: Map<K, Promise<V>>, key: K, pending: Pro
 }
 
 /**
+ * Attach an equipment item's icon URL, shared by the Equipment Index list and a doll's exclusive equipment.
+ *
+ * @param item An equipment item from the generated data.
+ * @returns A copy of the item with `image` set to its icon URL, or null when no icon is hosted yet.
+ */
+function withEquipmentIcon<T extends { id: number }>(item: T): T & { image: string | null } {
+	return { ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null };
+}
+
+/**
  * Load and process one shard, reusing an earlier load when there is one.
  *
  * @param index Position in `SHARDS`.
@@ -192,7 +202,7 @@ export async function loadDoll(id: number): Promise<TDoll | undefined> {
  * The shard and its profile side file are fetched in parallel. Both are cached, so a later `loadDoll` or `loadAllDolls` reuses the shard.
  *
  * @param id Doll id.
- * @returns The doll with its details attached, or `undefined` when no doll has that id.
+ * @returns The doll with its details attached and its exclusive equipment icons resolved, or `undefined` when no doll has that id.
  * @throws When the shard or side file fails to load, or the doll exists but its side file has no entry for it, which `tools/data/check.mjs`
  *   guards against.
  */
@@ -207,7 +217,7 @@ export async function loadDollDetails(id: number): Promise<TDollWithDetails | un
 	if (!entry) {
 		throw new Error(`doll ${id} has no profile entry`);
 	}
-	return { ...doll, ...entry };
+	return { ...doll, ...entry, exclusiveEquipment: entry.exclusiveEquipment.map(withEquipmentIcon) };
 }
 
 /**
@@ -278,7 +288,7 @@ export async function loadEquipment(): Promise<{ types: EquipmentType[]; items: 
 		fetchData<{ types: EquipmentType[]; items: Record<string, RawEquipment[]> }>("equipment").then((source) => {
 			const items: Record<string, Equipment[]> = {};
 			for (const [key, list] of Object.entries(source.items)) {
-				items[key] = list.map((item) => ({ ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null }));
+				items[key] = list.map(withEquipmentIcon);
 			}
 			return { types: source.types, items };
 		})

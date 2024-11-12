@@ -20,7 +20,7 @@ import fs from "node:fs";
 
 import { loadCnGuns } from "./lib/cnData.mjs";
 import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
-import { buildEquipment } from "./lib/equipment.mjs";
+import { buildEquipment, exclusivesByDoll } from "./lib/equipment.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
 import { buildProfile, fillFromWikidata, indexPages, releaseFor } from "./lib/profile.mjs";
 import { SHARDS } from "./lib/shards.mjs";
@@ -138,6 +138,12 @@ async function main() {
 	}
 	dolls.sort((a, b) => a.normal.id - b.normal.id);
 
+	const equipment = buildEquipment(upstream);
+	// The doll page reads its exclusive equipment from the profile side file, so it never downloads equipment.json.
+	const exclusives = exclusivesByDoll(equipment);
+	for (const doll of dolls) {
+		doll.exclusiveEquipment = exclusives.get(doll.normal.id) ?? [];
+	}
 	for (const shard of SHARDS) {
 		const split = dolls.filter((doll) => doll.normal.id >= shard.min && doll.normal.id <= shard.max).map(splitDetails);
 		writeJson(
@@ -146,7 +152,6 @@ async function main() {
 		);
 		writeJson(`${OUT_DIR}/${shard.profiles}.json`, Object.fromEntries(split.map((entry) => [entry.record.normal.id, entry.details])));
 	}
-	const equipment = buildEquipment(upstream);
 	writeJson(`${OUT_DIR}/equipment.json`, equipment);
 
 	const { repo, sha } = readLock();
