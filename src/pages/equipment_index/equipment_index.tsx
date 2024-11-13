@@ -1,7 +1,8 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 
 // MaterialUI imports
-import { Container, Typography, Divider, Grid, Zoom, Fade, Box, Slider } from "@mui/material";
+import { Container, Typography, Divider, Grid, Zoom, Fade, Box, Slider, TextField } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
@@ -11,6 +12,7 @@ import FilterChip from "../../components/FilterChip";
 import EquipmentCard from "./EquipmentCard";
 
 import { loadEquipment } from "../../lib/data";
+import { matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
 import type { Equipment, EquipmentType } from "../../types/equipment";
 
 /** Labels under the level slider: the ends spelled out, the steps between as bare numbers. Static, so built once here. */
@@ -57,7 +59,8 @@ const styles = {
 	topDividerForCards: {
 		marginTop: "10px",
 		marginBottom: "25px"
-	}
+	},
+	buildTimeSearch: { mt: 2, width: { xs: "100%", sm: 260 } }
 } satisfies Record<string, SxProps<Theme>>;
 
 /**
@@ -80,6 +83,13 @@ export default function EquipmentIndex() {
 		label: "Exclusive",
 		selected: false
 	});
+
+	// What the reader has typed into the build time search.
+	const [buildTimeText, setBuildTimeText] = useState("");
+	// Parsed once per keystroke rather than per item, since every item in the results reads the same parsed query.
+	const buildTimeQuery = useMemo(() => parseBuildTime(buildTimeText), [buildTimeText]);
+	// True once the reader has typed something that does not parse as a build time, so the field can show a hint instead of filtering.
+	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null;
 
 	const [currentLevel, setCurrentLevel] = useState(1);
 
@@ -126,13 +136,21 @@ export default function EquipmentIndex() {
 		setExclusiveFilter((exclusive) => ({ ...exclusive, selected: !exclusive.selected }));
 	}, []);
 
+	/**
+	 * Update the build time search text as the reader types.
+	 *
+	 * @param event The input change event.
+	 */
+	const handleBuildTimeInput = useCallback((event: ChangeEvent<HTMLInputElement>) => setBuildTimeText(event.target.value), []);
+
 	// T-Doll equipment matching the filters. Derived rather than copied into state from an effect, which rendered
 	// the whole grid twice for every filter change.
 	const searchResults = useMemo((): Equipment[] => {
 		const types = selectedTypes.size === 0 ? equipment.types : equipment.types.filter((type) => selectedTypes.has(type.key));
 		const items = types.flatMap((type) => equipment.items[type.key] ?? []);
-		return exclusiveFilter.selected ? items.filter((item) => item.exclusive) : items;
-	}, [selectedTypes, exclusiveFilter, equipment]);
+		const exclusiveMatches = exclusiveFilter.selected ? items.filter((item) => item.exclusive) : items;
+		return buildTimeQuery ? exclusiveMatches.filter((item) => item.buildSeconds !== null && matchesBuildTime(item.buildSeconds, buildTimeQuery)) : exclusiveMatches;
+	}, [selectedTypes, exclusiveFilter, equipment, buildTimeQuery]);
 
 	const handleSlider = useCallback((_event: Event, newValue: number | number[]) => {
 		setCurrentLevel(Array.isArray(newValue) ? (newValue[0] ?? 1) : newValue);
@@ -170,6 +188,17 @@ export default function EquipmentIndex() {
 						</Zoom>
 					</li>
 				</Box>
+
+				<TextField
+					value={buildTimeText}
+					onChange={handleBuildTimeInput}
+					placeholder="Build time, e.g. 0:45"
+					size="small"
+					error={buildTimeInvalid}
+					helperText={buildTimeInvalid ? "Type a time like 0:45 or 0:45:00" : undefined}
+					sx={styles.buildTimeSearch}
+					slotProps={{ htmlInput: { "aria-label": "Search equipment by build time", inputMode: "numeric" } }}
+				/>
 			</Container>
 
 			<Box sx={{ display: "flex", width: "80%", m: "auto", marginTop: 5 }}>

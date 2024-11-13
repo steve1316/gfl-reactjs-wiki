@@ -14,7 +14,7 @@ import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import ProfilePanel from "./ProfilePanel";
-import type { DollProfile, RawSkins, SpecRow } from "../../types/tdoll";
+import type { DollProduction, DollProfile, RawSkins, SpecRow } from "../../types/tdoll";
 
 const modIcon = uiUrl("mod.png");
 
@@ -140,6 +140,8 @@ interface DollHeroProps {
 	profile: DollProfile;
 	/** The spec sheet of the form on screen, shown beside the profile. */
 	specs: SpecRow[];
+	/** The doll's build time and production pools, or null when production never gives it. */
+	production: DollProduction | null;
 }
 
 /**
@@ -168,7 +170,8 @@ export default memo(function DollHero({
 	modOn,
 	onToggleMod,
 	profile,
-	specs
+	specs,
+	production
 }: DollHeroProps) {
 	// Shared by every skin pill, which carries its skin key in `data-skin`. A new arrow per pill per render
 	// would hand each Chip a fresh prop and re-render the whole row on any change to the page.
@@ -247,7 +250,7 @@ export default memo(function DollHero({
 						</Box>
 					) : null}
 
-					<ProfilePanel profile={profile} specs={specs} name={name} />
+					<ProfilePanel profile={profile} specs={specs} name={name} production={production} />
 				</Box>
 			</Box>
 		</Box>

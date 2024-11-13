@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildDoll, selectReleased, splitDetails } from "../lib/dolls.mjs";
+import { buildDoll, productionOf, selectReleased, splitDetails } from "../lib/dolls.mjs";
 import fs from "node:fs";
 
 import { addExtraSkins, buildSkins, findSkinArtGaps, validateExtraSkins } from "../lib/skins.mjs";
@@ -149,4 +149,21 @@ test("splitDetails moves the profile, exclusive equipment and spec sheets out of
 	const noMod = splitDetails({ normal: form("B", []), mod: null, skins: null, profile, exclusiveEquipment: [] });
 	assert.equal(noMod.record.mod, null);
 	assert.deepEqual(noMod.details.specs, { normal: [], mod: null });
+});
+
+test("productionOf reads the build time and the standard and heavy production pools", () => {
+	const gun = (id) => upstream.stc("gun").find((row) => row.id === id);
+	assert.deepEqual(productionOf(gun(65)), { seconds: 14100, standard: true, heavy: true });
+	assert.equal(productionOf(gun(229)), null);
+	assert.deepEqual(productionOf({ develop_duration: 600, obtain_ids: "2" }), { seconds: 600, standard: false, heavy: true });
+	assert.deepEqual(productionOf({ develop_duration: 600, obtain_ids: "1,3" }), { seconds: 600, standard: true, heavy: false });
+	const released = selectReleased(upstream, "2026-09-13");
+	const buildable = released.map(productionOf).filter(Boolean);
+	assert.equal(buildable.length, 258);
+	assert.ok(buildable.every((production) => production.seconds > 0));
+});
+
+test("buildDoll carries the doll's production", () => {
+	const gun = upstream.stc("gun").find((row) => row.id === 65);
+	assert.deepEqual(buildDoll(upstream, gun, ctx).production, { seconds: 14100, standard: true, heavy: true });
 });

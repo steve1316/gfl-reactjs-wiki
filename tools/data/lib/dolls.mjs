@@ -15,6 +15,12 @@ const MOD_OFFSET = 20000;
 /** Upstream `rank_display` for collaboration dolls, which the site files under rarity 1 ("Extra"). */
 const COLLAB_RANK_DISPLAY = 7;
 
+/** Obtain id of dolls built in standard production, from `asset/table/gun_obtain.txt`. */
+const STANDARD_PRODUCTION = "1";
+
+/** Obtain id of dolls built in heavy production. */
+const HEAVY_PRODUCTION = "2";
+
 /**
  * Pick released, playable base dolls.
  *
@@ -59,7 +65,22 @@ function buildForm(upstream, gun, base, ctx) {
 }
 
 /**
- * Build a whole doll: base form, Mod and skins.
+ * Read a doll's build time and the production pools it can come from.
+ *
+ * `develop_duration` is set for event and reward dolls too, so the obtain ids decide whether the doll is buildable at all.
+ *
+ * @param {{ develop_duration: number, obtain_ids: string }} gun The doll's base gun row.
+ * @returns {{ seconds: number, standard: boolean, heavy: boolean } | null} The build time and pools, or null when production never gives the doll.
+ */
+export function productionOf(gun) {
+	const obtain = String(gun.obtain_ids).split(",");
+	const standard = obtain.includes(STANDARD_PRODUCTION);
+	const heavy = obtain.includes(HEAVY_PRODUCTION);
+	return standard || heavy ? { seconds: gun.develop_duration, standard, heavy } : null;
+}
+
+/**
+ * Build a whole doll: base form, Mod, skins and production.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @param {object} gun The base doll's gun row.
@@ -71,7 +92,8 @@ export function buildDoll(upstream, gun, ctx) {
 	return {
 		normal: buildForm(upstream, gun, gun, ctx),
 		mod: modGun ? buildForm(upstream, modGun, gun, ctx) : null,
-		skins: buildSkins(upstream, gun.id)
+		skins: buildSkins(upstream, gun.id),
+		production: productionOf(gun)
 	};
 }
 

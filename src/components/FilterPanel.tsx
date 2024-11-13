@@ -8,6 +8,7 @@ import type { SxProps, Theme } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SearchIcon from "@mui/icons-material/Search";
+import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 
 import FilterChip from "./FilterChip";
 import { uiUrl } from "../lib/assets";
@@ -41,8 +42,13 @@ const styles = {
 		gap: 1.5,
 		fontWeight: 700
 	},
-	search: {
-		mt: 1.5
+	// Name and build time searches share a row from sm up, the name taking twice the width, and stack on a phone.
+	searches: {
+		mt: 1.5,
+		display: "grid",
+		gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr" },
+		gap: 1,
+		alignItems: "start"
 	},
 	rows: {
 		display: "flex",
@@ -93,6 +99,12 @@ interface FilterPanelProps {
 	nameQuery: string;
 	/** Called with the new text on every keystroke, so the list filters as the reader types. */
 	onNameQueryChange: (query: string) => void;
+	/** The text in the build time search. */
+	buildTimeQuery: string;
+	/** Called with the new text on every keystroke. */
+	onBuildTimeQueryChange: (query: string) => void;
+	/** True when the build time text is not a readable time, which shows a hint instead of filtering. */
+	buildTimeInvalid: boolean;
 	/** Toggles the rarity entry with this key. One stable handler for the whole row, which each chip calls with its key. */
 	onToggleRarity: (key?: string | number) => void;
 	/** Toggles the weapon-type entry with this key. One stable handler for the whole row, which each chip calls with its key. */
@@ -114,7 +126,21 @@ interface FilterPanelProps {
  * @param props Component props.
  * @returns The filter rows, always open from `sm` up and collapsible below it.
  */
-export default memo(function FilterPanel({ rarityFilter, typeFilter, modFilter, activeCount, nameQuery, onNameQueryChange, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterPanelProps) {
+export default memo(function FilterPanel({
+	rarityFilter,
+	typeFilter,
+	modFilter,
+	activeCount,
+	nameQuery,
+	onNameQueryChange,
+	buildTimeQuery,
+	onBuildTimeQueryChange,
+	buildTimeInvalid,
+	onToggleRarity,
+	onToggleType,
+	onToggleMod,
+	onClear
+}: FilterPanelProps) {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const [expanded, setExpanded] = useState(false);
@@ -122,6 +148,8 @@ export default memo(function FilterPanel({ rarityFilter, typeFilter, modFilter, 
 	const toggleExpanded = useCallback(() => setExpanded((current) => !current), []);
 	const clearNameQuery = useCallback(() => onNameQueryChange(""), [onNameQueryChange]);
 	const handleNameInput = useCallback((event: ChangeEvent<HTMLInputElement>) => onNameQueryChange(event.target.value), [onNameQueryChange]);
+	const clearBuildTimeQuery = useCallback(() => onBuildTimeQueryChange(""), [onBuildTimeQueryChange]);
+	const handleBuildTimeInput = useCallback((event: ChangeEvent<HTMLInputElement>) => onBuildTimeQueryChange(event.target.value), [onBuildTimeQueryChange]);
 
 	// Only the phone collapses. On a wider screen the rows cost little enough to leave open.
 	const open = !isMobile || expanded;
@@ -196,31 +224,58 @@ export default memo(function FilterPanel({ rarityFilter, typeFilter, modFilter, 
 			</Box>
 
 			{/* Outside the collapsing rows, so a phone can search without opening the chips first. */}
-			<TextField
-				value={nameQuery}
-				onChange={handleNameInput}
-				placeholder="Search by name"
-				size="small"
-				fullWidth
-				sx={styles.search}
-				slotProps={{
-					htmlInput: { "aria-label": "Search T-Dolls by name" },
-					input: {
-						startAdornment: (
-							<InputAdornment position="start">
-								<SearchIcon fontSize="small" />
-							</InputAdornment>
-						),
-						endAdornment: nameQuery ? (
-							<InputAdornment position="end">
-								<IconButton size="small" onClick={clearNameQuery} aria-label="clear name search" edge="end">
-									<ClearIcon fontSize="small" />
-								</IconButton>
-							</InputAdornment>
-						) : null
-					}
-				}}
-			/>
+			<Box sx={styles.searches}>
+				<TextField
+					value={nameQuery}
+					onChange={handleNameInput}
+					placeholder="Search by name"
+					size="small"
+					fullWidth
+					slotProps={{
+						htmlInput: { "aria-label": "Search T-Dolls by name" },
+						input: {
+							startAdornment: (
+								<InputAdornment position="start">
+									<SearchIcon fontSize="small" />
+								</InputAdornment>
+							),
+							endAdornment: nameQuery ? (
+								<InputAdornment position="end">
+									<IconButton size="small" onClick={clearNameQuery} aria-label="clear name search" edge="end">
+										<ClearIcon fontSize="small" />
+									</IconButton>
+								</InputAdornment>
+							) : null
+						}
+					}}
+				/>
+				<TextField
+					value={buildTimeQuery}
+					onChange={handleBuildTimeInput}
+					placeholder="Build time, e.g. 3:55"
+					size="small"
+					fullWidth
+					error={buildTimeInvalid}
+					helperText={buildTimeInvalid ? "Type a time like 3:55 or 3:55:00" : undefined}
+					slotProps={{
+						htmlInput: { "aria-label": "Search T-Dolls by build time", inputMode: "numeric" },
+						input: {
+							startAdornment: (
+								<InputAdornment position="start">
+									<TimerOutlinedIcon fontSize="small" />
+								</InputAdornment>
+							),
+							endAdornment: buildTimeQuery ? (
+								<InputAdornment position="end">
+									<IconButton size="small" onClick={clearBuildTimeQuery} aria-label="clear build time search" edge="end">
+										<ClearIcon fontSize="small" />
+									</IconButton>
+								</InputAdornment>
+							) : null
+						}
+					}}
+				/>
+			</Box>
 
 			{/* Mounted either way, so toggling the breakpoint never drops the rows entirely. */}
 			<Collapse in={open}>{rows}</Collapse>

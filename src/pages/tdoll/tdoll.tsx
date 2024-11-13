@@ -501,6 +501,7 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 							onToggleMod={switchModes}
 							profile={tdoll.profile}
 							specs={specs}
+							production={tdoll.production}
 						/>
 					</Grid>
 					{/* Stats shares its small-screen row with the Animations card, so it takes the full row when that card is absent. */}

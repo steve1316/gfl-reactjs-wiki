@@ -10,6 +10,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { searchIndex } from "../../lib/data";
 import { statName } from "../../lib/equipmentStats";
+import { formatBuildTime } from "../../lib/buildTime";
 import type { SearchEntry } from "../../lib/data";
 import type { Equipment, EquipmentDoll } from "../../types/equipment";
 
@@ -51,7 +52,8 @@ const styles = {
 		color: "primary.main",
 		textDecorationColor: "inherit",
 		"&:hover": { textDecorationThickness: 2 }
-	}
+	},
+	buildTime: { display: "block", mt: 0.25 }
 } satisfies Record<string, SxProps<Theme>>;
 
 /** Props for EquipmentDescription. */
@@ -142,7 +144,19 @@ interface EquipmentCardProps {
 export default memo(function EquipmentCard({ equipment, level }: EquipmentCardProps) {
 	return (
 		<Card>
-			<CardHeader title={equipment.name} subheader={<EquippableBy usable={equipment.usable} dolls={equipment.dolls} />} />
+			<CardHeader
+				title={equipment.name}
+				subheader={
+					<>
+						<EquippableBy usable={equipment.usable} dolls={equipment.dolls} />
+						{equipment.buildSeconds === null ? null : (
+							<Box component="span" sx={styles.buildTime}>
+								Build time {formatBuildTime(equipment.buildSeconds)}
+							</Box>
+						)}
+					</>
+				}
+			/>
 
 			<CardActionArea>
 				{equipment.image === null ? (

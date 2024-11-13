@@ -169,6 +169,7 @@ async function main() {
 	const failures = [];
 	const fail = (message) => failures.push(message);
 	const dolls = readDolls(fail);
+	const aliases = JSON.parse(fs.readFileSync("tools/data/equipment-aliases.json", "utf8"));
 	const byId = new Map(dolls.map((doll) => [doll.normal.id, doll]));
 	const equipment = JSON.parse(fs.readFileSync("src/data/equipment.json", "utf8"));
 	const upstream = JSON.parse(fs.readFileSync("src/data/upstream.json", "utf8"));
@@ -329,6 +330,50 @@ async function main() {
 	if (exclusiveLinks !== expectedLinks) {
 		fail(`doll pages list ${exclusiveLinks} exclusive equipment links, but equipment.json has ${expectedLinks} for released dolls`);
 	}
+
+	// Production: a buildable doll has a positive build time and at least one pool. HK416 is pinned against the game.
+	for (const doll of dolls) {
+		const production = doll.production;
+		if (production === undefined) {
+			fail(`doll ${doll.normal.id} has no production field`);
+		} else if (production !== null && (!(production.seconds > 0) || !(production.standard || production.heavy))) {
+			fail(`doll ${doll.normal.id} has production ${JSON.stringify(production)}, which needs positive seconds and a pool`);
+		}
+	}
+	if (JSON.stringify(byId.get(65)?.production) !== JSON.stringify({ seconds: 14100, standard: true, heavy: true })) {
+		fail(`HK416 production is ${JSON.stringify(byId.get(65)?.production)}, expected 14100 seconds from standard and heavy production`);
+	}
+	for (const item of items.filter((entry) => entry.buildSeconds !== null && !(entry.buildSeconds > 0))) {
+		fail(`equipment ${item.id} has buildSeconds ${item.buildSeconds}, expected null or a positive number`);
+	}
+
+	// Skill mentions name one of the doll's own exclusive items, in wording its description really contains, and every alias is still used.
+	const usedAliases = new Set();
+	for (const doll of dolls) {
+		const own = new Set(doll.exclusiveEquipment.map((entry) => entry.id));
+		for (const form of [doll.normal, doll.mod].filter(Boolean)) {
+			for (const skill of [form.skill, form.skill2].filter(Boolean)) {
+				if (!Array.isArray(skill.equipmentMentions)) {
+					fail(`doll ${doll.normal.id} skill ${skill.name} has no equipmentMentions list`);
+					continue;
+				}
+				for (const mention of skill.equipmentMentions) {
+					if (!own.has(mention.id) || !skill.description.includes(mention.text)) {
+						fail(`doll ${doll.normal.id} skill ${skill.name} mentions ${JSON.stringify(mention)}, which is not its own item in its own wording`);
+					}
+					const alias = aliases.findIndex((entry) => entry.doll === doll.normal.id && entry.equipment === mention.id && entry.text === mention.text);
+					if (alias !== -1) {
+						usedAliases.add(alias);
+					}
+				}
+			}
+		}
+	}
+	aliases.forEach((alias, index) => {
+		if (!usedAliases.has(index)) {
+			fail(`equipment alias ${JSON.stringify(alias.text)} for doll ${alias.doll} no longer matches any skill description`);
+		}
+	});
 
 	if (!process.argv.includes("--skip-build")) {
 		try {
