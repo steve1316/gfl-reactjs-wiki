@@ -535,10 +535,13 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 										onSkillLevelChange={setSkillLevel}
 										skill={tdoll.selected.skill}
 										skill2={tdoll.selected.skill2}
-										normalSkillDescription={tdoll.normal.skill.description}
+										skill1Description={tdoll.selected.skill.description}
 										modSkill2Description={tdoll.mod?.skill2?.description}
 										dollId={tdoll.selected.id}
 										skillImages={tdoll.skillImages}
+										skill1Mentions={tdoll.selected.skill.equipmentMentions}
+										modSkill2Mentions={tdoll.mod?.skill2?.equipmentMentions}
+										exclusiveEquipment={tdoll.exclusiveEquipment}
 									/>
 								</Box>
 								<Box sx={[styles.abilityPart, { flex: { lg: "0 0 300px" } }]}>

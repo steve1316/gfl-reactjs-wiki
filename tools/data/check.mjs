@@ -11,6 +11,7 @@ import fs from "node:fs";
 
 import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
+import { normaliseWithPositions } from "./lib/mentions.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 import { findSkinArtGaps } from "./lib/skins.mjs";
 import { findSpineIndexProblems } from "./lib/spineIndex.mjs";
@@ -348,6 +349,8 @@ async function main() {
 	}
 
 	// Skill mentions name one of the doll's own exclusive items, in wording its description really contains, and every alias is still used.
+	// An alias counts as used the way the importer matches it: ignoring case, spaces and punctuation.
+	const aliasKeys = aliases.map((entry) => normaliseWithPositions(entry.text).normal);
 	const usedAliases = new Set();
 	for (const doll of dolls) {
 		const own = new Set(doll.exclusiveEquipment.map((entry) => entry.id));
@@ -361,7 +364,8 @@ async function main() {
 					if (!own.has(mention.id) || !skill.description.includes(mention.text)) {
 						fail(`doll ${doll.normal.id} skill ${skill.name} mentions ${JSON.stringify(mention)}, which is not its own item in its own wording`);
 					}
-					const alias = aliases.findIndex((entry) => entry.doll === doll.normal.id && entry.equipment === mention.id && entry.text === mention.text);
+					const mentionKey = normaliseWithPositions(mention.text).normal;
+					const alias = aliases.findIndex((entry, index) => entry.doll === doll.normal.id && entry.equipment === mention.id && aliasKeys[index] === mentionKey);
 					if (alias !== -1) {
 						usedAliases.add(alias);
 					}
@@ -371,7 +375,7 @@ async function main() {
 	}
 	aliases.forEach((alias, index) => {
 		if (!usedAliases.has(index)) {
-			fail(`equipment alias ${JSON.stringify(alias.text)} for doll ${alias.doll} no longer matches any skill description`);
+			fail(`equipment alias ${JSON.stringify(alias.text)} for doll ${alias.doll} no longer matches any of its skill descriptions; update or remove it in tools/data/equipment-aliases.json`);
 		}
 	});
 

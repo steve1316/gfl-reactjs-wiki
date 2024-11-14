@@ -55,6 +55,17 @@ export function parseBuildTime(input: string): BuildTimeQuery | null {
 }
 
 /**
+ * Whether typed text is an unfinished build time, such as `3`, `3:` or `3:5`, that could still become a valid one as the reader types on.
+ *
+ * @param input What the reader typed.
+ * @returns True for a partial time the field should not flag yet, false for empty text or text no further typing can fix.
+ */
+export function isIncompleteBuildTime(input: string): boolean {
+	const text = input.trim();
+	return text !== "" && /^\d{1,2}(:([0-5]\d?)?(:[0-5]?)?)?$/.test(text);
+}
+
+/**
  * Whether a build time matches a typed query. A minute query matches every second of that minute.
  *
  * @param seconds The build time in seconds.

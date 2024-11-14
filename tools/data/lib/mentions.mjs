@@ -32,7 +32,7 @@ export function normaliseWithPositions(text) {
  *
  * Longer names are tried first and a matched stretch is never matched again, so a name inside a longer name does not match twice.
  * A match must start and end on a word boundary in the original text.
- * When two of the doll's items share a name, the wording is recorded once under the first of them (the lowest id, since items arrive in id order).
+ * When two of the doll's items share a name, the wording is recorded once under the first of them in the doll's item order.
  *
  * @param {string} description The skill description.
  * @param {{ id: number, name: string }[]} items The doll's exclusive equipment.

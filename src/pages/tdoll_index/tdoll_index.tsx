@@ -15,7 +15,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 import { loadAllDolls, searchIndex } from "../../lib/data";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
-import { formatBuildTimeQuery, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
+import { formatBuildTimeQuery, isIncompleteBuildTime, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
@@ -56,8 +56,7 @@ function isSortKey(value: unknown): value is SortKey {
 }
 
 /**
- * Sort the matching dolls. Ties fall back to ascending id, and dolls with no known Global release date or build time stay last in
- * either direction.
+ * Sort the matching dolls. Ties fall back to ascending id, and dolls with no known Global release date or build time stay last in either direction.
  *
  * @param entries The matching dolls, left unchanged.
  * @param key What to sort by. Name and rarity come from the shown form, so a Mod counts as 6 stars while the Mod filter is on.
@@ -92,7 +91,7 @@ function sortEntries(entries: IndexEntry[], key: SortKey, descending: boolean): 
 				break;
 			}
 			case "buildTime": {
-				// Decided before the direction applies, so dolls production never gives stay last either way.
+				// Decided before the direction applies, so dolls whose production never gives them stay last either way.
 				const missing = Number(a.production === null) - Number(b.production === null);
 				if (missing !== 0) {
 					return missing;
@@ -206,8 +205,8 @@ export default function TDoll_Index() {
 
 	// Parsed once per keystroke rather than per doll, since every doll in `matches` reads the same parsed query.
 	const buildTimeQuery = useMemo(() => parseBuildTime(buildTimeText), [buildTimeText]);
-	// True once the reader has typed something that does not parse as a build time, so the field can show a hint instead of filtering.
-	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null;
+	// True once the typed text cannot become a build time, so the field shows a hint. A time still being typed, such as `3:5`, is left unflagged.
+	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null && !isIncompleteBuildTime(buildTimeText);
 
 	// Every doll's searchable names, normalised once per load rather than on every keystroke.
 	const searchKeys = useMemo(
@@ -366,7 +365,7 @@ export default function TDoll_Index() {
 			...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: () => handleToggleType(type.key) })),
 			...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleToggleMod }] : []),
 			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : []),
-			...(buildTimeQuery ? [{ id: "build-time", label: formatBuildTimeQuery(buildTimeQuery), onDelete: handleClearBuildTime }] : [])
+			...(buildTimeQuery ? [{ id: "build-time", label: `Build time ${formatBuildTimeQuery(buildTimeQuery)}`, onDelete: handleClearBuildTime }] : [])
 		],
 		[rarityFilter, typeFilter, modFilter, nameQuery, buildTimeQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName, handleClearBuildTime]
 	);

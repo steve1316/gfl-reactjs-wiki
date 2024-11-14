@@ -12,7 +12,7 @@ import FilterChip from "../../components/FilterChip";
 import EquipmentCard from "./EquipmentCard";
 
 import { loadEquipment } from "../../lib/data";
-import { matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
+import { isIncompleteBuildTime, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
 import type { Equipment, EquipmentType } from "../../types/equipment";
 
 /** Labels under the level slider: the ends spelled out, the steps between as bare numbers. Static, so built once here. */
@@ -60,6 +60,7 @@ const styles = {
 		marginTop: "10px",
 		marginBottom: "25px"
 	},
+	buildTimeRow: { display: "flex", justifyContent: "center" },
 	buildTimeSearch: { mt: 2, width: { xs: "100%", sm: 260 } }
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -88,8 +89,8 @@ export default function EquipmentIndex() {
 	const [buildTimeText, setBuildTimeText] = useState("");
 	// Parsed once per keystroke rather than per item, since every item in the results reads the same parsed query.
 	const buildTimeQuery = useMemo(() => parseBuildTime(buildTimeText), [buildTimeText]);
-	// True once the reader has typed something that does not parse as a build time, so the field can show a hint instead of filtering.
-	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null;
+	// True once the typed text cannot become a build time, so the field shows a hint. A time still being typed, such as `3:5`, is left unflagged.
+	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null && !isIncompleteBuildTime(buildTimeText);
 
 	const [currentLevel, setCurrentLevel] = useState(1);
 
@@ -189,16 +190,18 @@ export default function EquipmentIndex() {
 					</li>
 				</Box>
 
-				<TextField
-					value={buildTimeText}
-					onChange={handleBuildTimeInput}
-					placeholder="Build time, e.g. 0:45"
-					size="small"
-					error={buildTimeInvalid}
-					helperText={buildTimeInvalid ? "Type a time like 0:45 or 0:45:00" : undefined}
-					sx={styles.buildTimeSearch}
-					slotProps={{ htmlInput: { "aria-label": "Search equipment by build time", inputMode: "numeric" } }}
-				/>
+				<Box sx={styles.buildTimeRow}>
+					<TextField
+						value={buildTimeText}
+						onChange={handleBuildTimeInput}
+						placeholder="Build time, e.g. 0:45"
+						size="small"
+						error={buildTimeInvalid}
+						helperText={buildTimeInvalid ? "Type a time like 0:45, 0:45:00 or 045" : undefined}
+						sx={styles.buildTimeSearch}
+						slotProps={{ htmlInput: { "aria-label": "Search equipment by build time" } }}
+					/>
+				</Box>
 			</Container>
 
 			<Box sx={{ display: "flex", width: "80%", m: "auto", marginTop: 5 }}>

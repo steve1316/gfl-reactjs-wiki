@@ -17,5 +17,7 @@
 	{ "doll": 269, "equipment": 457, "text": "ST-type Exoskeleton", "reason": "Skill inserts '-type' before Exoskeleton for the ST Exoskeleton" },
 	{ "doll": 270, "equipment": 211, "text": "Arisaka Rounds", "reason": "Skill drops AP from the Arisaka AP Rounds name" },
 	{ "doll": 296, "equipment": 339, "text": "233 Competition Cartridge", "reason": "Skill text has a transposed digit, .233 instead of .223, for the .223 Competition Cartridge" },
-	{ "doll": 306, "equipment": 441, "text": "TLL enhanced rounds", "reason": "Skill uses enhanced instead of Amplified for the TLL Amplified Rounds" }
+	{ "doll": 306, "equipment": 441, "text": "TLL enhanced rounds", "reason": "Skill uses enhanced instead of Amplified for the TLL Amplified Rounds" },
+	{ "doll": 1017, "equipment": 140, "text": "Bronson Ext", "reason": "Skill's drink menu shortens Bronson Extract to Bronson Ext" },
+	{ "doll": 1017, "equipment": 141, "text": "Pwd Delta", "reason": "Skill's drink menu shortens Powdered Delta to Pwd Delta" }
 ]

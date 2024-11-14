@@ -1,13 +1,16 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
-import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
+import parse, { Element, domToReact } from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
+import type { DOMNode, HTMLReactParserOptions } from "html-react-parser";
 
 // MaterialUI imports
 import { Avatar, Box, Card, CardContent, CardHeader, Divider, FormControl, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import EquipmentMention from "./EquipmentMention";
+import { wrapMentions } from "../../lib/equipmentMentions";
 import { INGREDIENT_COLOURS } from "../../theme";
-import type { RawSkill } from "../../types/tdoll";
+import type { ExclusiveEquipment, RawSkill, SkillEquipmentMention } from "../../types/tdoll";
 
 /** Shifts the level drop-down to the right of its field. A module constant, so the Select is not handed a new object each render. */
 const LEVEL_MENU_PROPS = {
@@ -92,18 +95,24 @@ interface SkillsPanelProps {
 	skillLevel: number;
 	/** Called with the new level when the level select changes. */
 	onSkillLevelChange: (level: number) => void;
-	/** The currently selected form's primary skill. Its `description` is reset and reformatted in place on every level change. */
+	/** The currently selected form's primary skill, which supplies the name, cooldowns and values. It is never written to. */
 	skill: RawSkill;
-	/** The currently selected form's second skill, present only on Mods. Reformatted the same way as `skill`. */
+	/** The currently selected form's second skill, present only on Mods. Read the same way as `skill`. */
 	skill2: RawSkill | undefined;
-	/** The Normal form's untouched Skill 1 description text, used to reset `skill.description` before each reformat. */
-	normalSkillDescription: string;
-	/** The Mod form's untouched Skill 2 description text, used to reset `skill2.description` before each reformat. */
+	/** The shown form's Skill 1 description with its `#N` placeholders, formatted afresh at every level. */
+	skill1Description: string;
+	/** The Mod form's Skill 2 description with its `#N` placeholders, formatted the same way. */
 	modSkill2Description: string | undefined;
 	/** Id of the form currently on screen, used by a handful of dolls with hand-styled skill text. */
 	dollId: number;
 	/** Skill icon URLs, keyed `skill1` and `skill2`. */
 	skillImages: Partial<Record<"skill1" | "skill2", string>>;
+	/** Where the shown form's Skill 1 description names exclusive equipment, matching `skill1Description`. */
+	skill1Mentions: SkillEquipmentMention[];
+	/** Where the Mod's Skill 2 description names exclusive equipment, matching `modSkill2Description`. */
+	modSkill2Mentions: SkillEquipmentMention[] | undefined;
+	/** The doll's exclusive equipment, which the tooltips show. */
+	exclusiveEquipment: ExclusiveEquipment[];
 }
 
 /**
@@ -120,10 +129,13 @@ export default memo(function SkillsPanel({
 	onSkillLevelChange,
 	skill,
 	skill2,
-	normalSkillDescription,
+	skill1Description,
 	modSkill2Description,
 	dollId,
-	skillImages
+	skillImages,
+	skill1Mentions,
+	modSkill2Mentions,
+	exclusiveEquipment
 }: SkillsPanelProps) {
 	const handleSkillToggle = useCallback(
 		(_event: MouseEvent<HTMLElement>, newValue: number | null) => {
@@ -146,16 +158,14 @@ export default memo(function SkillsPanel({
 	Note: The styling being inserted is using HTML styling and not using React styling.
 	*/
 	useEffect(() => {
-		// Reset the descriptions to have it include the delimiters again and set variables to be used.
-		skill.description = normalSkillDescription;
-		let tempSkillDescription1 = skill.description;
+		// Start from the untouched descriptions, so the loaded data keeps its placeholders for the next level or form.
+		let tempSkillDescription1 = skill1Description;
 		const numberOfStats1 = skill.number_of_stats;
 
 		let tempSkillDescription2 = "";
 		let numberOfStats2 = 0;
 		if (skill2) {
-			skill2.description = modSkill2Description ?? skill2.description;
-			tempSkillDescription2 = skill2.description;
+			tempSkillDescription2 = modSkill2Description ?? skill2.description;
 			numberOfStats2 = skill2.number_of_stats;
 		}
 
@@ -228,7 +238,23 @@ export default memo(function SkillsPanel({
 
 			setSkillDescription1(tempSkillDescription1);
 		}
-	}, [skill, skill2, normalSkillDescription, modSkill2Description, showModSkill, skillLevel, dollId]);
+	}, [skill, skill2, skill1Description, modSkill2Description, showModSkill, skillLevel, dollId]);
+
+	// Turns the marker spans wrapMentions inserts into tooltips. A marker whose item is missing renders as its plain text.
+	const parserOptions = useMemo<HTMLReactParserOptions>(() => {
+		const byId = new Map(exclusiveEquipment.map((item) => [item.id, item]));
+		const options: HTMLReactParserOptions = {
+			replace(node) {
+				if (!(node instanceof Element) || node.name !== "span" || node.attribs["data-equipment-id"] === undefined) {
+					return undefined;
+				}
+				const children = domToReact(node.children as DOMNode[], options);
+				const item = byId.get(Number(node.attribs["data-equipment-id"]));
+				return item ? <EquipmentMention item={item}>{children}</EquipmentMention> : <>{children}</>;
+			}
+		};
+		return options;
+	}, [exclusiveEquipment]);
 
 	return (
 		<>
@@ -270,7 +296,9 @@ export default memo(function SkillsPanel({
 
 					{/************** This will render the span tags inserted into the skill description and will color the numbers. **************/}
 					<Typography sx={styles.title} color="textSecondary" gutterBottom>
-						{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
+						{selectedSkill === 1 && showModSkill
+							? parse(wrapMentions(skillDescription2, modSkill2Mentions ?? []), parserOptions)
+							: parse(wrapMentions(skillDescription1, skill1Mentions), parserOptions)}
 					</Typography>
 					{selectedSkill === 0 && skill.initial_cooldown !== "Passive" ? (
 						<>
