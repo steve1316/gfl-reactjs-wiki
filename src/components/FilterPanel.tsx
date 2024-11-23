@@ -72,8 +72,7 @@ interface FilterPanelProps {
 }
 
 /**
- * An index's filters, rendered in the page itself: a header with Clear all, the name and build time searches, the page's own chip rows, and an
- * optional footer.
+ * An index's filters, rendered in the page itself: a header with Clear all, the name and build time searches, the page's own chip rows, and an optional footer.
  *
  * These lived behind a Filters button that opened a drawer on a phone and a popover on a desktop. Putting
  * them back in the page costs roughly 250px on a desktop and 330-370px on a phone, which is why the phone

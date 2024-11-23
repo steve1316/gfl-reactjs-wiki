@@ -7,17 +7,17 @@ import StarIcon from "@mui/icons-material/Star";
 import { MOD_RARITY_COLOUR } from "../theme/palette";
 
 /**
- * The colour a doll's rarity is drawn in.
+ * The colour a doll's or an equipment item's rarity is drawn in.
  *
  * A Mod takes its own colour whatever its rank, because Mods exist at rarity 4, 5 and 6 and would
  * otherwise be indistinguishable from an ordinary doll of the same rank.
  *
  * @param theme The active theme.
- * @param rarity The doll's rarity, 1 to 6.
+ * @param rarity The rarity, 1 to 6.
  * @param isMod Whether the form being shown is the Mod.
  * @returns A CSS colour.
  */
-function rarityColour(theme: Theme, rarity: number, isMod: boolean): string {
+export function rarityColour(theme: Theme, rarity: number, isMod: boolean): string {
 	if (isMod) {
 		return MOD_RARITY_COLOUR;
 	}

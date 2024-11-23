@@ -7,9 +7,7 @@ import { cardArtSx } from "../lib/artLayout";
 import { findNameMatch } from "../lib/nameSearch";
 import ArtPlaceholder from "./ArtPlaceholder";
 import { RarityLabel, TypeBadge } from "./DollBadges";
-
-/** Style for the part of a name that matches the search. */
-const matchSx = { fontWeight: 800, color: "text.primary" } as const;
+import HighlightedName from "./HighlightedName";
 
 /** Props for DollCard. */
 interface DollCardProps {
@@ -66,17 +64,7 @@ export default memo(function DollCard({ id, name, type, rarity, isMod, image, to
 						}}
 						title={name}
 					>
-						{match ? (
-							<>
-								{name.slice(0, match[0])}
-								<Box component="b" sx={matchSx}>
-									{name.slice(match[0], match[1])}
-								</Box>
-								{name.slice(match[1])}
-							</>
-						) : (
-							name
-						)}
+						<HighlightedName name={name} match={match} />
 					</Typography>
 					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, mt: 0.25 }}>
 						<TypeBadge type={type} dense={dense} />

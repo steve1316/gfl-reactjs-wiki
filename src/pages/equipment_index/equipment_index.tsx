@@ -13,6 +13,7 @@ import type { ActiveFilter, SortOption } from "../../components/IndexSummaryBar"
 import type { RarityFilterEntry } from "../../components/FilterRows";
 import EquipmentFilterRows from "./EquipmentFilterRows";
 import EquipmentCard from "./EquipmentCard";
+import EquipmentDialog from "./EquipmentDialog";
 
 import { loadEquipment, searchIndex } from "../../lib/data";
 import { EQUIPMENT_RARITIES } from "../../lib/equipmentDisplay";
@@ -252,6 +253,8 @@ export default function EquipmentIndex() {
 	const [currentLevel, setCurrentLevel] = useState(saved.level);
 	// How many results are on screen. Raised by the load-more button rather than by paging.
 	const [shown, setShown] = useState(PAGE_SIZE);
+	// Which item the details dialog shows, and whether it is open. The id is kept on close so the closing animation still has content.
+	const [dialog, setDialog] = useState<{ id: number | null; open: boolean }>({ id: null, open: false });
 
 	// The tiles read a deferred level and query, so the slider thumb and the search box keep up while tiles catch up behind them.
 	const deferredLevel = useDeferredValue(currentLevel);
@@ -299,6 +302,8 @@ export default function EquipmentIndex() {
 
 	const rangeLabel = matches.length === 0 ? "0" : `1-${visible.length}`;
 
+	const dialogItem = useMemo(() => entries.find((entry) => entry.id === dialog.id), [entries, dialog.id]);
+
 	// Equipment is fetched once, on mount, rather than pulled in at module scope. A failed load is fetched again from the retry button.
 	useEffect(() => {
 		let active = true;
@@ -335,7 +340,11 @@ export default function EquipmentIndex() {
 			sortDescending,
 			level: currentLevel
 		};
-		sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+		try {
+			sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+		} catch {
+			// Storage can be blocked, such as in a locked-down browser. The view is just not remembered then.
+		}
 	}, [selectedRarities, selectedTypes, exclusiveOnly, nameQuery, buildTimeText, sortKey, sortDescending, currentLevel]);
 
 	// Every handler below is stable across renders, so the memoised panel, rows and tiles skip renders they have no part in.
@@ -362,6 +371,10 @@ export default function EquipmentIndex() {
 	const handleLoadMore = useCallback(() => setShown((current) => current + PAGE_SIZE), []);
 
 	const handleRetryLoad = useCallback(() => setLoadAttempt((current) => current + 1), []);
+
+	const handleOpenItem = useCallback((id: number) => setDialog({ id, open: true }), []);
+
+	const handleCloseDialog = useCallback(() => setDialog((current) => ({ ...current, open: false })), []);
 
 	const handleSlider = useCallback((_event: Event, value: number | number[]) => {
 		setCurrentLevel(Array.isArray(value) ? (value[0] ?? MIN_LEVEL) : value);
@@ -479,7 +492,7 @@ export default function EquipmentIndex() {
 				<Grid container spacing={4}>
 					{visible.map((item) => (
 						<Grid key={item.id} size={{ xs: 6, sm: 4, md: 3, lg: 2.4 }}>
-							<EquipmentCard equipment={item} level={deferredLevel} />
+							<EquipmentCard equipment={item} typeLabel={item.typeLabel} level={deferredLevel} highlight={deferredQuery} onOpen={handleOpenItem} />
 						</Grid>
 					))}
 				</Grid>
@@ -494,6 +507,8 @@ export default function EquipmentIndex() {
 
 				<Divider sx={styles.bottomDividerForCards} />
 			</Container>
+
+			<EquipmentDialog open={dialog.open} equipment={dialogItem} typeLabel={dialogItem?.typeLabel ?? ""} level={currentLevel} onClose={handleCloseDialog} />
 		</Box>
 	);
 }
