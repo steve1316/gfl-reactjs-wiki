@@ -1,17 +1,17 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import type { ChangeEvent } from "react";
 
 // Component imports
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import FilterPanel from "../../components/FilterPanel";
 import DollCard from "../../components/DollCard";
+import DollFilterRows from "./DollFilterRows";
+import IndexSummaryBar from "../../components/IndexSummaryBar";
+import type { SortOption } from "../../components/IndexSummaryBar";
 
 // MaterialUI imports
-import { Box, Container, Grid, Chip, Divider, Typography, Button, IconButton, MenuItem, TextField, Tooltip } from "@mui/material";
+import { Box, Container, Grid, Divider, Button } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 import { loadAllDolls, searchIndex } from "../../lib/data";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
@@ -28,7 +28,7 @@ const ALIASES_BY_ID = new Map(searchIndex.map((entry) => [entry.id, entry.aliase
 type SortKey = "id" | "name" | "rarity" | "release" | "buildTime";
 
 /** The sort menu's entries, in menu order. */
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+const SORT_OPTIONS: SortOption<SortKey>[] = [
 	{ value: "id", label: "ID" },
 	{ value: "name", label: "Name" },
 	{ value: "rarity", label: "Rarity" },
@@ -110,33 +110,6 @@ function sortEntries(entries: IndexEntry[], key: SortKey, descending: boolean): 
 const styles = {
 	root: { py: 3 },
 	summaryContainer: { pt: 2 },
-	summaryRow: {
-		display: "flex",
-		flexWrap: "wrap",
-		alignItems: "center",
-		justifyContent: "space-between",
-		gap: 1,
-		mt: 2
-	},
-	summaryStart: {
-		display: "flex",
-		flexWrap: "wrap",
-		alignItems: "center",
-		gap: 1
-	},
-	sortControls: {
-		display: "flex",
-		alignItems: "center",
-		gap: 0.5
-	},
-	sortSelect: {
-		minWidth: 160
-	},
-	activeChipList: {
-		display: "flex",
-		flexWrap: "wrap",
-		gap: 0.5
-	},
 	cardGrid: {
 		pt: 4,
 		pb: 8,
@@ -336,12 +309,6 @@ export default function TDoll_Index() {
 
 	const handleClearBuildTime = useCallback(() => setBuildTimeText(""), []);
 
-	const handleSortKeyChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-		if (isSortKey(event.target.value)) {
-			setSortKey(event.target.value);
-		}
-	}, []);
-
 	const handleToggleSortDirection = useCallback(() => setSortDescending((descending) => !descending), []);
 
 	const handleLoadMore = useCallback(() => setShown((current) => current + PAGE_SIZE), []);
@@ -370,6 +337,21 @@ export default function TDoll_Index() {
 		[rarityFilter, typeFilter, modFilter, nameQuery, buildTimeQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName, handleClearBuildTime]
 	);
 
+	// Built once per filter change rather than per render, so the memoised panel skips renders that only touch the results.
+	const filterRows = useMemo(
+		() => (
+			<DollFilterRows
+				rarityFilter={rarityFilter}
+				typeFilter={typeFilter}
+				modFilter={modFilter}
+				onToggleRarity={handleToggleRarity}
+				onToggleType={handleToggleType}
+				onToggleMod={handleToggleMod}
+			/>
+		),
+		[rarityFilter, typeFilter, modFilter, handleToggleRarity, handleToggleType, handleToggleMod]
+	);
+
 	return (
 		<Box component="main" sx={styles.root}>
 			<ScrollToTop />
@@ -377,53 +359,31 @@ export default function TDoll_Index() {
 			{/* Filters and summary bar */}
 			<Container maxWidth="lg" sx={styles.summaryContainer}>
 				<FilterPanel
-					rarityFilter={rarityFilter}
-					typeFilter={typeFilter}
-					modFilter={modFilter}
 					activeCount={activeFilters.length}
+					onClear={handleClearAll}
 					nameQuery={nameQuery}
 					onNameQueryChange={setNameQuery}
+					nameLabel="Search T-Dolls by name"
 					buildTimeQuery={buildTimeText}
 					onBuildTimeQueryChange={setBuildTimeText}
 					buildTimeInvalid={buildTimeInvalid}
-					onToggleRarity={handleToggleRarity}
-					onToggleType={handleToggleType}
-					onToggleMod={handleToggleMod}
-					onClear={handleClearAll}
+					buildTimeExample="3:55"
+					buildTimeLabel="Search T-Dolls by build time"
+				>
+					{filterRows}
+				</FilterPanel>
+
+				<IndexSummaryBar
+					rangeLabel={rangeLabel}
+					total={matches.length}
+					activeFilters={activeFilters}
+					sortId="tdoll-sort"
+					sortOptions={SORT_OPTIONS}
+					sortKey={sortKey}
+					onSortKeyChange={setSortKey}
+					sortDescending={sortDescending}
+					onToggleSortDirection={handleToggleSortDirection}
 				/>
-
-				<Box sx={styles.summaryRow}>
-					<Box sx={styles.summaryStart}>
-						<Typography variant="body1" color="textSecondary">
-							Showing {rangeLabel} of {matches.length}
-						</Typography>
-
-						{/* The active chips stay on screen even while the panel is collapsed on a phone, so a
-						    narrowed result set never looks like a bug. */}
-						{activeFilters.length > 0 && (
-							<Box sx={styles.activeChipList}>
-								{activeFilters.map((filter) => (
-									<Chip key={filter.id} label={filter.label} onDelete={filter.onDelete} size="small" />
-								))}
-							</Box>
-						)}
-					</Box>
-
-					<Box sx={styles.sortControls}>
-						<TextField id="tdoll-sort" select size="small" label="Sort by" value={sortKey} onChange={handleSortKeyChange} sx={styles.sortSelect}>
-							{SORT_OPTIONS.map((option) => (
-								<MenuItem key={option.value} value={option.value}>
-									{option.label}
-								</MenuItem>
-							))}
-						</TextField>
-						<Tooltip title={sortDescending ? "Descending" : "Ascending"}>
-							<IconButton onClick={handleToggleSortDirection} aria-label="Descending order" aria-pressed={sortDescending}>
-								{sortDescending ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
-							</IconButton>
-						</Tooltip>
-					</Box>
-				</Box>
 			</Container>
 			{/* End of filters and summary bar */}
 
