@@ -1,5 +1,5 @@
 /**
- * The single place the app reads doll and equipment data.
+ * The single place the app reads doll, equipment and HOC data.
  *
  * Shards are fetched on demand so a route pays only for what it renders. Viewing one
  * doll fetches the shard holding it rather than all five, and the navbar, which renders on every
@@ -10,8 +10,10 @@
  * for the rest of the session, so an import that fails once on a flaky connection could never be retried without a reload.
  */
 
+import hocSearchIndexJson from "../data/hoc-search-index.json";
 import searchIndexJson from "../data/search-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
+import type { HocData } from "../types/hoc";
 import type { SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
 import { equipmentIconUrl } from "./assets";
@@ -35,6 +37,14 @@ export interface SearchEntry {
 	aliases?: string[];
 }
 
+/** One HOC in its search index. */
+export interface HocSearchEntry {
+	/** HOC id, used in its page's address. */
+	id: number;
+	/** Official English name. */
+	name: string;
+}
+
 /** One generated shard: the doll records every doll list reads, and the profile side file only the doll page reads. */
 interface Shard {
 	/** Highest doll id the shard holds. */
@@ -52,8 +62,11 @@ interface Shard {
  */
 export const searchIndex: SearchEntry[] = searchIndexJson as SearchEntry[];
 
+/** Every HOC's id and name, for the navbar search. */
+export const hocSearchIndex: HocSearchEntry[] = hocSearchIndexJson as HocSearchEntry[];
+
 /** Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are bundled. */
-const DATA_URLS = import.meta.glob<string>(["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json"], {
+const DATA_URLS = import.meta.glob<string>(["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json", "../data/hocs.json"], {
 	query: "?url",
 	import: "default",
 	eager: true
@@ -84,6 +97,9 @@ const spineIndexCache = new Map<0, Promise<SpineIndex>>();
 
 /** Cache of the in-flight or loaded equipment, under the single key `0`. A failed load is dropped so it can be retried. */
 const equipmentCache = new Map<0, Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }>>();
+
+/** Cache of the in-flight or loaded HOCs, under the single key `0`. A failed load is dropped so it can be retried. */
+const hocCache = new Map<0, Promise<HocData>>();
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,4 +309,18 @@ export async function loadEquipment(): Promise<{ types: EquipmentType[]; items: 
 			return { types: source.types, items };
 		})
 	);
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// HOCs
+
+/**
+ * Load every HOC and the constants their stats are worked out from.
+ *
+ * @returns The HOC data, shared by the HOC Index and each HOC's page.
+ * @throws When the file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadHocs(): Promise<HocData> {
+	return hocCache.get(0) ?? cacheUntilFailure(hocCache, 0, fetchData<HocData>("hocs"));
 }

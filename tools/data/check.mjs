@@ -96,7 +96,7 @@ function isValidRelease({ date, precision }) {
  * A missing file at HEAD means "first run" and returns null. Git being unavailable, HEAD not resolving, or a
  * committed file that fails to parse are real failures, not a first run, and throw instead.
  *
- * @returns {{ dolls: number, mods: number, equipment: number } | null} Previous counts, or null on a first run.
+ * @returns {{ dolls: number, mods: number, equipment: number, hocs?: number } | null} Previous counts, or null on a first run.
  */
 function previousCounts() {
 	try {
@@ -182,8 +182,9 @@ async function main() {
 		fail(error.message);
 	}
 	if (previous) {
-		for (const key of ["dolls", "mods", "equipment"]) {
-			if (upstream.counts[key] < previous[key]) {
+		for (const key of ["dolls", "mods", "equipment", "hocs"]) {
+			// A count the previous commit did not record yet has nothing to drop from.
+			if (upstream.counts[key] < (previous[key] ?? 0)) {
 				fail(`${key} dropped from ${previous[key]} to ${upstream.counts[key]}`);
 			}
 		}
