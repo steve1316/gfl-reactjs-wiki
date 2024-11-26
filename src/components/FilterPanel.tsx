@@ -55,16 +55,16 @@ interface FilterPanelProps {
 	onNameQueryChange: (query: string) => void;
 	/** The name search's accessible label, such as "Search T-Dolls by name". */
 	nameLabel: string;
-	/** The text in the build time search. */
-	buildTimeQuery: string;
+	/** The text in the build time search. The field is left out when this is absent, for an index with nothing to build. */
+	buildTimeQuery?: string;
 	/** Called with the new text on every keystroke. */
-	onBuildTimeQueryChange: (query: string) => void;
+	onBuildTimeQueryChange?: (query: string) => void;
 	/** True when the build time text is not a readable time, which shows a hint instead of filtering. */
-	buildTimeInvalid: boolean;
+	buildTimeInvalid?: boolean;
 	/** A typical build time for this index, such as "3:55", used in the placeholder and the hint. */
-	buildTimeExample: string;
+	buildTimeExample?: string;
 	/** The build time search's accessible label, such as "Search T-Dolls by build time". */
-	buildTimeLabel: string;
+	buildTimeLabel?: string;
 	/** The page's chip rows, which collapse on a phone. */
 	children: ReactNode;
 	/** Controls under the chip rows that stay visible on a phone while the rows are collapsed, such as a level slider. */
@@ -72,7 +72,7 @@ interface FilterPanelProps {
 }
 
 /**
- * An index's filters, rendered in the page itself: a header with Clear all, the name and build time searches, the page's own chip rows, and an optional footer.
+ * An index's filters, rendered in the page itself: a header with Clear all, the name and optional build time searches, the page's own chip rows, and an optional footer.
  *
  * These lived behind a Filters button that opened a drawer on a phone and a popover on a desktop. Putting
  * them back in the page costs roughly 250px on a desktop and 330-370px on a phone, which is why the phone
@@ -90,8 +90,8 @@ export default memo(function FilterPanel({
 	nameLabel,
 	buildTimeQuery,
 	onBuildTimeQueryChange,
-	buildTimeInvalid,
-	buildTimeExample,
+	buildTimeInvalid = false,
+	buildTimeExample = "",
 	buildTimeLabel,
 	children,
 	footer
@@ -103,8 +103,8 @@ export default memo(function FilterPanel({
 	const toggleExpanded = useCallback(() => setExpanded((current) => !current), []);
 	const clearNameQuery = useCallback(() => onNameQueryChange(""), [onNameQueryChange]);
 	const handleNameInput = useCallback((event: ChangeEvent<HTMLInputElement>) => onNameQueryChange(event.target.value), [onNameQueryChange]);
-	const clearBuildTimeQuery = useCallback(() => onBuildTimeQueryChange(""), [onBuildTimeQueryChange]);
-	const handleBuildTimeInput = useCallback((event: ChangeEvent<HTMLInputElement>) => onBuildTimeQueryChange(event.target.value), [onBuildTimeQueryChange]);
+	const clearBuildTimeQuery = useCallback(() => onBuildTimeQueryChange?.(""), [onBuildTimeQueryChange]);
+	const handleBuildTimeInput = useCallback((event: ChangeEvent<HTMLInputElement>) => onBuildTimeQueryChange?.(event.target.value), [onBuildTimeQueryChange]);
 
 	// Only the phone collapses. On a wider screen the rows cost little enough to leave open.
 	const open = !isMobile || expanded;
@@ -161,32 +161,34 @@ export default memo(function FilterPanel({
 						}
 					}}
 				/>
-				<TextField
-					value={buildTimeQuery}
-					onChange={handleBuildTimeInput}
-					placeholder={`Build time, e.g. ${buildTimeExample}`}
-					size="small"
-					fullWidth
-					error={buildTimeInvalid}
-					helperText={buildTimeInvalid ? `Type a time like ${buildTimeExample}, ${buildTimeExample}:00 or ${buildTimeExample.replace(":", "")}` : undefined}
-					slotProps={{
-						htmlInput: { "aria-label": buildTimeLabel },
-						input: {
-							startAdornment: (
-								<InputAdornment position="start">
-									<TimerOutlinedIcon fontSize="small" />
-								</InputAdornment>
-							),
-							endAdornment: buildTimeQuery ? (
-								<InputAdornment position="end">
-									<IconButton size="small" onClick={clearBuildTimeQuery} aria-label="clear build time search" edge="end">
-										<ClearIcon fontSize="small" />
-									</IconButton>
-								</InputAdornment>
-							) : null
-						}
-					}}
-				/>
+				{buildTimeQuery !== undefined && (
+					<TextField
+						value={buildTimeQuery}
+						onChange={handleBuildTimeInput}
+						placeholder={`Build time, e.g. ${buildTimeExample}`}
+						size="small"
+						fullWidth
+						error={buildTimeInvalid}
+						helperText={buildTimeInvalid ? `Type a time like ${buildTimeExample}, ${buildTimeExample}:00 or ${buildTimeExample.replace(":", "")}` : undefined}
+						slotProps={{
+							htmlInput: { "aria-label": buildTimeLabel },
+							input: {
+								startAdornment: (
+									<InputAdornment position="start">
+										<TimerOutlinedIcon fontSize="small" />
+									</InputAdornment>
+								),
+								endAdornment: buildTimeQuery ? (
+									<InputAdornment position="end">
+										<IconButton size="small" onClick={clearBuildTimeQuery} aria-label="clear build time search" edge="end">
+											<ClearIcon fontSize="small" />
+										</IconButton>
+									</InputAdornment>
+								) : null
+							}
+						}}
+					/>
+				)}
 			</Box>
 
 			{/* Mounted either way, so toggling the breakpoint never drops the rows entirely. */}

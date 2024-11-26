@@ -20,7 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { uiUrl } from "../lib/assets";
-import { searchIndex } from "../lib/data";
+import { hocSearchIndex, searchIndex } from "../lib/data";
 import { matchesAnyName, normaliseName } from "../lib/nameSearch";
 
 const HomeIcon = uiUrl("home_icon.png");
@@ -34,9 +34,11 @@ const FormationIcon = uiUrl("formation_icon.png");
 interface SearchOption {
 	/** The heading this option groups under: a letter, or "0-9" for names starting with a digit. */
 	firstLetter: string;
-	/** Doll id, used to build the link. */
-	id: number;
-	/** Doll name, shown and matched against. */
+	/** The page the option opens, such as `/tdoll/65` or `/hoc/1`. Also what tells a doll and a HOC with the same id apart. */
+	path: string;
+	/** A short tag shown after the name for anything that is not a doll, such as "HOC". */
+	tag?: string;
+	/** Doll or HOC name, shown and matched against. */
 	name: string;
 	/** The name and any old wiki names, passed through `normaliseName`, which the typed text is matched against. */
 	keys: string[];
@@ -48,11 +50,13 @@ interface SearchOption {
  * Built from the search index rather than the full dataset. The navbar renders on every route, so
  * pulling all five data shards here cost 65 KB gzipped on every page including the 404.
  */
-const options: SearchOption[] = searchIndex
-	.map((entry) => {
-		const firstLetter = entry.name.charAt(0).toUpperCase();
-		const keys = [entry.name, ...(entry.aliases ?? [])].map(normaliseName);
-		return { firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter, id: entry.id, name: entry.name, keys };
+const options: SearchOption[] = [
+	...searchIndex.map((entry) => ({ path: `/tdoll/${entry.id}`, name: entry.name, keys: [entry.name, ...(entry.aliases ?? [])].map(normaliseName) })),
+	...hocSearchIndex.map((entry) => ({ path: `/hoc/${entry.id}`, tag: "HOC", name: entry.name, keys: [normaliseName(entry.name)] }))
+]
+	.map((option) => {
+		const firstLetter = option.name.charAt(0).toUpperCase();
+		return { ...option, firstLetter: /[0-9]/.test(firstLetter) ? "0-9" : firstLetter };
 	})
 	.sort((a, b) => a.firstLetter.localeCompare(b.firstLetter) || a.name.localeCompare(b.name));
 
@@ -66,6 +70,7 @@ const options: SearchOption[] = searchIndex
 const styles = {
 	root: { flexGrow: 1 },
 	homeButton: { mr: 2 },
+	optionTag: { ml: 1, fontSize: "0.7rem", fontWeight: 700, color: "text.secondary" },
 	title: { flexGrow: 1 },
 	search: (theme: Theme) => ({
 		position: "relative",
@@ -144,7 +149,7 @@ const groupByLetter = (option: SearchOption) => option.firstLetter;
 const optionLabel = (option: SearchOption) => option.name;
 
 /**
- * Narrow the dropdown to dolls whose name or old name holds the typed text, ignoring case, spaces and punctuation.
+ * Narrow the dropdown to dolls and HOCs whose name or old name holds the typed text, ignoring case, spaces and punctuation.
  *
  * @param list Every option.
  * @param state MUI's filter state, carrying the typed text.
@@ -156,13 +161,13 @@ const filterByName = (list: SearchOption[], state: FilterOptionsState<SearchOpti
 };
 
 /**
- * Whether two options are the same doll. Names repeat across forms, so options are compared by id.
+ * Whether two options are the same doll or HOC. Names repeat across forms and ids overlap between dolls and HOCs, so options are compared by page.
  *
  * @param option An option.
  * @param value The selected value.
- * @returns True when both are the same doll.
+ * @returns True when both open the same page.
  */
-const sameDoll = (option: SearchOption, value: SearchOption) => option.id === value.id;
+const sameOption = (option: SearchOption, value: SearchOption) => option.path === value.path;
 
 /**
  * One row of the search dropdown, with the typed text in bold.
@@ -182,6 +187,11 @@ const renderSearchOption = (optionProps: HTMLAttributes<HTMLLIElement> & { key: 
 					{part.text}
 				</span>
 			))}
+			{option.tag && (
+				<Box component="span" sx={styles.optionTag}>
+					{option.tag}
+				</Box>
+			)}
 		</li>
 	);
 };
@@ -269,13 +279,13 @@ export default function Navbar() {
 	const openSearch = useCallback(() => setSearchOpen(true), []);
 	const closeSearch = useCallback(() => setSearchOpen(false), []);
 
-	// Send the reader to a doll and leave search mode. Shared by picking a suggestion and by submitting
+	// Send the reader to a doll or HOC and leave search mode. Shared by picking a suggestion and by submitting
 	// the form, so both routes behave the same.
 	const goTo = useCallback(
 		(option: SearchOption) => {
 			// Collapse the field again, or the reader lands on the doll with the bar still in search mode.
 			setSearchOpen(false);
-			void navigate(`/tdoll/${option.id}`);
+			void navigate(option.path);
 		},
 		[navigate]
 	);
@@ -316,7 +326,9 @@ export default function Navbar() {
 	);
 
 	const renderSearchInput = useCallback(
-		(params: AutocompleteRenderInputParams) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} variant="outlined" sx={searchFieldSx} />,
+		(params: AutocompleteRenderInputParams) => (
+			<TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll or HOC" : "Search..."} variant="outlined" sx={searchFieldSx} />
+		),
 		[hasError]
 	);
 
@@ -332,7 +344,7 @@ export default function Navbar() {
 				inputValue={searchValue}
 				onInputChange={handleInputChange}
 				onChange={handleOptionChange}
-				isOptionEqualToValue={sameDoll}
+				isOptionEqualToValue={sameOption}
 				// MUI swallows the first Enter to select the highlighted row, so without a row highlighted
 				// the reader had to press Enter twice before the form ever saw it.
 				autoHighlight
