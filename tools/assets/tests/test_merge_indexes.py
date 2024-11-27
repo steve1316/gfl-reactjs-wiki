@@ -134,6 +134,31 @@ class ManifestMergeTests(unittest.TestCase):
             merge_indexes.merge_manifest(committed_manifest(), partial)
         self.assertEqual(caught.exception.conflicts, ["equipment 5", "doll 65 base art", "doll 65 skin 805", "doll 65 skill1 icon"])
 
+    def test_new_hoc_joins_in_numeric_order(self):
+        """A partial HOC art entry joins the committed hocs dict by numeric id."""
+        committed = committed_manifest()
+        committed["hocs"] = {"1": ["card", "full"]}
+        partial = partial_manifest()
+        partial["hocs"] = {"2": ["card"]}
+        merged = merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(list(merged["hocs"]), ["1", "2"])
+        self.assertEqual(merged["hocs"]["2"], ["card"])
+
+    def test_hoc_conflict_is_refused(self):
+        """A HOC id the committed manifest already lists stops the merge."""
+        committed = committed_manifest()
+        committed["hocs"] = {"1": ["card"]}
+        partial = partial_manifest()
+        partial["hocs"] = {"1": ["full"]}
+        with self.assertRaises(merge_indexes.MergeConflict) as caught:
+            merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(caught.exception.conflicts, ["hoc 1 art"])
+
+    def test_no_hocs_key_when_neither_side_has_one(self):
+        """The merged manifest gets no `hocs` key when neither the committed nor the partial manifest has one."""
+        merged = merge_indexes.merge_manifest(committed_manifest(), partial_manifest())
+        self.assertNotIn("hocs", merged)
+
     def test_committed_input_is_not_changed(self):
         """The merge works on a copy."""
         committed = committed_manifest()
@@ -203,6 +228,35 @@ class SpineMergeTests(unittest.TestCase):
             merge_indexes.merge_spine_index(self.committed(), partial)
         self.assertEqual(caught.exception.conflicts, ["doll 100 rig", "doll 65 skin 805 rig"])
 
+
+
+def hoc_rig(name):
+    """Build one minimal HOC rig entry.
+
+    Args:
+        name: The skeleton and atlas name.
+
+    Returns:
+        A rig dict.
+    """
+    return {"skel": name, "atlas": name, "anims": ["wait"]}
+
+
+class HocSpineMergeTests(unittest.TestCase):
+    """Adding partial HOC Spine index entries, one whole HOC id at a time."""
+
+    def test_new_hoc_lands_in_numeric_order(self):
+        """A new HOC id is inserted between existing ids by number, not by text."""
+        entry = {"combat": hoc_rig("MK153"), "crew": []}
+        merged = merge_indexes.merge_hoc_spine_index({"1": entry, "10": entry}, {"2": entry})
+        self.assertEqual(list(merged), ["1", "2", "10"])
+
+    def test_conflicts_are_refused(self):
+        """A HOC id the committed index already has stops the merge."""
+        entry = {"combat": hoc_rig("MK153"), "crew": []}
+        with self.assertRaises(merge_indexes.MergeConflict) as caught:
+            merge_indexes.merge_hoc_spine_index({"1": entry}, {"1": entry})
+        self.assertEqual(caught.exception.conflicts, ["hoc 1 rig"])
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////

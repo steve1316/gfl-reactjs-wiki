@@ -69,6 +69,7 @@ export function buildHocs(upstream, cutoff) {
 			return {
 				id: row.id,
 				name,
+				code: row.code,
 				className,
 				description,
 				released: row.launch_time.slice(0, 10),
@@ -84,4 +85,20 @@ export function buildHocs(upstream, cutoff) {
 
 	const classes = PLAYABLE_TYPES.map((id) => cleanName(upstream.t(types.get(id).en_name))).filter((label) => items.some((hoc) => hoc.className === label));
 	return { constants, classes, items };
+}
+
+/**
+ * Compare the HOCs with the v3 asset manifest's `hocs` key. An absent or empty `hocs` key means the manifest has not
+ * been extended for HOCs yet, so nothing is reported.
+ *
+ * @param {{ id: number, name: string }[]} hocs Generated HOC records.
+ * @param {{ hocs?: Record<string, string[]> }} manifest The v3 asset manifest.
+ * @returns {string[]} Names of HOCs missing a `card` or `full` image, once the manifest lists any HOC.
+ */
+export function findHocArtGaps(hocs, manifest) {
+	const entries = manifest.hocs ?? {};
+	if (Object.keys(entries).length === 0) {
+		return [];
+	}
+	return hocs.filter((hoc) => !["card", "full"].every((kind) => (entries[String(hoc.id)] ?? []).includes(kind))).map((hoc) => hoc.name);
 }

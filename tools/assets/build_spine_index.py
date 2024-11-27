@@ -89,11 +89,59 @@ def build_v3(spine_root):
     return index
 
 
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# HOC layout
+
+# A HOC's rigs live flat in `<id>/`, with no dorm, Mod or skin nesting the way a doll's do.
+
+
+def build_hoc_index(hoc_spine_root):
+    """Index a HOC Spine tree by HOC id: one combat rig plus any crew rigs.
+
+    The combat rig is, among the skeletons that have a same-stem atlas (case-insensitive), the one with the shortest stem, ties broken by
+    name. Every other skeleton is a crew rig, in case-insensitive name order, using its own same-stem atlas when it has one and the combat
+    atlas otherwise, since some crew skeletons ship with no atlas of their own.
+
+    Args:
+        hoc_spine_root: Directory holding `<id>/` subdirectories, or absent.
+
+    Returns:
+        The index dict, `{"<id>": {"combat": rig, "crew": [rig, ...]}}` in numeric id order. A folder with no combat rig is skipped, and
+        `{}` is returned when `hoc_spine_root` does not exist.
+    """
+    if not os.path.isdir(hoc_spine_root):
+        return {}
+    index = {}
+    for hoc_id in sorted((name for name in os.listdir(hoc_spine_root) if name.isdigit()), key=int):
+        folder = os.path.join(hoc_spine_root, hoc_id)
+        if not os.path.isdir(folder):
+            continue
+        names = sorted(name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name)))
+        skeletons = {name[:-5].lower(): name[:-5] for name in names if name.endswith(".skel")}
+        atlases = {name[:-6].lower(): name[:-6] for name in names if name.endswith(".atlas")}
+        combats = [stem for lowered, stem in skeletons.items() if lowered in atlases]
+        if not combats:
+            continue
+        combat = min(combats, key=lambda stem: (len(stem), stem))
+        combat_atlas = atlases[combat.lower()]
+
+        def rig(stem):
+            """Build one rig entry, using the stem's own atlas or the combat atlas."""
+            return {"skel": stem, "atlas": atlases.get(stem.lower(), combat_atlas), "anims": []}
+
+        crew = sorted((stem for lowered, stem in skeletons.items() if stem != combat), key=str.lower)
+        index[hoc_id] = {"combat": rig(combat), "crew": [rig(stem) for stem in crew]}
+    return index
+
+
 def main():
-    """Scan the Spine tree and write the index."""
-    parser = argparse.ArgumentParser(description="Index the skin-id Spine tree by doll id.")
+    """Scan the Spine tree and write the index, and the HOC Spine tree and its index when `--hoc-spine` is passed."""
+    parser = argparse.ArgumentParser(description="Index the skin-id Spine tree by doll id, and optionally the HOC Spine tree by HOC id.")
     parser.add_argument("--spine", required=True, help="Directory holding spine/<id>/ subdirectories.")
     parser.add_argument("--out", default="src/data/spine-index.json", help="Where to write the index. Defaults to the one the site bundles.")
+    parser.add_argument("--hoc-spine", help="Directory holding hoc-spine/<id>/ subdirectories. Omit to skip the HOC index.")
+    parser.add_argument("--hoc-out", default="src/data/hoc-spine-index.json", help="Where to write the HOC index. Defaults to the one the site bundles.")
     parser.add_argument("--v3", action="store_true", help="Ignored. The skin-id layout is the only format.")
     args = parser.parse_args()
 
@@ -110,6 +158,15 @@ def main():
     print(f"  with dorm    {sum(1 for entry in entries if 'dorm' in entry)}")
     print(f"  mod rigs     {sum(1 for entry in entries if 'mod' in entry)}")
     print(f"  skin rigs    {sum(len(entry.get('skins', {})) for entry in entries)}")
+
+    if args.hoc_spine:
+        hoc_index = build_hoc_index(args.hoc_spine)
+        with open(args.hoc_out, "w", encoding="utf-8") as handle:
+            json.dump(hoc_index, handle)
+            handle.write("\n")
+        print(f"wrote {args.hoc_out} ({os.path.getsize(args.hoc_out) / 1024:.0f} KB)")
+        print(f"  hocs         {len(hoc_index)}")
+        print(f"  crew rigs    {sum(len(entry.get('crew', [])) for entry in hoc_index.values())}")
 
 
 if __name__ == "__main__":

@@ -5,13 +5,19 @@ The scheduled refresh extracts only new dolls, Mods, skins and equipment, builds
 merges them here. The merge only adds. Anything the committed files already list stops it, so hosted art is never replaced by accident. Both outputs
 keep the exact format and key order the full builders write.
 
+The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The HOC Spine index is a separate committed file and is only
+touched when `--hoc-spine-partial` is passed, since a refresh that adds no HOC rigs has no partial for it. It counts as `{}` when the committed
+file does not exist yet, and nothing is written when the merge changes nothing.
+
 Usage:
-    python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] [--spine-index src/data/spine-index.json]
+    python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] \
+        [--spine-index src/data/spine-index.json] [--hoc-spine-partial <file>] [--hoc-spine src/data/hoc-spine-index.json]
 """
 
 import argparse
 import copy
 import json
+import os
 import sys
 
 from build_manifest import SKILL_KINDS, dumps
@@ -93,6 +99,9 @@ def merge_manifest(committed, partial):
         committed: The committed manifest.
         partial: The manifest built from the `add` staging folder.
 
+    A partial's `hocs` entry is a plain list of image kinds, keyed by HOC id. A HOC id is either entirely new or entirely already
+    committed, there is nothing to merge piecemeal within one.
+
     Returns:
         A merged copy. `committed` is not changed.
 
@@ -123,6 +132,14 @@ def merge_manifest(committed, partial):
         conflicts.extend(f"doll {doll_id} {skill} icon" for skill in record["skills"] if skill in entry["skills"])
         entry["skills"] = [skill for skill in SKILL_KINDS if skill in entry["skills"] or skill in record["skills"]]
         merged["dolls"][doll_id] = in_order(entry, MANIFEST_DOLL_KEYS)
+    if "hocs" in partial or "hocs" in merged:
+        hocs = dict(merged.get("hocs", {}))
+        for hoc_id, kinds in partial.get("hocs", {}).items():
+            if hoc_id in hocs:
+                conflicts.append(f"hoc {hoc_id} art")
+            else:
+                hocs[hoc_id] = kinds
+        merged["hocs"] = by_id(hocs)
     if conflicts:
         raise MergeConflict(conflicts)
     merged["dolls"] = by_id(merged["dolls"])
@@ -171,6 +188,31 @@ def merge_spine_index(committed, partial):
     return by_id(merged)
 
 
+def merge_hoc_spine_index(committed, partial):
+    """Add a partial HOC Spine index's new HOC ids into the committed index.
+
+    Unlike a doll's rigs, a HOC's combat and crew rigs are not merged piecemeal: a HOC id is either entirely new or entirely already
+    committed.
+
+    Args:
+        committed: The committed HOC Spine index.
+        partial: The index built and annotated from the `add` staging folder.
+
+    Returns:
+        A merged copy. `committed` is not changed.
+
+    Raises:
+        MergeConflict: When the partial has a HOC id the committed index already has.
+    """
+    merged = copy.deepcopy(committed)
+    conflicts = [f"hoc {hoc_id} rig" for hoc_id in partial if hoc_id in merged]
+    if conflicts:
+        raise MergeConflict(conflicts)
+    for hoc_id, entry in partial.items():
+        merged[hoc_id] = copy.deepcopy(entry)
+    return by_id(merged)
+
+
 def dump_spine_index(index):
     """Serialise a Spine index exactly as `add_spine_animations.mjs` writes it.
 
@@ -202,18 +244,23 @@ def read_json(path):
 
 
 def main():
-    """Merge both partial files into the committed ones and print what was added."""
+    """Merge the partial files into the committed ones and print what was added."""
     parser = argparse.ArgumentParser(description="Add the partial manifest and Spine index of an add staging folder into the committed files.")
     parser.add_argument("--manifest-partial", required=True, help="Manifest built from the add staging folder.")
     parser.add_argument("--spine-partial", required=True, help="Spine index built and annotated from the add staging folder.")
     parser.add_argument("--manifest", default="assets-manifest.json", help="The committed manifest to update.")
     parser.add_argument("--spine-index", default="src/data/spine-index.json", help="The committed Spine index to update.")
+    parser.add_argument("--hoc-spine-partial", help="HOC Spine index built and annotated from the add staging folder. Omit when the refresh added no HOC rigs.")
+    parser.add_argument("--hoc-spine", default="src/data/hoc-spine-index.json", help="The committed HOC Spine index to update.")
     args = parser.parse_args()
 
     manifest_partial, spine_partial = read_json(args.manifest_partial), read_json(args.spine_partial)
+    hoc_spine_partial = read_json(args.hoc_spine_partial) if args.hoc_spine_partial else None
+    committed_hoc_spine = read_json(args.hoc_spine) if os.path.isfile(args.hoc_spine) else {}
     try:
         manifest = merge_manifest(read_json(args.manifest), manifest_partial)
         spine_index = merge_spine_index(read_json(args.spine_index), spine_partial)
+        hoc_spine_index = merge_hoc_spine_index(committed_hoc_spine, hoc_spine_partial) if hoc_spine_partial is not None else None
     except MergeConflict as conflict:
         sys.exit("the partial files list assets that are already hosted:\n  " + "\n  ".join(conflict.conflicts))
 
@@ -223,6 +270,11 @@ def main():
         handle.write(dump_spine_index(spine_index))
     print(f"merged {len(manifest_partial['dolls'])} manifest doll entries and {len(manifest_partial['equipment'])} equipment ids into {args.manifest}")
     print(f"merged {len(spine_partial)} Spine index entries into {args.spine_index}")
+
+    if hoc_spine_index is not None and hoc_spine_index != committed_hoc_spine:
+        with open(args.hoc_spine, "w", encoding="utf-8") as handle:
+            handle.write(dump_spine_index(hoc_spine_index))
+        print(f"merged {len(hoc_spine_partial)} HOC Spine index entries into {args.hoc_spine}")
 
 
 if __name__ == "__main__":

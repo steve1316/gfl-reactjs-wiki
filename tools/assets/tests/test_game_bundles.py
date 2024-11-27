@@ -177,6 +177,81 @@ class ResolutionTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# HOC resolution
+
+
+def hoc_index(files_by_bundle):
+    """Build a bundle index like `load_index` returns from `{bundle: [paths]}`."""
+    return {name: {"resname": name, "sizeOriginal": 1, "files": [(path.lower(), path) for path in paths]} for name, paths in files_by_bundle.items()}
+
+
+SQUADS = "Assets/Resources/DaBao/Pics/Squads/"
+
+
+def squad_pictures(code):
+    """The seven picture paths one HOC has in `resource_squads`."""
+    return [f"{SQUADS}Squads_Vertical/{code}_Vertical.png"] + [f"{SQUADS}{code}_{part}" for part in ("BGL.jpg", "BGR.jpg", "Left.png", "Left_Alpha.png", "Right.png", "Right_Alpha.png")]
+
+
+class HocResolutionTests(unittest.TestCase):
+    """HOC art and rigs resolve from `resource_squads` and `character_<code>_spine`."""
+
+    def test_art_uses_the_vertical_card_in_its_folder(self):
+        index = hoc_index({"resource_squads": [f"{SQUADS}L9A1_Vertical.png"] + squad_pictures("L9A1")})
+        art = game_bundles.hoc_items(index, {"id": 11, "code": "L9A1"})[0]
+        self.assertEqual(art["key"], "hoc_art:11")
+        self.assertEqual(art["status"], "resolved")
+        self.assertEqual(art["assets"]["card"]["path"], f"{SQUADS}Squads_Vertical/L9A1_Vertical.png")
+        self.assertEqual(sorted(art["assets"]), ["bgl", "bgr", "card", "left", "left_alpha", "right", "right_alpha"])
+
+    def test_missing_card_is_optional(self):
+        """RPG29 ships no vertical card, so the art still resolves and the card role is simply absent."""
+        index = hoc_index({"resource_squads": squad_pictures("RPG29")[1:]})
+        art = game_bundles.hoc_items(index, {"id": 10, "code": "RPG29"})[0]
+        self.assertEqual(art["status"], "resolved")
+        self.assertNotIn("card", art["assets"])
+
+    def test_rig_lists_combat_and_crew_with_own_or_shared_atlases(self):
+        spine = "Assets/Characters/MK153/Spine/"
+        names = ("MK153.atlas.txt", "MK153.png", "MK153.skel.bytes", "RMK153A.skel.bytes", "RMK153B.atlas.txt", "RMK153B.png", "RMK153B.skel.bytes", "RMK153C.skel.bytes")
+        rig = game_bundles.hoc_items(hoc_index({"character_mk153_spine": [spine + name for name in names]}), {"id": 7, "code": "MK153"})[1]
+        self.assertEqual(rig["status"], "resolved")
+        self.assertEqual(rig["crew"], 3)
+        self.assertTrue(rig["assets"]["crew1_skel"]["path"].endswith("RMK153A.skel.bytes"))
+        self.assertNotIn("crew1_atlas", rig["assets"])
+        self.assertTrue(rig["assets"]["crew2_atlas"]["path"].endswith("RMK153B.atlas.txt"))
+        self.assertTrue(rig["assets"]["crew2_texture"]["path"].endswith("RMK153B.png"))
+
+    def test_crew_names_with_spaces_and_no_r_prefix(self):
+        spine = "Assets/Characters/QLZ04/Spine/"
+        names = ("QLZ04.atlas.txt", "QLZ04.png", "QLZ04.skel.bytes", "QLZ04 A.skel.bytes", "QLZ04 B.skel.bytes")
+        rig = game_bundles.hoc_items(hoc_index({"character_qlz04_spine": [spine + name for name in names]}), {"id": 6, "code": "QLZ04"})[1]
+        self.assertEqual(rig["crew"], 2)
+        self.assertTrue(rig["assets"]["skel"]["path"].endswith("QLZ04.skel.bytes"))
+        self.assertTrue(rig["assets"]["crew1_skel"]["path"].endswith("QLZ04 A.skel.bytes"))
+
+    def test_missing_bundles_are_unresolved(self):
+        art, rig = game_bundles.hoc_items(hoc_index({}), {"id": 1, "code": "TOW"})
+        self.assertEqual((art["status"], rig["status"]), ("unresolved", "unresolved"))
+
+
+class HocTargetTests(unittest.TestCase):
+    """`--only-missing` picks HOCs the committed manifest does not list."""
+
+    def test_new_hocs_are_targets_and_their_items_selected(self):
+        manifest = {"dolls": {}, "equipment": [], "hocs": {"1": ["card", "full"]}}
+        targets = game_bundles.new_targets([], [], manifest, hocs=[{"id": 1, "code": "TOW"}, {"id": 2, "code": "AGS30"}])
+        self.assertEqual(targets["hocs"], {2})
+        items = [{"tier": "hoc_art", "hoc_id": 1}, {"tier": "hoc_spine", "hoc_id": 2}, {"tier": "hoc_art", "hoc_id": 2}]
+        self.assertEqual(game_bundles.select_new_items(items, targets), items[1:])
+
+    def test_manifest_without_hocs_targets_every_hoc(self):
+        targets = game_bundles.new_targets([], [], {"dolls": {}, "equipment": []}, hocs=[{"id": 3, "code": "2B14"}])
+        self.assertEqual(targets["hocs"], {3})
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Download
 
 
@@ -395,7 +470,7 @@ class NewTargetTests(unittest.TestCase):
 
     def test_targets(self):
         """A missing doll, a missing Mod, a missing numeric skin and a missing equipment id are the targets."""
-        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}})
+        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set()})
 
     def test_selects_forms_of_new_targets(self):
         """Art and rigs follow their form, and hosted forms, known gaps and legacy items are never selected."""
@@ -460,7 +535,7 @@ class NewTargetTests(unittest.TestCase):
             self.assertTrue(inventory["onlyMissing"])
             self.assertTrue(any(item["tier"] == "art" for item in inventory["items"]))
 
-            dolls, equipment_ids = game_bundles.load_site(SITE_DATA)
+            dolls, equipment_ids, _hocs = game_bundles.load_site(SITE_DATA)
             full = {"equipment": equipment_ids, "dolls": {}}
             for doll in dolls:
                 skins = {str(skin_id): {"images": ["card"]} for skin_id in ((doll.get("skins") or {}).get("skin_ids") or []) if isinstance(skin_id, int)}
@@ -474,9 +549,11 @@ class NewTargetTests(unittest.TestCase):
 
 
     def test_committed_data_has_no_new_targets(self):
-        """The committed site data and manifest agree, so the daily refresh never selects a hosted form."""
-        targets = game_bundles.new_targets(*game_bundles.load_site(game_bundles.SITE_DATA_DIR), game_bundles.read_json(game_bundles.MANIFEST_PATH))
-        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()})
+        """The committed site data and manifest agree on dolls and equipment.
+        HOCs are new, so every one is still a pending target until the manifest lists them."""
+        dolls, equipment_ids, hocs = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
+        targets = game_bundles.new_targets(dolls, equipment_ids, game_bundles.read_json(game_bundles.MANIFEST_PATH), hocs=hocs)
+        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": {hoc["id"] for hoc in hocs}})
 
 
 if __name__ == "__main__":

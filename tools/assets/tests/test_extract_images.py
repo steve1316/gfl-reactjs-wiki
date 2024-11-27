@@ -540,5 +540,112 @@ class FileSizeTests(unittest.TestCase):
             self.assertEqual(extract.oversized_files(root, limit=5), ["a/large.bin"])
 
 
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# HOC art
+
+
+class FakeTexture:
+    """A Texture2D reader whose `read()` returns an object holding a decoded image."""
+
+    def __init__(self, image):
+        """Build the fake.
+
+        Args:
+            image: The decoded image `read().image` returns.
+        """
+        self.type = type("Type", (), {"name": "Texture2D"})()
+        self.data = type("Data", (), {"image": image})()
+
+    def read(self):
+        """Return the fake payload.
+
+        Returns:
+            An object with an `image` attribute.
+        """
+        return self.data
+
+
+class HocFullArtTests(unittest.TestCase):
+    """The HOC scene is two background halves with masked character layers on top."""
+
+    def test_layers_use_the_mask_alpha_channel_resized_and_sit_on_their_half(self):
+        """Each layer takes its alpha from its resized mask, the left layer over `bgl` and the right one over `bgr`."""
+        bgl = Image.new("RGB", (8, 8), (0, 0, 255))
+        bgr = Image.new("RGB", (8, 8), (0, 255, 0))
+        left = Image.new("RGBA", (8, 8), (255, 0, 0, 255))
+        right = Image.new("RGBA", (8, 8), (255, 255, 0, 255))
+        # Masks hold their shape in alpha with zero RGB, at half size like the game's 512px masks.
+        left_alpha = Image.new("RGBA", (4, 4), (0, 0, 0, 0))
+        left_alpha.paste((0, 0, 0, 255), (0, 0, 2, 4))
+        right_alpha = Image.new("RGBA", (4, 4), (0, 0, 0, 0))
+        full = extract.compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha)
+        self.assertEqual((full.mode, full.size), ("RGB", (16, 8)))
+        self.assertEqual(full.getpixel((1, 4)), (255, 0, 0))
+        self.assertEqual(full.getpixel((6, 4)), (0, 0, 255))
+        self.assertEqual(full.getpixel((12, 4)), (0, 255, 0))
+
+
+class HocCardTests(unittest.TestCase):
+    """A HOC with no vertical card gets one cropped from its full art around the character layers."""
+
+    def test_derived_card_is_centred_on_the_opaque_mask_pixels(self):
+        """Mask pixels at x 12..13 of a 16x8 scene centre the 4px crop on columns 11..14. The right mask sits after `bgl`, not `left`."""
+        bgl = Image.new("RGB", (8, 8))
+        left = Image.new("RGBA", (6, 8))
+        right = Image.new("RGBA", (8, 8))
+        left_alpha = Image.new("RGBA", (8, 8), (0, 0, 0, 0))
+        right_alpha = Image.new("RGBA", (8, 8), (0, 0, 0, 0))
+        right_alpha.paste((0, 0, 0, 255), (4, 0, 6, 8))
+        full = Image.new("RGB", (16, 8), (0, 0, 255))
+        full.paste((255, 0, 0), (11, 0, 15, 8))
+        card = extract.derive_hoc_card(bgl, left, left_alpha, right, right_alpha, full)
+        self.assertEqual(card.size, extract.HOC_CARD_SIZE)
+        for x in (0, card.width // 2, card.width - 1):
+            red, _green, blue = card.convert("RGB").getpixel((x, card.height // 2))
+            self.assertGreater(red, 200)
+            self.assertLess(blue, 50)
+
+    def test_worker_writes_card_and_full_art_and_derives_a_missing_card(self):
+        """The worker writes `hocs/<id>/card.webp` and `full.webp`, flagging the derived card and off-size layers."""
+        bundle = "resource_squads"
+        roles = {
+            "bgl": Image.new("RGB", (8, 8), (0, 0, 255)),
+            "bgr": Image.new("RGB", (8, 8), (0, 255, 0)),
+            "left": Image.new("RGBA", (8, 8), (255, 0, 0, 255)),
+            "left_alpha": Image.new("RGBA", (8, 8), (0, 0, 0, 255)),
+            "right": Image.new("RGBA", (8, 8), (255, 255, 0, 255)),
+            "right_alpha": Image.new("RGBA", (8, 8), (0, 0, 0, 0)),
+        }
+        container = {f"assets/{role}.png": FakeTexture(image) for role, image in roles.items()}
+        item = {
+            "key": "hoc_art:7",
+            "tier": "hoc_art",
+            "hoc_id": 7,
+            "code": "RPG29",
+            "bundles": [bundle],
+            "assets": {role: {"bundle": bundle, "path": f"Assets/{role}.png"} for role in roles},
+        }
+        with tempfile.TemporaryDirectory() as staging:
+            result = extract.extract_hoc_art_item(item, "", staging, loader=lambda _file: FakeEnv(container))
+            self.assertEqual(result["missing"], [])
+            self.assertEqual(sorted((row[0], row[1], row[3]) for row in result["files"]), [("art", "hocs/7/full.webp", "hoc_full"), ("assets", "hocs/7/card.webp", "hoc_card")])
+            with Image.open(os.path.join(staging, "assets", "hocs", "7", "card.webp")) as card:
+                self.assertEqual(card.size, extract.HOC_CARD_SIZE)
+            with Image.open(os.path.join(staging, "art", "hocs", "7", "full.webp")) as full:
+                self.assertEqual(full.size, (16, 8))
+        rows = {row["role"]: row for row in result["nonstandard"]}
+        self.assertEqual(rows["card"], {"key": "hoc_art:7", "role": "card", "size": "derived", "expected": list(extract.HOC_CARD_SIZE)})
+        self.assertEqual(sorted(rows), ["bgl", "bgr", "card", "left", "right"])
+
+    def test_worker_reports_an_undecodable_layer_and_writes_nothing(self):
+        """A scene layer the bundle does not hold is a missing row, and no file is written."""
+        item = {"key": "hoc_art:8", "tier": "hoc_art", "hoc_id": 8, "code": "X", "bundles": ["b"], "assets": {role: {"bundle": "b", "path": f"{role}.png"} for role in extract.HOC_SCENE_ROLES}}
+        with tempfile.TemporaryDirectory() as staging:
+            result = extract.extract_hoc_art_item(item, "", staging, loader=lambda _file: FakeEnv({}))
+        self.assertEqual(result["files"], [])
+        self.assertEqual(sorted(row["role"] for row in result["missing"]), sorted(extract.HOC_SCENE_ROLES))
+
+
 if __name__ == "__main__":
     unittest.main()

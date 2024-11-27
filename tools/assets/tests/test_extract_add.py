@@ -91,6 +91,20 @@ class LegacyFreeExtractionTests(unittest.TestCase):
             report = extract.run_extraction(inventory, None, [], SITE_DATA, os.path.join(scratch, "bundles"), os.path.join(scratch, "staging"), 1)
         self.assertEqual([row["key"] for row in report["unexpected_missing"]], ["skill_icon:doll:1005:skill1"])
 
+    def test_hoc_items_are_routed_to_the_hoc_workers(self):
+        """HOC art goes through `run_extraction` and HOC rigs through `run_spine`, so a missing bundle is reported under their keys."""
+        base = {"hoc_id": 7, "code": "X", "status": "resolved", "missing": []}
+        art = {**base, "key": "hoc_art:7", "tier": "hoc_art", "bundles": ["resource_squads"], "assets": {"bgl": {"bundle": "resource_squads", "path": "X_BGL.jpg"}}}
+        rig = {**base, "key": "hoc_spine:7", "tier": "hoc_spine", "crew": 0, "bundles": ["character_x_spine"], "assets": {"skel": {"bundle": "character_x_spine", "path": "X.skel.bytes"}}}
+        inventory = {**EMPTY_INVENTORY, "items": [art, rig]}
+        self.assertEqual(extract.require_add_inputs(inventory, os.path.join(tempfile.gettempdir(), "hoc-add-never-created")), [])
+        with tempfile.TemporaryDirectory() as scratch:
+            cache, staging = os.path.join(scratch, "bundles"), os.path.join(scratch, "staging")
+            report = extract.run_extraction(inventory, None, [], SITE_DATA, cache, staging, 1)
+            spine_report = extract.run_spine(inventory, cache, staging, 1)
+        self.assertEqual([row["key"] for row in report["unexpected_missing"]], ["hoc_art:7"])
+        self.assertEqual([row["key"] for row in spine_report["unexpected_missing"]], ["hoc_spine:7"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildHocs } from "../lib/hocs.mjs";
+import { buildHocs, findHocArtGaps } from "../lib/hocs.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 import { hocChipStats, hocStats } from "../../../src/lib/hocStats.ts";
 
@@ -85,6 +85,7 @@ test("builds each HOC's facts and three skills", () => {
 	assert.equal(bgm.released, "2020-01-07");
 	assert.equal(bgm.productionSeconds, 28800);
 	assert.equal(bgm.range, 2);
+	assert.equal(bgm.code, "TOW");
 	assert.match(bgm.description, /^A group of four who love tabletop games/);
 	assert.deepEqual(
 		bgm.skills.map((skill) => skill.name),
@@ -107,4 +108,21 @@ test("the chip board's maximum grows with stars", () => {
 	const five = ordered(hocChipStats(bgm, built.constants, 100, 5));
 	assert.deepEqual(five, [190, 329, 191, 46]);
 	assert.ok(one.every((value, index) => value < five[index]));
+});
+
+test("every HOC carries the game code its asset bundles are named after", () => {
+	assert.deepEqual(
+		built.items.map((hoc) => hoc.code),
+		["TOW", "AGS30", "2B14", "M2", "AT4", "QLZ04", "MK153", "PP93", "MK47", "RPG29", "L9A1"]
+	);
+});
+
+test("HOC art gaps are only reported once the manifest lists any HOC", () => {
+	const hocs = [
+		{ id: 1, name: "BGM-71" },
+		{ id: 2, name: "AGS-30" }
+	];
+	assert.deepEqual(findHocArtGaps(hocs, { dolls: {} }), []);
+	assert.deepEqual(findHocArtGaps(hocs, { hocs: {} }), []);
+	assert.deepEqual(findHocArtGaps(hocs, { hocs: { 1: ["card", "full"], 2: ["card"] } }), ["AGS-30"]);
 });

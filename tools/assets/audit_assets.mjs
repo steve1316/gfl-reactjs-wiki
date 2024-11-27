@@ -11,10 +11,11 @@
  * index, which `add_spine_animations.mjs` fills with the same `skb.js` the browser uses.
  *
  * Usage:
- *     node tools/assets/audit_assets.mjs [--assets <dir>] [--art <dir>] [--manifest <file>] [--spine-index <file>]
+ *     node tools/assets/audit_assets.mjs [--assets <dir>] [--art <dir>] [--manifest <file>] [--spine-index <file>] [--hoc-spine-index <file>]
  *
  * Audits the skin-id layout on disk: every file the version 3 manifest and Spine index reference must exist in the staging trees. `--v3`
- * is still accepted from before the version 2 audit of the live hosts was removed.
+ * is still accepted from before the version 2 audit of the live hosts was removed. HOC art and rigs are audited too, the HOC Spine index
+ * only when its file exists, since a repo may not have any HOC rigs published yet.
  *
  * Exits non-zero when anything is missing, so it can gate a deploy.
  */
@@ -27,11 +28,15 @@ const V3_DEFAULTS = {
 	assets: "tools/assets/.staging/assets",
 	art: "tools/assets/.staging/art",
 	manifest: "assets-manifest.json",
-	spineIndex: "src/data/spine-index.json"
+	spineIndex: "src/data/spine-index.json",
+	hocSpineIndex: "src/data/hoc-spine-index.json"
 };
 
 /** v3 image kind -> tree and filename inside a form folder. */
 const V3_IMAGE_FILES = { card: ["assets", "card.webp"], card_damaged: ["assets", "card_d.webp"], full: ["art", "full.webp"], full_damaged: ["art", "full_d.webp"] };
+
+/** HOC image kind -> tree and filename inside a HOC's `hocs/<id>/` folder. */
+const HOC_IMAGE_FILES = { card: ["assets", "card.webp"], full: ["art", "full.webp"] };
 
 /** v3 Mod-skin card kind -> filename inside a skin folder. */
 const V3_MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
@@ -114,6 +119,7 @@ function auditV3(args) {
 	const roots = { assets: option(args, "--assets", V3_DEFAULTS.assets), art: option(args, "--art", V3_DEFAULTS.art) };
 	const manifest = JSON.parse(fs.readFileSync(option(args, "--manifest", V3_DEFAULTS.manifest), "utf8"));
 	const spineIndex = JSON.parse(fs.readFileSync(option(args, "--spine-index", V3_DEFAULTS.spineIndex), "utf8"));
+	const hocSpineIndexPath = option(args, "--hoc-spine-index", V3_DEFAULTS.hocSpineIndex);
 
 	const missing = [];
 	const problems = [];
@@ -201,6 +207,28 @@ function auditV3(args) {
 
 	for (const equipId of manifest.equipment) {
 		need("assets", `equipment/${equipId}.png`, `equipment ${equipId}`);
+	}
+
+	for (const [id, kinds] of Object.entries(manifest.hocs ?? {})) {
+		for (const kind of kinds) {
+			const [tree, name] = HOC_IMAGE_FILES[kind];
+			need(tree, `hocs/${id}/${name}`, `hoc ${id} ${kind}`);
+		}
+	}
+
+	if (fs.existsSync(hocSpineIndexPath)) {
+		const hocSpineIndex = JSON.parse(fs.readFileSync(hocSpineIndexPath, "utf8"));
+		for (const [id, entry] of Object.entries(hocSpineIndex)) {
+			const rigs = [["combat", entry.combat], ...(entry.crew ?? []).map((rig, i) => [`crew ${i + 1}`, rig])];
+			for (const [label, rig] of rigs) {
+				if (!rig) continue;
+				need("assets", `hoc-spine/${id}/${rig.skel}.skel`, `hoc ${id} ${label} skeleton`);
+				need("assets", `hoc-spine/${id}/${rig.atlas}.atlas`, `hoc ${id} ${label} atlas`);
+				if (!rig.anims?.length) {
+					problems.push(`hoc ${id} ${label}: skeleton ${rig.skel} defines no animations, or skb.js cannot parse it`);
+				}
+			}
+		}
 	}
 
 	console.log(`dolls               ${Object.keys(manifest.dolls).length}`);

@@ -298,6 +298,105 @@ class RigExtractionTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# HOC rigs
+
+
+class HocRigExtractionTests(unittest.TestCase):
+    """Extracting a HOC's combat rig and its crew skeletons from a fake bundle."""
+
+    def extract_with(self, item, container):
+        """Run the HOC Spine worker against one fake bundle.
+
+        Args:
+            item: The inventory item.
+            container: Container entries of the fake bundle.
+
+        Returns:
+            A `(result, staging dir, TemporaryDirectory)` triple. The caller cleans up the directory.
+        """
+        tmp = tempfile.TemporaryDirectory()
+        envs = {f"{bundle}.ab": FakeEnv(dict(container)) for bundle in item["bundles"]}
+        result = extract.extract_hoc_spine_item(item, "", tmp.name, loader=lambda file: envs[os.path.basename(file)])
+        return result, tmp.name, tmp
+
+    def test_combat_rig_and_crew_with_and_without_their_own_atlas(self):
+        """Every skeleton, atlas and page lands in `hoc-spine/<id>/`, and a crew with no atlas counts as sharing the combat atlas."""
+        bundle = "character_mk153_spine"
+        base = "assets/characters/mk153/spine/"
+        item = {
+            "key": "hoc_spine:7",
+            "tier": "hoc_spine",
+            "hoc_id": 7,
+            "code": "MK153",
+            "crew": 2,
+            "bundles": [bundle],
+            "assets": {
+                "skel": asset(bundle, base + "MK153.skel.bytes"),
+                "atlas": asset(bundle, base + "MK153.atlas.txt"),
+                "texture": asset(bundle, base + "MK153.png"),
+                "crew1_skel": asset(bundle, base + "RMK153A.skel.bytes"),
+                "crew2_skel": asset(bundle, base + "RMK153B.skel.bytes"),
+                "crew2_atlas": asset(bundle, base + "RMK153B.atlas.txt"),
+                "crew2_texture": asset(bundle, base + "RMK153B.png"),
+            },
+        }
+        container = [
+            text(base + "mk153.skel.bytes", "MK153.skel", "c"),
+            text(base + "mk153.atlas.txt", "MK153.atlas", ATLAS_ONE_PAGE.replace("HK416.png", "MK153.png")),
+            texture(base + "mk153.png", "MK153"),
+            text(base + "rmk153a.skel.bytes", "RMK153A.skel", "a"),
+            text(base + "rmk153b.skel.bytes", "RMK153B.skel", "b"),
+            text(base + "rmk153b.atlas.txt", "RMK153B.atlas", ATLAS_ONE_PAGE.replace("HK416.png", "RMK153B.png")),
+            texture(base + "rmk153b.png", "RMK153B", (0, 255, 0, 255)),
+        ]
+        result, staging, tmp = self.extract_with(item, container)
+        with tmp:
+            expected = ["MK153.atlas", "MK153.png", "MK153.skel", "RMK153A.skel", "RMK153B.atlas", "RMK153B.png", "RMK153B.skel"]
+            self.assertEqual(sorted(os.listdir(os.path.join(staging, "assets", "hoc-spine", "7"))), expected)
+            self.assertEqual({row[3] for row in result["files"]}, {"hoc_spine_rig"})
+        self.assertEqual(result["missing"], [])
+        self.assertIs(result["rigs"][0]["shared_atlas"], True)
+        self.assertEqual(result["rigs"], [{"key": "hoc_spine:7", "tier": "hoc_spine", "dorm": False, "shared_atlas": True, "pages": 2}])
+
+    def test_crew_atlas_page_with_no_texture_is_missing_and_nothing_is_written(self):
+        """A crew atlas naming a page no texture matches is a `page` missing row, and the rig writes no files."""
+        bundle = "b"
+        item = {
+            "key": "hoc_spine:8",
+            "tier": "hoc_spine",
+            "hoc_id": 8,
+            "code": "A",
+            "crew": 1,
+            "bundles": [bundle],
+            "assets": {
+                "skel": asset(bundle, "p/A.skel.bytes"),
+                "atlas": asset(bundle, "p/A.atlas.txt"),
+                "crew1_skel": asset(bundle, "p/RA.skel.bytes"),
+                "crew1_atlas": asset(bundle, "p/RA.atlas.txt"),
+            },
+        }
+        container = [
+            text("p/a.skel.bytes", "A.skel", "c"),
+            text("p/a.atlas.txt", "A.atlas", ATLAS_ONE_PAGE.replace("HK416.png", "A.png")),
+            texture("p/a.png", "A"),
+            text("p/ra.skel.bytes", "RA.skel", "r"),
+            text("p/ra.atlas.txt", "RA.atlas", ATLAS_ONE_PAGE.replace("HK416.png", "Nope.png")),
+        ]
+        result, staging, tmp = self.extract_with(item, container)
+        with tmp:
+            self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("hoc_spine:8", "page")])
+            self.assertEqual(result["files"], [])
+            self.assertFalse(os.path.exists(os.path.join(staging, "assets", "hoc-spine")))
+        self.assertEqual(result["rigs"], [])
+
+    def test_rig_counts_include_hoc_rigs(self):
+        """HOC rigs are counted under their own tier."""
+        counts = extract.rig_counts([{"tier": "hoc_spine", "dorm": False, "shared_atlas": True, "pages": 2}])
+        self.assertEqual((counts["hoc_spine"], counts["shared_atlas"], counts["pages"]), (1, 1, 2))
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Gaps and counts
 
 

@@ -9,8 +9,12 @@
  *
  * Uses the same `skb.js` the browser does, so the names here are exactly what the runtime will find.
  *
+ * `--hoc` switches to the HOC Spine index: each entry there is a `combat` rig plus a flat `crew` list, instead of a doll's combat, dorm,
+ * Mod and skin rigs, so the two branches walk the index differently.
+ *
  * Usage:
  *     node tools/assets/add_spine_animations.mjs --spine <dir> [--index src/data/spine-index.json]
+ *     node tools/assets/add_spine_animations.mjs --spine <hoc-spine dir> --hoc [--index src/data/hoc-spine-index.json]
  */
 
 import fs from "node:fs";
@@ -44,7 +48,8 @@ function animationNames(SkeletonBinary, file) {
 function main() {
 	const args = process.argv.slice(2);
 	const spineDir = args[args.indexOf("--spine") + 1];
-	const indexPath = args.includes("--index") ? args[args.indexOf("--index") + 1] : "src/data/spine-index.json";
+	const isHoc = args.includes("--hoc");
+	const indexPath = args.includes("--index") ? args[args.indexOf("--index") + 1] : isHoc ? "src/data/hoc-spine-index.json" : "src/data/spine-index.json";
 	if (!spineDir || !fs.existsSync(spineDir)) {
 		console.error("pass --spine <dir> pointing at the published spine/<id>/ tree");
 		process.exit(1);
@@ -55,20 +60,31 @@ function main() {
 
 	let rigs = 0;
 	const vocabulary = new Set();
-	for (const [id, entry] of Object.entries(index)) {
-		// The doll's own rigs, then the Mod's, which is a separate chibi with its own animation set.
-		for (const rig of [entry.combat, entry.dorm, entry.mod?.combat, entry.mod?.dorm]) {
-			if (!rig) continue;
-			rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
-			rig.anims.forEach((name) => vocabulary.add(name));
-			rigs++;
-		}
-		// Each skin holds the same shape as the doll: a combat rig and, usually, a dorm one.
-		for (const skin of Object.values(entry.skins ?? {})) {
-			for (const rig of Object.values(skin)) {
+	if (isHoc) {
+		for (const [id, entry] of Object.entries(index)) {
+			for (const rig of [entry.combat, ...(entry.crew ?? [])]) {
+				if (!rig) continue;
 				rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
 				rig.anims.forEach((name) => vocabulary.add(name));
 				rigs++;
+			}
+		}
+	} else {
+		for (const [id, entry] of Object.entries(index)) {
+			// The doll's own rigs, then the Mod's, which is a separate chibi with its own animation set.
+			for (const rig of [entry.combat, entry.dorm, entry.mod?.combat, entry.mod?.dorm]) {
+				if (!rig) continue;
+				rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
+				rig.anims.forEach((name) => vocabulary.add(name));
+				rigs++;
+			}
+			// Each skin holds the same shape as the doll: a combat rig and, usually, a dorm one.
+			for (const skin of Object.values(entry.skins ?? {})) {
+				for (const rig of Object.values(skin)) {
+					rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
+					rig.anims.forEach((name) => vocabulary.add(name));
+					rigs++;
+				}
 			}
 		}
 	}

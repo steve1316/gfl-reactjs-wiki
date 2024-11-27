@@ -41,3 +41,14 @@ export interface SpineDollEntry {
 
 /** The whole index, keyed by stringified doll id. */
 export type SpineIndex = Record<string, SpineDollEntry>;
+
+/** Everything published for one HOC. Rig paths are relative to `hoc-spine/<id>/`. */
+export interface HocSpineEntry {
+	/** The combat rig, always published since a HOC with no rig is not listed at all. */
+	combat: SpineRig;
+	/** The crew's own rigs, shown alongside the combat rig. */
+	crew: SpineRig[];
+}
+
+/** The whole HOC index, keyed by stringified HOC id. */
+export type HocSpineIndex = Record<string, HocSpineEntry>;

@@ -29,6 +29,9 @@ LEGACY_SKIN_PREFIX = "legacy-"
 # Mod-coloured cards of a skin, stored next to the skin's own cards.
 V3_MOD_CARD_FILES = (("card", "mod_card.webp"), ("card_damaged", "mod_card_d.webp"))
 
+# HOC image kinds, in manifest order, with the tree and filename each is read from. A HOC has no forms or skins, just a card and full art.
+V3_HOC_IMAGE_FILES = (("card", "assets", "card.webp"), ("full", "art", "full.webp"))
+
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,11 +86,12 @@ def build_v3(assets_root, art_root):
     """Scan both staging trees and assemble the version 3 manifest.
 
     Args:
-        assets_root: The asset tree, holding `tdolls/` cards and skill icons and `equipment/<id>.png`.
-        art_root: The art tree, holding `tdolls/` full art.
+        assets_root: The asset tree, holding `tdolls/` cards and skill icons, `equipment/<id>.png` and `hocs/<id>/card.webp`.
+        art_root: The art tree, holding `tdolls/` full art and `hocs/<id>/full.webp`.
 
     Returns:
-        The manifest dict, dolls in numeric order and skins in `skin_dirs` order.
+        The manifest dict, dolls in numeric order, skins in `skin_dirs` order, and `hocs` (always present, `{}` when none) keyed by HOC id
+        in numeric order with each value the image kinds that exist for it.
     """
     roots = {"assets": assets_root, "art": art_root}
     doll_ids = sorted(set(numeric_dirs(os.path.join(assets_root, "tdolls"))) | set(numeric_dirs(os.path.join(art_root, "tdolls"))), key=int)
@@ -114,7 +118,11 @@ def build_v3(assets_root, art_root):
     equipment_dir = os.path.join(assets_root, "equipment")
     names = os.listdir(equipment_dir) if os.path.isdir(equipment_dir) else []
     equipment = sorted(int(name[:-4]) for name in names if name.endswith(".png") and name[:-4].isdigit())
-    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls}
+
+    hoc_ids = sorted(set(numeric_dirs(os.path.join(assets_root, "hocs"))) | set(numeric_dirs(os.path.join(art_root, "hocs"))), key=int)
+    hocs = {hoc_id: [kind for kind, tree, name in V3_HOC_IMAGE_FILES if os.path.isfile(os.path.join(roots[tree], "hocs", hoc_id, name))] for hoc_id in hoc_ids}
+
+    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs}
 
 
 def dumps(manifest, indent=None):
@@ -152,6 +160,7 @@ def main():
     print(f"  mods         {sum(1 for doll in dolls if 'mod' in doll)}")
     print(f"  skins        {sum(len(doll.get('skins', {})) for doll in dolls)}")
     print(f"  equipment    {len(manifest['equipment'])}")
+    print(f"  hocs         {len(manifest['hocs'])}")
 
 
 if __name__ == "__main__":

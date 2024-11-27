@@ -18,6 +18,9 @@ export interface ManifestSkin extends ManifestForm {
 	modImages?: CardKind[];
 }
 
+/** The two portrait kinds a HOC has. */
+export type HocImageKind = "card" | "full";
+
 /** What one doll has available, across all of its forms. */
 export interface ManifestDoll {
 	/** The base form. */
@@ -40,4 +43,6 @@ export interface AssetsManifest {
 	equipment: number[];
 	/** Every doll with art, keyed by stringified id. */
 	dolls: Record<string, ManifestDoll>;
+	/** Which portrait kinds exist for each HOC with art, keyed by stringified id. Absent when no HOC art has been merged in yet. */
+	hocs?: Record<string, HocImageKind[]>;
 }
