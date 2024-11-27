@@ -549,11 +549,10 @@ class NewTargetTests(unittest.TestCase):
 
 
     def test_committed_data_has_no_new_targets(self):
-        """The committed site data and manifest agree on dolls and equipment.
-        HOCs are new, so every one is still a pending target until the manifest lists them."""
+        """The committed site data and manifest agree on dolls, equipment and HOCs."""
         dolls, equipment_ids, hocs = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
         targets = game_bundles.new_targets(dolls, equipment_ids, game_bundles.read_json(game_bundles.MANIFEST_PATH), hocs=hocs)
-        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": {hoc["id"] for hoc in hocs}})
+        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set()})
 
 
 if __name__ == "__main__":

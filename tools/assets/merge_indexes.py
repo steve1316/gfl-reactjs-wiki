@@ -5,9 +5,9 @@ The scheduled refresh extracts only new dolls, Mods, skins and equipment, builds
 merges them here. The merge only adds. Anything the committed files already list stops it, so hosted art is never replaced by accident. Both outputs
 keep the exact format and key order the full builders write.
 
-The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The HOC Spine index is a separate committed file and is only
-touched when `--hoc-spine-partial` is passed, since a refresh that adds no HOC rigs has no partial for it. It counts as `{}` when the committed
-file does not exist yet, and nothing is written when the merge changes nothing.
+The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The HOC Spine index is a separate committed file, merged
+only when `--hoc-spine-partial` is passed. The workflow always passes it, but an empty partial (a refresh that added no HOC rigs) is a no-op. It
+counts as `{}` when the committed file does not exist yet, and nothing is written when the merge changes nothing.
 
 Usage:
     python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] \
@@ -250,7 +250,7 @@ def main():
     parser.add_argument("--spine-partial", required=True, help="Spine index built and annotated from the add staging folder.")
     parser.add_argument("--manifest", default="assets-manifest.json", help="The committed manifest to update.")
     parser.add_argument("--spine-index", default="src/data/spine-index.json", help="The committed Spine index to update.")
-    parser.add_argument("--hoc-spine-partial", help="HOC Spine index built and annotated from the add staging folder. Omit when the refresh added no HOC rigs.")
+    parser.add_argument("--hoc-spine-partial", help="HOC Spine index built and annotated from the add staging folder. An empty partial (no new HOC rigs) is a no-op.")
     parser.add_argument("--hoc-spine", default="src/data/hoc-spine-index.json", help="The committed HOC Spine index to update.")
     args = parser.parse_args()
 

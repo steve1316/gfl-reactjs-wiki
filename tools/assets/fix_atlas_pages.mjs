@@ -56,9 +56,9 @@ function main() {
 					if (actual) {
 						lines[i] = lines[i].replace(name, actual);
 						changed = true;
-						fixed.push(`doll ${doll} ${entry}: ${name} -> ${actual}`);
+						fixed.push(`rig folder ${doll} ${entry}: ${name} -> ${actual}`);
 					} else {
-						unresolved.push(`doll ${doll} ${entry}: ${name} has no file of any casing`);
+						unresolved.push(`rig folder ${doll} ${entry}: ${name} has no file of any casing`);
 					}
 				}
 				if (changed && !dryRun) {

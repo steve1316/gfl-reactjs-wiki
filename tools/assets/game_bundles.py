@@ -514,7 +514,8 @@ def hoc_items(index, hoc):
 def new_targets(dolls, equipment_ids, manifest, hocs=()):
     """Work out which dolls, Mods, skins, equipment and HOCs the committed manifest does not list yet.
 
-    A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed.
+    A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed. A HOC counts as hosted
+    once the manifest lists its art, so a rig added for that HOC later is not picked up as a new target on its own.
 
     Args:
         dolls: Site doll records.
