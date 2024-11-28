@@ -134,6 +134,43 @@ function auditV3(args) {
 		}
 	};
 
+	/**
+	 * Check every rig of one index entry: its skeleton, atlas and atlas pages exist, the default rig is not a skin, and its animations parse
+	 * and have labels.
+	 *
+	 * @param {string} label Message prefix naming the entry, e.g. `doll 65` or `hoc 1`.
+	 * @param {string} folder The entry's rig folder inside the assets tree, e.g. `spine/65`.
+	 * @param {Array<[string, object]>} rigs Kind label and rig pairs, absent rigs already dropped.
+	 */
+	const auditRigs = (label, folder, rigs) => {
+		for (const [kind, rig] of rigs) {
+			need("assets", `${folder}/${rig.skel}.skel`, `${label} ${kind} skeleton`);
+			const atlasRel = `${folder}/${rig.atlas}.atlas`;
+			need("assets", atlasRel, `${label} ${kind} atlas`);
+			const atlasFile = path.join(roots.assets, atlasRel);
+			if (fs.existsSync(atlasFile)) {
+				// Page images resolve against the atlas's own folder, exactly as `spineImageBase` builds the URL.
+				for (const line of fs.readFileSync(atlasFile, "utf8").split("\n")) {
+					const name = line.trim();
+					if (name.toLowerCase().endsWith(".png")) {
+						need("assets", `${path.posix.dirname(atlasRel)}/${name}`, `${label} ${kind} atlas page`);
+					}
+				}
+			}
+			if (kind === "combat" && /_\d+$/.test(rig.skel.split("/").pop())) {
+				problems.push(`${label}: default rig ${rig.skel} is a skin, not the base rig`);
+			}
+			if (!rig.anims?.length) {
+				problems.push(`${label} ${kind}: skeleton ${rig.skel} defines no animations, or skb.js cannot parse it`);
+				continue;
+			}
+			const unlabelled = rig.anims.filter((name) => !KNOWN_ANIMATION_NAMES.has(name));
+			if (unlabelled.length) {
+				notes.push(`${label} ${kind}: shown under raw names ${unlabelled.join(",")}`);
+			}
+		}
+	};
+
 	if (manifest.version !== 3) {
 		problems.push(`manifest version is ${manifest.version}, expected 3`);
 	}
@@ -177,32 +214,7 @@ function auditV3(args) {
 		if (!manifest.dolls[id]) {
 			notes.push(`doll ${id}: has rigs but no manifest entry`);
 		}
-		for (const [kind, rig] of v3Rigs(rigs)) {
-			need("assets", `spine/${id}/${rig.skel}.skel`, `doll ${id} ${kind} skeleton`);
-			const atlasRel = `spine/${id}/${rig.atlas}.atlas`;
-			need("assets", atlasRel, `doll ${id} ${kind} atlas`);
-			const atlasFile = path.join(roots.assets, atlasRel);
-			if (fs.existsSync(atlasFile)) {
-				// Page images resolve against the atlas's own folder, exactly as `spineImageBase` builds the URL.
-				for (const line of fs.readFileSync(atlasFile, "utf8").split("\n")) {
-					const name = line.trim();
-					if (name.toLowerCase().endsWith(".png")) {
-						need("assets", `${path.posix.dirname(atlasRel)}/${name}`, `doll ${id} ${kind} atlas page`);
-					}
-				}
-			}
-			if (kind === "combat" && /_\d+$/.test(rig.skel.split("/").pop())) {
-				problems.push(`doll ${id}: default rig ${rig.skel} is a skin, not the base rig`);
-			}
-			if (!rig.anims?.length) {
-				problems.push(`doll ${id} ${kind}: skeleton ${rig.skel} defines no animations, or skb.js cannot parse it`);
-				continue;
-			}
-			const unlabelled = rig.anims.filter((name) => !KNOWN_ANIMATION_NAMES.has(name));
-			if (unlabelled.length) {
-				notes.push(`doll ${id} ${kind}: shown under raw names ${unlabelled.join(",")}`);
-			}
-		}
+		auditRigs(`doll ${id}`, `spine/${id}`, v3Rigs(rigs));
 	}
 
 	for (const equipId of manifest.equipment) {
@@ -220,14 +232,11 @@ function auditV3(args) {
 		const hocSpineIndex = JSON.parse(fs.readFileSync(hocSpineIndexPath, "utf8"));
 		for (const [id, entry] of Object.entries(hocSpineIndex)) {
 			const rigs = [["combat", entry.combat], ...(entry.crew ?? []).map((rig, i) => [`crew ${i + 1}`, rig])];
-			for (const [label, rig] of rigs) {
-				if (!rig) continue;
-				need("assets", `hoc-spine/${id}/${rig.skel}.skel`, `hoc ${id} ${label} skeleton`);
-				need("assets", `hoc-spine/${id}/${rig.atlas}.atlas`, `hoc ${id} ${label} atlas`);
-				if (!rig.anims?.length) {
-					problems.push(`hoc ${id} ${label}: skeleton ${rig.skel} defines no animations, or skb.js cannot parse it`);
-				}
-			}
+			auditRigs(
+				`hoc ${id}`,
+				`hoc-spine/${id}`,
+				rigs.filter(([, rig]) => rig)
+			);
 		}
 	}
 

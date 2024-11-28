@@ -201,19 +201,6 @@ def merge_alpha(color, alpha):
     return merged
 
 
-def layer_mask(mask, size):
-    """Read a HOC layer's mask as an alpha channel at the layer's size.
-
-    Args:
-        mask: The mask texture, shape in its alpha channel.
-        size: The layer size to resize to.
-
-    Returns:
-        An `L` image.
-    """
-    return mask.convert("RGBA").split()[3].resize(size, Image.Resampling.LANCZOS)
-
-
 def compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha):
     """Compose a HOC's full scene: both background halves side by side, each character layer masked and drawn over its half.
 
@@ -235,8 +222,7 @@ def compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha):
     scene.alpha_composite(bgl.convert("RGBA"), (0, 0))
     scene.alpha_composite(bgr.convert("RGBA"), (bgl.width, 0))
     for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, bgl.width)):
-        red, green, blue = layer.convert("RGB").split()
-        scene.alpha_composite(Image.merge("RGBA", (red, green, blue, layer_mask(mask, layer.size))), (x, 0))
+        scene.alpha_composite(merge_alpha(layer, mask), (x, 0))
     return scene.convert("RGB")
 
 
@@ -258,7 +244,7 @@ def derive_hoc_card(bgl, left, left_alpha, right, right_alpha, full):
     """
     boxes = []
     for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, bgl.width)):
-        box = layer_mask(mask, layer.size).getbbox()
+        box = merge_alpha(layer, mask).getchannel("A").getbbox()
         if box:
             boxes.append((box[0] + x, box[2] + x))
     centre = (min(box[0] for box in boxes) + max(box[1] for box in boxes)) / 2 if boxes else full.width / 2
@@ -716,27 +702,21 @@ def extract_art_item(item, cache_dir, staging):
     return result
 
 
-def extract_hoc_art_item(item, cache_dir, staging, loader=unity_load):
-    """Extract one HOC's card and compose its full scene.
+def build_hoc_art(textures, item, staging):
+    """Extract one HOC's card and compose its full scene from already loaded textures.
 
     RPG29 ships no card, so a missing card is cropped from the scene and flagged as `derived`.
 
     Args:
+        textures: The index from `load_textures`, holding the item's bundles.
         item: A `hoc_art` inventory item.
-        cache_dir: The bundle cache directory.
         staging: The staging root.
-        loader: Callable opening one `.ab` file, replaceable in tests.
 
     Returns:
-        A worker result. Nothing is written unless every scene layer decodes.
+        A worker result for this item. Nothing is written unless every scene layer decodes.
     """
     result = new_result()
     key, folder = item["key"], f"hocs/{item['hoc_id']}"
-    try:
-        textures = load_textures(item["bundles"], cache_dir, loader)
-    except Exception as exc:
-        result["missing"].append({"key": key, "role": "*", "reason": f"bundle load failed: {exc!r}"})
-        return result
     images = {}
     for role in ("card",) + HOC_SCENE_ROLES:
         if role not in item["assets"]:
@@ -777,6 +757,29 @@ def load_failure(items, exc):
     """
     result = new_result()
     result["missing"].extend({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc!r}"} for item in items)
+    return result
+
+
+def extract_hoc_art_items(items, cache_dir, staging, loader=unity_load):
+    """Extract every HOC's card and full scene, loading their shared bundles once.
+
+    Args:
+        items: Resolved `hoc_art` inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result merged over every item.
+    """
+    try:
+        textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir, loader)
+    except Exception as exc:
+        return load_failure(items, exc)
+    result = new_result()
+    for item in items:
+        for field, rows in build_hoc_art(textures, item, staging).items():
+            result[field].extend(rows)
     return result
 
 
@@ -1549,7 +1552,8 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
         if equip_items:
             futures[pool.submit(extract_equip_icons, equip_items, load_rarities(site_dir), cache_dir, staging)] = "worker:equip_icon"
         futures.update({pool.submit(extract_art_item, item, cache_dir, staging): item["key"] for item in art_items})
-        futures.update({pool.submit(extract_hoc_art_item, item, cache_dir, staging): item["key"] for item in hoc_items})
+        if hoc_items:
+            futures[pool.submit(extract_hoc_art_items, hoc_items, cache_dir, staging)] = "worker:hoc_art"
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()

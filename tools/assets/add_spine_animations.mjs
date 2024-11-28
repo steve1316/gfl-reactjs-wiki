@@ -10,7 +10,7 @@
  * Uses the same `skb.js` the browser does, so the names here are exactly what the runtime will find.
  *
  * `--hoc` switches to the HOC Spine index: each entry there is a `combat` rig plus a flat `crew` list, instead of a doll's combat, dorm,
- * Mod and skin rigs, so the two branches walk the index differently.
+ * Mod and skin rigs, so each entry flattens to a different rig list.
  *
  * Usage:
  *     node tools/assets/add_spine_animations.mjs --spine <dir> [--index src/data/spine-index.json]
@@ -60,33 +60,24 @@ function main() {
 
 	let rigs = 0;
 	const vocabulary = new Set();
-	if (isHoc) {
-		for (const [id, entry] of Object.entries(index)) {
-			for (const rig of [entry.combat, ...(entry.crew ?? [])]) {
-				if (!rig) continue;
-				rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
-				rig.anims.forEach((name) => vocabulary.add(name));
-				rigs++;
-			}
-		}
-	} else {
-		for (const [id, entry] of Object.entries(index)) {
-			// The doll's own rigs, then the Mod's, which is a separate chibi with its own animation set.
-			for (const rig of [entry.combat, entry.dorm, entry.mod?.combat, entry.mod?.dorm]) {
-				if (!rig) continue;
-				rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
-				rig.anims.forEach((name) => vocabulary.add(name));
-				rigs++;
-			}
-			// Each skin holds the same shape as the doll: a combat rig and, usually, a dorm one.
-			for (const skin of Object.values(entry.skins ?? {})) {
-				for (const rig of Object.values(skin)) {
-					rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
-					rig.anims.forEach((name) => vocabulary.add(name));
-					rigs++;
-				}
-			}
-		}
+	/**
+	 * Record one rig's animation names, add them to the vocabulary and count the rig.
+	 *
+	 * @param {{skel: string, anims: string[]}} rig The index rig entry to fill in.
+	 * @param {string} folder The entry's folder under `spineDir`.
+	 */
+	const annotate = (rig, folder) => {
+		rig.anims = animationNames(SkeletonBinary, path.join(spineDir, folder, `${rig.skel}.skel`));
+		rig.anims.forEach((name) => vocabulary.add(name));
+		rigs++;
+	};
+	for (const [id, entry] of Object.entries(index)) {
+		// A HOC has a combat rig and a flat crew list. A doll has its own rigs, then the Mod's, which is a separate chibi with its own animation
+		// set, then each skin's combat rig and, usually, a dorm one.
+		const entryRigs = isHoc
+			? [entry.combat, ...(entry.crew ?? [])]
+			: [entry.combat, entry.dorm, entry.mod?.combat, entry.mod?.dorm, ...Object.values(entry.skins ?? {}).flatMap((skin) => Object.values(skin))];
+		entryRigs.filter(Boolean).forEach((rig) => annotate(rig, id));
 	}
 
 	// Note: JSON.stringify's second argument is a replacer, not a sort. Passing a key array here

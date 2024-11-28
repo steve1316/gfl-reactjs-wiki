@@ -18,6 +18,40 @@ from build_manifest import skin_dirs
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Rig helpers
+
+
+def scan_rig_files(folder):
+    """List a rig folder's skeletons and atlases by lowercased stem, so names match case-insensitively.
+
+    Args:
+        folder: A folder holding rig files.
+
+    Returns:
+        A `(skeletons, atlases)` pair of dicts, lowercased stem to the stem as spelled on disk, in name order.
+    """
+    names = sorted(name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name)))
+    skeletons = {name[:-5].lower(): name[:-5] for name in names if name.endswith(".skel")}
+    atlases = {name[:-6].lower(): name[:-6] for name in names if name.endswith(".atlas")}
+    return skeletons, atlases
+
+
+def rig_entry(prefix, skel, atlas):
+    """Build one index rig entry with empty animations.
+
+    Args:
+        prefix: Path prepended to both stems, empty or ending in a slash.
+        skel: Skeleton stem.
+        atlas: Atlas stem.
+
+    Returns:
+        A `{skel, atlas, anims}` dict.
+    """
+    return {"skel": f"{prefix}{skel}", "atlas": f"{prefix}{atlas}", "anims": []}
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Skin-id layout (v3)
 
 
@@ -34,9 +68,7 @@ def index_rig_dir(folder, prefix):
     Returns:
         A dict with `combat` and optionally `dorm`, each `{skel, atlas, anims}`, or None when the folder holds no usable rig.
     """
-    names = sorted(name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name)))
-    skeletons = {name[:-5].lower(): name[:-5] for name in names if name.endswith(".skel")}
-    atlases = {name[:-6].lower(): name[:-6] for name in names if name.endswith(".atlas")}
+    skeletons, atlases = scan_rig_files(folder)
     combats = [stem for lowered, stem in skeletons.items() if not (lowered[:1] == "r" and lowered[1:] in skeletons)]
     if not combats:
         return None
@@ -44,15 +76,10 @@ def index_rig_dir(folder, prefix):
     combat_atlas = atlases.get(combat.lower())
     if not combat_atlas:
         return None
-
-    def rig(skel, atlas):
-        """Build one rig entry with the folder prefix applied."""
-        return {"skel": f"{prefix}{skel}", "atlas": f"{prefix}{atlas}", "anims": []}
-
-    pair = {"combat": rig(combat, combat_atlas)}
+    pair = {"combat": rig_entry(prefix, combat, combat_atlas)}
     dorm = skeletons.get(f"r{combat.lower()}")
     if dorm:
-        pair["dorm"] = rig(dorm, atlases.get(dorm.lower(), combat_atlas))
+        pair["dorm"] = rig_entry(prefix, dorm, atlases.get(dorm.lower(), combat_atlas))
     return pair
 
 
@@ -117,21 +144,14 @@ def build_hoc_index(hoc_spine_root):
         folder = os.path.join(hoc_spine_root, hoc_id)
         if not os.path.isdir(folder):
             continue
-        names = sorted(name for name in os.listdir(folder) if os.path.isfile(os.path.join(folder, name)))
-        skeletons = {name[:-5].lower(): name[:-5] for name in names if name.endswith(".skel")}
-        atlases = {name[:-6].lower(): name[:-6] for name in names if name.endswith(".atlas")}
+        skeletons, atlases = scan_rig_files(folder)
         combats = [stem for lowered, stem in skeletons.items() if lowered in atlases]
         if not combats:
             continue
         combat = min(combats, key=lambda stem: (len(stem), stem))
         combat_atlas = atlases[combat.lower()]
-
-        def rig(stem):
-            """Build one rig entry, using the stem's own atlas or the combat atlas."""
-            return {"skel": stem, "atlas": atlases.get(stem.lower(), combat_atlas), "anims": []}
-
         crew = sorted((stem for lowered, stem in skeletons.items() if stem != combat), key=str.lower)
-        index[hoc_id] = {"combat": rig(combat), "crew": [rig(stem) for stem in crew]}
+        index[hoc_id] = {"combat": rig_entry("", combat, combat_atlas), "crew": [rig_entry("", stem, atlases.get(stem.lower(), combat_atlas)) for stem in crew]}
     return index
 
 
