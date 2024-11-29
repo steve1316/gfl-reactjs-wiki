@@ -8,11 +8,14 @@ import type { SxProps, Theme } from "@mui/material";
 import FilterChip from "../../components/FilterChip";
 import SpineAnimation from "../../components/SpineAnimation";
 import { hocSpineImageBase, hocSpineUrl } from "../../lib/assets";
-import { animationTabs } from "../../lib/spine";
+import { animationTabs, nextAnimationValue } from "../../lib/spine";
 import type { HocSpineEntry, SpineRig } from "../../types/spine";
 
 /** The animation a rig opens on, when it defines one. */
 const DEFAULT_ANIMATION = "wait";
+
+/** Shows the stage is clickable. A module constant, so the wrapper is not handed a new style object each render. */
+const STAGE_STYLE = { cursor: "pointer" } as const;
 
 const styles = {
 	// The same full-width toggle the Stats card uses to switch views.
@@ -65,7 +68,8 @@ interface HocAnimationsPanelProps {
 }
 
 /**
- * A HOC's chibi animations: a toggle between the battle rig and each crew rig, the animation pill row and the Spine player.
+ * A HOC's chibi animations: a toggle between the battle rig and each crew rig, the animation pill row and the Spine player. Clicking the
+ * player moves to the next animation, as on the T-Doll page.
  *
  * @param props Component props.
  * @returns The rig toggle, pill row and player.
@@ -91,6 +95,13 @@ export default function HocAnimationsPanel({ hocId, entry }: HocAnimationsPanelP
 	);
 	// FilterChip hands back its value, so one stable handler serves every chip instead of a new arrow per chip per render.
 	const handleChipToggle = useCallback((value?: string | number) => setAnimation(String(value)), []);
+	// Walks the same tab list the pills render, so clicking the stage and clicking a pill agree on what comes next.
+	const handleStageClick = useCallback(() => {
+		const next = nextAnimationValue(tabs, animation);
+		if (next) {
+			setAnimation(next);
+		}
+	}, [tabs, animation]);
 
 	return (
 		<>
@@ -112,14 +123,16 @@ export default function HocAnimationsPanel({ hocId, entry }: HocAnimationsPanelP
 
 			<Card sx={styles.cardForAnimation}>
 				{/* Keyed by rig so switching rigs mounts a fresh player rather than swapping a skeleton under a live one. */}
-				<SpineAnimation
-					key={rigIndex}
-					skelUrl={hocSpineUrl(hocId, rig.skel, "skel")}
-					atlasUrl={hocSpineUrl(hocId, rig.atlas, "atlas")}
-					imageBase={hocSpineImageBase(hocId)}
-					animation={animation}
-					maxSize={340}
-				/>
+				<div onClick={handleStageClick} style={STAGE_STYLE}>
+					<SpineAnimation
+						key={rigIndex}
+						skelUrl={hocSpineUrl(hocId, rig.skel, "skel")}
+						atlasUrl={hocSpineUrl(hocId, rig.atlas, "atlas")}
+						imageBase={hocSpineImageBase(hocId)}
+						animation={animation}
+						maxSize={340}
+					/>
+				</div>
 			</Card>
 		</>
 	);

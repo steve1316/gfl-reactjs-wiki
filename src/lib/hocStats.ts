@@ -32,7 +32,7 @@ function roundUp(value: number): number {
  * @param compute Works out one stat.
  * @returns Every stat.
  */
-function perStat(compute: (key: HocStatKey) => number): HocStatValues {
+function perStat<T>(compute: (key: HocStatKey) => T): Record<HocStatKey, T> {
 	return { lethality: compute("lethality"), pierce: compute("pierce"), precision: compute("precision"), reload: compute("reload") };
 }
 
@@ -62,4 +62,20 @@ export function hocChipStats(hoc: Hoc, constants: HocConstants, level: number, s
 	const scaledLevel = constants.baseLevel + level - 1;
 	const starRate = constants.starCpuRates[stars - 1] ?? 0;
 	return perStat((key) => roundUp((hoc.cpuRate * (constants.stats[key].cpuRate * (hoc.attributes[key] * scaledLevel)) * starRate) / 10_000_000_000));
+}
+
+/**
+ * The best HOC for each stat at a level. The first HOC in the list wins a tie.
+ *
+ * @param hocs Every HOC to compare.
+ * @param constants The shared stat constants.
+ * @param level The level, 1 to `constants.maxLevel`.
+ * @returns Each stat's leading HOC name and its value.
+ */
+export function bestHocStats(hocs: readonly Hoc[], constants: HocConstants, level: number): Record<HocStatKey, { name: string; value: number }> {
+	const all = hocs.map((hoc) => ({ name: hoc.name, stats: hocStats(hoc, constants, level) }));
+	return perStat((key) => {
+		const top = all.reduce((leader, entry) => (entry.stats[key] > leader.stats[key] ? entry : leader));
+		return { name: top.name, value: top.stats[key] };
+	});
 }
