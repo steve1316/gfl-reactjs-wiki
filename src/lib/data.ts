@@ -1,5 +1,5 @@
 /**
- * The single place the app reads doll, equipment and HOC data.
+ * The single place the app reads doll, equipment, HOC and Fairy data.
  *
  * Shards are fetched on demand so a route pays only for what it renders. Viewing one
  * doll fetches the shard holding it rather than all five, and the navbar, which renders on every
@@ -10,9 +10,11 @@
  * for the rest of the session, so an import that fails once on a flaky connection could never be retried without a reload.
  */
 
+import fairySearchIndexJson from "../data/fairy-search-index.json";
 import hocSearchIndexJson from "../data/hoc-search-index.json";
 import searchIndexJson from "../data/search-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
+import type { FairyData } from "../types/fairy";
 import type { HocData } from "../types/hoc";
 import type { HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
@@ -45,6 +47,14 @@ export interface HocSearchEntry {
 	name: string;
 }
 
+/** One Fairy in its search index. */
+export interface FairySearchEntry {
+	/** Fairy id, used in its page's address. */
+	id: number;
+	/** Official English name. */
+	name: string;
+}
+
 /** One generated shard: the doll records every doll list reads, and the profile side file only the doll page reads. */
 interface Shard {
 	/** Highest doll id the shard holds. */
@@ -65,9 +75,12 @@ export const searchIndex: SearchEntry[] = searchIndexJson as SearchEntry[];
 /** Every HOC's id and name, for the navbar search. */
 export const hocSearchIndex: HocSearchEntry[] = hocSearchIndexJson as HocSearchEntry[];
 
+/** Every Fairy's id and name, for the navbar search. */
+export const fairySearchIndex: FairySearchEntry[] = fairySearchIndexJson as FairySearchEntry[];
+
 /** Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are bundled. */
 const DATA_URLS = import.meta.glob<string>(
-	["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json", "../data/hocs.json", "../data/hoc-spine-index.json"],
+	["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json", "../data/hocs.json", "../data/hoc-spine-index.json", "../data/fairies.json"],
 	{
 		query: "?url",
 		import: "default",
@@ -106,6 +119,9 @@ const hocCache = new Map<0, Promise<HocData>>();
 
 /** Cache of the in-flight or loaded HOC Spine index, under the single key `0`. A failed load is dropped so it can be retried. */
 const hocSpineIndexCache = new Map<0, Promise<HocSpineIndex>>();
+
+/** Cache of the in-flight or loaded Fairies, under the single key `0`. A failed load is dropped so it can be retried. */
+const fairyCache = new Map<0, Promise<FairyData>>();
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -341,4 +357,18 @@ export function loadHocs(): Promise<HocData> {
 export async function loadHocSpineRigs(id: number): Promise<HocSpineEntry | undefined> {
 	const index = await (hocSpineIndexCache.get(0) ?? cacheUntilFailure(hocSpineIndexCache, 0, fetchData<HocSpineIndex>("hoc-spine-index")));
 	return index[String(id)];
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Fairies
+
+/**
+ * Load every Fairy, its talents and the constants their stats are worked out from.
+ *
+ * @returns The Fairy data, shared by the Fairy Index and each Fairy's page.
+ * @throws When the file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadFairies(): Promise<FairyData> {
+	return fairyCache.get(0) ?? cacheUntilFailure(fairyCache, 0, fetchData<FairyData>("fairies"));
 }

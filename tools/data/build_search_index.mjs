@@ -9,8 +9,8 @@
  * Entries also carry `aliases` from `tools/data/name-aliases.json`: the names the wiki used before the 2026-09-13
  * upstream import renamed dolls (HK416 is now "416"), so readers can still find a doll by its old name.
  *
- * HOCs go to their own small `hoc-search-index.json`, because doll and HOC ids overlap and every doll-keyed reader of the main index would
- * otherwise have to skip them.
+ * HOCs and Fairies go to their own small `hoc-search-index.json` and `fairy-search-index.json`, because doll, HOC and Fairy ids overlap and
+ * every doll-keyed reader of the main index would otherwise have to skip them.
  *
  * Usage:
  *     node tools/data/build_search_index.mjs [--data src/data] [--out src/data/search-index.json]
@@ -35,7 +35,7 @@ function readShard(file) {
 }
 
 /**
- * Build the search indexes from the generated doll shards and HOCs, and write them to disk.
+ * Build the search indexes from the generated doll shards, HOCs and Fairies, and write them to disk.
  */
 function main() {
 	const args = process.argv.slice(2);
@@ -60,6 +60,11 @@ function main() {
 	const hocOut = path.join(path.dirname(out), "hoc-search-index.json");
 	fs.writeFileSync(hocOut, `${JSON.stringify(hocs)}\n`);
 	console.log(`wrote ${hocOut} (${hocs.length} HOCs)`);
+
+	const fairies = JSON.parse(fs.readFileSync(path.join(dataDir, "fairies.json"), "utf8")).items.map((fairy) => ({ id: fairy.id, name: fairy.name }));
+	const fairyOut = path.join(path.dirname(out), "fairy-search-index.json");
+	fs.writeFileSync(fairyOut, `${JSON.stringify(fairies)}\n`);
+	console.log(`wrote ${fairyOut} (${fairies.length} Fairies)`);
 }
 
 main();
