@@ -4,8 +4,8 @@ import { memo, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import LevelSlider from "../../components/LevelSlider";
 import type { HocSkill } from "../../types/hoc";
-import LevelSlider from "./LevelSlider";
 
 /** The highest skill level. */
 const MAX_SKILL_LEVEL = 10;

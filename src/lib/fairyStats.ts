@@ -58,3 +58,13 @@ export function fairyStats(fairy: Fairy, constants: FairyConstants, level: numbe
 	};
 	return { damage: stat("damage"), accuracy: stat("accuracy"), evasion: stat("evasion"), armor: stat("armor"), critDamage: stat("critDamage") };
 }
+
+/**
+ * Format a fairy stat as a percentage, dropping a trailing ".0" so a whole number reads as "25%" rather than "25.0%".
+ *
+ * @param value The stat value, already rounded to two decimals by `fairyStats`.
+ * @returns The value with a `%` suffix, such as "25%" or "4.8%".
+ */
+export function formatFairyStat(value: number): string {
+	return `${Number(value.toFixed(2))}%`;
+}
