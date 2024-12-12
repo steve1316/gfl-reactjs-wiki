@@ -38,7 +38,7 @@ interface SearchOption {
 	path: string;
 	/** A short tag shown after the name for anything that is not a doll, such as "HOC". */
 	tag?: string;
-	/** Doll or HOC name, shown and matched against. */
+	/** Doll, HOC or fairy name, shown and matched against. */
 	name: string;
 	/** The name and any old wiki names, passed through `normaliseName`, which the typed text is matched against. */
 	keys: string[];
@@ -150,7 +150,7 @@ const groupByLetter = (option: SearchOption) => option.firstLetter;
 const optionLabel = (option: SearchOption) => option.name;
 
 /**
- * Narrow the dropdown to dolls and HOCs whose name or old name holds the typed text, ignoring case, spaces and punctuation.
+ * Narrow the dropdown to dolls, HOCs and fairies whose name or old name holds the typed text, ignoring case, spaces and punctuation.
  *
  * @param list Every option.
  * @param state MUI's filter state, carrying the typed text.
@@ -162,7 +162,8 @@ const filterByName = (list: SearchOption[], state: FilterOptionsState<SearchOpti
 };
 
 /**
- * Whether two options are the same doll or HOC. Names repeat across forms and ids overlap between dolls and HOCs, so options are compared by page.
+ * Whether two options are the same doll, HOC or fairy. Names repeat across forms and ids overlap between dolls, HOCs and fairies, so options are
+ * compared by page.
  *
  * @param option An option.
  * @param value The selected value.
@@ -280,7 +281,7 @@ export default function Navbar() {
 	const openSearch = useCallback(() => setSearchOpen(true), []);
 	const closeSearch = useCallback(() => setSearchOpen(false), []);
 
-	// Send the reader to a doll or HOC and leave search mode. Shared by picking a suggestion and by submitting
+	// Send the reader to a doll, HOC or fairy and leave search mode. Shared by picking a suggestion and by submitting
 	// the form, so both routes behave the same.
 	const goTo = useCallback(
 		(option: SearchOption) => {
@@ -328,7 +329,7 @@ export default function Navbar() {
 
 	const renderSearchInput = useCallback(
 		(params: AutocompleteRenderInputParams) => (
-			<TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll or HOC" : "Search..."} variant="outlined" sx={searchFieldSx} />
+			<TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll, HOC or fairy" : "Search..."} variant="outlined" sx={searchFieldSx} />
 		),
 		[hasError]
 	);

@@ -517,14 +517,32 @@ class CommitMessageTests(unittest.TestCase):
         self.assertEqual(publish.commit_message(["tdolls/424/card.webp", "spine/424/Foo.skel"]), "Add art for doll 424")
 
     def test_mixed(self):
-        """Dolls, skins, equipment and HOCs are grouped, numbered and joined."""
-        paths = ["tdolls/425/card.webp", "tdolls/424/mod/card.webp", "tdolls/65/skins/9001/card.webp", "spine/65/skins/9001/a.skel", "equipment/301.png", "hocs/6/card.webp"]
-        self.assertEqual(publish.commit_message(paths), "Add art for dolls 424, 425, skin 65:9001, equipment 301 and hoc 6")
+        """Dolls, skins, equipment, HOCs and fairies are grouped, numbered and joined."""
+        paths = [
+            "tdolls/425/card.webp",
+            "tdolls/424/mod/card.webp",
+            "tdolls/65/skins/9001/card.webp",
+            "spine/65/skins/9001/a.skel",
+            "equipment/301.png",
+            "hocs/6/card.webp",
+            "fairies/9/form1.webp",
+        ]
+        self.assertEqual(publish.commit_message(paths), "Add art for dolls 424, 425, skin 65:9001, equipment 301, hoc 6 and fairy 9")
 
     def test_hoc_art_and_rig(self):
         """Card art and rig files under a HOC's own top-level folders name that HOC once."""
         paths = ["hocs/6/card.webp", "hocs/6/full.webp", "hoc-spine/6/QLZ04.skel", "hoc-spine/6/QLZ04 A.atlas"]
         self.assertEqual(publish.commit_message(paths), "Add art for hoc 6")
+
+    def test_fairy_art(self):
+        """Form art files under a fairy's own top-level folder name that fairy once."""
+        paths = ["fairies/6/form1.webp", "fairies/6/form2.webp", "fairies/6/form3.webp"]
+        self.assertEqual(publish.commit_message(paths), "Add art for fairy 6")
+
+    def test_multiple_fairies_are_pluralised_irregularly(self):
+        """Two fairies read as `fairies`, not `fairys`."""
+        paths = ["fairies/9/form1.webp", "fairies/10/form1.webp"]
+        self.assertEqual(publish.commit_message(paths), "Add art for fairies 9, 10")
 
 
 class PlannedTreeTests(unittest.TestCase):

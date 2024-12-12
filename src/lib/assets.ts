@@ -191,6 +191,17 @@ export function hocFullArtUrl(id: number): string {
 }
 
 /**
+ * URL for a fairy's art at one of its three forms.
+ *
+ * @param id Fairy id.
+ * @param form Form number, 1 through 3.
+ * @returns An absolute URL.
+ */
+export function fairyFormUrl(id: number, form: number): string {
+	return join(ASSET_BASE, `fairies/${id}/form${form}.webp`);
+}
+
+/**
  * URL for one file inside a HOC's Spine bundle.
  *
  * @param id HOC id.

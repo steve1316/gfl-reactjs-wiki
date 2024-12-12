@@ -32,6 +32,10 @@ V3_MOD_CARD_FILES = (("card", "mod_card.webp"), ("card_damaged", "mod_card_d.web
 # HOC image kinds, in manifest order, with the tree and filename each is read from. A HOC has no forms or skins, just a card and full art.
 V3_HOC_IMAGE_FILES = (("card", "assets", "card.webp"), ("full", "art", "full.webp"))
 
+# Fairy image kinds, in manifest order, with the tree and filename each is read from. A fairy has three forms and no card or full art, and
+# lives only in the asset tree.
+V3_FAIRY_IMAGE_FILES = (("form1", "assets", "form1.webp"), ("form2", "assets", "form2.webp"), ("form3", "assets", "form3.webp"))
+
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +94,8 @@ def build_v3(assets_root, art_root):
         art_root: The art tree, holding `tdolls/` full art and `hocs/<id>/full.webp`.
 
     Returns:
-        The manifest dict, dolls in numeric order, skins in `skin_dirs` order, and `hocs` (always present, `{}` when none) keyed by HOC id
-        in numeric order with each value the image kinds that exist for it.
+        The manifest dict, dolls in numeric order, skins in `skin_dirs` order, and `hocs` and `fairies` (always present, `{}` when none)
+        keyed by id in numeric order with each value the image kinds that exist for it.
     """
     roots = {"assets": assets_root, "art": art_root}
     doll_ids = sorted(set(numeric_dirs(os.path.join(assets_root, "tdolls"))) | set(numeric_dirs(os.path.join(art_root, "tdolls"))), key=int)
@@ -122,7 +126,13 @@ def build_v3(assets_root, art_root):
     hoc_ids = sorted(set(numeric_dirs(os.path.join(assets_root, "hocs"))) | set(numeric_dirs(os.path.join(art_root, "hocs"))), key=int)
     hocs = {hoc_id: [kind for kind, tree, name in V3_HOC_IMAGE_FILES if os.path.isfile(os.path.join(roots[tree], "hocs", hoc_id, name))] for hoc_id in hoc_ids}
 
-    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs}
+    fairy_ids = sorted(numeric_dirs(os.path.join(assets_root, "fairies")), key=int)
+    fairies = {
+        fairy_id: [kind for kind, tree, name in V3_FAIRY_IMAGE_FILES if os.path.isfile(os.path.join(roots[tree], "fairies", fairy_id, name))]
+        for fairy_id in fairy_ids
+    }
+
+    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs, "fairies": fairies}
 
 
 def dumps(manifest, indent=None):
@@ -161,6 +171,7 @@ def main():
     print(f"  skins        {sum(len(doll.get('skins', {})) for doll in dolls)}")
     print(f"  equipment    {len(manifest['equipment'])}")
     print(f"  hocs         {len(manifest['hocs'])}")
+    print(f"  fairies      {len(manifest['fairies'])}")
 
 
 if __name__ == "__main__":

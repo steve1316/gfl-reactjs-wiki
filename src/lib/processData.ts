@@ -141,3 +141,14 @@ export function hasEquipmentIcon(id: number): boolean {
 export function hasHocArt(id: number, kind: HocImageKind): boolean {
 	return manifest.hocs?.[String(id)]?.includes(kind) ?? false;
 }
+
+/**
+ * Whether a fairy has a hosted image for the given form.
+ *
+ * @param id Fairy id.
+ * @param form Form number, 1 through 3.
+ * @returns True when the manifest lists that form for the fairy.
+ */
+export function hasFairyForm(id: number, form: number): boolean {
+	return manifest.fairies?.[String(id)]?.includes(`form${form}` as "form1" | "form2" | "form3") ?? false;
+}

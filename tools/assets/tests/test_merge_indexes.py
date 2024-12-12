@@ -159,6 +159,31 @@ class ManifestMergeTests(unittest.TestCase):
         merged = merge_indexes.merge_manifest(committed_manifest(), partial_manifest())
         self.assertNotIn("hocs", merged)
 
+    def test_new_fairy_joins_in_numeric_order(self):
+        """A partial fairy art entry joins the committed fairies dict by numeric id."""
+        committed = committed_manifest()
+        committed["fairies"] = {"1": ["form1", "form2", "form3"]}
+        partial = partial_manifest()
+        partial["fairies"] = {"2": ["form1"]}
+        merged = merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(list(merged["fairies"]), ["1", "2"])
+        self.assertEqual(merged["fairies"]["2"], ["form1"])
+
+    def test_fairy_conflict_is_refused(self):
+        """A fairy id the committed manifest already lists stops the merge."""
+        committed = committed_manifest()
+        committed["fairies"] = {"1": ["form1"]}
+        partial = partial_manifest()
+        partial["fairies"] = {"1": ["form2"]}
+        with self.assertRaises(merge_indexes.MergeConflict) as caught:
+            merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(caught.exception.conflicts, ["fairy 1 art"])
+
+    def test_no_fairies_key_when_neither_side_has_one(self):
+        """The merged manifest gets no `fairies` key when neither the committed nor the partial manifest has one."""
+        merged = merge_indexes.merge_manifest(committed_manifest(), partial_manifest())
+        self.assertNotIn("fairies", merged)
+
     def test_committed_input_is_not_changed(self):
         """The merge works on a copy."""
         committed = committed_manifest()

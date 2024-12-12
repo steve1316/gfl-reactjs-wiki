@@ -45,4 +45,6 @@ export interface AssetsManifest {
 	dolls: Record<string, ManifestDoll>;
 	/** Which portrait kinds exist for each HOC with art, keyed by stringified id. Absent when no HOC art has been merged in yet. */
 	hocs?: Record<string, HocImageKind[]>;
+	/** Which forms exist for each fairy with art, keyed by stringified id. Absent when no fairy art has been merged in yet. */
+	fairies?: Record<string, ("form1" | "form2" | "form3")[]>;
 }

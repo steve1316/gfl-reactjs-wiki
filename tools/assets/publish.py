@@ -84,6 +84,9 @@ USER_AGENT = "gfl-reactjs-wiki-refresh/1.0 (fan wiki asset pipeline; https://git
 LIVE_TIMEOUT_SECONDS = 20 * 60
 LIVE_INTERVAL_SECONDS = 30
 
+# Commit message labels whose plural is not the singular plus a trailing `s`.
+IRREGULAR_PLURALS = {"fairy": "fairies"}
+
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -620,22 +623,27 @@ def join_numbers(label, values):
         values: The ids as strings, already in order.
 
     Returns:
-        The group text, pluralised with an `s` when there is more than one id and the label is not `equipment`.
+        The group text, pluralised when there is more than one id and the label is not `equipment`: an `s` is appended unless
+        the label is in `IRREGULAR_PLURALS`, which spells the plural out instead.
     """
-    plural = label if len(values) == 1 or label == "equipment" else f"{label}s"
+    if len(values) == 1 or label == "equipment":
+        plural = label
+    else:
+        plural = IRREGULAR_PLURALS.get(label, f"{label}s")
     return f"{plural} {', '.join(values)}"
 
 
 def commit_message(paths):
-    """Describe the dolls, skins, equipment and HOCs an add commit holds.
+    """Describe the dolls, skins, equipment, HOCs and fairies an add commit holds.
 
     Args:
-        paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel`, `equipment/301.png` or `hocs/6/card.webp`.
+        paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel`, `equipment/301.png`, `hocs/6/card.webp`
+            or `fairies/9/form1.webp`.
 
     Returns:
-        A subject line such as `Add art for dolls 424, 425, skin 65:9001, equipment 301 and hoc 6`.
+        A subject line such as `Add art for dolls 424, 425, skin 65:9001, equipment 301, hoc 6 and fairy 9`.
     """
-    dolls, skins, equipment, hocs = set(), set(), set(), set()
+    dolls, skins, equipment, hocs, fairies = set(), set(), set(), set(), set()
     for rel in paths:
         parts = rel.split("/")
         if parts[0] == "equipment" and len(parts) == 2 and parts[1][:-4].isdigit():
@@ -647,6 +655,8 @@ def commit_message(paths):
                 dolls.add(int(parts[1]))
         elif parts[0] in ("hocs", "hoc-spine") and len(parts) > 2 and parts[1].isdigit():
             hocs.add(int(parts[1]))
+        elif parts[0] == "fairies" and len(parts) > 2 and parts[1].isdigit():
+            fairies.add(int(parts[1]))
     groups = []
     if dolls:
         groups.append(join_numbers("doll", [str(doll_id) for doll_id in sorted(dolls)]))
@@ -657,6 +667,8 @@ def commit_message(paths):
         groups.append(join_numbers("equipment", [str(equip_id) for equip_id in sorted(equipment)]))
     if hocs:
         groups.append(join_numbers("hoc", [str(hoc_id) for hoc_id in sorted(hocs)]))
+    if fairies:
+        groups.append(join_numbers("fairy", [str(fairy_id) for fairy_id in sorted(fairies)]))
     if not groups:
         return "Add assets"
     return f"Add art for {groups[0] if len(groups) == 1 else ', '.join(groups[:-1]) + ' and ' + groups[-1]}"

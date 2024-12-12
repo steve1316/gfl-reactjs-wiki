@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildFairies } from "../lib/fairies.mjs";
+import { buildFairies, findFairyArtGaps } from "../lib/fairies.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 import { effectiveStars, fairyForm, fairyStats } from "../../../src/lib/fairyStats.ts";
 
@@ -88,4 +88,14 @@ test("stars are capped by level and map to forms", () => {
 		[1, 2, 3, 4, 5].map((stars) => fairyForm(built.constants, stars)),
 		[1, 1, 2, 2, 3]
 	);
+});
+
+test("fairy art gaps are only reported once the manifest lists any fairy", () => {
+	const fairies = [
+		{ id: 1, name: "Warrior Fairy" },
+		{ id: 2, name: "Armor Fairy" }
+	];
+	assert.deepEqual(findFairyArtGaps(fairies, { dolls: {} }), []);
+	assert.deepEqual(findFairyArtGaps(fairies, { fairies: {} }), []);
+	assert.deepEqual(findFairyArtGaps(fairies, { fairies: { 1: ["form1", "form2", "form3"], 2: ["form1"] } }), ["Armor Fairy"]);
 });

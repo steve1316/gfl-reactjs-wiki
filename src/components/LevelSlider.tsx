@@ -29,7 +29,7 @@ interface LevelSliderProps {
 }
 
 /**
- * A labelled level slider with the current level shown beside it, shared by the HOC page's stats and skills.
+ * A labelled level slider with the current level shown beside it, shared by the HOC and fairy pages' stats and skills.
  *
  * @param props Component props.
  * @returns The slider row.

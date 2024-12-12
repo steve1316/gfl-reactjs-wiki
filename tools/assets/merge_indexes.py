@@ -5,9 +5,10 @@ The scheduled refresh extracts only new dolls, Mods, skins and equipment, builds
 merges them here. The merge only adds. Anything the committed files already list stops it, so hosted art is never replaced by accident. Both outputs
 keep the exact format and key order the full builders write.
 
-The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The HOC Spine index is a separate committed file, merged
-only when `--hoc-spine-partial` is passed. The workflow always passes it, but an empty partial (a refresh that added no HOC rigs) is a no-op. It
-counts as `{}` when the committed file does not exist yet, and nothing is written when the merge changes nothing.
+The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The `fairies` key merges the same way too. The HOC Spine
+index is a separate committed file, merged only when `--hoc-spine-partial` is passed. The workflow always passes it, but an empty partial (a
+refresh that added no HOC rigs) is a no-op. It counts as `{}` when the committed file does not exist yet, and nothing is written when the merge
+changes nothing.
 
 Usage:
     python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] \
@@ -100,7 +101,7 @@ def merge_manifest(committed, partial):
         partial: The manifest built from the `add` staging folder.
 
     A partial's `hocs` entry is a plain list of image kinds, keyed by HOC id. A HOC id is either entirely new or entirely already
-    committed, there is nothing to merge piecemeal within one.
+    committed, there is nothing to merge piecemeal within one. A partial's `fairies` entry merges the same way, keyed by fairy id.
 
     Returns:
         A merged copy. `committed` is not changed.
@@ -140,6 +141,14 @@ def merge_manifest(committed, partial):
             else:
                 hocs[hoc_id] = kinds
         merged["hocs"] = by_id(hocs)
+    if "fairies" in partial or "fairies" in merged:
+        fairies = dict(merged.get("fairies", {}))
+        for fairy_id, kinds in partial.get("fairies", {}).items():
+            if fairy_id in fairies:
+                conflicts.append(f"fairy {fairy_id} art")
+            else:
+                fairies[fairy_id] = kinds
+        merged["fairies"] = by_id(fairies)
     if conflicts:
         raise MergeConflict(conflicts)
     merged["dolls"] = by_id(merged["dolls"])

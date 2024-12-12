@@ -252,6 +252,51 @@ class HocTargetTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Fairy resolution
+
+
+FAIRY_PICS = "Assets/Resources/DaBao/Pics/Fairy/"
+
+
+def fairy_pictures(code):
+    """The six picture paths one fairy has in `resource_fairy`."""
+    return [f"{FAIRY_PICS}{code}_{number}{alpha}.png" for number in (1, 2, 3) for alpha in ("", "_Alpha")]
+
+
+class FairyResolutionTests(unittest.TestCase):
+    """Fairy art resolves from `resource_fairy` and ignores the `Battle/` twins."""
+
+    def test_art_resolves_all_six_roles_and_ignores_the_battle_folder(self):
+        battle = [f"{FAIRY_PICS}Battle/fighting_1.png"]
+        index = hoc_index({"resource_fairy": battle + fairy_pictures("fighting")})
+        art = game_bundles.fairy_items(index, {"id": 1, "code": "fighting"})
+        self.assertEqual(art["key"], "fairy_art:1")
+        self.assertEqual(art["status"], "resolved")
+        self.assertEqual(sorted(art["assets"]), ["form1", "form1_alpha", "form2", "form2_alpha", "form3", "form3_alpha"])
+        self.assertEqual(art["assets"]["form1"]["path"], f"{FAIRY_PICS}fighting_1.png")
+
+    def test_missing_bundle_is_unresolved(self):
+        art = game_bundles.fairy_items(hoc_index({}), {"id": 2, "code": "air_attack"})
+        self.assertEqual(art["status"], "unresolved")
+
+
+class FairyTargetTests(unittest.TestCase):
+    """`--only-missing` picks fairies the committed manifest does not list."""
+
+    def test_new_fairies_are_targets_and_their_items_selected(self):
+        manifest = {"dolls": {}, "equipment": [], "fairies": {"1": ["form1"]}}
+        targets = game_bundles.new_targets([], [], manifest, fairies=[{"id": 1, "code": "fighting"}, {"id": 2, "code": "air_attack"}])
+        self.assertEqual(targets["fairies"], {2})
+        items = [{"tier": "fairy_art", "fairy_id": 1}, {"tier": "fairy_art", "fairy_id": 2}]
+        self.assertEqual(game_bundles.select_new_items(items, targets), items[1:])
+
+    def test_manifest_without_fairies_targets_every_fairy(self):
+        targets = game_bundles.new_targets([], [], {"dolls": {}, "equipment": []}, fairies=[{"id": 3, "code": "Nian"}])
+        self.assertEqual(targets["fairies"], {3})
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Download
 
 
@@ -470,7 +515,7 @@ class NewTargetTests(unittest.TestCase):
 
     def test_targets(self):
         """A missing doll, a missing Mod, a missing numeric skin and a missing equipment id are the targets."""
-        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set()})
+        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set()})
 
     def test_selects_forms_of_new_targets(self):
         """Art and rigs follow their form, and hosted forms, known gaps and legacy items are never selected."""
@@ -535,7 +580,7 @@ class NewTargetTests(unittest.TestCase):
             self.assertTrue(inventory["onlyMissing"])
             self.assertTrue(any(item["tier"] == "art" for item in inventory["items"]))
 
-            dolls, equipment_ids, _hocs = game_bundles.load_site(SITE_DATA)
+            dolls, equipment_ids, _hocs, _fairies = game_bundles.load_site(SITE_DATA)
             full = {"equipment": equipment_ids, "dolls": {}}
             for doll in dolls:
                 skins = {str(skin_id): {"images": ["card"]} for skin_id in ((doll.get("skins") or {}).get("skin_ids") or []) if isinstance(skin_id, int)}
@@ -549,10 +594,11 @@ class NewTargetTests(unittest.TestCase):
 
 
     def test_committed_data_has_no_new_targets(self):
-        """The committed site data and manifest agree on dolls, equipment and HOCs."""
-        dolls, equipment_ids, hocs = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
-        targets = game_bundles.new_targets(dolls, equipment_ids, game_bundles.read_json(game_bundles.MANIFEST_PATH), hocs=hocs)
-        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set()})
+        """The committed site data and manifest agree on dolls, equipment, HOCs and fairies: every one already has a published
+        asset, so there are no pending targets left."""
+        dolls, equipment_ids, hocs, fairies = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
+        targets = game_bundles.new_targets(dolls, equipment_ids, game_bundles.read_json(game_bundles.MANIFEST_PATH), hocs=hocs, fairies=fairies)
+        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set(), "fairies": set()})
 
 
 if __name__ == "__main__":
