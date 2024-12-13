@@ -169,7 +169,8 @@ async function main() {
 	writeJson(`${OUT_DIR}/equipment.json`, equipment);
 	const hocs = buildHocs(upstream, cutoff);
 	writeJson(`${OUT_DIR}/hocs.json`, hocs);
-	const fairies = buildFairies(upstream);
+	const specialTalents = JSON.parse(fs.readFileSync("tools/data/fairy-special-talents.json", "utf8"));
+	const fairies = buildFairies(upstream, specialTalents);
 	writeJson(`${OUT_DIR}/fairies.json`, fairies);
 
 	const { repo, sha } = readLock();

@@ -40,6 +40,16 @@ export function fairyForm(constants: FairyConstants, stars: number): number {
 }
 
 /**
+ * The label for an art form's group of star ranks, such as "1-2★" or "5★".
+ *
+ * @param ranks The star ranks the form covers, in ascending order.
+ * @returns The lowest and highest rank joined by a dash, or just the rank when the form covers only one.
+ */
+export function fairyFormLabel(ranks: number[]): string {
+	return ranks.length > 1 ? `${ranks[0]}-${ranks[ranks.length - 1]}★` : `${ranks[0]}★`;
+}
+
+/**
  * A fairy's stats at a level and star rank. The star rank is capped by level first.
  *
  * @param fairy The fairy.
