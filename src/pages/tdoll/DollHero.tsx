@@ -9,7 +9,7 @@ import type { SxProps, Theme } from "@mui/material";
 // MaterialUI icon imports
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
-import { cardArtSx } from "../../lib/artLayout";
+import { FAB_EXPAND_SX, cardArtSx } from "../../lib/artLayout";
 import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import ArtPlaceholder from "../../components/ArtPlaceholder";
@@ -37,17 +37,9 @@ const styles = {
 		// already undersampled at this pixel ratio only makes it softer.
 		width: { xs: 176, sm: 208, md: 200 },
 		flexShrink: 0,
-		// Anchors fabExpand, which is clipped by this card's inherited overflow: hidden otherwise.
+		// Anchors the full art Fab, which is clipped by this card's inherited overflow: hidden otherwise.
 		position: "relative",
 		boxShadow: 8
-	},
-	fabExpand: {
-		position: "absolute",
-		right: 8,
-		bottom: 8,
-		height: 40,
-		width: 40,
-		opacity: 0.85
 	},
 	info: {
 		display: "flex",
@@ -194,7 +186,7 @@ export default memo(function DollHero({
 							{/* Sibling of the action area rather than a child, or opening the full art would also flip
 							    the portrait to its damaged version on the way out. */}
 							{hasFullArt ? (
-								<Fab color="primary" component={Link} to={artLink} sx={styles.fabExpand} aria-label="view full art">
+								<Fab color="primary" component={Link} to={artLink} sx={FAB_EXPAND_SX} aria-label="view full art">
 									<ZoomOutMapIcon />
 								</Fab>
 							) : null}

@@ -3,12 +3,11 @@ import { useLocation, useNavigate, useParams, useSearchParams } from "react-rout
 
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
+import ArtZoomControls from "../../components/ArtZoomControls";
 import LoadError from "../../components/LoadError";
+import { useArtPanBounds, useCloseOnEscape } from "../../hooks/useArtViewer";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { containArtSx } from "../../lib/artLayout";
 import { skinFormKey, skinKeyOf } from "../../lib/assets";
@@ -99,19 +98,7 @@ export default function TDollArt() {
 	// The art element fills the stage, so its box is the stage's size and its natural size gives the drawn picture's shape.
 	const artRef = useRef<HTMLImageElement | null>(null);
 
-	// Zoomed past the stage, the art's edge may be dragged to the middle of the screen. Smaller than the stage, as when fitted,
-	// its centre may be dragged to the screen's edge, leaving half of it on screen. Both are half of the larger of art and stage.
-	const panBounds = useCallback((scale: number) => {
-		const art = artRef.current;
-		if (!art) {
-			return { x: 0, y: 0 };
-		}
-		// Before the art loads its natural size is 0, so it is treated as a square until then.
-		const fit = Math.min(art.clientWidth / (art.naturalWidth || 1), art.clientHeight / (art.naturalHeight || 1));
-		const width = (art.naturalWidth || 1) * fit * scale;
-		const height = (art.naturalHeight || 1) * fit * scale;
-		return { x: Math.max(width, art.clientWidth) / 2, y: Math.max(height, art.clientHeight) / 2 };
-	}, []);
+	const panBounds = useArtPanBounds(artRef);
 
 	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5, panBounds });
 
@@ -172,15 +159,7 @@ export default function TDollArt() {
 		void navigate(`/tdoll/${id ?? ""}${query ? `?${query}` : ""}`, { replace: true });
 	}, [location.key, navigate, id, current?.key, modSkin, damaged]);
 
-	useEffect(() => {
-		const onKey = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
-				close();
-			}
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, [close]);
+	useCloseOnEscape(close);
 
 	useEffect(() => {
 		if (doll) {
@@ -189,8 +168,6 @@ export default function TDollArt() {
 	}, [doll]);
 
 	// Stable handlers, in step with the rest of the site.
-	const zoomIn = useCallback(() => zoom.zoomBy(1.4), [zoom.zoomBy]);
-	const zoomOut = useCallback(() => zoom.zoomBy(1 / 1.4), [zoom.zoomBy]);
 	const handleFormChange = useCallback((_event: unknown, value: string | null) => {
 		if (value) {
 			setFormKey(String(value));
@@ -216,19 +193,7 @@ export default function TDollArt() {
 				<Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
 					{doll?.normal.name ?? (loadFailed ? "" : "Loading...")}
 				</Typography>
-				{!showControls ? null : (
-					<>
-						<IconButton onClick={zoomOut} aria-label="zoom out" sx={{ color: "inherit" }}>
-							<RemoveIcon />
-						</IconButton>
-						<IconButton onClick={zoomIn} aria-label="zoom in" sx={{ color: "inherit" }}>
-							<AddIcon />
-						</IconButton>
-						<IconButton onClick={zoom.reset} aria-label="reset zoom" sx={{ color: "inherit" }}>
-							<ZoomOutMapIcon />
-						</IconButton>
-					</>
-				)}
+				{!showControls ? null : <ArtZoomControls zoom={zoom} />}
 			</Box>
 
 			{loadFailed ? (

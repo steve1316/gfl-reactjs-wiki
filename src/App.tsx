@@ -23,6 +23,7 @@ const HOCPage = lazy(() => import("./pages/hoc/hoc"));
 /** The Fairy pages load on first visit, for the same reason as the HOC pages. */
 const FairyIndex = lazy(() => import("./pages/fairy_index/fairy_index"));
 const FairyPage = lazy(() => import("./pages/fairy/fairy"));
+const FairyArt = lazy(() => import("./pages/fairy_art/fairy_art"));
 
 /**
  * The application shell: theme, navigation and routes.
@@ -60,6 +61,14 @@ export default function App() {
 						element={
 							<Suspense>
 								<FairyIndex />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/fairy/:id/art"
+						element={
+							<Suspense>
+								<FairyArt />
 							</Suspense>
 						}
 					/>
