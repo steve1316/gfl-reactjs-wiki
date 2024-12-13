@@ -76,13 +76,30 @@ function growPair(upstream, field) {
 }
 
 /**
+ * Look up a fairy's type name, matching its `typeId` against the `fairy_type` table.
+ *
+ * @param {Map<number, string>} types Type names by `fairy_type` id.
+ * @param {{ id: number, typeId: number }} item The fairy's id and its upstream `fairy_type` id.
+ * @returns {string} The matching type name.
+ * @throws {Error} When the type id has no matching `fairy_type` name.
+ */
+export function typeNameFor(types, item) {
+	const typeName = types.get(item.typeId);
+	if (typeName === undefined) {
+		throw new Error(`fairy ${item.id} has no fairy_type name for type id ${item.typeId}`);
+	}
+	return typeName;
+}
+
+/**
  * Build every obtainable fairy, its talents and the constants its stats are worked out from.
  *
  * Stats ship as the game's inputs rather than as numbers, and `src/lib/fairyStats.ts` turns them into a stat at any level and star rank.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @returns {{ constants: object, types: string[], talents: object[], items: object[] }} The stat constants, type names, talents and fairies.
- * @throws {Error} When a fairy or talent's name, text or skill is missing, or fewer than 47 fairies are selected.
+ * @throws {Error} When a fairy or talent's name, text or skill is missing, fewer than 47 fairies are selected, or a fairy's type id has no
+ * matching `fairy_type` name.
  */
 export function buildFairies(upstream) {
 	const constants = {
@@ -91,6 +108,8 @@ export function buildFairies(upstream) {
 		starLevels: parseRankedList(configValue(upstream, "fairy_quality_need_level")),
 		forms: parseForms(configValue(upstream, "fairy_image_type"))
 	};
+
+	const types = new Map(upstream.stc("fairy_type").map((row) => [row.id, cleanName(upstream.t(row.name))]));
 
 	const items = upstream
 		.stc("fairy")
@@ -106,13 +125,19 @@ export function buildFairies(upstream) {
 			const strategy = String(row.skill_id).startsWith("*");
 			const skill = strategy ? buildMissionSkill(upstream, Number(String(row.skill_id).slice(1))) : buildSkill(upstream, Number(row.skill_id), []);
 			const inProduction = String(row.obtain_ids).split(",").includes("39");
-			const source = inProduction ? "Production" : row.id >= 1000 ? "Collab" : "Event";
+			let source;
+			if (inProduction) {
+				source = "Production";
+			} else if (row.id >= 1000) {
+				source = "Collab";
+			} else {
+				source = "Event";
+			}
 			return {
 				id: row.id,
 				name,
 				code: row.code,
-				typeName: "",
-				typeId: row.type,
+				typeName: typeNameFor(types, { id: row.id, typeId: row.type }),
 				strategy,
 				tagline,
 				introduce,
@@ -129,11 +154,6 @@ export function buildFairies(upstream) {
 		throw new Error(`expected at least 47 obtainable fairies, found ${items.length}`);
 	}
 
-	const types = new Map(upstream.stc("fairy_type").map((row) => [row.id, cleanName(upstream.t(row.name))]));
-	for (const item of items) {
-		item.typeName = types.get(item.typeId);
-		delete item.typeId;
-	}
 	const typeNames = Array.from(types.keys())
 		.sort((a, b) => a - b)
 		.map((id) => types.get(id))

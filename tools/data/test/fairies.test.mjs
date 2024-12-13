@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildFairies, findFairyArtGaps } from "../lib/fairies.mjs";
+import { buildFairies, findFairyArtGaps, typeNameFor } from "../lib/fairies.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 import { effectiveStars, fairyForm, fairyStats } from "../../../src/lib/fairyStats.ts";
 
@@ -88,6 +88,12 @@ test("stars are capped by level and map to forms", () => {
 		[1, 2, 3, 4, 5].map((stars) => fairyForm(built.constants, stars)),
 		[1, 1, 2, 2, 3]
 	);
+});
+
+test("typeNameFor throws when a fairy's type id has no fairy_type name", () => {
+	const types = new Map([[1, "Buff"]]);
+	assert.equal(typeNameFor(types, { id: 1, typeId: 1 }), "Buff");
+	assert.throws(() => typeNameFor(types, { id: 2, typeId: 99 }), /fairy 2 has no fairy_type name for type id 99/);
 });
 
 test("fairy art gaps are only reported once the manifest lists any fairy", () => {

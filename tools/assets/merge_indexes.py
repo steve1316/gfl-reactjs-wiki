@@ -133,22 +133,15 @@ def merge_manifest(committed, partial):
         conflicts.extend(f"doll {doll_id} {skill} icon" for skill in record["skills"] if skill in entry["skills"])
         entry["skills"] = [skill for skill in SKILL_KINDS if skill in entry["skills"] or skill in record["skills"]]
         merged["dolls"][doll_id] = in_order(entry, MANIFEST_DOLL_KEYS)
-    if "hocs" in partial or "hocs" in merged:
-        hocs = dict(merged.get("hocs", {}))
-        for hoc_id, kinds in partial.get("hocs", {}).items():
-            if hoc_id in hocs:
-                conflicts.append(f"hoc {hoc_id} art")
-            else:
-                hocs[hoc_id] = kinds
-        merged["hocs"] = by_id(hocs)
-    if "fairies" in partial or "fairies" in merged:
-        fairies = dict(merged.get("fairies", {}))
-        for fairy_id, kinds in partial.get("fairies", {}).items():
-            if fairy_id in fairies:
-                conflicts.append(f"fairy {fairy_id} art")
-            else:
-                fairies[fairy_id] = kinds
-        merged["fairies"] = by_id(fairies)
+    for key, label in (("hocs", "hoc"), ("fairies", "fairy")):
+        if key in partial or key in merged:
+            entries = dict(merged.get(key, {}))
+            for entry_id, kinds in partial.get(key, {}).items():
+                if entry_id in entries:
+                    conflicts.append(f"{label} {entry_id} art")
+                else:
+                    entries[entry_id] = kinds
+            merged[key] = by_id(entries)
     if conflicts:
         raise MergeConflict(conflicts)
     merged["dolls"] = by_id(merged["dolls"])
