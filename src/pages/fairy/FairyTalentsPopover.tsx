@@ -25,7 +25,6 @@ const styles = {
 	intro: { mb: 1 },
 	group: { mt: 2 },
 	groupHeading: { mb: 0.5 },
-	note: { mb: 0.5 },
 	talent: { py: 1, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0, pb: 0 } },
 	name: { fontWeight: 700 },
 	description: { mt: 0.25 }
@@ -45,8 +44,6 @@ interface FairyTalentsPopoverProps {
 	onClose: () => void;
 	/** Every fairy talent, in table order. */
 	talents: FairyTalent[];
-	/** The id of this fairy's own Special talent, or null when it has none. */
-	specialTalentId: number | null;
 }
 
 /** Props for TalentRow. */
@@ -75,13 +72,12 @@ function TalentRow({ talent }: TalentRowProps) {
 }
 
 /**
- * A popover listing the talents a fairy can roll, with its own Special talent first when it has one.
+ * A popover listing the talents a fairy can roll.
  *
  * @param props Component props.
  * @returns The popover.
  */
-export default memo(function FairyTalentsPopover({ anchorEl, open, onClose, talents, specialTalentId }: FairyTalentsPopoverProps) {
-	const special = useMemo(() => (specialTalentId === null ? undefined : talents.find((talent) => talent.id === specialTalentId && talent.rank === 0)), [talents, specialTalentId]);
+export default memo(function FairyTalentsPopover({ anchorEl, open, onClose, talents }: FairyTalentsPopoverProps) {
 	const tiers = useMemo(() => TIER_GROUPS.map((group) => ({ ...group, talents: talents.filter((talent) => talent.rank === group.rank) })), [talents]);
 
 	return (
@@ -99,17 +95,6 @@ export default memo(function FairyTalentsPopover({ anchorEl, open, onClose, tale
 			<Typography variant="body2" color="text.secondary" sx={styles.intro}>
 				A fairy rolls one talent at random from Tier I and Tier II.
 			</Typography>
-			{special && (
-				<Box sx={styles.group}>
-					<Typography variant="subtitle1" component="h3" sx={styles.groupHeading}>
-						Special
-					</Typography>
-					<Typography variant="caption" component="p" color="text.secondary" sx={styles.note}>
-						Exclusive to this fairy. The game describes it with flavour text rather than its effect.
-					</Typography>
-					<TalentRow talent={special} />
-				</Box>
-			)}
 			{tiers.map((group) => (
 				<Box key={group.rank} sx={styles.group}>
 					<Typography variant="subtitle1" component="h3" sx={styles.groupHeading}>

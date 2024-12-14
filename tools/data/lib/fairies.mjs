@@ -92,49 +92,16 @@ export function typeNameFor(types, item) {
 }
 
 /**
- * Check the hand-kept special talent pairs against the built fairies and talents.
- *
- * @param {{ fairy: number, talent: number }[]} specialTalents Fairy to special talent pairs.
- * @param {{ id: number }[]} items Built fairies.
- * @param {{ id: number, rank: number }[]} talents Built talents.
- * @returns {Map<number, number>} Special talent id by fairy id.
- * @throws {Error} When a pair names an unknown fairy, a talent that is missing or not Special, or reuses a fairy or talent.
- */
-function validateSpecialTalents(specialTalents, items, talents) {
-	const byFairy = new Map();
-	const usedTalents = new Set();
-	for (const { fairy, talent } of specialTalents) {
-		if (!items.some((item) => item.id === fairy)) {
-			throw new Error(`special talent ${talent} names unknown fairy ${fairy}`);
-		}
-		const match = talents.find((entry) => entry.id === talent);
-		if (!match || match.rank !== 0) {
-			throw new Error(`fairy ${fairy} is mapped to talent ${talent}, which is not a special talent`);
-		}
-		if (byFairy.has(fairy)) {
-			throw new Error(`fairy ${fairy} is mapped to more than one special talent`);
-		}
-		if (usedTalents.has(talent)) {
-			throw new Error(`special talent ${talent} is mapped to more than one fairy`);
-		}
-		byFairy.set(fairy, talent);
-		usedTalents.add(talent);
-	}
-	return byFairy;
-}
-
-/**
  * Build every obtainable fairy, its talents and the constants its stats are worked out from.
  *
  * Stats ship as the game's inputs rather than as numbers, and `src/lib/fairyStats.ts` turns them into a stat at any level and star rank.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
- * @param {{ fairy: number, talent: number }[]} specialTalents Hand-kept fairy to special talent pairs, from `tools/data/fairy-special-talents.json`.
  * @returns {{ constants: object, types: string[], talents: object[], items: object[] }} The stat constants, type names, talents and fairies.
- * @throws {Error} When a fairy or talent's name, text or skill is missing, fewer than 47 fairies are selected, a fairy's type id has no
- * matching `fairy_type` name, or a special talent pair is invalid.
+ * @throws {Error} When a fairy or talent's name, text or skill is missing, fewer than 47 fairies are selected, or a fairy's type id has no
+ * matching `fairy_type` name.
  */
-export function buildFairies(upstream, specialTalents = []) {
+export function buildFairies(upstream) {
 	const constants = {
 		maxLevel: MAX_LEVEL,
 		grow: Object.fromEntries(Object.entries(STAT_FIELDS).map(([field, key]) => [key, growPair(upstream, field)])),
@@ -192,26 +159,24 @@ export function buildFairies(upstream, specialTalents = []) {
 		.map((id) => types.get(id))
 		.filter((label) => items.some((item) => item.typeName === label));
 
-	const talents = upstream.stc("fairy_talent").map((row) => {
-		const name = cleanName(upstream.t(row.name));
-		const effectRows = upstream
-			.stc("battle_skill_config")
-			.filter((skillRow) => skillRow.skill_group_id === row.id)
-			.sort((a, b) => a.level - b.level);
-		if (effectRows.length === 0) {
-			throw new Error(`talent ${row.id} has no battle_skill_config effect text`);
-		}
-		const description = stripMarkup(upstream.t(effectRows[0].description)).trim();
-		if (name === "" || description === "") {
-			throw new Error(`talent ${row.id} is missing its name or description text`);
-		}
-		return { id: row.id, name, rank: row.rank, description };
-	});
-
-	const specialByFairy = validateSpecialTalents(specialTalents, items, talents);
-	for (const item of items) {
-		item.specialTalent = specialByFairy.get(item.id) ?? null;
-	}
+	const talents = upstream
+		.stc("fairy_talent")
+		.filter((row) => row.rank === 1 || row.rank === 2)
+		.map((row) => {
+			const name = cleanName(upstream.t(row.name));
+			const effectRows = upstream
+				.stc("battle_skill_config")
+				.filter((skillRow) => skillRow.skill_group_id === row.id)
+				.sort((a, b) => a.level - b.level);
+			if (effectRows.length === 0) {
+				throw new Error(`talent ${row.id} has no battle_skill_config effect text`);
+			}
+			const description = stripMarkup(upstream.t(effectRows[0].description)).trim();
+			if (name === "" || description === "") {
+				throw new Error(`talent ${row.id} is missing its name or description text`);
+			}
+			return { id: row.id, name, rank: row.rank, description };
+		});
 
 	return { constants, types: typeNames, talents, items };
 }
