@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Check a published pair of asset hosts by fetching a random sample of the URLs the site can ask for.
+ * Check a published asset host by fetching a random sample of the URLs the site can ask for.
  *
  * URLs are derived from the version 3 manifest and Spine index exactly as `src/lib/assets.ts` builds them, grouped into tiers, and the
  * sample is spread across every tier. The top-level UI images come from the `uiUrl("<name>")` calls in the site source. The page images of
  * each sampled atlas are fetched too. Any response other than 200 fails the run.
  *
  * Usage:
- *     node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>] [--manifest <file>] [--spine-index <file>]
+ *     node tools/assets/verify_live_assets.mjs <base> [--sample 200] [--seed <n>] [--manifest <file>] [--spine-index <file>]
  *         [--hoc-spine-index <file>] [--src <dir>]
  *
  * The seed is printed, so a failing sample can be fetched again with `--seed`.
@@ -40,17 +40,17 @@ const TIMEOUT_MS = 30000;
 /** Network failures are retried this many times. HTTP error statuses are not. */
 const RETRIES = 2;
 
-/** v3 image kind -> host and filename inside a form folder, as in `src/lib/assets.ts`. */
-const IMAGE_FILES = { card: ["assets", "card.webp"], card_damaged: ["assets", "card_d.webp"], full: ["art", "full.webp"], full_damaged: ["art", "full_d.webp"] };
+/** v3 image kind -> filename inside a form folder, as in `src/lib/assets.ts`. Tier is `full` for `full`/`full_damaged`, `cards` otherwise. */
+const IMAGE_FILES = { card: "card.webp", card_damaged: "card_d.webp", full: "full.webp", full_damaged: "full_d.webp" };
 
 /** v3 Mod-skin card kind -> filename inside a skin folder. */
 const MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
 
-/** HOC image kind -> host and filename inside a HOC folder, as in `hocCardUrl` / `hocFullArtUrl` in `src/lib/assets.ts`. */
-const HOC_IMAGE_FILES = { card: ["assets", "card.webp"], full: ["art", "full.webp"] };
+/** HOC image kind -> filename inside a HOC folder, as in `hocCardUrl` / `hocFullArtUrl` in `src/lib/assets.ts`. Tier is `hocFull` for `full`, `hocCards` for `card`. */
+const HOC_IMAGE_FILES = { card: "card.webp", full: "full.webp" };
 
-/** Fairy image kind -> host and filename inside a fairy's `fairies/<id>/` folder. Fairy art lives only on the asset host. */
-const FAIRY_IMAGE_FILES = { form1: ["assets", "form1.webp"], form2: ["assets", "form2.webp"], form3: ["assets", "form3.webp"] };
+/** Fairy image kind -> filename inside a fairy's `fairies/<id>/` folder. */
+const FAIRY_IMAGE_FILES = { form1: "form1.webp", form2: "form2.webp", form3: "form3.webp" };
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,18 +91,16 @@ export function uiImageNames(srcDir) {
  *
  * @param {object} manifest The version 3 asset manifest.
  * @param {object} spineIndex The version 3 Spine index.
- * @param {string} assetsBase Base URL of the asset host.
- * @param {string} artBase Base URL of the art host.
+ * @param {string} base Base URL of the asset host.
  * @param {string[]} [uiNames] Top-level UI image names, as `uiImageNames` finds them.
  * @param {object} [hocSpineIndex] The HOC Spine index, id -> `{combat, crew}` rigs.
  * @returns {Record<string, string[]>} Tier name -> URLs. Tiers are `manifest`, `ui`, `cards`, `modCards`, `full`, `skills`, `equipment`,
  *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel`, `hocSpineAtlas` and `fairyForms`.
  */
-export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames = [], hocSpineIndex = {}) {
-	const bases = { assets: assetsBase, art: artBase };
+export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpineIndex = {}) {
 	const tiers = {
-		manifest: [join(assetsBase, "assets-manifest.json")],
-		ui: uiNames.map((name) => join(assetsBase, name)),
+		manifest: [join(base, "assets-manifest.json")],
+		ui: uiNames.map((name) => join(base, name)),
 		cards: [],
 		modCards: [],
 		full: [],
@@ -121,41 +119,40 @@ export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames
 		for (const [folder, form] of forms) {
 			if (!form) continue;
 			for (const kind of form.images ?? []) {
-				const [host, name] = IMAGE_FILES[kind];
-				tiers[host === "art" ? "full" : "cards"].push(join(bases[host], `${folder}/${name}`));
+				const tier = kind.startsWith("full") ? "full" : "cards";
+				tiers[tier].push(join(base, `${folder}/${IMAGE_FILES[kind]}`));
 			}
 			for (const kind of form.modImages ?? []) {
-				tiers.modCards.push(join(assetsBase, `${folder}/${MOD_CARD_FILES[kind]}`));
+				tiers.modCards.push(join(base, `${folder}/${MOD_CARD_FILES[kind]}`));
 			}
 		}
 		for (const skill of doll.skills ?? []) {
-			tiers.skills.push(join(assetsBase, `tdolls/${id}/${skill}.png`));
+			tiers.skills.push(join(base, `tdolls/${id}/${skill}.png`));
 		}
 	}
 	for (const equipId of manifest.equipment ?? []) {
-		tiers.equipment.push(join(assetsBase, `equipment/${equipId}.png`));
+		tiers.equipment.push(join(base, `equipment/${equipId}.png`));
 	}
 	for (const [id, entry] of Object.entries(spineIndex)) {
 		const rigs = [entry.combat, entry.dorm, entry.mod?.combat, entry.mod?.dorm, ...Object.values(entry.skins ?? {}).flatMap((pair) => [pair.combat, pair.dorm])];
 		const skels = new Set();
 		const atlases = new Set();
 		for (const rig of rigs.filter(Boolean)) {
-			skels.add(join(assetsBase, `spine/${id}/${rig.skel}.skel`));
-			atlases.add(join(assetsBase, `spine/${id}/${rig.atlas}.atlas`));
+			skels.add(join(base, `spine/${id}/${rig.skel}.skel`));
+			atlases.add(join(base, `spine/${id}/${rig.atlas}.atlas`));
 		}
 		tiers.spineSkel.push(...skels);
 		tiers.spineAtlas.push(...atlases);
 	}
 	for (const [id, kinds] of Object.entries(manifest.hocs ?? {})) {
 		for (const kind of kinds) {
-			const [host, name] = HOC_IMAGE_FILES[kind];
-			tiers[host === "art" ? "hocFull" : "hocCards"].push(join(bases[host], `hocs/${id}/${name}`));
+			const tier = kind === "full" ? "hocFull" : "hocCards";
+			tiers[tier].push(join(base, `hocs/${id}/${HOC_IMAGE_FILES[kind]}`));
 		}
 	}
 	for (const [id, kinds] of Object.entries(manifest.fairies ?? {})) {
 		for (const kind of kinds) {
-			const [host, name] = FAIRY_IMAGE_FILES[kind];
-			tiers.fairyForms.push(join(bases[host], `fairies/${id}/${name}`));
+			tiers.fairyForms.push(join(base, `fairies/${id}/${FAIRY_IMAGE_FILES[kind]}`));
 		}
 	}
 	for (const [id, entry] of Object.entries(hocSpineIndex)) {
@@ -163,8 +160,8 @@ export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames
 		const skels = new Set();
 		const atlases = new Set();
 		for (const rig of rigs) {
-			skels.add(join(assetsBase, `hoc-spine/${id}/${rig.skel}.skel`));
-			atlases.add(join(assetsBase, `hoc-spine/${id}/${rig.atlas}.atlas`));
+			skels.add(join(base, `hoc-spine/${id}/${rig.skel}.skel`));
+			atlases.add(join(base, `hoc-spine/${id}/${rig.atlas}.atlas`));
 		}
 		tiers.hocSpineSkel.push(...skels);
 		tiers.hocSpineAtlas.push(...atlases);
@@ -315,12 +312,12 @@ const option = (args, name, fallback) => (args.includes(name) ? args[args.indexO
 async function main(args) {
 	const valued = new Set(["--sample", "--seed", "--manifest", "--spine-index", "--hoc-spine-index", "--src", "--concurrency"]);
 	const positional = args.filter((arg, i) => !arg.startsWith("--") && !valued.has(args[i - 1]));
-	if (positional.length !== 2) {
-		console.error("usage: node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>]");
+	if (positional.length !== 1) {
+		console.error("usage: node tools/assets/verify_live_assets.mjs <base> [--sample 200] [--seed <n>]");
 		process.exitCode = 2;
 		return;
 	}
-	const [assetsBase, artBase] = positional;
+	const [base] = positional;
 	const size = Number(option(args, "--sample", DEFAULTS.sample));
 	const seed = Number(option(args, "--seed", Math.floor(Math.random() * 2 ** 31)));
 	const concurrency = Number(option(args, "--concurrency", DEFAULTS.concurrency));
@@ -328,10 +325,9 @@ async function main(args) {
 	const spineIndex = JSON.parse(fs.readFileSync(option(args, "--spine-index", DEFAULTS.spineIndex), "utf8"));
 	const hocSpineIndex = JSON.parse(fs.readFileSync(option(args, "--hoc-spine-index", DEFAULTS.hocSpineIndex), "utf8"));
 
-	const tiers = candidateUrls(manifest, spineIndex, assetsBase, artBase, uiImageNames(option(args, "--src", DEFAULTS.src)), hocSpineIndex);
+	const tiers = candidateUrls(manifest, spineIndex, base, uiImageNames(option(args, "--src", DEFAULTS.src)), hocSpineIndex);
 	const sample = sampleByTier(tiers, size, seed);
-	console.log(`assets ${assetsBase}`);
-	console.log(`art    ${artBase}`);
+	console.log(`assets ${base}`);
 	console.log(`seed   ${seed}   sample ${sample.length} of ${Object.values(tiers).reduce((sum, urls) => sum + urls.length, 0)} URLs`);
 
 	const results = await mapLimited(sample, concurrency, async (entry) => ({ ...entry, ...(await fetchOne(entry.url, entry.tier === "spineAtlas")) }));

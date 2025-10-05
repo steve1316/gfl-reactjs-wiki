@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Extract card art, full art, skill icons, equipment icons and Spine rigs from the cached game bundles into the staging trees.
+"""Extract card art, full art, skill icons, equipment icons and Spine rigs from the cached game bundles into the staging tree.
 
-Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and the bundles it names, and writes:
+Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and the bundles it names, and writes everything into one
+`tools/assets/.staging/assets/` tree:
 
-- `tools/assets/.staging/assets/`: `tdolls/<id>/card.webp` / `card_d.webp` (plus `mod/` and `skins/<skinId>/`, with `mod_card(_d).webp` for
-  Mod-skin cards), `tdolls/<id>/skill1.png` / `skill2.png`, `equipment/<equipId>.png` and the UI images carried over from the current asset repo.
-- `tools/assets/.staging/art/`: `tdolls/<id>/full.webp` / `full_d.webp`, with the same `mod/` and `skins/<skinId>/` folders.
-- `tools/assets/.staging/assets/spine/<id>/`: the base combat and dorm rigs, with `mod/` and `skins/<skinId>/` folders for the Mod and skin rigs.
-- HOCs: `assets/hocs/<id>/card.webp`, `art/hocs/<id>/full.webp` and `assets/hoc-spine/<id>/`, the combat rig plus its crew skeletons.
-- Fairies: `assets/fairies/<id>/form1.webp` to `form3.webp`, each rebuilt from a trimmed Sprite and masked by its `_Alpha` Sprite.
-- `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes per tree.
-- `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes per tree after the Spine pass.
+- `tdolls/<id>/card.webp` / `card_d.webp` (plus `mod/` and `skins/<skinId>/`, with `mod_card(_d).webp` for Mod-skin cards), `full.webp` /
+  `full_d.webp`, `tdolls/<id>/skill1.png` / `skill2.png`, `equipment/<equipId>.png` and the UI images carried over from the current asset repo.
+- `spine/<id>/`: the base combat and dorm rigs, with `mod/` and `skins/<skinId>/` folders for the Mod and skin rigs.
+- HOCs: `hocs/<id>/card.webp`, `hocs/<id>/full.webp` and `hoc-spine/<id>/`, the combat rig plus its crew skeletons.
+- Fairies: `fairies/<id>/form1.webp` to `form3.webp`, each rebuilt from a trimmed Sprite and masked by its `_Alpha` Sprite.
+- `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes for the tree.
+- `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes for the tree after the Spine pass.
 
 Skins listed as `legacy` in `tools/data/extra-skins.json` have no game bundle. Their cards and full art are converted from the old `skinN` PNGs of the
 old-layout asset and art repos into `skins/<key>/`. None of them has a Spine rig that clearly belongs to it, so no legacy rigs are copied. The
@@ -73,7 +73,8 @@ LEGACY_DIR = os.path.join(TOOLS_DIR, ".cache", "legacy")
 LEGACY_MANIFEST_NAME = "snapshot.json"
 LEGACY_REF = "main"
 EXTRA_SKINS_PATH = os.path.join(REPO_ROOT, "tools", "data", "extra-skins.json")
-TREES = ("assets", "art")
+TREE = "assets"
+LEGACY_TREES = ("assets", "art")
 
 CARD_QUALITY = 90
 FULL_QUALITY = 85
@@ -85,8 +86,8 @@ EQUIP_SOURCE_SIZE = (256, 256)
 HOC_CARD_SIZE = (224, 399)
 HOC_LAYER_SIZE = (1024, 1024)
 
-WARN_BYTES = 900 * BYTES_PER_MB
-LIMIT_BYTES = 1000 * BYTES_PER_MB
+WARN_BYTES = 4000 * BYTES_PER_MB
+LIMIT_BYTES = 5000 * BYTES_PER_MB
 MAX_FILE_BYTES = 50 * BYTES_PER_MB
 
 # Equipment frame. The game's list card is 128x98 with the 256px icon drawn at 123px, so the hosted 256x196 icons are that card at 2x.
@@ -98,13 +99,15 @@ EQUIP_ICON_OFFSET = (6, -24)
 # Rarity -> the game's own sprite name for the white, blue, green and yellow pattern.
 RARITY_BACKGROUNDS = {2: "\u5e95\u7eb9_\u767d", 3: "\u5e95\u7eb9_\u84dd", 4: "\u5e95\u7eb9_\u7eff", 5: "\u5e95\u7eb9_\u9ec4"}
 
-# Inventory role -> output tree and names. Cards split into a normal and damaged half, so they carry two names.
+# Inventory role -> output names.
 ROLE_OUTPUTS = (
-    ("card", "assets", ("card.webp", "card_d.webp")),
-    ("mod_card", "assets", ("mod_card.webp", "mod_card_d.webp")),
-    ("full", "art", ("full.webp",)),
-    ("full_d", "art", ("full_d.webp",)),
+    ("card", ("card.webp", "card_d.webp")),
+    ("mod_card", ("mod_card.webp", "mod_card_d.webp")),
+    ("full", ("full.webp",)),
+    ("full_d", ("full_d.webp",)),
 )
+# Roles encoded as card halves. Every other art role is full art.
+CARD_ROLES = ("card", "card_d", "mod_card", "mod_card_d")
 ART_TIERS = ("art", "mod_art", "skin_art")
 SPINE_TIERS = ("spine", "mod_spine", "skin_spine")
 # HOC scene roles in `compose_hoc_full` argument order. The masks are not size checked, since the game ships them at half size.
@@ -336,11 +339,10 @@ def encode_png(image):
     return buffer.getvalue()
 
 
-def check_file_size(tree, rel, size):
-    """Refuse a file over the Pages per-file limit.
+def check_file_size(rel, size):
+    """Refuse a file over GitHub's per-file limit.
 
     Args:
-        tree: `assets` or `art`.
         rel: Path inside the tree.
         size: The file's size in bytes.
 
@@ -348,7 +350,7 @@ def check_file_size(tree, rel, size):
         ValueError: When the file is over 50 MB, naming the offending path.
     """
     if size > MAX_FILE_BYTES:
-        raise ValueError(f"{tree}/{rel} is {size / BYTES_PER_MB:.1f} MB, over the {MAX_FILE_BYTES // BYTES_PER_MB} MB per-file limit")
+        raise ValueError(f"{TREE}/{rel} is {size / BYTES_PER_MB:.1f} MB, over the {MAX_FILE_BYTES // BYTES_PER_MB} MB per-file limit")
 
 
 def unexpected_missing(missing, expected_keys):
@@ -380,15 +382,15 @@ def expected_gap_keys(inventory):
 
 
 def tree_limit_status(total_bytes):
-    """Classify a staging tree size against the Pages limits.
+    """Classify a staging tree size against GitHub's limits.
 
     Args:
         total_bytes: Bytes in the tree.
 
     Returns:
-        `ok`, `warn` above 900 MB, or `over` above 1,000 MB.
+        `ok`, `warn` above 4,000 MB, or `over` at or above 5,000 MB, GitHub's recommended repo ceiling.
     """
-    if total_bytes > LIMIT_BYTES:
+    if total_bytes >= LIMIT_BYTES:
         return "over"
     return "warn" if total_bytes > WARN_BYTES else "ok"
 
@@ -422,10 +424,10 @@ def art_outputs(item):
         item: An `art`, `mod_art` or `skin_art` inventory item.
 
     Returns:
-        A list of `(role, tree, [relative paths])`, in `ROLE_OUTPUTS` order, for the roles the item resolved.
+        A list of `(role, [relative paths])`, in `ROLE_OUTPUTS` order, for the roles the item resolved.
     """
     folder = form_dir(item)
-    return [(role, tree, [f"{folder}/{name}" for name in names]) for role, tree, names in ROLE_OUTPUTS if role in item["assets"]]
+    return [(role, [f"{folder}/{name}" for name in names]) for role, names in ROLE_OUTPUTS if role in item["assets"]]
 
 
 def skill_outputs(item):
@@ -663,12 +665,11 @@ def new_result():
     return {"files": [], "missing": [], "nonstandard": []}
 
 
-def write_file(staging, tree, rel, data, tier, result):
+def write_file(staging, rel, data, tier, result):
     """Write one output file and record it.
 
     Args:
         staging: The staging root.
-        tree: `assets` or `art`.
         rel: Path inside the tree.
         data: Encoded bytes.
         tier: Report tier the file counts under.
@@ -677,12 +678,12 @@ def write_file(staging, tree, rel, data, tier, result):
     Raises:
         ValueError: When the data is over the per-file limit. Nothing is written.
     """
-    check_file_size(tree, rel, len(data))
-    path = os.path.join(staging, tree, rel)
+    check_file_size(rel, len(data))
+    path = os.path.join(staging, TREE, *rel.split("/"))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as handle:
         handle.write(data)
-    result["files"].append([tree, rel, len(data), tier])
+    result["files"].append([rel, len(data), tier])
 
 
 def extract_art_item(item, cache_dir, staging):
@@ -702,23 +703,24 @@ def extract_art_item(item, cache_dir, staging):
     except Exception as exc:
         result["missing"].append({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc}"})
         return result
-    for role, tree, paths in art_outputs(item):
+    for role, paths in art_outputs(item):
         tier = REPORT_TIERS[(item["tier"], role)]
         try:
             image = decode(textures, item["assets"][role])
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": role, "reason": f"decode failed: {exc!r}"})
             continue
-        expected = CARD_ATLAS_SIZE if tree == "assets" else FULL_SIZE
+        card = role in CARD_ROLES
+        expected = CARD_ATLAS_SIZE if card else FULL_SIZE
         if image.size != expected:
             result["nonstandard"].append({"key": item["key"], "role": role, "size": list(image.size), "expected": list(expected)})
         try:
-            if tree == "assets":
+            if card:
                 for rel, half in zip(paths, split_card_atlas(image.convert("RGB"))):
-                    write_file(staging, tree, rel, encode_webp(half, CARD_QUALITY), tier, result)
+                    write_file(staging, rel, encode_webp(half, CARD_QUALITY), tier, result)
             else:
                 full = image if image.mode in ("RGB", "RGBA") else image.convert("RGBA")
-                write_file(staging, tree, paths[0], encode_webp(full, FULL_QUALITY), tier, result)
+                write_file(staging, paths[0], encode_webp(full, FULL_QUALITY), tier, result)
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": role, "reason": f"encode or write failed: {exc}"})
     return result
@@ -760,8 +762,8 @@ def build_hoc_art(textures, item, staging):
             result["nonstandard"].append({"key": key, "role": "card", "size": "derived", "expected": list(HOC_CARD_SIZE)})
         elif card.size != HOC_CARD_SIZE:
             result["nonstandard"].append({"key": key, "role": "card", "size": list(card.size), "expected": list(HOC_CARD_SIZE)})
-        write_file(staging, "assets", f"{folder}/card.webp", encode_webp(card.convert("RGB"), CARD_QUALITY), REPORT_TIERS[("hoc_art", "card")], result)
-        write_file(staging, "art", f"{folder}/full.webp", encode_webp(full, FULL_QUALITY), REPORT_TIERS[("hoc_art", "full")], result)
+        write_file(staging, f"{folder}/card.webp", encode_webp(card.convert("RGB"), CARD_QUALITY), REPORT_TIERS[("hoc_art", "card")], result)
+        write_file(staging, f"{folder}/full.webp", encode_webp(full, FULL_QUALITY), REPORT_TIERS[("hoc_art", "full")], result)
     except Exception as exc:
         result["missing"].append({"key": key, "role": "*", "reason": f"compose, encode or write failed: {exc!r}"})
     return result
@@ -850,7 +852,7 @@ def build_fairy_art(sprites, item, staging):
             continue
         try:
             data = encode_webp(merge_alpha(*images), CARD_QUALITY)
-            write_file(staging, "assets", f"fairies/{item['fairy_id']}/form{form}.webp", data, REPORT_TIERS[("fairy_art", "form")], result)
+            write_file(staging, f"fairies/{item['fairy_id']}/form{form}.webp", data, REPORT_TIERS[("fairy_art", "form")], result)
         except Exception as exc:
             result["missing"].append({"key": key, "role": roles[0], "reason": f"merge, encode or write failed: {exc!r}"})
     return result
@@ -895,7 +897,7 @@ def extract_skill_icons(items, cache_dir, staging, loader=unity_load):
                 result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(image.size), "expected": list(SKILL_SIZE)})
             data = encode_png(image)
             for rel in skill_outputs(item):
-                write_file(staging, "assets", rel, data, "skill_icon", result)
+                write_file(staging, rel, data, "skill_icon", result)
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": "icon", "reason": f"failed: {exc!r}"})
     return result
@@ -942,7 +944,7 @@ def extract_equip_icons(items, rarities, cache_dir, staging):
             image, source_size = build_equip_icon(textures, backgrounds, item, rarities[item["equip_id"]])
             if source_size != EQUIP_SOURCE_SIZE:
                 result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(source_size), "expected": list(EQUIP_SOURCE_SIZE)})
-            write_file(staging, "assets", equip_output(item), encode_png(image), "equip_icon", result)
+            write_file(staging, equip_output(item), encode_png(image), "equip_icon", result)
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": "icon", "reason": f"failed: {exc!r}"})
     return result
@@ -1026,7 +1028,7 @@ def write_rig_files(item, roles, folder, tier, cache_dir, staging, loader):
 
     try:
         for name, data in sorted(outputs.items()):
-            write_file(staging, "assets", f"{folder}/{name}", data, tier, result)
+            write_file(staging, f"{folder}/{name}", data, tier, result)
     except Exception as exc:
         result["missing"].append({"key": key, "role": "*", "reason": f"write failed: {exc}"})
     return result, names, pages_written
@@ -1119,11 +1121,11 @@ def legacy_outputs(extra, assets_root, art_root):
         art_root: The old art repo files, normally the `art` folder of the legacy snapshot, holding the old full art.
 
     Returns:
-        A list of `(role, source path, tree, output path, required)`, in `LEGACY_FILES` order.
+        A list of `(role, source path, output path, required)`, in `LEGACY_FILES` order.
     """
     roots = {"assets": assets_root, "art": art_root}
     folder = f"tdolls/{extra['doll']}/skins/{extra['key']}"
-    return [(role, os.path.join(roots[tree], *rel.split("/")), tree, f"{folder}/{name}", required) for role, tree, rel, name, required in legacy_skin_paths(extra)]
+    return [(role, os.path.join(roots[tree], *rel.split("/")), f"{folder}/{name}", required) for role, tree, rel, name, required in legacy_skin_paths(extra)]
 
 
 def legacy_skill_paths(item):
@@ -1161,7 +1163,7 @@ def extract_legacy_skill_icons(items, assets_root, staging):
                     if image.size != SKILL_SIZE:
                         result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(image.size), "expected": list(SKILL_SIZE)})
                     data = encode_png(image)
-                write_file(staging, "assets", rel, data, "skill_icon", result)
+                write_file(staging, rel, data, "skill_icon", result)
             except Exception as exc:
                 result["missing"].append({"key": item["key"], "role": "icon", "reason": f"convert failed: {exc!r}"})
     return result
@@ -1181,20 +1183,20 @@ def extract_legacy_skin(extra, assets_root, art_root, staging):
     """
     result = new_result()
     key = f"legacy_skin:{extra['doll']}:{extra['key']}"
-    for role, source, tree, rel, required in legacy_outputs(extra, assets_root, art_root):
+    for role, source, rel, required in legacy_outputs(extra, assets_root, art_root):
         if not os.path.isfile(source):
             if required:
                 result["missing"].append({"key": key, "role": role, "reason": f"no old file {source}"})
             continue
         try:
             with Image.open(source) as image:
-                if tree == "assets":
+                if role in CARD_ROLES:
                     if image.size != CARD_SIZE:
                         result["nonstandard"].append({"key": key, "role": role, "size": list(image.size), "expected": list(CARD_SIZE)})
                     data = encode_webp(image.convert("RGB"), CARD_QUALITY)
                 else:
                     data = encode_webp(image if image.mode in ("RGB", "RGBA") else image.convert("RGBA"), FULL_QUALITY)
-            write_file(staging, tree, rel, data, LEGACY_TIERS[role], result)
+            write_file(staging, rel, data, LEGACY_TIERS[role], result)
         except Exception as exc:
             result["missing"].append({"key": key, "role": role, "reason": f"convert failed: {exc!r}"})
     return result
@@ -1435,7 +1437,7 @@ def snapshot_legacy(inventory, legacy_skins, clones, ref, out_dir):
         The snapshot manifest dict.
     """
     sources, paths = {}, {}
-    for tree in TREES:
+    for tree in LEGACY_TREES:
         clone = os.path.abspath(clones[tree])
         sources[tree] = {"clone": clone, "commit": git_output(clone, "rev-parse", "--verify", f"{ref}^{{commit}}").decode().strip()}
         paths[tree] = [rel for rel in git_output(clone, "ls-tree", "-r", "--name-only", "-z", sources[tree]["commit"]).decode("utf-8").split("\0") if rel]
@@ -1534,10 +1536,9 @@ def reset_staging(staging):
     Args:
         staging: The staging root.
     """
-    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies", "art/tdolls", "art/hocs"):
+    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies"):
         shutil.rmtree(os.path.join(staging, rel), ignore_errors=True)
-    for tree in TREES:
-        os.makedirs(os.path.join(staging, tree), exist_ok=True)
+    os.makedirs(os.path.join(staging, TREE), exist_ok=True)
 
 
 def copy_ui(assets_root, staging):
@@ -1552,8 +1553,8 @@ def copy_ui(assets_root, staging):
     """
     names = sorted(name for name in os.listdir(assets_root) if os.path.isfile(os.path.join(assets_root, name)) and name not in UI_SKIP and not name.startswith("."))
     for name in names:
-        check_file_size("assets", name, os.path.getsize(os.path.join(assets_root, name)))
-        shutil.copyfile(os.path.join(assets_root, name), os.path.join(staging, "assets", name))
+        check_file_size(name, os.path.getsize(os.path.join(assets_root, name)))
+        shutil.copyfile(os.path.join(assets_root, name), os.path.join(staging, TREE, name))
     return names
 
 
@@ -1561,14 +1562,14 @@ def tier_counts(files):
     """Total the written files and bytes per report tier.
 
     Args:
-        files: Worker `files` rows of `(tree, path, bytes, tier)`.
+        files: Worker `files` rows of `(path, bytes, tier)`.
 
     Returns:
         An ordered dict of tier to `{tree, files, bytes}`, tiers sorted by name.
     """
     counts = collections.OrderedDict()
-    for tree, _rel, size, tier in sorted(files, key=lambda row: (row[3], row[1])):
-        entry = counts.setdefault(tier, {"tree": tree, "files": 0, "bytes": 0})
+    for _rel, size, tier in sorted(files, key=lambda row: (row[2], row[0])):
+        entry = counts.setdefault(tier, {"tree": TREE, "files": 0, "bytes": 0})
         entry["files"] += 1
         entry["bytes"] += size
     return counts
@@ -1595,7 +1596,7 @@ def require_add_inputs(inventory, staging):
 
 
 def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, staging, workers):
-    """Extract every image tier, the legacy skins and the legacy skill icons into the staging trees and write the report.
+    """Extract every image tier, the legacy skins and the legacy skill icons into the staging tree and write the report.
 
     Args:
         inventory: The inventory dict.
@@ -1669,7 +1670,7 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
     print(f"legacy skins: {len(legacy_skins)}, legacy skill icons: {len(legacy_skill_items)}", flush=True)
 
     counts = tier_counts(files)
-    counts["ui"] = {"tree": "assets", "files": len(ui_files), "bytes": sum(os.path.getsize(os.path.join(staging, "assets", name)) for name in ui_files)}
+    counts["ui"] = {"tree": TREE, "files": len(ui_files), "bytes": sum(os.path.getsize(os.path.join(staging, TREE, name)) for name in ui_files)}
     report["tiers"] = counts
     report["missing"].sort(key=lambda row: (row["key"], row["role"]))
     report["nonstandard"].sort(key=lambda row: (row["key"], row["role"]))
@@ -1681,7 +1682,7 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
 
 
 def finish_report(report, expected_keys, staging):
-    """Add the tree sizes, oversized files and unexpected gaps to a report.
+    """Add the tree size, oversized files and unexpected gaps to a report.
 
     Args:
         report: The report dict, with `missing` filled in.
@@ -1689,12 +1690,10 @@ def finish_report(report, expected_keys, staging):
         staging: The staging root.
     """
     report["unexpected_missing"] = unexpected_missing(report["missing"], expected_keys)
-    report["trees"], report["oversized"] = {}, []
-    for tree in TREES:
-        root = os.path.join(staging, tree)
-        size, count = tree_size(root)
-        report["trees"][tree] = {"files": count, "bytes": size, "mb": round(size / BYTES_PER_MB, 1), "status": tree_limit_status(size)}
-        report["oversized"].extend(f"{tree}/{rel}" for rel in oversized_files(root))
+    root = os.path.join(staging, TREE)
+    size, count = tree_size(root)
+    report["trees"] = {TREE: {"files": count, "bytes": size, "mb": round(size / BYTES_PER_MB, 1), "status": tree_limit_status(size)}}
+    report["oversized"] = [f"{TREE}/{rel}" for rel in oversized_files(root)]
 
 
 def failure_reasons(report):
@@ -1877,7 +1876,7 @@ def run_legacy_command(args, inventory, legacy_dir):
 
 def main():
     """Parse arguments and run the requested subcommand."""
-    parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging trees.")
+    parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging tree.")
     parser.add_argument("command", choices=("snapshot-legacy", "run", "add", "spine", "verify-cards", "proof-equip"))
     parser.add_argument("--legacy", default=LEGACY_DIR, help="The legacy snapshot folder read by `run`, `verify-cards` and `proof-equip`.")
     parser.add_argument("--reference-clone", help="Old-layout gfl-wiki-assets clone. Needed by `snapshot-legacy`, otherwise read instead of the snapshot.")
@@ -1886,7 +1885,7 @@ def main():
     parser.add_argument("--skip-card-check", action="store_true", help="Skip the card check before `run` extracts.")
     parser.add_argument("--site-data", default=SITE_DATA_DIR, help="Directory holding the site's equipment.json.")
     parser.add_argument("--cache", default=BUNDLE_CACHE_DIR, help="Bundle cache directory.")
-    parser.add_argument("--staging", default=STAGING_DIR, help="Output root holding the assets and art trees. add needs a fresh folder.")
+    parser.add_argument("--staging", default=STAGING_DIR, help="Output root holding the assets tree. add needs a fresh folder.")
     parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1), help="Process pool size, defaults to cores - 1.")
     parser.add_argument("--out-dir", help="Output folder for proof-equip.")
     parser.add_argument("--allow-card-diffs", action="store_true", help="Report hosted cards that differ from the game atlas instead of stopping.")
