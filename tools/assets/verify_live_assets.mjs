@@ -52,6 +52,12 @@ const HOC_IMAGE_FILES = { card: "card.webp", full: "full.webp" };
 /** Fairy image kind -> filename inside a fairy's `fairies/<id>/` folder. */
 const FAIRY_IMAGE_FILES = { form1: "form1.webp", form2: "form2.webp", form3: "form3.webp" };
 
+/** Live2D fairy form kind -> its model3.json filename inside a fairy's `live2d/fairies/<id>/` folder. */
+const LIVE2D_FAIRY_MODEL_FILES = { form1: "form1.model3.json", form2: "form2.model3.json", form3: "form3.model3.json" };
+
+/** Live2D HOC kind -> its model3.json filename inside a HOC's `live2d/hocs/<id>/` folder. */
+const LIVE2D_HOC_MODEL_FILES = { model: "model.model3.json" };
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // URL derivation
@@ -95,7 +101,7 @@ export function uiImageNames(srcDir) {
  * @param {string[]} [uiNames] Top-level UI image names, as `uiImageNames` finds them.
  * @param {object} [hocSpineIndex] The HOC Spine index, id -> `{combat, crew}` rigs.
  * @returns {Record<string, string[]>} Tier name -> URLs. Tiers are `manifest`, `ui`, `cards`, `modCards`, `full`, `skills`, `equipment`,
- *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel`, `hocSpineAtlas` and `fairyForms`.
+ *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel`, `hocSpineAtlas`, `fairyForms`, `live2dFairies` and `live2dHocs`.
  */
 export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpineIndex = {}) {
 	const tiers = {
@@ -112,7 +118,9 @@ export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpine
 		hocFull: [],
 		hocSpineSkel: [],
 		hocSpineAtlas: [],
-		fairyForms: []
+		fairyForms: [],
+		live2dFairies: [],
+		live2dHocs: []
 	};
 	for (const [id, doll] of Object.entries(manifest.dolls ?? {})) {
 		const forms = [[`tdolls/${id}`, doll.normal], [`tdolls/${id}/mod`, doll.mod], ...Object.entries(doll.skins ?? {}).map(([skinId, skin]) => [`tdolls/${id}/skins/${skinId}`, skin])];
@@ -153,6 +161,16 @@ export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpine
 	for (const [id, kinds] of Object.entries(manifest.fairies ?? {})) {
 		for (const kind of kinds) {
 			tiers.fairyForms.push(join(base, `fairies/${id}/${FAIRY_IMAGE_FILES[kind]}`));
+		}
+	}
+	for (const [id, kinds] of Object.entries(manifest.live2d?.fairies ?? {})) {
+		for (const kind of kinds) {
+			tiers.live2dFairies.push(join(base, `live2d/fairies/${id}/${LIVE2D_FAIRY_MODEL_FILES[kind]}`));
+		}
+	}
+	for (const [id, kinds] of Object.entries(manifest.live2d?.hocs ?? {})) {
+		for (const kind of kinds) {
+			tiers.live2dHocs.push(join(base, `live2d/hocs/${id}/${LIVE2D_HOC_MODEL_FILES[kind]}`));
 		}
 	}
 	for (const [id, entry] of Object.entries(hocSpineIndex)) {

@@ -79,7 +79,7 @@ EQUIP_BUNDLE = "resource_icon_equip"
 UI_BUNDLES = ("atlasclips_listequipment",)
 
 # Tiers in report order.
-TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon", "hoc_art", "hoc_spine", "fairy_art")
+TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon", "hoc_art", "hoc_spine", "fairy_art", "live2d")
 
 # Each role is `(name, filename alternatives, required)`. `{stem}` is the codename, with `_<skinId>` for skins.
 ART_ROLES = (
@@ -122,6 +122,31 @@ FAIRY_ART_ROLES = (
     ("form2_alpha", ("Pics/Fairy/{stem}_2_Alpha.png",), True),
     ("form3", ("Pics/Fairy/{stem}_3.png",), True),
     ("form3_alpha", ("Pics/Fairy/{stem}_3_Alpha.png",), True),
+)
+
+# Live2D bundle names, one bundle per fairy or HOC, keyed by kind. A fairy's live2d code is its normal `fairies.json` code, but a HOC's is
+# its weapon name, e.g. `BGM-71` - a HOC's `hocs.json` code (e.g. `TOW`) is an unrelated internal id used for its Spine rig instead.
+LIVE2D_BUNDLE_PREFIXES = {"fairy": "live2dnew_fairy_", "hoc": "live2dnew_squads_"}
+
+# Live2D file names never depend on the fairy or HOC's code, unlike the templated roles above, so no `{stem}` placeholder is needed. The
+# texture folder name varies per form and, for the `golden` fairy, so does the model file name (a `modle` typo) - both are matched by file
+# name suffix only, ignoring the folder, so the folder inconsistency never matters.
+FAIRY_LIVE2D_ROLES = (
+    ("form1_moc", ("model1_moc.asset", "modle1_moc.asset"), True),
+    ("form1_prefab", ("model1.prefab", "modle1.prefab"), True),
+    ("form2_moc", ("model2_moc.asset", "modle2_moc.asset"), True),
+    ("form2_prefab", ("model2.prefab", "modle2.prefab"), True),
+    ("form3_moc", ("model3_moc.asset", "modle3_moc.asset"), True),
+    ("form3_prefab", ("model3.prefab", "modle3.prefab"), True),
+    # Each form has its own texture file, but only one is ever needed, so the first match wins regardless of which form it belongs to.
+    ("texture", ("texture_00.png",), True),
+)
+HOC_LIVE2D_ROLES = (
+    ("moc", ("model_moc.asset",), True),
+    ("prefab", ("model.prefab",), True),
+    ("texture0", ("texture_00.png",), True),
+    # A second texture is not universal - BGM-71 and AT4 ship one, AGS-30 does not.
+    ("texture1", ("texture_01.png",), False),
 )
 
 # Skill codes with no icon anywhere in `sprites_ui`, confirmed by the research pass.
@@ -190,18 +215,20 @@ def normalise_file_hash(file_hash):
 
 
 def load_records(path, key="id"):
-    """Read a `{"items": [...]}` site file into `{"id", "code"}` records sorted by id.
+    """Read a `{"items": [...]}` site file into `{"id", "code", "name"}` records sorted by id.
+
+    `name` is carried through for the Live2D tier: a HOC's Live2D bundle is named after its displayed weapon name, not its internal `code`.
 
     Args:
         path: Path to the site file, such as `hocs.json` or `fairies.json`.
         key: Field name each record is sorted by.
 
     Returns:
-        A list of `{"id": int, "code": str}` dicts, empty when the file is absent.
+        A list of `{"id": int, "code": str, "name": str}` dicts, empty when the file is absent.
     """
     if not os.path.isfile(path):
         return []
-    return sorted(({"id": item["id"], "code": item["code"]} for item in read_json(path)["items"]), key=lambda record: record[key])
+    return sorted(({"id": item["id"], "code": item["code"], "name": item["name"]} for item in read_json(path)["items"]), key=lambda record: record[key])
 
 
 def load_site(site_dir):
@@ -212,7 +239,7 @@ def load_site(site_dir):
 
     Returns:
         A `(dolls, equipment_ids, hocs, fairies)` quadruple. Dolls are sorted by id, ids are sorted and deduplicated, and `hocs` and `fairies`
-        are lists of `{"id": int, "code": str}` sorted by id, empty when their site file is absent.
+        are lists of `{"id": int, "code": str, "name": str}` sorted by id, empty when their site file is absent.
     """
     dolls = []
     for path in sorted(glob.glob(os.path.join(site_dir, "dolls-*.json"))):
@@ -283,6 +310,27 @@ def find_file(index, bundle_names, filenames):
             for lowered, path in bundle["files"]:
                 if lowered.endswith(suffix):
                     return {"bundle": name, "path": path}
+    return None
+
+
+def find_prefix(bundle, folder):
+    """Find the real-case path down to a named folder, matched as a path segment rather than a filename.
+
+    Used for a folder whose files are too numerous or too arbitrarily named to list role by role, such as `motions/`. The caller gets the
+    folder's own path back, to filter or list the bundle's files against later, rather than one specific file.
+
+    Args:
+        bundle: One index bundle entry.
+        folder: Folder name to match, such as `motions`.
+
+    Returns:
+        The path up to and including `<folder>/`, in its original case, or None when no file sits under that folder.
+    """
+    marker = f"/{folder.lower()}/"
+    for lowered, path in bundle["files"]:
+        hit = lowered.find(marker)
+        if hit != -1:
+            return path[: hit + len(marker)]
     return None
 
 
@@ -552,23 +600,90 @@ def fairy_items(index, fairy):
     return resolve_item(index, "fairy_art", f"fairy_art:{fairy_id}", code, [FAIRY_ART_BUNDLE], FAIRY_ART_ROLES, fairy_id=fairy_id, code=code)
 
 
+def live2d_item(index, kind, item_id, stem):
+    """Resolve one fairy's or HOC's Live2D model bundle.
+
+    A fairy's bundle holds three forms, each with its own `moc` source and `prefab`, plus one texture and one `motions/` folder shared by
+    every form. A HOC's bundle holds a single form the same way. The `motions` role is not resolved file by file, since a fairy or HOC has an
+    arbitrary, game-defined number of named animation clips - it instead records the bundle-relative folder itself, for a later extractor to
+    list.
+
+    Args:
+        index: The bundle index from `load_index`.
+        kind: `"fairy"` or `"hoc"`.
+        item_id: The fairy or HOC id.
+        stem: The lowercased code the bundle name is built from - a fairy's own `code`, or a HOC's displayed weapon `name`.
+
+    Returns:
+        The `live2d` item dict with `status` of `resolved` or `partial`, or None when the bundle is not in the index at all - most
+        fairies and HOCs never get a Live2D model, and that is not a gap worth recording.
+    """
+    bundle_name = LIVE2D_BUNDLE_PREFIXES[kind] + stem
+    if not any(name in index for name in bundle_candidates([bundle_name])):
+        return None
+    roles = FAIRY_LIVE2D_ROLES if kind == "fairy" else HOC_LIVE2D_ROLES
+    item = resolve_item(index, "live2d", f"live2d:{kind}:{item_id}", stem, [bundle_name], roles, kind=kind, id=item_id, code=stem)
+    if item["status"] == "unresolved":
+        # The bundle exists but holds none of the required model roles - a genuine gap, unlike the no-bundle-at-all case skipped above,
+        # so it still stays unresolved with empty bundles, same as every other tier.
+        return item
+    motions = None
+    for name in bundle_candidates([bundle_name]):
+        bundle = index.get(name)
+        if bundle:
+            prefix = find_prefix(bundle, "motions")
+            if prefix:
+                motions = {"bundle": name, "path": prefix}
+            break
+    if motions:
+        item["assets"]["motions"] = motions
+        item["bundles"] = sorted({hit["bundle"] for hit in item["assets"].values()})
+        item["sizeOriginal"] = sum(index[name]["sizeOriginal"] for name in item["bundles"])
+    else:
+        item["missing"] = item["missing"] + ["motions"]
+        item["status"] = "partial"
+    return item
+
+
+def live2d_items(index, fairies, hocs):
+    """Resolve the Live2D item for every fairy and HOC that actually ships one.
+
+    Only 9 fairies and 3 HOCs ship a Live2D model today, but which ones is never hardcoded - every fairy and HOC in the site data is
+    checked, and the ones with no bundle in the index produce no item at all, so a newly added Live2D model is picked up with no code
+    change and the rest never show up as a false gap in the refresh's unresolved check.
+
+    Args:
+        index: The bundle index from `load_index`.
+        fairies: Fairy records from `load_site`, each `{"id", "code", "name"}`.
+        hocs: HOC records from `load_site`, each `{"id", "code", "name"}`.
+
+    Returns:
+        A list of `live2d` item dicts, one per fairy or HOC whose bundle is in the index, keyed by the fairy's own `code` or the HOC's
+        `name`. A fairy or HOC with no Live2D bundle at all produces no entry.
+    """
+    candidates = [live2d_item(index, "fairy", fairy["id"], fairy["code"].lower()) for fairy in fairies]
+    candidates.extend(live2d_item(index, "hoc", hoc["id"], hoc["name"].lower()) for hoc in hocs)
+    return [item for item in candidates if item is not None]
+
+
 def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=()):
     """Work out which dolls, Mods, skins, equipment, HOCs and fairies the committed manifest does not list yet.
 
     A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed. A HOC counts as hosted
     once the manifest lists its art, so a rig added for that HOC later is not picked up as a new target on its own. A fairy counts as hosted
-    the same way, once the manifest lists its art.
+    the same way, once the manifest lists its art. Live2D is tracked separately from art, in its own `manifest["live2d"]["fairies"/"hocs"]`
+    block, since most fairies and HOCs never get a Live2D bundle at all.
 
     Args:
         dolls: Site doll records.
         equipment_ids: Equipment ids from the site data.
         manifest: The committed version 3 manifest.
-        hocs: HOC records from `load_site`, each `{"id", "code"}`.
-        fairies: Fairy records from `load_site`, each `{"id", "code"}`.
+        hocs: HOC records from `load_site`, each `{"id", "code", "name"}`.
+        fairies: Fairy records from `load_site`, each `{"id", "code", "name"}`.
 
     Returns:
-        A dict of `dolls`, `mods`, `equipment`, `hocs` and `fairies` id sets and a `skins` set of `(doll_id, skin_id)` pairs. Only numeric skin
-        ids count.
+        A dict of `dolls`, `mods`, `equipment`, `hocs` and `fairies` id sets, a `skins` set of `(doll_id, skin_id)` pairs (only numeric skin
+        ids count), and a `live2d` set of `(kind, id)` pairs where `kind` is `"fairy"` or `"hoc"`.
     """
     listed = manifest["dolls"]
     targets = {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()}
@@ -589,6 +704,12 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=()):
     targets["hocs"] = {hoc["id"] for hoc in hocs if str(hoc["id"]) not in listed_hocs}
     listed_fairies = manifest.get("fairies", {})
     targets["fairies"] = {fairy["id"] for fairy in fairies if str(fairy["id"]) not in listed_fairies}
+    listed_live2d = manifest.get("live2d", {})
+    listed_live2d_fairies = listed_live2d.get("fairies", {})
+    listed_live2d_hocs = listed_live2d.get("hocs", {})
+    targets["live2d"] = {("fairy", fairy["id"]) for fairy in fairies if str(fairy["id"]) not in listed_live2d_fairies} | {
+        ("hoc", hoc["id"]) for hoc in hocs if str(hoc["id"]) not in listed_live2d_hocs
+    }
     return targets
 
 
@@ -627,6 +748,8 @@ def select_new_items(items, targets):
             keep = item.get("hoc_id") in targets.get("hocs", set())
         elif tier == "fairy_art":
             keep = item.get("fairy_id") in targets.get("fairies", set())
+        elif tier == "live2d":
+            keep = (item.get("kind"), item.get("id")) in targets.get("live2d", set())
         else:
             keep = False
         if keep:
@@ -721,6 +844,7 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         items.extend(hoc_items(index, hoc))
     for fairy in fairies:
         items.append(fairy_items(index, fairy))
+    items.extend(live2d_items(index, fairies, hocs))
     if select is not None:
         items = select(items)
     include_ui = select is None or any(item["tier"] == "equip_icon" for item in items)

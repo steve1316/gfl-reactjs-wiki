@@ -15,6 +15,7 @@ import { normaliseWithPositions } from "./lib/mentions.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 import { findHocArtGaps } from "./lib/hocs.mjs";
 import { findFairyArtGaps } from "./lib/fairies.mjs";
+import { findLive2dArtGaps } from "./lib/live2d.mjs";
 import { findSkinArtGaps } from "./lib/skins.mjs";
 import { findSpineIndexProblems } from "./lib/spineIndex.mjs";
 
@@ -306,6 +307,10 @@ async function main() {
 			const fairyGaps = findFairyArtGaps(fairies, manifest);
 			if (fairyGaps.length > 0) {
 				fail(`fairies without art: ${fairyGaps.join(", ")}`);
+			}
+			const live2dGaps = findLive2dArtGaps(manifest);
+			if (live2dGaps.length > 0) {
+				fail(`live2d models missing a kind: ${live2dGaps.join(", ")}`);
 			}
 		}
 	}

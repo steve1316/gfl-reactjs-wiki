@@ -17,6 +17,11 @@
  * is still accepted from before the version 2 audit of the live hosts was removed. HOC art and rigs are audited too, the HOC Spine index
  * only when its file exists, since a repo may not have any HOC rigs published yet. Fairy art is audited the same way.
  *
+ * Live2D fairy forms and HOC models are audited too: for each kind the manifest's `live2d` block lists, its `.moc3` and `.model3.json`
+ * files must exist, plus the shared texture (`texture.webp` for a fairy, `texture0.webp` for a HOC) and at least one `.motion3.json`
+ * file in its `motions/` folder. The moc3 and model3.json checks count toward the missing-files total; a missing texture does too,
+ * but a folder with no motion files is a structural problem, since motion file names vary per model and cannot be checked by name.
+ *
  * Exits non-zero when anything is missing, so it can gate a deploy.
  */
 
@@ -39,6 +44,12 @@ const HOC_IMAGE_FILES = { card: "card.webp", full: "full.webp" };
 
 /** Fairy image kind -> filename inside a fairy's `fairies/<id>/` folder. */
 const FAIRY_IMAGE_FILES = { form1: "form1.webp", form2: "form2.webp", form3: "form3.webp" };
+
+/** Live2D fairy form kind -> its moc3 and model3.json filenames inside a fairy's `live2d/fairies/<id>/` folder. */
+const LIVE2D_FAIRY_FILES = { form1: ["form1.moc3", "form1.model3.json"], form2: ["form2.moc3", "form2.model3.json"], form3: ["form3.moc3", "form3.model3.json"] };
+
+/** Live2D HOC kind -> its moc3 and model3.json filenames inside a HOC's `live2d/hocs/<id>/` folder. */
+const LIVE2D_HOC_FILES = { model: ["model.moc3", "model.model3.json"] };
 
 /** v3 Mod-skin card kind -> filename inside a skin folder. */
 const V3_MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
@@ -232,6 +243,37 @@ function auditV3(args) {
 		for (const kind of kinds) {
 			need(`fairies/${id}/${FAIRY_IMAGE_FILES[kind]}`, `fairy ${id} ${kind}`);
 		}
+	}
+
+	/**
+	 * Check one Live2D model's folder: the moc3 and model3.json of every listed kind, the shared texture, and at least one motion file.
+	 *
+	 * @param {string} label Message prefix naming the entry, e.g. `live2d fairy 1`.
+	 * @param {string} folder The model's folder inside the assets tree, e.g. `live2d/fairies/1`.
+	 * @param {string[]} kinds The kinds the manifest lists for it.
+	 * @param {Record<string, string[]>} kindFiles Kind -> its required filenames.
+	 * @param {string} textureFile The shared texture's filename.
+	 */
+	const auditLive2dModel = (label, folder, kinds, kindFiles, textureFile) => {
+		for (const kind of kinds) {
+			for (const file of kindFiles[kind]) {
+				need(`${folder}/${file}`, `${label} ${kind}`);
+			}
+		}
+		need(`${folder}/${textureFile}`, `${label} texture`);
+		const motionsDir = path.join(root, folder, "motions");
+		const hasMotion = fs.existsSync(motionsDir) && fs.readdirSync(motionsDir).some((name) => name.endsWith(".motion3.json"));
+		if (!hasMotion) {
+			problems.push(`${label}: no .motion3.json files in ${folder}/motions`);
+		}
+	};
+
+	for (const [id, kinds] of Object.entries(manifest.live2d?.fairies ?? {})) {
+		auditLive2dModel(`live2d fairy ${id}`, `live2d/fairies/${id}`, kinds, LIVE2D_FAIRY_FILES, "texture.webp");
+	}
+
+	for (const [id, kinds] of Object.entries(manifest.live2d?.hocs ?? {})) {
+		auditLive2dModel(`live2d hoc ${id}`, `live2d/hocs/${id}`, kinds, LIVE2D_HOC_FILES, "texture0.webp");
 	}
 
 	if (fs.existsSync(hocSpineIndexPath)) {

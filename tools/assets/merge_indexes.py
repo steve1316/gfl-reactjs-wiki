@@ -5,14 +5,16 @@ The scheduled refresh extracts only new dolls, Mods, skins and equipment, builds
 merges them here. The merge only adds. Anything the committed files already list stops it, so hosted art is never replaced by accident. Both outputs
 keep the exact format and key order the full builders write.
 
-The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The `fairies` key merges the same way too. The HOC Spine
-index is a separate committed file, merged only when `--hoc-spine-partial` is passed. The workflow always passes it, but an empty partial (a
-refresh that added no HOC rigs) is a no-op. It counts as `{}` when the committed file does not exist yet, and nothing is written when the merge
-changes nothing.
+The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The `fairies` key merges the same way too. The `live2d`
+key merges the same way at one level deeper, by id within its own `fairies` and `hocs` sub-keys. The HOC Spine index and the Live2D index are
+each a separate committed file, merged only when `--hoc-spine-partial` or `--live2d-partial` is passed. The workflow always passes both, but an
+empty partial (a refresh that added no HOC rigs or no Live2D models) is a no-op. Either counts as `{}` (or, for the Live2D index, an empty
+`fairies`/`hocs` pair) when its committed file does not exist yet, and nothing is written when the merge changes nothing.
 
 Usage:
     python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] \
-        [--spine-index src/data/spine-index.json] [--hoc-spine-partial <file>] [--hoc-spine src/data/hoc-spine-index.json]
+        [--spine-index src/data/spine-index.json] [--hoc-spine-partial <file>] [--hoc-spine src/data/hoc-spine-index.json] \
+        [--live2d-partial <file>] [--live2d-index src/data/live2d-index.json]
 """
 
 import argparse
@@ -102,6 +104,7 @@ def merge_manifest(committed, partial):
 
     A partial's `hocs` entry is a plain list of image kinds, keyed by HOC id. A HOC id is either entirely new or entirely already
     committed, there is nothing to merge piecemeal within one. A partial's `fairies` entry merges the same way, keyed by fairy id.
+    A partial's `live2d` entry merges the same way too, one level deeper: its `fairies` and `hocs` sub-keys each merge by id.
 
     Returns:
         A merged copy. `committed` is not changed.
@@ -142,6 +145,17 @@ def merge_manifest(committed, partial):
                 else:
                     entries[entry_id] = kinds
             merged[key] = by_id(entries)
+    if "live2d" in partial or "live2d" in merged:
+        merged_live2d = {}
+        for sub_key, label in (("fairies", "live2d fairy"), ("hocs", "live2d hoc")):
+            entries = dict(merged.get("live2d", {}).get(sub_key, {}))
+            for entry_id, kinds in partial.get("live2d", {}).get(sub_key, {}).items():
+                if entry_id in entries:
+                    conflicts.append(f"{label} {entry_id}")
+                else:
+                    entries[entry_id] = kinds
+            merged_live2d[sub_key] = by_id(entries)
+        merged["live2d"] = merged_live2d
     if conflicts:
         raise MergeConflict(conflicts)
     merged["dolls"] = by_id(merged["dolls"])
@@ -215,6 +229,36 @@ def merge_hoc_spine_index(committed, partial):
     return by_id(merged)
 
 
+def merge_live2d_index(committed, partial):
+    """Add a partial Live2D index's new fairy and HOC ids into the committed index.
+
+    Like a HOC's Spine rigs, a fairy's or HOC's motions are not merged piecemeal: an id is either entirely new or entirely already committed.
+
+    Args:
+        committed: The committed Live2D index, `{"fairies": {...}, "hocs": {...}}`.
+        partial: The index built from the `add` staging folder, the same shape.
+
+    Returns:
+        A merged copy. `committed` is not changed.
+
+    Raises:
+        MergeConflict: When the partial has a fairy or HOC id the committed index already has.
+    """
+    conflicts = []
+    merged = {}
+    for sub_key, label in (("fairies", "live2d fairy"), ("hocs", "live2d hoc")):
+        entries = dict(committed.get(sub_key, {}))
+        for entry_id, entry in partial.get(sub_key, {}).items():
+            if entry_id in entries:
+                conflicts.append(f"{label} {entry_id}")
+            else:
+                entries[entry_id] = copy.deepcopy(entry)
+        merged[sub_key] = entries
+    if conflicts:
+        raise MergeConflict(conflicts)
+    return {"fairies": by_id(merged["fairies"]), "hocs": by_id(merged["hocs"])}
+
+
 def dump_spine_index(index):
     """Serialise a Spine index exactly as `add_spine_animations.mjs` writes it.
 
@@ -254,15 +298,20 @@ def main():
     parser.add_argument("--spine-index", default="src/data/spine-index.json", help="The committed Spine index to update.")
     parser.add_argument("--hoc-spine-partial", help="HOC Spine index built and annotated from the add staging folder. An empty partial (no new HOC rigs) is a no-op.")
     parser.add_argument("--hoc-spine", default="src/data/hoc-spine-index.json", help="The committed HOC Spine index to update.")
+    parser.add_argument("--live2d-partial", help="Live2D index built from the add staging folder. An empty partial (no new Live2D models) is a no-op.")
+    parser.add_argument("--live2d-index", default="src/data/live2d-index.json", help="The committed Live2D index to update.")
     args = parser.parse_args()
 
     manifest_partial, spine_partial = read_json(args.manifest_partial), read_json(args.spine_partial)
     hoc_spine_partial = read_json(args.hoc_spine_partial) if args.hoc_spine_partial else None
     committed_hoc_spine = read_json(args.hoc_spine) if os.path.isfile(args.hoc_spine) else {}
+    live2d_partial = read_json(args.live2d_partial) if args.live2d_partial else None
+    committed_live2d = read_json(args.live2d_index) if os.path.isfile(args.live2d_index) else {"fairies": {}, "hocs": {}}
     try:
         manifest = merge_manifest(read_json(args.manifest), manifest_partial)
         spine_index = merge_spine_index(read_json(args.spine_index), spine_partial)
         hoc_spine_index = merge_hoc_spine_index(committed_hoc_spine, hoc_spine_partial) if hoc_spine_partial is not None else None
+        live2d_index = merge_live2d_index(committed_live2d, live2d_partial) if live2d_partial is not None else None
     except MergeConflict as conflict:
         sys.exit("the partial files list assets that are already hosted:\n  " + "\n  ".join(conflict.conflicts))
 
@@ -277,6 +326,12 @@ def main():
         with open(args.hoc_spine, "w", encoding="utf-8") as handle:
             handle.write(dump_spine_index(hoc_spine_index))
         print(f"merged {len(hoc_spine_partial)} HOC Spine index entries into {args.hoc_spine}")
+
+    if live2d_index is not None and live2d_index != committed_live2d:
+        with open(args.live2d_index, "w", encoding="utf-8") as handle:
+            handle.write(dump_spine_index(live2d_index))
+        merged_count = len(live2d_partial.get("fairies", {})) + len(live2d_partial.get("hocs", {}))
+        print(f"merged {merged_count} Live2D index entries into {args.live2d_index}")
 
 
 if __name__ == "__main__":

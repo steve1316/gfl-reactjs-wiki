@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract card art, full art, skill icons, equipment icons and Spine rigs from the cached game bundles into the staging tree.
+"""Extract card art, full art, skill icons, equipment icons, Spine rigs and Live2D models from the cached game bundles into the staging tree.
 
 Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and the bundles it names, and writes everything into one
 `tools/assets/.staging/assets/` tree:
@@ -9,6 +9,8 @@ Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and th
 - `spine/<id>/`: the base combat and dorm rigs, with `mod/` and `skins/<skinId>/` folders for the Mod and skin rigs.
 - HOCs: `hocs/<id>/card.webp`, `hocs/<id>/full.webp` and `hoc-spine/<id>/`, the combat rig plus its crew skeletons.
 - Fairies: `fairies/<id>/form1.webp` to `form3.webp`, each rebuilt from a trimmed Sprite and masked by its `_Alpha` Sprite.
+- `live2d/fairies/<id>/` and `live2d/hocs/<id>/`: Cubism web files (`.moc3`, `.model3.json`, `.motion3.json`, texture `.webp`) converted
+  from the game's Unity Cubism bundles by `extract_live2d.py`.
 - `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes for the tree.
 - `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes for the tree after the Spine pass.
 
@@ -1536,7 +1538,7 @@ def reset_staging(staging):
     Args:
         staging: The staging root.
     """
-    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies"):
+    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies", "assets/live2d"):
         shutil.rmtree(os.path.join(staging, rel), ignore_errors=True)
     os.makedirs(os.path.join(staging, TREE), exist_ok=True)
 
@@ -1618,9 +1620,9 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
     ui_files = copy_ui(legacy_assets, staging) if legacy_dir else []
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
-    art_items, hoc_items, fairy_items, skill_items, equip_items, legacy_skill_items = [], [], [], [], [], []
+    art_items, hoc_items, fairy_items, skill_items, equip_items, live2d_items, legacy_skill_items = [], [], [], [], [], [], []
     for item in inventory["items"]:
-        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art")
+        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art", "live2d")
         if not wanted:
             continue
         if item["tier"] == "skill_icon" and item.get("source") == "legacy":
@@ -1630,7 +1632,11 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
             continue
         report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
-        {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items}.get(item["tier"], art_items).append(item)
+        buckets = {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items, "live2d": live2d_items}
+        buckets.get(item["tier"], art_items).append(item)
+
+    # Imported here, not at module scope, since `extract_live2d` imports back from this module - a top-level import would be circular.
+    from extract_live2d import extract_live2d_items
 
     files, done = [], 0
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
@@ -1645,6 +1651,8 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             futures[pool.submit(extract_hoc_art_items, hoc_items, cache_dir, staging)] = "worker:hoc_art"
         if fairy_items:
             futures[pool.submit(extract_fairy_art_items, fairy_items, cache_dir, staging)] = "worker:fairy_art"
+        if live2d_items:
+            futures[pool.submit(extract_live2d_items, live2d_items, cache_dir, staging)] = "worker:live2d"
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()

@@ -35,6 +35,16 @@ V3_HOC_IMAGE_FILES = (("card", "card.webp"), ("full", "full.webp"))
 # Fairy image kinds, in manifest order, with the filename each is read from. A fairy has three forms and no card or full art.
 V3_FAIRY_IMAGE_FILES = (("form1", "form1.webp"), ("form2", "form2.webp"), ("form3", "form3.webp"))
 
+# Live2D fairy form kinds, in manifest order, with the two files that must both exist for the form to count as present.
+V3_LIVE2D_FAIRY_FILES = (
+    ("form1", ("form1.moc3", "form1.model3.json")),
+    ("form2", ("form2.moc3", "form2.model3.json")),
+    ("form3", ("form3.moc3", "form3.model3.json")),
+)
+
+# Live2D HOC kind, with the two files that must both exist for it to count as present. A HOC has one model, no forms.
+V3_LIVE2D_HOC_FILES = (("model", ("model.moc3", "model.model3.json")),)
+
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,15 +94,43 @@ def form_images(root, rel):
     return [kind for kind, name in V3_IMAGE_FILES if os.path.isfile(os.path.join(root, rel, name))]
 
 
+def build_live2d(assets_root):
+    """Scan the `live2d/` folder for fairy and HOC Live2D models.
+
+    A fairy form or HOC model counts as present only when both of its files exist, mirroring `build_v3`'s image-kind scan.
+    The shared texture and the `motions/` folder are not recorded here, only checked by `audit_assets.mjs`.
+
+    Args:
+        assets_root: The asset tree, holding `live2d/fairies/<id>/` and `live2d/hocs/<id>/`.
+
+    Returns:
+        The `live2d` manifest block: `fairies` and `hocs`, each keyed by id in numeric order with the kinds present for it.
+    """
+    live2d_root = os.path.join(assets_root, "live2d")
+    fairy_ids = numeric_dirs(os.path.join(live2d_root, "fairies"))
+    fairies = {
+        fairy_id: [kind for kind, files in V3_LIVE2D_FAIRY_FILES if all(os.path.isfile(os.path.join(live2d_root, "fairies", fairy_id, name)) for name in files)]
+        for fairy_id in fairy_ids
+    }
+    hoc_ids = numeric_dirs(os.path.join(live2d_root, "hocs"))
+    hocs = {
+        hoc_id: [kind for kind, files in V3_LIVE2D_HOC_FILES if all(os.path.isfile(os.path.join(live2d_root, "hocs", hoc_id, name)) for name in files)]
+        for hoc_id in hoc_ids
+    }
+    return {"fairies": fairies, "hocs": hocs}
+
+
 def build_v3(assets_root):
     """Scan the staging tree and assemble the version 3 manifest.
 
     Args:
-        assets_root: The asset tree, holding `tdolls/` cards, skill icons and full art, `equipment/<id>.png` and `hocs/<id>/`.
+        assets_root: The asset tree, holding `tdolls/` cards, skill icons and full art, `equipment/<id>.png`, `hocs/<id>/` and
+            `live2d/<fairies|hocs>/<id>/`.
 
     Returns:
-        The manifest dict, dolls in numeric order, skins in `skin_dirs` order, and `hocs` and `fairies` (always present, `{}` when none)
-        keyed by id in numeric order with each value the image kinds that exist for it.
+        The manifest dict, dolls in numeric order, skins in `skin_dirs` order, `hocs` and `fairies` (always present, `{}` when none)
+        keyed by id in numeric order with each value the image kinds that exist for it, and `live2d` (always present) from
+        `build_live2d`.
     """
     doll_ids = numeric_dirs(os.path.join(assets_root, "tdolls"))
     dolls = {}
@@ -128,7 +166,9 @@ def build_v3(assets_root):
         for fairy_id in fairy_ids
     }
 
-    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs, "fairies": fairies}
+    live2d = build_live2d(assets_root)
+
+    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs, "fairies": fairies, "live2d": live2d}
 
 
 def dumps(manifest, indent=None):
@@ -167,6 +207,8 @@ def main():
     print(f"  equipment    {len(manifest['equipment'])}")
     print(f"  hocs         {len(manifest['hocs'])}")
     print(f"  fairies      {len(manifest['fairies'])}")
+    print(f"  live2d fairies {len(manifest['live2d']['fairies'])}")
+    print(f"  live2d hocs    {len(manifest['live2d']['hocs'])}")
 
 
 if __name__ == "__main__":

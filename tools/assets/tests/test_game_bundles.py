@@ -297,6 +297,132 @@ class FairyTargetTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Live2D resolution
+
+
+def fairy_live2d_files(code):
+    """The nine model files and two motion files one fairy's Live2D bundle has, for `code`."""
+    base = f"Assets/Resources/DaBao/Live2DNew/Fairy/{code}/"
+    forms = [f"{base}{n}/model{n}{suffix}" for n in (1, 2, 3) for suffix in ("_moc.asset", ".prefab", ".2048/texture_00.png")]
+    motions = [f"{base}motions/wait_01.anim", f"{base}motions/wait_01.fade.asset"]
+    return forms + motions
+
+
+def hoc_live2d_files(code):
+    """The four model files and one motion file one HOC's Live2D bundle has, for `code`."""
+    base = f"Assets/Resources/DaBao/Live2DNew/Squads/{code}/"
+    return [f"{base}model_moc.asset", f"{base}model.prefab", f"{base}model.2048/texture_00.png", f"{base}motions/daiji_idle_01.anim"]
+
+
+class Live2dResolutionTests(unittest.TestCase):
+    """The Live2D tier resolves one bundle per fairy or HOC, most of which have none at all."""
+
+    def test_fairy_resolves_its_bundle_by_its_own_code(self):
+        index = hoc_index({"live2dnew_fairy_fighting": fairy_live2d_files("fighting")})
+        item = game_bundles.live2d_items(index, [{"id": 1, "code": "fighting", "name": "Warrior Fairy"}], [])[0]
+        self.assertEqual(item["key"], "live2d:fairy:1")
+        self.assertEqual(item["status"], "resolved")
+        self.assertEqual(item["bundles"], ["live2dnew_fairy_fighting"])
+        self.assertEqual(item["kind"], "fairy")
+        self.assertTrue(item["assets"]["motions"]["path"].endswith("/motions/"))
+
+    def test_hoc_resolves_its_bundle_by_its_weapon_name_not_its_internal_code(self):
+        """`BGM-71`'s internal `hocs.json` code is `TOW`, used for its Spine rig - its Live2D bundle is named after the weapon instead."""
+        index = hoc_index({"live2dnew_squads_bgm-71": hoc_live2d_files("BGM-71")})
+        item = game_bundles.live2d_items(index, [], [{"id": 1, "code": "TOW", "name": "BGM-71"}])[0]
+        self.assertEqual(item["key"], "live2d:hoc:1")
+        self.assertEqual(item["status"], "resolved")
+        self.assertEqual(item["bundles"], ["live2dnew_squads_bgm-71"])
+        self.assertEqual(item["kind"], "hoc")
+
+    def test_fairy_with_no_live2d_bundle_produces_no_item(self):
+        """Most fairies and HOCs ship no Live2D model at all, so a bundle absent from the index produces no item, not an unresolved one -
+        an unresolved row here would be a false gap in the refresh's unresolved check."""
+        items = game_bundles.live2d_items(hoc_index({}), [{"id": 2, "code": "air_attack", "name": "Airstrike Fairy"}], [])
+        self.assertEqual(items, [])
+
+    def test_bundle_with_roles_but_no_motions_is_partial(self):
+        """A bundle with every model role but no `motions/` folder downgrades from resolved to partial, motions reported missing."""
+        files = hoc_live2d_files("BGM-71")[:-1]  # drop the trailing motions file, keep the model files
+        index = hoc_index({"live2dnew_squads_bgm-71": files})
+        item = game_bundles.live2d_items(index, [], [{"id": 1, "code": "TOW", "name": "BGM-71"}])[0]
+        self.assertEqual(item["status"], "partial")
+        self.assertIn("motions", item["missing"])
+        self.assertNotIn("motions", item["assets"])
+
+    def test_bundle_with_only_motions_is_unresolved(self):
+        """A bundle holding nothing but a `motions/` folder stays unresolved with empty bundles, same as any other tier's total miss."""
+        index = hoc_index({"live2dnew_squads_bgm-71": ["Assets/Resources/DaBao/Live2DNew/Squads/BGM-71/motions/daiji_idle_01.anim"]})
+        item = game_bundles.live2d_items(index, [], [{"id": 1, "code": "TOW", "name": "BGM-71"}])[0]
+        self.assertEqual(item["status"], "unresolved")
+        self.assertEqual(item["bundles"], [])
+        self.assertNotIn("motions", item["assets"])
+
+
+class Live2dTargetTests(unittest.TestCase):
+    """`--only-missing` picks fairies and HOCs the committed manifest's `live2d` block does not list."""
+
+    def test_new_targets_lists_only_ids_missing_from_the_live2d_manifest_block(self):
+        manifest = {"dolls": {}, "equipment": [], "live2d": {"fairies": {"1": ["form1", "form2", "form3"]}, "hocs": {}}}
+        fairies = [{"id": 1, "code": "fighting", "name": "Warrior Fairy"}, {"id": 3, "code": "armor", "name": "Armor Fairy"}]
+        hocs = [{"id": 1, "code": "TOW", "name": "BGM-71"}]
+        targets = game_bundles.new_targets([], [], manifest, hocs=hocs, fairies=fairies)
+        self.assertEqual(targets["live2d"], {("fairy", 3), ("hoc", 1)})
+
+    def test_select_new_items_keeps_live2d_items_in_the_live2d_target_set(self):
+        """A live2d item is kept only when its own `(kind, id)` pair is in `targets["live2d"]` - fairy 1's Live2D model is already listed
+        in the manifest, so its item is dropped, while fairy 3's and HOC 1's are still targets and kept."""
+        manifest = {"dolls": {}, "equipment": [], "live2d": {"fairies": {"1": ["form1", "form2", "form3"]}, "hocs": {}}}
+        fairies = [{"id": 1, "code": "fighting", "name": "Warrior Fairy"}, {"id": 3, "code": "armor", "name": "Armor Fairy"}]
+        hocs = [{"id": 1, "code": "TOW", "name": "BGM-71"}]
+        targets = game_bundles.new_targets([], [], manifest, hocs=hocs, fairies=fairies)
+        items = [
+            {"key": "live2d:fairy:1", "tier": "live2d", "kind": "fairy", "id": 1},
+            {"key": "live2d:fairy:3", "tier": "live2d", "kind": "fairy", "id": 3},
+            {"key": "live2d:hoc:1", "tier": "live2d", "kind": "hoc", "id": 1},
+        ]
+        self.assertEqual(game_bundles.select_new_items(items, targets), items[1:])
+
+
+def live2d_resdata(fairy_bundle, fairy_code, hoc_bundle, hoc_code):
+    """Build a minimal `resdata_no_hash.json`-shaped dict with one fairy and one HOC Live2D bundle.
+
+    Args:
+        fairy_bundle: The fairy's Live2D bundle name, such as `live2dnew_fairy_fighting`.
+        fairy_code: The fairy's own code, passed to `fairy_live2d_files`.
+        hoc_bundle: The HOC's Live2D bundle name, such as `live2dnew_squads_bgm-71`.
+        hoc_code: The HOC's displayed weapon name, passed to `hoc_live2d_files`.
+
+    Returns:
+        A resdata dict `build_inventory` can read via `load_index`.
+    """
+    bundles = {fairy_bundle: fairy_live2d_files(fairy_code), hoc_bundle: hoc_live2d_files(hoc_code)}
+    return {
+        "resUrl": "https://cdn.example/",
+        "BaseAssetBundles": [{"assetBundleName": name, "resname": name, "sizeOriginal": 1, "assetAllRes": [{"pathKey": path} for path in paths]} for name, paths in bundles.items()],
+        "AddAssetBundles": [],
+    }
+
+
+class Live2dInventoryTests(unittest.TestCase):
+    """`build_inventory` resolves the Live2D tier for every fairy and HOC, not just their art and rigs."""
+
+    def test_build_inventory_includes_live2d_items_for_a_fairy_and_a_hoc(self):
+        resdata = live2d_resdata("live2dnew_fairy_fighting", "fighting", "live2dnew_squads_bgm-71", "BGM-71")
+        fairies = [{"id": 1, "code": "fighting", "name": "Warrior Fairy"}]
+        hocs = [{"id": 1, "code": "TOW", "name": "BGM-71"}]
+        inventory = game_bundles.build_inventory(resdata, [], [], {}, {}, {}, hocs=hocs, fairies=fairies)
+        items = {item["key"]: item for item in inventory["items"]}
+        self.assertIn("live2d:fairy:1", items)
+        self.assertEqual(items["live2d:fairy:1"]["status"], "resolved")
+        self.assertEqual(items["live2d:fairy:1"]["bundles"], ["live2dnew_fairy_fighting"])
+        self.assertIn("live2d:hoc:1", items)
+        self.assertEqual(items["live2d:hoc:1"]["status"], "resolved")
+        self.assertEqual(items["live2d:hoc:1"]["bundles"], ["live2dnew_squads_bgm-71"])
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Download
 
 
@@ -515,7 +641,7 @@ class NewTargetTests(unittest.TestCase):
 
     def test_targets(self):
         """A missing doll, a missing Mod, a missing numeric skin and a missing equipment id are the targets."""
-        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set()})
+        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set(), "live2d": set()})
 
     def test_selects_forms_of_new_targets(self):
         """Art and rigs follow their form, and hosted forms, known gaps and legacy items are never selected."""
@@ -594,11 +720,14 @@ class NewTargetTests(unittest.TestCase):
 
 
     def test_committed_data_has_no_new_targets(self):
-        """The committed site data and manifest agree on dolls, equipment, HOCs and fairies: every one already has a published
-        asset, so there are no pending targets left."""
+        """The committed site data and manifest agree on dolls, equipment, HOCs and fairies: every one already has a published art asset, so
+        there are no pending targets left. Live2D is a separate, not-yet-downloaded tier, so every fairy and HOC is still a target for it."""
         dolls, equipment_ids, hocs, fairies = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
         targets = game_bundles.new_targets(dolls, equipment_ids, game_bundles.read_json(game_bundles.MANIFEST_PATH), hocs=hocs, fairies=fairies)
-        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set(), "fairies": set()})
+        expected_live2d = {("fairy", fairy["id"]) for fairy in fairies} | {("hoc", hoc["id"]) for hoc in hocs}
+        self.assertEqual(
+            targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set(), "fairies": set(), "live2d": expected_live2d}
+        )
 
 
 if __name__ == "__main__":

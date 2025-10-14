@@ -3,6 +3,7 @@
 Each test builds a tiny staging tree of empty files in a temporary directory.
 """
 
+import json
 import os
 import sys
 import tempfile
@@ -10,6 +11,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import build_live2d_index  # noqa: E402
 import build_manifest  # noqa: E402
 import build_spine_index  # noqa: E402
 
@@ -30,6 +32,35 @@ def touch(root, *paths):
         path = os.path.join(root, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         open(path, "wb").close()
+
+
+def write_motion3(root, rel, duration):
+    """Write a tiny motion3.json file with just the `Meta.Duration` `build_live2d_index` reads.
+
+    Args:
+        root: The root directory.
+        rel: Relative file path.
+        duration: The `Meta.Duration` value.
+    """
+    path = os.path.join(root, rel)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump({"Meta": {"Duration": duration}}, handle)
+
+
+def motion_row(row_id, motion_type, motion_name, touch_area="0"):
+    """Build one `fairy_live2d_motions_info.json` row, with the fields `build_live2d_index` reads.
+
+    Args:
+        row_id: The row's `id`.
+        motion_type: The row's `type`: `"1"` idle, `"2"` wait, `"3"` touch.
+        motion_name: The row's `motion_name`, such as `motions/daiji_idle.mtn`.
+        touch_area: The row's `touch_area`: `"head"`, `"body"` or `"0"`.
+
+    Returns:
+        A row dict.
+    """
+    return {"id": row_id, "type": motion_type, "motion_name": motion_name, "touch_area": touch_area}
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -244,6 +275,133 @@ class FairyIndexTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as assets:
             manifest = build_manifest.build_v3(assets)
         self.assertEqual(manifest["fairies"], {})
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Live2D manifest models
+
+
+class Live2dIndexTests(unittest.TestCase):
+    """Live2D fairy forms and HOC models land in the manifest's `live2d` block."""
+
+    def test_manifest_lists_live2d_kinds(self):
+        with tempfile.TemporaryDirectory() as assets:
+            touch(
+                assets,
+                "live2d/fairies/1/texture.webp",
+                "live2d/fairies/1/form1.moc3",
+                "live2d/fairies/1/form1.model3.json",
+                "live2d/fairies/1/form2.moc3",
+                "live2d/fairies/1/form2.model3.json",
+                "live2d/fairies/1/form3.moc3",
+                "live2d/fairies/1/form3.model3.json",
+                "live2d/hocs/5/model.moc3",
+                "live2d/hocs/5/model.model3.json",
+                "live2d/hocs/5/texture0.webp",
+            )
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["live2d"], {"fairies": {"1": ["form1", "form2", "form3"]}, "hocs": {"5": ["model"]}})
+
+    def test_a_fairy_missing_one_forms_moc3_lists_only_the_forms_it_has(self):
+        with tempfile.TemporaryDirectory() as assets:
+            touch(
+                assets,
+                "live2d/fairies/1/texture.webp",
+                "live2d/fairies/1/form1.moc3",
+                "live2d/fairies/1/form1.model3.json",
+                "live2d/fairies/1/form2.moc3",
+                "live2d/fairies/1/form2.model3.json",
+                "live2d/fairies/1/form3.model3.json",
+            )
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["live2d"]["fairies"], {"1": ["form1", "form2"]})
+
+    def test_manifest_has_no_live2d_kinds_when_the_folder_is_absent(self):
+        with tempfile.TemporaryDirectory() as assets:
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["live2d"], {"fairies": {}, "hocs": {}})
+
+
+class MotionGroupsTests(unittest.TestCase):
+    """Flattening `fairy_live2d_motions_info.json` rows into a stem-keyed classification lookup."""
+
+    def test_type_1_row_maps_to_idle(self):
+        rows = [motion_row("101", "1", "motions/daiji_idle.mtn")]
+        self.assertEqual(build_live2d_index.motion_groups(rows), {"daiji_idle": {"group": "idle", "touchArea": None}})
+
+    def test_type_2_row_maps_to_wait(self):
+        rows = [motion_row("102", "2", "motions/wait_01.mtn")]
+        self.assertEqual(build_live2d_index.motion_groups(rows), {"wait_01": {"group": "wait", "touchArea": None}})
+
+    def test_type_3_row_with_head_touch_area_maps_to_touch_head(self):
+        rows = [motion_row("104", "3", "motions/motou_01.mtn", touch_area="head")]
+        self.assertEqual(build_live2d_index.motion_groups(rows), {"motou_01": {"group": "touch", "touchArea": "head"}})
+
+    def test_type_3_row_with_body_touch_area_maps_to_touch_body(self):
+        rows = [motion_row("106", "3", "motions/motou_03.mtn", touch_area="body")]
+        self.assertEqual(build_live2d_index.motion_groups(rows), {"motou_03": {"group": "touch", "touchArea": "body"}})
+
+    def test_duplicate_stem_keeps_the_first_rows_classification(self):
+        """The table is not scoped per fairy, so a later row for a stem the table already classified is ignored."""
+        rows = [motion_row("102", "2", "motions/wait_01.mtn"), motion_row("132", "3", "motions/wait_01.mtn", touch_area="head")]
+        self.assertEqual(build_live2d_index.motion_groups(rows), {"wait_01": {"group": "wait", "touchArea": None}})
+
+
+class ResolveMotionTests(unittest.TestCase):
+    """Classifying one real motion file's stem, with the documented fallbacks."""
+
+    def test_stem_with_a_direct_row_uses_it(self):
+        groups = build_live2d_index.motion_groups([motion_row("101", "1", "motions/daiji_idle.mtn")])
+        self.assertEqual(build_live2d_index.resolve_motion("daiji_idle", groups), {"group": "idle", "touchArea": None})
+
+    def test_stem_with_no_row_falls_back_to_a_prefix_match(self):
+        """`daiji_idle_01` has no row of its own here, so it resolves through the `daiji_idle` row."""
+        groups = build_live2d_index.motion_groups([motion_row("101", "1", "motions/daiji_idle.mtn")])
+        self.assertEqual(build_live2d_index.resolve_motion("daiji_idle_01", groups), {"group": "idle", "touchArea": None})
+
+    def test_unknown_stem_falls_back_to_wait(self):
+        self.assertEqual(build_live2d_index.resolve_motion("wait_09", {}), {"group": "wait", "touchArea": None})
+
+    def test_unknown_daiji_idle_stem_falls_back_to_idle(self):
+        self.assertEqual(build_live2d_index.resolve_motion("daiji_idle_99", {}), {"group": "idle", "touchArea": None})
+
+
+class BuildLive2dIndexTests(unittest.TestCase):
+    """Walking a Live2D staging tree into the documented index shape."""
+
+    def test_build_index_shape(self):
+        with tempfile.TemporaryDirectory() as root:
+            write_motion3(root, "live2d/fairies/1/motions/daiji_idle.motion3.json", 3.5)
+            write_motion3(root, "live2d/fairies/1/motions/wait_01.motion3.json", 2.333)
+            write_motion3(root, "live2d/hocs/5/motions/daiji_idle_01.motion3.json", 1.2)
+            rows = [motion_row("101", "1", "motions/daiji_idle.mtn"), motion_row("102", "2", "motions/wait_01.mtn")]
+            index = build_live2d_index.build_index(root, rows)
+        self.assertEqual(
+            index,
+            {
+                "fairies": {
+                    "1": {
+                        "motions": [
+                            {"name": "daiji_idle", "group": "idle", "seconds": 3.5, "touchArea": None},
+                            {"name": "wait_01", "group": "wait", "seconds": 2.33, "touchArea": None},
+                        ]
+                    }
+                },
+                "hocs": {"5": {"motions": [{"name": "daiji_idle_01", "group": "idle", "seconds": 1.2, "touchArea": None}]}},
+            },
+        )
+
+    def test_id_with_no_motions_folder_is_skipped(self):
+        with tempfile.TemporaryDirectory() as root:
+            touch(root, "live2d/fairies/1/texture.webp")
+            index = build_live2d_index.build_index(root, [])
+        self.assertEqual(index, {"fairies": {}, "hocs": {}})
+
+    def test_missing_fairies_and_hocs_folders_yield_an_empty_index(self):
+        with tempfile.TemporaryDirectory() as root:
+            index = build_live2d_index.build_index(root, [])
+        self.assertEqual(index, {"fairies": {}, "hocs": {}})
 
 
 if __name__ == "__main__":
