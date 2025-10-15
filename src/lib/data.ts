@@ -16,6 +16,7 @@ import searchIndexJson from "../data/search-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { FairyData } from "../types/fairy";
 import type { HocData } from "../types/hoc";
+import type { Live2dIndex, Live2dMotion } from "../types/live2d";
 import type { HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
 import { equipmentIconUrl } from "./assets";
@@ -80,7 +81,16 @@ export const fairySearchIndex: FairySearchEntry[] = fairySearchIndexJson as Fair
 
 /** Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are bundled. */
 const DATA_URLS = import.meta.glob<string>(
-	["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json", "../data/hocs.json", "../data/hoc-spine-index.json", "../data/fairies.json"],
+	[
+		"../data/dolls-*.json",
+		"../data/profiles-*.json",
+		"../data/spine-index.json",
+		"../data/equipment.json",
+		"../data/hocs.json",
+		"../data/hoc-spine-index.json",
+		"../data/fairies.json",
+		"../data/live2d-index.json"
+	],
 	{
 		query: "?url",
 		import: "default",
@@ -122,6 +132,9 @@ const hocSpineIndexCache = new Map<0, Promise<HocSpineIndex>>();
 
 /** Cache of the in-flight or loaded Fairies, under the single key `0`. A failed load is dropped so it can be retried. */
 const fairyCache = new Map<0, Promise<FairyData>>();
+
+/** Cache of the in-flight or loaded Live2D index, under the single key `0`. A failed load is dropped so it can be retried. */
+const live2dIndexCache = new Map<0, Promise<Live2dIndex>>();
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -371,4 +384,32 @@ export async function loadHocSpineRigs(id: number): Promise<HocSpineEntry | unde
  */
 export function loadFairies(): Promise<FairyData> {
 	return fairyCache.get(0) ?? cacheUntilFailure(fairyCache, 0, fetchData<FairyData>("fairies"));
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Live2D
+
+/**
+ * Look up a fairy's Live2D motions.
+ *
+ * @param id Fairy id.
+ * @returns The fairy's motions, or undefined when nothing was published for it.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadFairyLive2dMotions(id: number): Promise<Live2dMotion[] | undefined> {
+	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
+	return index.fairies[String(id)]?.motions;
+}
+
+/**
+ * Look up a HOC's Live2D motions.
+ *
+ * @param id HOC id.
+ * @returns The HOC's motions, or undefined when nothing was published for it.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadHocLive2dMotions(id: number): Promise<Live2dMotion[] | undefined> {
+	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
+	return index.hocs[String(id)]?.motions;
 }

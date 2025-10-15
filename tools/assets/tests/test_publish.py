@@ -528,6 +528,22 @@ class CommitMessageTests(unittest.TestCase):
         paths = ["fairies/9/form1.webp", "fairies/10/form1.webp"]
         self.assertEqual(publish.commit_message(paths), "Add art for fairies 9, 10")
 
+    def test_live2d_only(self):
+        """A Live2D-only publish names the fairies and the HOC, not `Add assets`."""
+        paths = [
+            "live2d/fairies/9/form1.model3.json",
+            "live2d/fairies/9/form1.moc3",
+            "live2d/fairies/10/form1.model3.json",
+            "live2d/hocs/6/model.model3.json",
+            "live2d/hocs/6/model.moc3",
+        ]
+        self.assertEqual(publish.commit_message(paths), "Add art for live2d hoc 6 and live2d fairies 9, 10")
+
+    def test_live2d_mixed_with_other_tiers(self):
+        """A publish mixing Live2D models with plain art still names every tier."""
+        paths = ["hocs/6/card.webp", "live2d/hocs/6/model.model3.json", "fairies/9/form1.webp", "live2d/fairies/9/form1.model3.json"]
+        self.assertEqual(publish.commit_message(paths), "Add art for hoc 6, fairy 9, live2d hoc 6 and live2d fairy 9")
+
 
 class PlannedTreeTests(unittest.TestCase):
     """Combining hosted and staged sizes under GitHub's 5 GB repo recommendation."""

@@ -3,6 +3,7 @@ import type { MouseEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 
 // MaterialUI imports
+import AnimationOutlinedIcon from "@mui/icons-material/AnimationOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import { Box, Button, CardMedia, Chip, Container, Fab, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
@@ -21,7 +22,7 @@ import { FAB_EXPAND_SX, containArtSx } from "../../lib/artLayout";
 import { fairyFormUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
 import { FAIRY_MAX_STARS, fairyForm, fairyFormLabel } from "../../lib/fairyStats";
-import { hasFairyForm } from "../../lib/processData";
+import { hasFairyForm, hasFairyLive2d } from "../../lib/processData";
 import { useFairies } from "../../lib/useFairies";
 import type { Fairy, FairyConstants, FairyTalent } from "../../types/fairy";
 
@@ -47,7 +48,9 @@ const styles = {
 	forms: { alignSelf: "flex-start" },
 	chips: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 },
 	name: { fontWeight: 700 },
-	infoRow: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } }
+	infoRow: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } },
+	// Offset from FAB_EXPAND_SX's own corner so the two Fabs sit side by side instead of stacked.
+	fabLive2d: { position: "absolute", right: 56, bottom: 8, height: 40, width: 40, opacity: 0.85 }
 } satisfies Record<string, SxProps<Theme>>;
 
 /** Props for FairyDetail. */
@@ -75,6 +78,7 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 	const form = fairyForm(constants, stars);
 	const talentsOpen = talentsAnchor !== null;
 	const hosted = hasFairyForm(fairy.id, form);
+	const hasLive2d = hasFairyLive2d(fairy.id, form);
 
 	const handleForm = useCallback(
 		(_event: MouseEvent<HTMLElement>, value: number | null) => {
@@ -112,6 +116,11 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 									) : (
 										<ArtPlaceholder name={fairy.name} sx={styles.placeholder} />
 									)}
+									{hasLive2d ? (
+										<Fab color="primary" component={Link} to={`/fairy/${fairy.id}/live2d?form=${form}`} sx={styles.fabLive2d} aria-label="view Live2D">
+											<AnimationOutlinedIcon />
+										</Fab>
+									) : null}
 								</Box>
 								<Box sx={styles.facts}>
 									<ToggleButtonGroup value={form} exclusive onChange={handleForm} size="small" sx={styles.forms} aria-label="Fairy form">

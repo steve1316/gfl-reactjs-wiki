@@ -216,3 +216,25 @@ export function hocSpineUrl(id: number, rigPath: string, extension: string): str
 export function hocSpineImageBase(id: number): string {
 	return `${join(ASSET_BASE, `hoc-spine/${id}`)}/`;
 }
+
+/**
+ * URL for a fairy's Live2D `model3.json` at one of its three forms. Textures and motions live alongside it and are
+ * referenced by relative path inside the file, so nothing else needs to be built.
+ *
+ * @param id Fairy id.
+ * @param form Form number, 1 through 3.
+ * @returns An absolute URL.
+ */
+export function fairyLive2dModelUrl(id: number, form: number): string {
+	return join(ASSET_BASE, `live2d/fairies/${id}/form${form}.model3.json`);
+}
+
+/**
+ * URL for a HOC's Live2D `model3.json`.
+ *
+ * @param id HOC id.
+ * @returns An absolute URL.
+ */
+export function hocLive2dModelUrl(id: number): string {
+	return join(ASSET_BASE, `live2d/hocs/${id}/model.model3.json`);
+}

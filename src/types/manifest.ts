@@ -33,6 +33,14 @@ export interface ManifestDoll {
 	skills: ("skill1" | "skill2")[];
 }
 
+/** Which Live2D forms or model exist for the items that have one, keyed by stringified id. */
+export interface ManifestLive2d {
+	/** Which of a fairy's three forms have a published model, keyed by stringified fairy id. */
+	fairies: Record<string, ("form1" | "form2" | "form3")[]>;
+	/** HOCs with a published model, keyed by stringified HOC id. Always `["model"]` when present, since a HOC has only one. */
+	hocs: Record<string, "model"[]>;
+}
+
 /** The manifest. Asset paths are derived from the doll id, form and kind, so only presence is stored. */
 export interface AssetsManifest {
 	/** Format version. */
@@ -47,4 +55,6 @@ export interface AssetsManifest {
 	hocs?: Record<string, HocImageKind[]>;
 	/** Which forms exist for each fairy with art, keyed by stringified id. Absent when no fairy art has been merged in yet. */
 	fairies?: Record<string, ("form1" | "form2" | "form3")[]>;
+	/** Which fairies and HOCs have a published Live2D model. Absent when no Live2D asset has been merged in yet. */
+	live2d?: ManifestLive2d;
 }

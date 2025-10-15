@@ -152,3 +152,24 @@ export function hasHocArt(id: number, kind: HocImageKind): boolean {
 export function hasFairyForm(id: number, form: number): boolean {
 	return manifest.fairies?.[String(id)]?.includes(`form${form}` as "form1" | "form2" | "form3") ?? false;
 }
+
+/**
+ * Whether a fairy has a hosted Live2D model for the given form.
+ *
+ * @param id Fairy id.
+ * @param form Form number, 1 through 3.
+ * @returns True when the manifest lists that form for the fairy's Live2D model.
+ */
+export function hasFairyLive2d(id: number, form: number): boolean {
+	return manifest.live2d?.fairies[String(id)]?.includes(`form${form}` as "form1" | "form2" | "form3") ?? false;
+}
+
+/**
+ * Whether a HOC has a hosted Live2D model.
+ *
+ * @param id HOC id.
+ * @returns True when the manifest lists a model for the HOC.
+ */
+export function hasHocLive2d(id: number): boolean {
+	return manifest.live2d?.hocs[String(id)]?.includes("model") ?? false;
+}

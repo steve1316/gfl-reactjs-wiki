@@ -79,7 +79,7 @@ LIVE_TIMEOUT_SECONDS = 20 * 60
 LIVE_INTERVAL_SECONDS = 30
 
 # Commit message labels whose plural is not the singular plus a trailing `s`.
-IRREGULAR_PLURALS = {"fairy": "fairies"}
+IRREGULAR_PLURALS = {"fairy": "fairies", "live2d fairy": "live2d fairies"}
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -621,16 +621,16 @@ def join_numbers(label, values):
 
 
 def commit_message(paths):
-    """Describe the dolls, skins, equipment, HOCs and fairies an add commit holds.
+    """Describe the dolls, skins, equipment, HOCs, fairies and Live2D models an add commit holds.
 
     Args:
-        paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel`, `equipment/301.png`, `hocs/6/card.webp`
-            or `fairies/9/form1.webp`.
+        paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel`, `equipment/301.png`, `hocs/6/card.webp`,
+            `fairies/9/form1.webp`, `live2d/fairies/9/form1.model3.json` or `live2d/hocs/6/model.model3.json`.
 
     Returns:
         A subject line such as `Add art for dolls 424, 425, skin 65:9001, equipment 301, hoc 6 and fairy 9`.
     """
-    dolls, skins, equipment, hocs, fairies = set(), set(), set(), set(), set()
+    dolls, skins, equipment, hocs, fairies, live2d_hocs, live2d_fairies = set(), set(), set(), set(), set(), set(), set()
     for rel in paths:
         parts = rel.split("/")
         if parts[0] == "equipment" and len(parts) == 2 and parts[1][:-4].isdigit():
@@ -644,6 +644,11 @@ def commit_message(paths):
             hocs.add(int(parts[1]))
         elif parts[0] == "fairies" and len(parts) > 2 and parts[1].isdigit():
             fairies.add(int(parts[1]))
+        elif parts[0] == "live2d" and len(parts) > 3 and parts[2].isdigit():
+            if parts[1] == "hocs":
+                live2d_hocs.add(int(parts[2]))
+            elif parts[1] == "fairies":
+                live2d_fairies.add(int(parts[2]))
     groups = []
     if dolls:
         groups.append(join_numbers("doll", [str(doll_id) for doll_id in sorted(dolls)]))
@@ -656,6 +661,10 @@ def commit_message(paths):
         groups.append(join_numbers("hoc", [str(hoc_id) for hoc_id in sorted(hocs)]))
     if fairies:
         groups.append(join_numbers("fairy", [str(fairy_id) for fairy_id in sorted(fairies)]))
+    if live2d_hocs:
+        groups.append(join_numbers("live2d hoc", [str(hoc_id) for hoc_id in sorted(live2d_hocs)]))
+    if live2d_fairies:
+        groups.append(join_numbers("live2d fairy", [str(fairy_id) for fairy_id in sorted(live2d_fairies)]))
     if not groups:
         return "Add assets"
     return f"Add art for {groups[0] if len(groups) == 1 else ', '.join(groups[:-1]) + ' and ' + groups[-1]}"

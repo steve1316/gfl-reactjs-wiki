@@ -11,6 +11,11 @@ first row seen for a stem, since the earliest rows in the table use the intuitiv
 most fairies follow. A real motion file whose stem is not a literal key, such as an extra clip a specific fairy ships that no row
 describes, falls back to a prefix match and then to a name-based default.
 
+Each motion also carries a `model3Group` field, the literal group name the file actually lives under in the model's own `model3.json`,
+computed by `extract_live2d.motion_group_name` rather than re-derived from the table. The table-driven `group` field above is a
+different, semantic classification (idle/wait/touch) used only for labelling and touch-area lookup - it can disagree with the file's
+real model3 group for an oddly named or misclassified clip, so the site must call `playMotion` with `model3Group`, never `group`.
+
 The index is written to `src/data/live2d-index.json` by default, the one the site bundles.
 """
 
@@ -20,6 +25,7 @@ import os
 import sys
 
 from build_manifest import numeric_dirs
+from extract_live2d import motion_group_name
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +116,7 @@ def index_motions(motions_dir, groups):
         groups: The lookup from `motion_groups`.
 
     Returns:
-        A list of `{"name", "group", "seconds", "touchArea"}` dicts, in file name order.
+        A list of `{"name", "group", "model3Group", "seconds", "touchArea"}` dicts, in file name order.
     """
     suffix = ".motion3.json"
     names = sorted(name for name in os.listdir(motions_dir) if name.endswith(suffix))
@@ -124,6 +130,7 @@ def index_motions(motions_dir, groups):
             {
                 "name": stem,
                 "group": classification["group"],
+                "model3Group": motion_group_name(stem),
                 "seconds": round(data["Meta"]["Duration"], 2),
                 "touchArea": classification["touchArea"],
             }

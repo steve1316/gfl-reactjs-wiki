@@ -24,6 +24,7 @@ const HOCPage = lazy(() => import("./pages/hoc/hoc"));
 const FairyIndex = lazy(() => import("./pages/fairy_index/fairy_index"));
 const FairyPage = lazy(() => import("./pages/fairy/fairy"));
 const FairyArt = lazy(() => import("./pages/fairy_art/fairy_art"));
+const FairyLive2d = lazy(() => import("./pages/fairy_live2d/fairy_live2d"));
 
 /**
  * The application shell: theme, navigation and routes.
@@ -69,6 +70,14 @@ export default function App() {
 						element={
 							<Suspense>
 								<FairyArt />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/fairy/:id/live2d"
+						element={
+							<Suspense>
+								<FairyLive2d />
 							</Suspense>
 						}
 					/>

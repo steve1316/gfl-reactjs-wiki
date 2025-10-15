@@ -383,14 +383,26 @@ class BuildLive2dIndexTests(unittest.TestCase):
                 "fairies": {
                     "1": {
                         "motions": [
-                            {"name": "daiji_idle", "group": "idle", "seconds": 3.5, "touchArea": None},
-                            {"name": "wait_01", "group": "wait", "seconds": 2.33, "touchArea": None},
+                            {"name": "daiji_idle", "group": "idle", "model3Group": "Idle", "seconds": 3.5, "touchArea": None},
+                            {"name": "wait_01", "group": "wait", "model3Group": "wait_01", "seconds": 2.33, "touchArea": None},
                         ]
                     }
                 },
-                "hocs": {"5": {"motions": [{"name": "daiji_idle_01", "group": "idle", "seconds": 1.2, "touchArea": None}]}},
+                "hocs": {
+                    "5": {"motions": [{"name": "daiji_idle_01", "group": "idle", "model3Group": "Idle", "seconds": 1.2, "touchArea": None}]}
+                },
             },
         )
+
+    def test_model3_group_matches_the_extractors_rule_even_when_the_table_disagrees(self):
+        """A stem the table misclassifies as `wait` still gets the extractor's own `Idle` model3 group when it is `daiji_idle`-prefixed."""
+        with tempfile.TemporaryDirectory() as root:
+            write_motion3(root, "live2d/fairies/1/motions/daiji_idle_01.motion3.json", 3.5)
+            rows = [motion_row("101", "2", "motions/daiji_idle_01.mtn")]
+            index = build_live2d_index.build_index(root, rows)
+        motion = index["fairies"]["1"]["motions"][0]
+        self.assertEqual(motion["group"], "wait")
+        self.assertEqual(motion["model3Group"], "Idle")
 
     def test_id_with_no_motions_folder_is_skipped(self):
         with tempfile.TemporaryDirectory() as root:

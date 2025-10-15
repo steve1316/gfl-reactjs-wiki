@@ -9,6 +9,8 @@
  * actually wants an animation, which keeps 1.5 MB of vendor code off every other route.
  */
 
+import { withLoadLock } from "./pixiRuntimeLock";
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Runtime loading
@@ -18,6 +20,16 @@ const RUNTIME_SCRIPTS = ["pixi.js", "pixi-spine-sjzs.js", "skb.js"];
 
 /** Shared across callers so the 1.5 MB runtime is fetched at most once per session. */
 let runtimePromise: Promise<void> | undefined;
+
+/**
+ * The Spine runtime's own `PIXI` (v4, with `.spine` attached), captured the moment its scripts finish loading. `lib/live2d.ts`
+ * loads a different major version of PixiJS onto the same `window.PIXI` global, so once a page has opened a Live2D stage,
+ * `window.PIXI` points at that other runtime instead. This capture lets `createSpinePlayer` re-point the global back before
+ * it runs: the vendored `pixi-spine-sjzs.js` reads the bare global `PIXI` identifier inside some of its own methods (such as
+ * `Spine.createMesh`), not a value closed over at load time, so a stale `window.PIXI` breaks it even when this module's own
+ * calls use the captured reference directly.
+ */
+let spinePixi: unknown;
 
 /**
  * Inject one script and wait for it.
@@ -56,7 +68,13 @@ export function loadSpineRuntime(): Promise<void> {
 	globals.enable_clear_fail_step = false;
 
 	const base = `${import.meta.env.BASE_URL}vendor/spine/`;
-	runtimePromise = RUNTIME_SCRIPTS.reduce((chain, name) => chain.then(() => loadScript(`${base}${name}`)), Promise.resolve());
+	// Queued behind `withLoadLock` so a concurrent first load of the Live2D runtime cannot interleave its scripts
+	// with these: see `pixiRuntimeLock.ts` for why that would attach `.spine` to the wrong `PIXI` object.
+	runtimePromise = withLoadLock(() =>
+		RUNTIME_SCRIPTS.reduce((chain, name) => chain.then(() => loadScript(`${base}${name}`)), Promise.resolve()).then(() => {
+			spinePixi = (window as unknown as { PIXI: unknown }).PIXI;
+		})
+	);
 	return runtimePromise;
 }
 
@@ -272,9 +290,11 @@ export interface SpinePlayerOptions {
  */
 export async function createSpinePlayer(options: SpinePlayerOptions): Promise<SpinePlayer> {
 	await loadSpineRuntime();
+	// Re-point the global at this runtime's own PIXI before touching it: see `spinePixi`'s docstring for why.
+	(window as unknown as { PIXI: unknown }).PIXI = spinePixi;
 
 	const size = options.size ?? 250;
-	const PIXI = (window as unknown as { PIXI: any }).PIXI;
+	const PIXI = spinePixi as any;
 	const SkeletonBinary = (window as unknown as { SkeletonBinary: any }).SkeletonBinary;
 	const runtime = PIXI.spine.SpineRuntime;
 

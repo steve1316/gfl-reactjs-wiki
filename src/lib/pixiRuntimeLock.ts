@@ -1,0 +1,30 @@
+/**
+ * Serialises the Spine and Live2D runtime loaders behind one shared queue.
+ *
+ * `lib/spine.ts` and `lib/live2d.ts` both inject a chain of UMD scripts with `script.async = false`, which puts
+ * every injected script from both runtimes into one document-wide, in-order execution list. Each runtime's
+ * augmentation script (`pixi-spine-sjzs.js`, `pixi-live2d-display`) mutates whatever `window.PIXI` happens to be at
+ * the moment it runs, so if the two runtimes' first loads overlap, their six scripts can interleave and an
+ * augmentation script can attach itself to the other runtime's `PIXI` object instead of its own. Routing both
+ * loaders through `withLoadLock` guarantees one runtime's whole script chain finishes running, and captures its own
+ * `PIXI`, before the other runtime's first script is even injected, so the interleaving can never happen.
+ */
+
+/** The tail of the shared load queue. Starts resolved so the first loader through runs immediately. */
+let loadLock: Promise<void> = Promise.resolve();
+
+/**
+ * Run a runtime loader once the previous loader (if any) has settled, queuing this one behind it.
+ *
+ * @param loader Starts loading a runtime's scripts and returns a promise that settles once they have all run.
+ * @returns The loader's own promise, so the caller sees its real result or rejection.
+ */
+export function withLoadLock<T>(loader: () => Promise<T>): Promise<T> {
+	const result = loadLock.then(loader, loader);
+	// Advance the queue on both success and failure, so one runtime failing to load never wedges the other.
+	loadLock = result.then(
+		() => undefined,
+		() => undefined
+	);
+	return result;
+}
