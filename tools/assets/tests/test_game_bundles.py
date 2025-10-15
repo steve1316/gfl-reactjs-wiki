@@ -721,10 +721,14 @@ class NewTargetTests(unittest.TestCase):
 
     def test_committed_data_has_no_new_targets(self):
         """The committed site data and manifest agree on dolls, equipment, HOCs and fairies: every one already has a published art asset, so
-        there are no pending targets left. Live2D is a separate, not-yet-downloaded tier, so every fairy and HOC is still a target for it."""
+        there are no pending targets left. Fairies and HOCs with published Live2D models are excluded from targets; any unpublished ones are still targets."""
         dolls, equipment_ids, hocs, fairies = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
-        targets = game_bundles.new_targets(dolls, equipment_ids, game_bundles.read_json(game_bundles.MANIFEST_PATH), hocs=hocs, fairies=fairies)
-        expected_live2d = {("fairy", fairy["id"]) for fairy in fairies} | {("hoc", hoc["id"]) for hoc in hocs}
+        manifest = game_bundles.read_json(game_bundles.MANIFEST_PATH)
+        targets = game_bundles.new_targets(dolls, equipment_ids, manifest, hocs=hocs, fairies=fairies)
+        published_live2d = manifest.get("live2d", {})
+        published_fairy_ids = set(int(fid) for fid in published_live2d.get("fairies", {}))
+        published_hoc_ids = set(int(hid) for hid in published_live2d.get("hocs", {}))
+        expected_live2d = {("fairy", fairy["id"]) for fairy in fairies if fairy["id"] not in published_fairy_ids} | {("hoc", hoc["id"]) for hoc in hocs if hoc["id"] not in published_hoc_ids}
         self.assertEqual(
             targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set(), "fairies": set(), "live2d": expected_live2d}
         )

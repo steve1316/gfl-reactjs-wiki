@@ -28,3 +28,18 @@ export function withLoadLock<T>(loader: () => Promise<T>): Promise<T> {
 	);
 	return result;
 }
+
+/**
+ * Point `window.PIXI` at one runtime's own captured `PIXI` instance.
+ *
+ * `lib/spine.ts` and `lib/live2d.ts` share this one global, and each vendored runtime's own scripts read it at the
+ * moment their code runs rather than only once at load time, so the global has to be correct at every point where
+ * vendored code touches it, not just before the caller's first `await`. Both modules call this right before any
+ * synchronous block that runs vendored code, and again immediately after resuming from an `await` inside one,
+ * since the other runtime's loader or teardown can repoint the global while this one was suspended.
+ *
+ * @param pixi The runtime's own captured `PIXI` instance to make current.
+ */
+export function claimPixiGlobal(pixi: unknown): void {
+	(window as unknown as { PIXI: unknown }).PIXI = pixi;
+}

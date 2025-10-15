@@ -10,7 +10,7 @@
  * actually wants a model, which keeps its ~790 KB off every other route.
  */
 
-import { withLoadLock } from "./pixiRuntimeLock";
+import { claimPixiGlobal, withLoadLock } from "./pixiRuntimeLock";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,14 +43,6 @@ interface Live2dModel {
 	 * @returns Whether the motion started.
 	 */
 	motion(group: string, index: number, priority: number): Promise<boolean>;
-	/**
-	 * Find which hit areas contain a point, in the canvas's coordinate space.
-	 *
-	 * @param x X coordinate.
-	 * @param y Y coordinate.
-	 * @returns Names of the hit areas containing the point, outermost first.
-	 */
-	hitTest(x: number, y: number): string[];
 }
 
 /** Options accepted by `Live2DModel.from`. */
@@ -122,8 +114,9 @@ let runtimePromise: Promise<void> | undefined;
  * The Live2D runtime's own `PIXI` (v6, with `.live2d` attached), captured the moment its scripts finish loading. `lib/spine.ts`
  * loads a different major version of PixiJS onto the same `window.PIXI` global, so opening a Spine rig after this runtime has
  * loaded points `window.PIXI` at that other runtime instead. This capture lets `createLive2dStage` re-point the global back
- * before it runs, the same way `createSpinePlayer` does - see its matching `spinePixi` docstring for why a captured reference
- * alone is not enough.
+ * via `claimPixiGlobal` before it runs, the same way `createSpinePlayer` does - see its matching `spinePixi` docstring for
+ * why a captured reference alone is not enough. The claim is repeated after the model-load `await` too, since a Spine
+ * stage created while that is in flight could otherwise leave the global wrong once it resolves.
  */
 let live2dPixi: PixiGlobal | undefined;
 
@@ -176,8 +169,6 @@ export function loadLive2dRuntime(): Promise<void> {
 export interface Live2dStage {
 	/** Play a motion by its group name, looping per the motion's own data. Unknown names are ignored by the runtime. */
 	playMotion(name: string): void;
-	/** Find the hit area at a canvas-space point, or null when nothing is hit. */
-	hitTest(x: number, y: number): string | null;
 	/** Tear down the renderer and free its WebGL context. */
 	destroy(): void;
 }
@@ -200,7 +191,7 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 	// Re-point the global at this runtime's own PIXI before touching anything below, including tearing down a
 	// previous stage: see `live2dPixi`'s docstring for why. Done before `currentStage?.destroy()` too, since that
 	// destroy call is also vendor code that could read the bare global.
-	window.PIXI = PIXI;
+	claimPixiGlobal(PIXI);
 	currentStage?.destroy();
 
 	const width = canvas.width;
@@ -221,6 +212,8 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 		app.destroy(false, { children: true, texture: true, baseTexture: true });
 		throw error;
 	}
+	// Re-claim after the model-load await: a Spine stage created while this was in flight could have repointed the global.
+	claimPixiGlobal(PIXI);
 
 	// Fit against the model's natural size, then set scale, then re-read width/height: pixi.js reports both already
 	// multiplied by the current scale, so centring afterwards needs no second multiplication.
@@ -249,9 +242,6 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 			if (!destroyed) {
 				play(name);
 			}
-		},
-		hitTest(x: number, y: number) {
-			return model.hitTest(x, y)[0] ?? null;
 		},
 		destroy() {
 			if (destroyed) {

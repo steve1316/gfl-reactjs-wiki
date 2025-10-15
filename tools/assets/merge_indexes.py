@@ -146,16 +146,10 @@ def merge_manifest(committed, partial):
                     entries[entry_id] = kinds
             merged[key] = by_id(entries)
     if "live2d" in partial or "live2d" in merged:
-        merged_live2d = {}
-        for sub_key, label in (("fairies", "live2d fairy"), ("hocs", "live2d hoc")):
-            entries = dict(merged.get("live2d", {}).get(sub_key, {}))
-            for entry_id, kinds in partial.get("live2d", {}).get(sub_key, {}).items():
-                if entry_id in entries:
-                    conflicts.append(f"{label} {entry_id}")
-                else:
-                    entries[entry_id] = kinds
-            merged_live2d[sub_key] = by_id(entries)
-        merged["live2d"] = merged_live2d
+        try:
+            merged["live2d"] = merge_live2d_index(merged.get("live2d", {}), partial.get("live2d", {}))
+        except MergeConflict as error:
+            conflicts.extend(error.conflicts)
     if conflicts:
         raise MergeConflict(conflicts)
     merged["dolls"] = by_id(merged["dolls"])

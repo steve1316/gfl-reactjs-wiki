@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 // MaterialUI imports
@@ -11,28 +10,24 @@ import CloseIcon from "@mui/icons-material/Close";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import ArtZoomControls from "../../components/ArtZoomControls";
+import FilterChip from "../../components/FilterChip";
 import LoadError from "../../components/LoadError";
+import StarRankPicker from "../../components/StarRankPicker";
 import { useCloseOnEscape } from "../../hooks/useArtViewer";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { fairyLive2dModelUrl } from "../../lib/assets";
-import { createLive2dStage } from "../../lib/live2d";
-import type { Live2dStage } from "../../lib/live2d";
+import { FAIRY_MAX_STARS, fairyForm } from "../../lib/fairyStats";
 import { hasFairyLive2d } from "../../lib/processData";
-import { nextAnimationValue } from "../../lib/spine";
-import type { AnimationTab } from "../../lib/spine";
 import { useFairies } from "../../lib/useFairies";
-import { useFairyLive2dMotions } from "../../lib/useLive2dMotions";
+import { motionTabs, useFairyLive2dMotions } from "../../lib/useLive2dMotions";
+import { useLive2dStage } from "../../lib/useLive2dStage";
 import NotFound404 from "../../not_found_404";
-import type { Live2dMotion } from "../../types/live2d";
 
-/** The form shown when the address names none or an invalid one, the fairy's highest rank. Mirrors `FairyConstants.forms.length`. */
-const DEFAULT_FORM = 3;
-
-/** How many forms a fairy has. Mirrors `FairyConstants.forms.length`, since the address is checked before the data loads. */
-const FORM_COUNT = 3;
-
-/** The `model3Group` value every idle-classified motion's index entry carries, per `tools/assets/extract_live2d.py`'s `motion_group_name`. */
-const IDLE_TAB_VALUE = "Idle";
+/**
+ * The lowest star rank in each art form, index 0 = form 1. Mirrors `FairyConstants.forms`' first entries, since a
+ * legacy `?form=` link must resolve to a rank before the data loads.
+ */
+const FORM_LOWEST_STARS = [1, 3, 5];
 
 const styles = {
 	root: { position: "fixed", inset: 0, bgcolor: "common.black", zIndex: (theme: Theme) => theme.zIndex.modal, display: "flex", flexDirection: "column" },
@@ -46,77 +41,31 @@ const styles = {
 	stage: { flexGrow: 1, position: "relative", overflow: "hidden", cursor: "pointer" },
 	canvas: { position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" },
 	statusOverlay: { position: "absolute", inset: 0, display: "grid", placeItems: "center", p: 2 },
-	footer: { display: "flex", justifyContent: "center", p: 1 },
-	caption: { color: "common.white" }
+	footer: { display: "flex", flexDirection: "column", alignItems: "center", gap: 1, p: 1 },
+	starPicker: { maxWidth: 360 },
+	tiles: { display: "flex", flexWrap: "wrap", justifyContent: "center", listStyle: "none", p: 0, m: 0, gap: 0.5 }
 } satisfies Record<string, SxProps<Theme>>;
 
 /**
- * Read the `form` parameter as a form number.
+ * Read the star rank from the `stars` parameter, or, for a legacy link, the lowest rank of the `form` parameter.
  *
- * @param param The `form` parameter, or null when the address has none.
- * @returns The form number, 1 to 3, or `DEFAULT_FORM` when the parameter is missing or not a valid form.
+ * @param params The page's search params.
+ * @returns The rank from `stars`, the lowest rank of a valid `form`, or `FAIRY_MAX_STARS` when neither parses.
  */
-function parseForm(param: string | null): number {
-	const value = Number(param);
-	return Number.isInteger(value) && value >= 1 && value <= FORM_COUNT ? value : DEFAULT_FORM;
-}
-
-/**
- * A readable label for a raw motion file name, such as `wait_01`.
- *
- * @param name The motion's file name from the Live2D index.
- * @returns The name split on underscores and title-cased.
- */
-function motionLabel(name: string): string {
-	return name
-		.split("_")
-		.map((part) => (part.length === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
-		.join(" ");
-}
-
-/**
- * The playable motion tabs for a model, one per distinct model3 motion group.
- *
- * The tab's `value` is each motion's own `model3Group`, the group name the model's actual `model3.json` uses, so a click always
- * finds a real group to play. Every idle-classified clip collapses into the single `Idle` group they share.
- *
- * @param motions The fairy's motions from the Live2D index.
- * @returns Tabs in the index's own order, for `nextAnimationValue` and the caption.
- */
-function motionTabs(motions: readonly Live2dMotion[]): AnimationTab[] {
-	const tabs: AnimationTab[] = [];
-	const seen = new Set<string>();
-	for (const motion of motions) {
-		const value = motion.model3Group;
-		if (seen.has(value)) {
-			continue;
-		}
-		seen.add(value);
-		tabs.push({ value, label: value === IDLE_TAB_VALUE ? "Idle" : motionLabel(motion.name) });
+function parseStars(params: URLSearchParams): number {
+	const starsValue = Number(params.get("stars"));
+	if (Number.isInteger(starsValue) && starsValue >= 1 && starsValue <= FAIRY_MAX_STARS) {
+		return starsValue;
 	}
-	return tabs;
+	const formValue = Number(params.get("form"));
+	const lowest = Number.isInteger(formValue) ? FORM_LOWEST_STARS[formValue - 1] : undefined;
+	return lowest ?? FAIRY_MAX_STARS;
 }
 
 /**
- * Which motion's model3 group plays for a tap on each hit area.
+ * Full-screen Live2D viewer for a fairy's model, with zoom, pan, motion cycling and a star rank picker.
  *
- * @param motions The fairy's motions from the Live2D index.
- * @returns A map of hit area (lowercased) to the model3 group to play, the first touch clip found for each area.
- */
-function touchMotionsByArea(motions: readonly Live2dMotion[]): Map<string, string> {
-	const map = new Map<string, string>();
-	for (const motion of motions) {
-		if (motion.group === "touch" && motion.touchArea !== null && !map.has(motion.touchArea)) {
-			map.set(motion.touchArea, motion.model3Group);
-		}
-	}
-	return map;
-}
-
-/**
- * Full-screen Live2D viewer for a fairy's model, with zoom, pan and motion cycling.
- *
- * A route rather than an overlay, like the fairy art viewer, so Back closes it and the form on screen can be linked to.
+ * A route rather than an overlay, like the fairy art viewer, so Back closes it and the rank on screen can be linked to.
  *
  * @returns The viewer, a retry notice, or the 404 page for an unknown id.
  */
@@ -124,30 +73,26 @@ export default function FairyLive2d() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const { data, loadFailed, retry } = useFairies();
 
-	// Captured at open, since a pasted link's `default` key must still be recognised after any internal navigation.
+	// Captured at open, since the star picker's replace gives the location a new key and would hide a pasted link's `default` key.
 	const openedKey = useRef(location.key);
 
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
-	const stageRef = useRef<Live2dStage | null>(null);
-
-	const [stageStatus, setStageStatus] = useState<"loading" | "ready" | "error">("loading");
-	// Bumped by the stage retry button to run the load again.
-	const [stageAttempt, setStageAttempt] = useState(0);
-	const [motion, setMotion] = useState("");
 
 	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5, doubleClickZoom: false });
 
 	const fairy = data?.items.find((entry) => String(entry.id) === id);
-	const form = parseForm(searchParams.get("form"));
+	const stars = parseStars(searchParams);
+	const form = data !== null ? fairyForm(data.constants, stars) : 1;
 	const hosted = fairy !== undefined && hasFairyLive2d(fairy.id, form);
 	const modelUrl = fairy !== undefined && hosted ? fairyLive2dModelUrl(fairy.id, form) : undefined;
 
-	const { motions } = useFairyLive2dMotions(fairy !== undefined && hosted ? fairy.id : undefined);
+	const motions = useFairyLive2dMotions(fairy !== undefined && hosted ? fairy.id : undefined);
 	const tabs = useMemo(() => motionTabs(motions ?? []), [motions]);
-	const touchByArea = useMemo(() => touchMotionsByArea(motions ?? []), [motions]);
+
+	const live2dStage = useLive2dStage(canvasRef, modelUrl, tabs, zoom.containerRef);
 
 	// Opened from the fairy page, going back returns to it. Opened from a pasted link there is nothing to go back to, so the fairy page opens instead.
 	const close = useCallback(() => {
@@ -166,84 +111,18 @@ export default function FairyLive2d() {
 		}
 	}, [fairy]);
 
-	// Rebuilds the stage whenever the model changes or a retry is requested. The container is measured once here rather than
-	// tracked with a resize observer: the footer stays mounted at a stable height as soon as `hosted` is known, so the box has
-	// already settled into its final size by the time this runs.
-	useEffect(() => {
-		if (modelUrl === undefined) {
+	// Replaces rather than pushes, so Back still closes the viewer in one step, matching `fairy_art.tsx`'s form picker.
+	const handleStars = useCallback((next: number) => setSearchParams({ stars: String(next) }, { replace: true }), [setSearchParams]);
+
+	const handleTileToggle = useCallback((value?: string | number) => live2dStage.playMotion(String(value)), [live2dStage.playMotion]);
+
+	// A click anywhere on the stage advances to the next motion in the tile order, same as the fairy card and the HOC panel.
+	const handleStageClick = useCallback(() => {
+		if (zoom.wasDragged()) {
 			return;
 		}
-		const canvas = canvasRef.current;
-		const container = zoom.containerRef.current;
-		if (!canvas || !container) {
-			return;
-		}
-
-		let active = true;
-		setStageStatus("loading");
-		setMotion("");
-
-		const rect = container.getBoundingClientRect();
-		const resolution = window.devicePixelRatio || 1;
-		canvas.width = Math.max(1, Math.round(rect.width * resolution));
-		canvas.height = Math.max(1, Math.round(rect.height * resolution));
-
-		createLive2dStage(canvas, modelUrl)
-			.then((stage) => {
-				if (!active) {
-					stage.destroy();
-					return;
-				}
-				stageRef.current = stage;
-				setStageStatus("ready");
-			})
-			.catch((error: unknown) => {
-				console.error("Live2D model load failed:", error);
-				if (active) {
-					setStageStatus("error");
-				}
-			});
-
-		return () => {
-			active = false;
-			stageRef.current?.destroy();
-			stageRef.current = null;
-		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [modelUrl, stageAttempt]);
-
-	// Sets the caption once the stage is up and the index's motion tabs have arrived, without overwriting a motion the reader already chose.
-	useEffect(() => {
-		if (stageStatus === "ready") {
-			setMotion((current) => (current === "" ? (tabs.find((tab) => tab.value === IDLE_TAB_VALUE)?.value ?? tabs[0]?.value ?? "") : current));
-		}
-	}, [stageStatus, tabs]);
-
-	const retryStage = useCallback(() => setStageAttempt((current) => current + 1), []);
-
-	// A hit area's touch reaction pre-empts the plain cycle; otherwise the click walks the same motion order the caption tracks.
-	const handleStageClick = useCallback(
-		(event: ReactMouseEvent<HTMLElement>) => {
-			if (zoom.wasDragged()) {
-				return;
-			}
-			const canvas = canvasRef.current;
-			const stage = stageRef.current;
-			if (!canvas || !stage) {
-				return;
-			}
-			const rect = canvas.getBoundingClientRect();
-			const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
-			const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
-			const hitArea = stage.hitTest(x, y)?.toLowerCase();
-			const next = (hitArea !== undefined ? touchByArea.get(hitArea) : undefined) ?? nextAnimationValue(tabs, motion);
-			if (next !== undefined) {
-				stage.playMotion(next);
-				setMotion(next);
-			}
-		},
-		[zoom.wasDragged, touchByArea, tabs, motion]
-	);
+		live2dStage.advance();
+	}, [zoom.wasDragged, live2dStage.advance]);
 
 	if (data !== null && fairy === undefined) {
 		return <NotFound404 message={`There is no fairy with the id ${id ?? ""}.`} />;
@@ -270,12 +149,12 @@ export default function FairyLive2d() {
 				<Box ref={zoom.containerRef} sx={styles.stage} style={zoom.containerStyle} {...zoom.handlers} onClick={handleStageClick}>
 					{fairy === undefined ? null : hosted ? (
 						<>
-							<Box component="canvas" ref={canvasRef} sx={styles.canvas} style={zoom.contentStyle} />
-							{stageStatus === "error" ? (
+							<Box key={modelUrl} component="canvas" ref={canvasRef} sx={styles.canvas} style={zoom.contentStyle} />
+							{live2dStage.status === "error" ? (
 								<Box sx={styles.statusOverlay}>
-									<LoadError what="this fairy's Live2D model" onRetry={retryStage} />
+									<LoadError what="this fairy's Live2D model" onRetry={live2dStage.retry} />
 								</Box>
-							) : stageStatus === "loading" ? (
+							) : live2dStage.status === "loading" ? (
 								<Box sx={styles.statusOverlay}>
 									<Typography variant="body2" color="common.white" sx={{ opacity: 0.7 }}>
 										Loading...
@@ -293,11 +172,18 @@ export default function FairyLive2d() {
 				</Box>
 			)}
 
-			{hosted && !loadFailed ? (
+			{data !== null && !loadFailed ? (
 				<Box sx={styles.footer}>
-					<Typography variant="body2" sx={styles.caption}>
-						{tabs.find((tab) => tab.value === motion)?.label ?? " "}
-					</Typography>
+					<StarRankPicker value={stars} max={FAIRY_MAX_STARS} onChange={handleStars} sx={styles.starPicker} />
+					{hosted ? (
+						<Box component="ul" sx={styles.tiles} aria-label="Motions">
+							{tabs.map((tab) => (
+								<li key={tab.value}>
+									<FilterChip label={tab.label} selected={tab.value === live2dStage.motion} value={tab.value} onToggle={handleTileToggle} />
+								</li>
+							))}
+						</Box>
+					) : null}
 				</Box>
 			) : null}
 		</Box>

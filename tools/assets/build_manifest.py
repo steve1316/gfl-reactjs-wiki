@@ -94,6 +94,22 @@ def form_images(root, rel):
     return [kind for kind, name in V3_IMAGE_FILES if os.path.isfile(os.path.join(root, rel, name))]
 
 
+def scan_live2d_kind(kind_root, kind_files):
+    """Scan one `live2d/fairies` or `live2d/hocs` folder for the ids that have any of a kind table's files.
+
+    An id counts as having a kind only when all of that kind's files exist, mirroring `build_v3`'s image-kind scan.
+
+    Args:
+        kind_root: The `live2d/fairies` or `live2d/hocs` folder.
+        kind_files: `V3_LIVE2D_FAIRY_FILES` or `V3_LIVE2D_HOC_FILES`.
+
+    Returns:
+        A dict of id to the kinds present for it, in `numeric_dirs` order.
+    """
+    ids = numeric_dirs(kind_root)
+    return {entry_id: [kind for kind, files in kind_files if all(os.path.isfile(os.path.join(kind_root, entry_id, name)) for name in files)] for entry_id in ids}
+
+
 def build_live2d(assets_root):
     """Scan the `live2d/` folder for fairy and HOC Live2D models.
 
@@ -107,16 +123,8 @@ def build_live2d(assets_root):
         The `live2d` manifest block: `fairies` and `hocs`, each keyed by id in numeric order with the kinds present for it.
     """
     live2d_root = os.path.join(assets_root, "live2d")
-    fairy_ids = numeric_dirs(os.path.join(live2d_root, "fairies"))
-    fairies = {
-        fairy_id: [kind for kind, files in V3_LIVE2D_FAIRY_FILES if all(os.path.isfile(os.path.join(live2d_root, "fairies", fairy_id, name)) for name in files)]
-        for fairy_id in fairy_ids
-    }
-    hoc_ids = numeric_dirs(os.path.join(live2d_root, "hocs"))
-    hocs = {
-        hoc_id: [kind for kind, files in V3_LIVE2D_HOC_FILES if all(os.path.isfile(os.path.join(live2d_root, "hocs", hoc_id, name)) for name in files)]
-        for hoc_id in hoc_ids
-    }
+    fairies = scan_live2d_kind(os.path.join(live2d_root, "fairies"), V3_LIVE2D_FAIRY_FILES)
+    hocs = scan_live2d_kind(os.path.join(live2d_root, "hocs"), V3_LIVE2D_HOC_FILES)
     return {"fairies": fairies, "hocs": hocs}
 
 

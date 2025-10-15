@@ -9,7 +9,7 @@
  * actually wants an animation, which keeps 1.5 MB of vendor code off every other route.
  */
 
-import { withLoadLock } from "./pixiRuntimeLock";
+import { claimPixiGlobal, withLoadLock } from "./pixiRuntimeLock";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -24,10 +24,12 @@ let runtimePromise: Promise<void> | undefined;
 /**
  * The Spine runtime's own `PIXI` (v4, with `.spine` attached), captured the moment its scripts finish loading. `lib/live2d.ts`
  * loads a different major version of PixiJS onto the same `window.PIXI` global, so once a page has opened a Live2D stage,
- * `window.PIXI` points at that other runtime instead. This capture lets `createSpinePlayer` re-point the global back before
- * it runs: the vendored `pixi-spine-sjzs.js` reads the bare global `PIXI` identifier inside some of its own methods (such as
- * `Spine.createMesh`), not a value closed over at load time, so a stale `window.PIXI` breaks it even when this module's own
- * calls use the captured reference directly.
+ * `window.PIXI` points at that other runtime instead. This capture lets `createSpinePlayer` re-point the global back via
+ * `claimPixiGlobal` before it runs: the vendored `pixi-spine-sjzs.js` reads the bare global `PIXI` identifier inside some of
+ * its own methods (such as `Spine.createMesh`), not a value closed over at load time, so a stale `window.PIXI` breaks it even
+ * when this module's own calls use the captured reference directly. The claim is repeated after every `await` in
+ * `createSpinePlayer`, not just once at the top, since Live2D's loader or teardown can repoint the global while this
+ * function is suspended waiting on a fetch.
  */
 let spinePixi: unknown;
 
@@ -291,7 +293,7 @@ export interface SpinePlayerOptions {
 export async function createSpinePlayer(options: SpinePlayerOptions): Promise<SpinePlayer> {
 	await loadSpineRuntime();
 	// Re-point the global at this runtime's own PIXI before touching it: see `spinePixi`'s docstring for why.
-	(window as unknown as { PIXI: unknown }).PIXI = spinePixi;
+	claimPixiGlobal(spinePixi);
 
 	const size = options.size ?? 250;
 	const PIXI = spinePixi as any;
@@ -299,6 +301,8 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	const runtime = PIXI.spine.SpineRuntime;
 
 	const [skelBuffer, atlasText] = await Promise.all([fetch(options.skelUrl).then((response) => response.arrayBuffer()), fetch(options.atlasUrl).then((response) => response.text())]);
+	// Re-claim after the fetch await: Live2D's loader or teardown could have repointed the global while this was suspended.
+	claimPixiGlobal(spinePixi);
 
 	// The .skel is Spine's binary format; skb.js converts it to the JSON the runtime parses.
 	const binary = new SkeletonBinary();

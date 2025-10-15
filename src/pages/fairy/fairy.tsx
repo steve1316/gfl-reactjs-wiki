@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 
 // MaterialUI imports
-import AnimationOutlinedIcon from "@mui/icons-material/AnimationOutlined";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import { Box, Button, CardMedia, Chip, Container, Fab, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
@@ -11,6 +10,7 @@ import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
 import ArtPlaceholder from "../../components/ArtPlaceholder";
+import FilterChip from "../../components/FilterChip";
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
@@ -19,11 +19,13 @@ import FairyStatsPanel from "./FairyStatsPanel";
 import FairyTalentsPopover from "./FairyTalentsPopover";
 
 import { FAB_EXPAND_SX, containArtSx } from "../../lib/artLayout";
-import { fairyFormUrl } from "../../lib/assets";
+import { fairyFormUrl, fairyLive2dModelUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
 import { FAIRY_MAX_STARS, fairyForm, fairyFormLabel } from "../../lib/fairyStats";
 import { hasFairyForm, hasFairyLive2d } from "../../lib/processData";
 import { useFairies } from "../../lib/useFairies";
+import { motionTabs, useFairyLive2dMotions } from "../../lib/useLive2dMotions";
+import { useLive2dStage } from "../../lib/useLive2dStage";
 import type { Fairy, FairyConstants, FairyTalent } from "../../types/fairy";
 
 const styles = {
@@ -31,26 +33,28 @@ const styles = {
 	section: { p: { xs: 2, md: 2.5 }, height: "100%" },
 	sectionHeading: { mb: 1.5 },
 	hero: { display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "stretch", md: "flex-start" }, gap: { xs: 2, md: 3 } },
-	// The art is the largest the game has at 512x512, so it leads the hero at close to its own size.
+	// The art is the largest the game has at 512x512, so it leads the hero at close to its own size. This column also
+	// carries the Art/Live2D toggle and, in Live2D mode, the motion tiles, so the stage stays the same size as the art.
+	artColumn: { display: "flex", flexDirection: "column", gap: 1, width: { xs: "100%", md: 460 }, maxWidth: 512, mx: { xs: "auto", md: 0 }, flex: "none" },
+	// The same full-width toggle the HOC card uses to switch between its rigs and Live2D.
+	modeToggle: { width: "100%", "& .MuiToggleButton-root": { flex: 1 } },
 	artBox: {
 		position: "relative",
-		width: { xs: "100%", md: 460 },
-		maxWidth: 512,
-		mx: { xs: "auto", md: 0 },
-		flex: "none",
+		width: "100%",
 		aspectRatio: "1 / 1",
 		borderRadius: "8px",
 		overflow: "hidden",
 		bgcolor: "action.hover"
 	},
 	placeholder: { position: "absolute", inset: 0, aspectRatio: "auto", height: "100%" },
+	live2dCanvas: { position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", cursor: "pointer" },
+	live2dStatus: { position: "absolute", inset: 0, display: "grid", placeItems: "center" },
+	live2dTiles: { display: "flex", flexWrap: "wrap", listStyle: "none", p: 0, m: 0, gap: 0.5 },
 	facts: { display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 },
 	forms: { alignSelf: "flex-start" },
 	chips: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 },
 	name: { fontWeight: 700 },
-	infoRow: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } },
-	// Offset from FAB_EXPAND_SX's own corner so the two Fabs sit side by side instead of stacked.
-	fabLive2d: { position: "absolute", right: 56, bottom: 8, height: 40, width: 40, opacity: 0.85 }
+	infoRow: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } }
 } satisfies Record<string, SxProps<Theme>>;
 
 /** Props for FairyDetail. */
@@ -75,10 +79,21 @@ interface FairyDetailProps {
 function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 	const [stars, setStars] = useState(FAIRY_MAX_STARS);
 	const [talentsAnchor, setTalentsAnchor] = useState<HTMLElement | null>(null);
+	// Which the card shows in the art box. Kept separate from `hasLive2d` below so a form switch that drops the
+	// model falls back to Art visually (via `live2dActive`) without losing the reader's choice if it comes back.
+	const [mode, setMode] = useState<"art" | "live2d">("art");
+	const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
 	const form = fairyForm(constants, stars);
 	const talentsOpen = talentsAnchor !== null;
 	const hosted = hasFairyForm(fairy.id, form);
 	const hasLive2d = hasFairyLive2d(fairy.id, form);
+	const live2dActive = hasLive2d && mode === "live2d";
+
+	const motions = useFairyLive2dMotions(hasLive2d ? fairy.id : undefined);
+	const live2dTabs = useMemo(() => motionTabs(motions ?? []), [motions]);
+	const live2dModelUrl = live2dActive ? fairyLive2dModelUrl(fairy.id, form) : undefined;
+	const live2dStage = useLive2dStage(canvasRef, live2dModelUrl, live2dTabs);
 
 	const handleForm = useCallback(
 		(_event: MouseEvent<HTMLElement>, value: number | null) => {
@@ -96,6 +111,16 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 
 	const handleCloseTalents = useCallback(() => setTalentsAnchor(null), []);
 
+	const handleMode = useCallback((_event: MouseEvent<HTMLElement>, value: "art" | "live2d" | null) => {
+		if (value !== null) {
+			setMode(value);
+		}
+	}, []);
+
+	const handleLive2dTile = useCallback((value?: string | number) => live2dStage.playMotion(String(value)), [live2dStage.playMotion]);
+
+	const handleLive2dStageClick = useCallback(() => live2dStage.advance(), [live2dStage.advance]);
+
 	return (
 		<main>
 			<ScrollToTop />
@@ -105,21 +130,48 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 					<Grid size={12}>
 						<Paper sx={styles.section} variant="outlined">
 							<Box sx={styles.hero}>
-								<Box sx={styles.artBox}>
-									{hosted ? (
-										<>
+								<Box sx={styles.artColumn}>
+									{hasLive2d ? (
+										<ToggleButtonGroup value={mode} exclusive onChange={handleMode} size="small" sx={styles.modeToggle} aria-label="Art or Live2D">
+											<ToggleButton value="art">Art</ToggleButton>
+											<ToggleButton value="live2d">Live2D</ToggleButton>
+										</ToggleButtonGroup>
+									) : null}
+									<Box sx={styles.artBox}>
+										{live2dActive ? (
+											<Box key={live2dModelUrl} component="canvas" ref={canvasRef} onClick={handleLive2dStageClick} sx={styles.live2dCanvas} />
+										) : hosted ? (
 											<CardMedia component="img" image={fairyFormUrl(fairy.id, form)} alt="" sx={containArtSx} />
-											<Fab color="primary" component={Link} to={`/fairy/${fairy.id}/art?form=${form}`} sx={FAB_EXPAND_SX} aria-label="view full art">
+										) : (
+											<ArtPlaceholder name={fairy.name} sx={styles.placeholder} />
+										)}
+										{live2dActive && live2dStage.status !== "ready" ? (
+											<Box sx={styles.live2dStatus}>
+												<Typography variant="body2" color="text.secondary">
+													{live2dStage.status === "loading" ? "Loading..." : "Model unavailable"}
+												</Typography>
+											</Box>
+										) : null}
+										{live2dActive || hosted ? (
+											<Fab
+												color="primary"
+												component={Link}
+												to={live2dActive ? `/fairy/${fairy.id}/live2d?stars=${stars}` : `/fairy/${fairy.id}/art?form=${form}`}
+												sx={FAB_EXPAND_SX}
+												aria-label={live2dActive ? "view full Live2D" : "view full art"}
+											>
 												<ZoomOutMapIcon />
 											</Fab>
-										</>
-									) : (
-										<ArtPlaceholder name={fairy.name} sx={styles.placeholder} />
-									)}
-									{hasLive2d ? (
-										<Fab color="primary" component={Link} to={`/fairy/${fairy.id}/live2d?form=${form}`} sx={styles.fabLive2d} aria-label="view Live2D">
-											<AnimationOutlinedIcon />
-										</Fab>
+										) : null}
+									</Box>
+									{live2dActive ? (
+										<Box component="ul" sx={styles.live2dTiles} aria-label="Motions">
+											{live2dTabs.map((tab) => (
+												<li key={tab.value}>
+													<FilterChip label={tab.label} selected={tab.value === live2dStage.motion} value={tab.value} onToggle={handleLive2dTile} />
+												</li>
+											))}
+										</Box>
 									) : null}
 								</Box>
 								<Box sx={styles.facts}>
