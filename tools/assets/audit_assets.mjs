@@ -22,6 +22,10 @@
  * file in its `motions/` folder. The moc3 and model3.json checks count toward the missing-files total; a missing texture does too,
  * but a folder with no motion files is a structural problem, since motion file names vary per model and cannot be checked by name.
  *
+ * T-Doll skin Live2D variants are audited the same way, but a skin's texture count varies per model instead of following a fixed table,
+ * so its textures, motions and physics rig (when it has one) are read out of the variant's own `model.model3.json` `FileReferences`
+ * rather than a hardcoded filename, and each referenced file is checked to exist.
+ *
  * Exits non-zero when anything is missing, so it can gate a deploy.
  */
 
@@ -274,6 +278,48 @@ function auditV3(args) {
 
 	for (const [id, kinds] of Object.entries(manifest.live2d?.hocs ?? {})) {
 		auditLive2dModel(`live2d hoc ${id}`, `live2d/hocs/${id}`, kinds, LIVE2D_HOC_FILES, "texture0.webp");
+	}
+
+	/**
+	 * Check one T-Doll skin Live2D variant: its moc3 and model3.json exist, then every texture, motion and physics file the
+	 * model3.json itself lists exists too. Unlike a fairy or HOC, a skin's texture count is not fixed, so it is read from the file
+	 * rather than a hardcoded table.
+	 *
+	 * @param {string} label Message prefix naming the entry, e.g. `live2d tdoll 104 base 1202 normal`.
+	 * @param {string} folder The variant's folder inside the assets tree, e.g. `live2d/tdolls/104/base/1202/normal`.
+	 */
+	const auditSkinLive2dVariant = (label, folder) => {
+		need(`${folder}/model.moc3`, `${label} moc3`);
+		const model3Rel = `${folder}/model.model3.json`;
+		need(model3Rel, `${label} model3`);
+		const model3File = path.join(root, model3Rel);
+		if (!fs.existsSync(model3File)) {
+			return;
+		}
+		const refs = JSON.parse(fs.readFileSync(model3File, "utf8")).FileReferences ?? {};
+		for (const texture of refs.Textures ?? []) {
+			need(`${folder}/${texture}`, `${label} texture`);
+		}
+		if (refs.Physics) {
+			need(`${folder}/${refs.Physics}`, `${label} physics`);
+		}
+		const motionFiles = Object.values(refs.Motions ?? {}).flatMap((group) => group.map((entry) => entry.File));
+		for (const file of motionFiles) {
+			need(`${folder}/${file}`, `${label} motion`);
+		}
+		if (motionFiles.length === 0) {
+			problems.push(`${label}: no motions listed in ${model3Rel}`);
+		}
+	};
+
+	for (const [id, forms] of Object.entries(manifest.live2d?.tdolls ?? {})) {
+		for (const [form, skins] of Object.entries(forms)) {
+			for (const [skin, variants] of Object.entries(skins)) {
+				for (const variant of variants) {
+					auditSkinLive2dVariant(`live2d tdoll ${id} ${form} ${skin} ${variant}`, `live2d/tdolls/${id}/${form}/${skin}/${variant}`);
+				}
+			}
+		}
 	}
 
 	if (fs.existsSync(hocSpineIndexPath)) {

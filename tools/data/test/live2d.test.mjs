@@ -17,3 +17,10 @@ test("a hoc missing its model is reported, a complete hoc is not", () => {
 	const manifest = { live2d: { fairies: {}, hocs: { 6: ["model"], 7: [] } } };
 	assert.deepEqual(findLive2dArtGaps(manifest), ["hoc 7 (missing model)"]);
 });
+
+test("a tdoll skin with no variant is reported, a populated one is not", () => {
+	const manifest = { live2d: { fairies: {}, hocs: {}, tdolls: { 104: { base: { 1202: [] } } } } };
+	assert.deepEqual(findLive2dArtGaps(manifest), ["tdoll 104 base 1202"]);
+	const populated = { live2d: { fairies: {}, hocs: {}, tdolls: { 104: { base: { 1202: ["normal"] } } } } };
+	assert.deepEqual(findLive2dArtGaps(populated), []);
+});

@@ -110,22 +110,77 @@ def scan_live2d_kind(kind_root, kind_files):
     return {entry_id: [kind for kind, files in kind_files if all(os.path.isfile(os.path.join(kind_root, entry_id, name)) for name in files)] for entry_id in ids}
 
 
-def build_live2d(assets_root):
-    """Scan the `live2d/` folder for fairy and HOC Live2D models.
-
-    A fairy form or HOC model counts as present only when both of its files exist, mirroring `build_v3`'s image-kind scan.
-    The shared texture and the `motions/` folder are not recorded here, only checked by `audit_assets.mjs`.
+def tdoll_skin_sort_key(key):
+    """Sort key for a T-Doll skin Live2D key: `base` first, then numeric skin ids by number.
 
     Args:
-        assets_root: The asset tree, holding `live2d/fairies/<id>/` and `live2d/hocs/<id>/`.
+        key: A skin key, `base` or a numeric skin id string.
 
     Returns:
-        The `live2d` manifest block: `fairies` and `hocs`, each keyed by id in numeric order with the kinds present for it.
+        A tuple to sort by.
+    """
+    return (0, 0) if key == "base" else (1, int(key))
+
+
+def scan_live2d_tdolls(tdolls_root):
+    """Scan `live2d/tdolls` for the skin models that exist, by doll, form and skin.
+
+    A variant counts only when it holds both a `model.moc3` and a `model.model3.json`, so a half-written folder is not recorded as present.
+    A stray file sitting where a form or skin folder is expected is skipped rather than crashing the scan.
+
+    Args:
+        tdolls_root: The `live2d/tdolls` folder, which may not exist.
+
+    Returns:
+        A dict of doll id to form to skin key to its sorted variant names, `base` before numeric skin ids, in numeric doll id order.
+        Empty when nothing is published.
+    """
+    entries = {}
+    if not os.path.isdir(tdolls_root):
+        return entries
+    for doll_id in numeric_dirs(tdolls_root):
+        forms = {}
+        for form in sorted(os.listdir(os.path.join(tdolls_root, doll_id))):
+            form_root = os.path.join(tdolls_root, doll_id, form)
+            if not os.path.isdir(form_root):
+                continue
+            skins = {}
+            skin_names = sorted((name for name in os.listdir(form_root) if os.path.isdir(os.path.join(form_root, name))), key=tdoll_skin_sort_key)
+            for skin in skin_names:
+                skin_root = os.path.join(form_root, skin)
+                variants = [
+                    variant
+                    for variant in sorted(os.listdir(skin_root))
+                    if os.path.isfile(os.path.join(skin_root, variant, "model.moc3")) and os.path.isfile(os.path.join(skin_root, variant, "model.model3.json"))
+                ]
+                if variants:
+                    skins[skin] = variants
+            if skins:
+                forms[form] = skins
+        if forms:
+            entries[doll_id] = forms
+    return entries
+
+
+def build_live2d(assets_root):
+    """Scan the `live2d/` folder for fairy, HOC and T-Doll skin Live2D models.
+
+    A fairy form or HOC model counts as present only when both of its files exist, mirroring `build_v3`'s image-kind scan. A skin
+    variant counts the same way, via `scan_live2d_tdolls`. The shared texture and the `motions/` folder are not recorded here, only
+    checked by `audit_assets.mjs`.
+
+    Args:
+        assets_root: The asset tree, holding `live2d/fairies/<id>/`, `live2d/hocs/<id>/` and `live2d/tdolls/<id>/<form>/<skin>/<variant>/`.
+
+    Returns:
+        The `live2d` manifest block: `fairies` and `hocs`, each keyed by id in numeric order with the kinds present for it, and `tdolls`,
+        keyed by doll id, form and skin key with the variant names present for it.
     """
     live2d_root = os.path.join(assets_root, "live2d")
     fairies = scan_live2d_kind(os.path.join(live2d_root, "fairies"), V3_LIVE2D_FAIRY_FILES)
     hocs = scan_live2d_kind(os.path.join(live2d_root, "hocs"), V3_LIVE2D_HOC_FILES)
-    return {"fairies": fairies, "hocs": hocs}
+    tdolls = scan_live2d_tdolls(os.path.join(live2d_root, "tdolls"))
+    return {"fairies": fairies, "hocs": hocs, "tdolls": tdolls}
 
 
 def build_v3(assets_root):
@@ -217,6 +272,7 @@ def main():
     print(f"  fairies      {len(manifest['fairies'])}")
     print(f"  live2d fairies {len(manifest['live2d']['fairies'])}")
     print(f"  live2d hocs    {len(manifest['live2d']['hocs'])}")
+    print(f"  live2d tdolls  {len(manifest['live2d']['tdolls'])}")
 
 
 if __name__ == "__main__":

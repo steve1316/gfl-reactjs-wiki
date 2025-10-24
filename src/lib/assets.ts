@@ -238,3 +238,16 @@ export function fairyLive2dModelUrl(id: number, form: number): string {
 export function hocLive2dModelUrl(id: number): string {
 	return join(ASSET_BASE, `live2d/hocs/${id}/model.model3.json`);
 }
+
+/**
+ * The URL of one T-Doll skin Live2D model's `model3.json`.
+ *
+ * @param dollId The doll's base id.
+ * @param form `base` or `mod`, the doll form the model belongs to.
+ * @param skinKey `base` for the form's own art, or the skin id as a string.
+ * @param variant `normal` or `damaged`.
+ * @returns The published `model3.json` URL.
+ */
+export function skinLive2dModelUrl(dollId: number, form: string, skinKey: string, variant: string): string {
+	return join(ASSET_BASE, `live2d/tdolls/${dollId}/${form}/${skinKey}/${variant}/model.model3.json`);
+}

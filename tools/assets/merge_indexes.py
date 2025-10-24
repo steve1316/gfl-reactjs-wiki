@@ -6,10 +6,11 @@ merges them here. The merge only adds. Anything the committed files already list
 keep the exact format and key order the full builders write.
 
 The manifest partial's `hocs` key, when it lists any new HOC art, merges the same way. The `fairies` key merges the same way too. The `live2d`
-key merges the same way at one level deeper, by id within its own `fairies` and `hocs` sub-keys. The HOC Spine index and the Live2D index are
+key merges the same way at one level deeper, by id within its own `fairies` and `hocs` sub-keys, and its `tdolls` sub-key merges one level
+deeper still, by skin key within each doll id and form. The HOC Spine index and the Live2D index are
 each a separate committed file, merged only when `--hoc-spine-partial` or `--live2d-partial` is passed. The workflow always passes both, but an
 empty partial (a refresh that added no HOC rigs or no Live2D models) is a no-op. Either counts as `{}` (or, for the Live2D index, an empty
-`fairies`/`hocs` pair) when its committed file does not exist yet, and nothing is written when the merge changes nothing.
+`fairies`/`hocs`/`tdolls` set) when its committed file does not exist yet, and nothing is written when the merge changes nothing.
 
 Usage:
     python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] \
@@ -23,7 +24,7 @@ import json
 import os
 import sys
 
-from build_manifest import SKILL_KINDS, dumps
+from build_manifest import SKILL_KINDS, dumps, tdoll_skin_sort_key
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,19 +225,25 @@ def merge_hoc_spine_index(committed, partial):
 
 
 def merge_live2d_index(committed, partial):
-    """Add a partial Live2D index's new fairy and HOC ids into the committed index.
+    """Add a partial Live2D index's new fairy, HOC and T-Doll skin entries into the committed index.
 
     Like a HOC's Spine rigs, a fairy's or HOC's motions are not merged piecemeal: an id is either entirely new or entirely already committed.
+    `tdolls` nests two levels deeper than `fairies` and `hocs`, keyed by doll id then form, so it is merged separately, by skin key within
+    each doll and form: a skin key already committed to a doll and form is a conflict, exactly like a fairy or HOC id the committed index
+    already has, so a partial re-run of one variant can never silently drop the committed record of another. `tdolls` is only written to
+    the merged result when the committed or partial index already has it, mirroring how `merge_manifest` only carries `hocs`, `fairies`
+    and `live2d` forward when one side already has them - so merging an old committed index that predates `tdolls` against a partial with
+    nothing tdoll-related reproduces the old shape exactly, instead of growing an empty `tdolls` key no caller asked for.
 
     Args:
-        committed: The committed Live2D index, `{"fairies": {...}, "hocs": {...}}`.
+        committed: The committed Live2D index, `{"fairies": {...}, "hocs": {...}}`, optionally with a `tdolls` key too.
         partial: The index built from the `add` staging folder, the same shape.
 
     Returns:
         A merged copy. `committed` is not changed.
 
     Raises:
-        MergeConflict: When the partial has a fairy or HOC id the committed index already has.
+        MergeConflict: When the partial has a fairy or HOC id, or a tdoll doll/form/skin key, the committed index already has.
     """
     conflicts = []
     merged = {}
@@ -248,9 +255,25 @@ def merge_live2d_index(committed, partial):
             else:
                 entries[entry_id] = copy.deepcopy(entry)
         merged[sub_key] = entries
+    result = {"fairies": by_id(merged["fairies"]), "hocs": by_id(merged["hocs"])}
+    if "tdolls" in committed or "tdolls" in partial:
+        committed_tdolls = copy.deepcopy(committed.get("tdolls", {}))
+        for doll_id, forms in partial.get("tdolls", {}).items():
+            doll = committed_tdolls.setdefault(doll_id, {})
+            for form, skins in forms.items():
+                existing = doll.setdefault(form, {})
+                for skin_key, variants in skins.items():
+                    if skin_key in existing:
+                        conflicts.append(f"live2d tdoll {doll_id} {form} {skin_key}")
+                    else:
+                        existing[skin_key] = variants
+        result["tdolls"] = {
+            doll_id: {form: dict(sorted(skins.items(), key=lambda pair: tdoll_skin_sort_key(pair[0]))) for form, skins in sorted(forms.items())}
+            for doll_id, forms in sorted(committed_tdolls.items(), key=lambda pair: int(pair[0]))
+        }
     if conflicts:
         raise MergeConflict(conflicts)
-    return {"fairies": by_id(merged["fairies"]), "hocs": by_id(merged["hocs"])}
+    return result
 
 
 def dump_spine_index(index):
@@ -300,7 +323,7 @@ def main():
     hoc_spine_partial = read_json(args.hoc_spine_partial) if args.hoc_spine_partial else None
     committed_hoc_spine = read_json(args.hoc_spine) if os.path.isfile(args.hoc_spine) else {}
     live2d_partial = read_json(args.live2d_partial) if args.live2d_partial else None
-    committed_live2d = read_json(args.live2d_index) if os.path.isfile(args.live2d_index) else {"fairies": {}, "hocs": {}}
+    committed_live2d = read_json(args.live2d_index) if os.path.isfile(args.live2d_index) else {"fairies": {}, "hocs": {}, "tdolls": {}}
     try:
         manifest = merge_manifest(read_json(args.manifest), manifest_partial)
         spine_index = merge_spine_index(read_json(args.spine_index), spine_partial)

@@ -413,3 +413,43 @@ export async function loadHocLive2dMotions(id: number): Promise<Live2dMotion[] |
 	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
 	return index.hocs[String(id)]?.motions;
 }
+
+/**
+ * Look up one T-Doll skin variant's Live2D motions.
+ *
+ * @param dollId The doll's base id.
+ * @param form `base` or `mod`, the doll form the model belongs to.
+ * @param skinKey `base` for the form's own art, or the skin id as a string.
+ * @param variant `normal` or `damaged`.
+ * @returns The variant's motions, or undefined when nothing was published for it.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadSkinLive2dMotions(dollId: number, form: string, skinKey: string, variant: string): Promise<Live2dMotion[] | undefined> {
+	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
+	return index.tdolls?.[String(dollId)]?.[form]?.[skinKey]?.[variant]?.motions;
+}
+
+/**
+ * Look up which form, skin and variant combinations have a published Live2D model for a doll, without loading any motions.
+ *
+ * @param dollId The doll's base id.
+ * @returns The doll's forms, each mapping a skin key to the variant names it has (`normal`, `damaged`, or both), or undefined when the
+ *   doll has no T-Doll skin Live2D models at all.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadSkinLive2dForms(dollId: number): Promise<Record<string, Record<string, string[]>> | undefined> {
+	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
+	const forms = index.tdolls?.[String(dollId)];
+	if (forms === undefined) {
+		return undefined;
+	}
+	const result: Record<string, Record<string, string[]>> = {};
+	for (const [form, skins] of Object.entries(forms)) {
+		const skinVariants: Record<string, string[]> = {};
+		for (const [skinKey, variants] of Object.entries(skins)) {
+			skinVariants[skinKey] = Object.keys(variants);
+		}
+		result[form] = skinVariants;
+	}
+	return result;
+}

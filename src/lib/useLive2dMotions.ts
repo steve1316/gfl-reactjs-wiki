@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { AnimationTab } from "./spine";
 import type { Live2dMotion } from "../types/live2d";
-import { loadFairyLive2dMotions, loadHocLive2dMotions } from "./data";
+import { loadFairyLive2dMotions, loadHocLive2dMotions, loadSkinLive2dForms, loadSkinLive2dMotions } from "./data";
 
 /**
  * The `model3Group` value every idle-classified motion's index entry carries, per `tools/assets/extract_live2d.py`'s
@@ -47,33 +47,33 @@ export function motionTabs(motions: readonly Live2dMotion[]): AnimationTab[] {
 }
 
 /**
- * Load one model's Live2D motions by id, shared by the fairy and HOC hooks below since both only differ in which loader they call.
+ * Load one model's Live2D data by id, shared by every hook below that keys off a single id since they only differ in which loader
+ * they call.
  *
  * @param id The model's id, or undefined before it is known.
- * @param loader Fetches the motions for one id, resolving to undefined when nothing was published for it.
- * @returns The motions once loaded, undefined when nothing was published for it, or null before the load settles.
+ * @param loader Fetches the data for one id, resolving to undefined when nothing was published for it.
+ * @returns The data once loaded, undefined when nothing was published for it, or null before the load settles.
  */
-function useModelLive2dMotions(id: number | undefined, loader: (id: number) => Promise<Live2dMotion[] | undefined>): Live2dMotion[] | undefined | null {
-	const [motions, setMotions] = useState<Live2dMotion[] | undefined | null>(null);
+function useModelLive2dData<T>(id: number | undefined, loader: (id: number) => Promise<T | undefined>): T | undefined | null {
+	const [value, setValue] = useState<T | undefined | null>(null);
 
 	useEffect(() => {
 		if (id === undefined) {
 			return;
 		}
 		let active = true;
-		setMotions(null);
+		setValue(null);
 		loader(id).then(
-			(loaded) => active && setMotions(loaded),
+			(loaded) => active && setValue(loaded),
 			() => {}
 		);
 		return () => {
 			active = false;
 		};
-		// `loader` is a stable module-level function at every call site (`loadFairyLive2dMotions` or `loadHocLive2dMotions`),
-		// so including it here never causes an extra run.
+		// `loader` is a stable module-level function at every call site, so including it here never causes an extra run.
 	}, [id, loader]);
 
-	return motions;
+	return value;
 }
 
 /**
@@ -83,7 +83,7 @@ function useModelLive2dMotions(id: number | undefined, loader: (id: number) => P
  * @returns The motions once loaded, undefined when nothing was published for it, or null before the load settles.
  */
 export function useFairyLive2dMotions(id: number | undefined): Live2dMotion[] | undefined | null {
-	return useModelLive2dMotions(id, loadFairyLive2dMotions);
+	return useModelLive2dData(id, loadFairyLive2dMotions);
 }
 
 /**
@@ -93,5 +93,46 @@ export function useFairyLive2dMotions(id: number | undefined): Live2dMotion[] | 
  * @returns The motions once loaded, undefined when nothing was published for it, or null before the load settles.
  */
 export function useHocLive2dMotions(id: number | undefined): Live2dMotion[] | undefined | null {
-	return useModelLive2dMotions(id, loadHocLive2dMotions);
+	return useModelLive2dData(id, loadHocLive2dMotions);
+}
+
+/**
+ * Load which form, skin and variant combinations have a published T-Doll skin Live2D model, for the doll page to decide whether to
+ * offer the Live2D toggle at all before any motions are loaded.
+ *
+ * @param dollId The doll's base id, or undefined before it is known.
+ * @returns The doll's forms once loaded, undefined when it has no T-Doll skin Live2D models, or null before the load settles.
+ */
+export function useSkinLive2dForms(dollId: number | undefined): Record<string, Record<string, string[]>> | undefined | null {
+	return useModelLive2dData(dollId, loadSkinLive2dForms);
+}
+
+/**
+ * Load one T-Doll skin variant's Live2D motions, for the doll page's Live2D viewer once a skin, form and variant are selected.
+ *
+ * @param dollId The doll's base id, or undefined before it is known.
+ * @param form `base` or `mod`, the doll form the model belongs to.
+ * @param skinKey `base` for the form's own art, or the skin id as a string.
+ * @param variant `normal` or `damaged`.
+ * @returns The motions once loaded, undefined when nothing was published for it, or null before the load settles.
+ */
+export function useSkinLive2dMotions(dollId: number | undefined, form: string, skinKey: string, variant: string): Live2dMotion[] | undefined | null {
+	const [motions, setMotions] = useState<Live2dMotion[] | undefined | null>(null);
+
+	useEffect(() => {
+		if (dollId === undefined) {
+			return;
+		}
+		let active = true;
+		setMotions(null);
+		loadSkinLive2dMotions(dollId, form, skinKey, variant).then(
+			(loaded) => active && setMotions(loaded),
+			() => {}
+		);
+		return () => {
+			active = false;
+		};
+	}, [dollId, form, skinKey, variant]);
+
+	return motions;
 }

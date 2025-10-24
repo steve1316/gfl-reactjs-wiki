@@ -286,6 +286,54 @@ class HocSpineMergeTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Live2D index
+
+
+class Live2dMergeTests(unittest.TestCase):
+    """Adding partial Live2D index entries: fairies and hocs by id, tdolls one level deeper, by doll, form and skin."""
+
+    def test_merge_live2d_index_merges_tdolls_by_doll_form_and_skin(self):
+        """A new skin joins an existing doll and form, and a new form or doll is added whole."""
+        committed = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal"]}}}}
+        partial = {
+            "fairies": {},
+            "hocs": {},
+            "tdolls": {"104": {"base": {"3802": ["normal"]}, "mod": {"1202": ["normal"]}}, "65": {"base": {"805": ["normal"]}}},
+        }
+        merged = merge_indexes.merge_live2d_index(committed, partial)
+        self.assertEqual(merged["tdolls"]["104"]["base"], {"1202": ["normal"], "3802": ["normal"]})
+        self.assertEqual(merged["tdolls"]["104"]["mod"], {"1202": ["normal"]})
+        self.assertEqual(merged["tdolls"]["65"], {"base": {"805": ["normal"]}})
+
+    def test_merge_live2d_index_keeps_a_committed_tdoll_the_partial_does_not_mention(self):
+        """A committed tdoll the partial says nothing about is carried through unchanged."""
+        committed = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal", "damaged"]}}}}
+        merged = merge_indexes.merge_live2d_index(committed, {"fairies": {}, "hocs": {}, "tdolls": {}})
+        self.assertEqual(merged["tdolls"], {"104": {"base": {"1202": ["normal", "damaged"]}}})
+
+    def test_no_tdolls_key_when_neither_side_has_one(self):
+        """An old committed index that predates `tdolls`, merged against a partial with nothing tdoll-related, gains no `tdolls` key."""
+        merged = merge_indexes.merge_live2d_index({"fairies": {}, "hocs": {}}, {"fairies": {}, "hocs": {}})
+        self.assertNotIn("tdolls", merged)
+
+    def test_tdoll_skin_conflict_is_refused_instead_of_overwriting(self):
+        """A skin key already committed to a doll and form stops the merge instead of replacing its variant list."""
+        committed = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal"]}}}}
+        partial = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["damaged"]}}}}
+        with self.assertRaises(merge_indexes.MergeConflict) as caught:
+            merge_indexes.merge_live2d_index(committed, partial)
+        self.assertEqual(caught.exception.conflicts, ["live2d tdoll 104 base 1202"])
+
+    def test_tdoll_skins_sort_with_base_first_then_numeric(self):
+        """A merged doll's skin keys order `base` before numeric skin ids, not as plain strings."""
+        committed = {"fairies": {}, "hocs": {}, "tdolls": {}}
+        partial = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal"], "base": ["normal"], "805": ["normal"]}}}}
+        merged = merge_indexes.merge_live2d_index(committed, partial)
+        self.assertEqual(list(merged["tdolls"]["104"]["base"]), ["base", "805", "1202"])
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Committed files
 
 

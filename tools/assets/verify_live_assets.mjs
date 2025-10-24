@@ -58,6 +58,9 @@ const LIVE2D_FAIRY_MODEL_FILES = { form1: "form1.model3.json", form2: "form2.mod
 /** Live2D HOC kind -> its model3.json filename inside a HOC's `live2d/hocs/<id>/` folder. */
 const LIVE2D_HOC_MODEL_FILES = { model: "model.model3.json" };
 
+/** Live2D T-Doll skin variant model3.json filename, inside a skin's `live2d/tdolls/<id>/<form>/<skin>/<variant>/` folder. */
+const LIVE2D_SKIN_MODEL_FILE = "model.model3.json";
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // URL derivation
@@ -101,7 +104,8 @@ export function uiImageNames(srcDir) {
  * @param {string[]} [uiNames] Top-level UI image names, as `uiImageNames` finds them.
  * @param {object} [hocSpineIndex] The HOC Spine index, id -> `{combat, crew}` rigs.
  * @returns {Record<string, string[]>} Tier name -> URLs. Tiers are `manifest`, `ui`, `cards`, `modCards`, `full`, `skills`, `equipment`,
- *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel`, `hocSpineAtlas`, `fairyForms`, `live2dFairies` and `live2dHocs`.
+ *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel`, `hocSpineAtlas`, `fairyForms`, `live2dFairies`, `live2dHocs` and
+ *     `live2dTdolls`.
  */
 export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpineIndex = {}) {
 	const tiers = {
@@ -120,7 +124,8 @@ export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpine
 		hocSpineAtlas: [],
 		fairyForms: [],
 		live2dFairies: [],
-		live2dHocs: []
+		live2dHocs: [],
+		live2dTdolls: []
 	};
 	for (const [id, doll] of Object.entries(manifest.dolls ?? {})) {
 		const forms = [[`tdolls/${id}`, doll.normal], [`tdolls/${id}/mod`, doll.mod], ...Object.entries(doll.skins ?? {}).map(([skinId, skin]) => [`tdolls/${id}/skins/${skinId}`, skin])];
@@ -171,6 +176,15 @@ export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpine
 	for (const [id, kinds] of Object.entries(manifest.live2d?.hocs ?? {})) {
 		for (const kind of kinds) {
 			tiers.live2dHocs.push(join(base, `live2d/hocs/${id}/${LIVE2D_HOC_MODEL_FILES[kind]}`));
+		}
+	}
+	for (const [id, forms] of Object.entries(manifest.live2d?.tdolls ?? {})) {
+		for (const [form, skins] of Object.entries(forms)) {
+			for (const [skin, variants] of Object.entries(skins)) {
+				for (const variant of variants) {
+					tiers.live2dTdolls.push(join(base, `live2d/tdolls/${id}/${form}/${skin}/${variant}/${LIVE2D_SKIN_MODEL_FILE}`));
+				}
+			}
 		}
 	}
 	for (const [id, entry] of Object.entries(hocSpineIndex)) {

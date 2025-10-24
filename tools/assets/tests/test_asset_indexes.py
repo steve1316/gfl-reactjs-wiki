@@ -283,7 +283,7 @@ class FairyIndexTests(unittest.TestCase):
 
 
 class Live2dIndexTests(unittest.TestCase):
-    """Live2D fairy forms and HOC models land in the manifest's `live2d` block."""
+    """Live2D fairy forms, HOC models and T-Doll skin variants land in the manifest's `live2d` block."""
 
     def test_manifest_lists_live2d_kinds(self):
         with tempfile.TemporaryDirectory() as assets:
@@ -301,7 +301,7 @@ class Live2dIndexTests(unittest.TestCase):
                 "live2d/hocs/5/texture0.webp",
             )
             manifest = build_manifest.build_v3(assets)
-        self.assertEqual(manifest["live2d"], {"fairies": {"1": ["form1", "form2", "form3"]}, "hocs": {"5": ["model"]}})
+        self.assertEqual(manifest["live2d"], {"fairies": {"1": ["form1", "form2", "form3"]}, "hocs": {"5": ["model"]}, "tdolls": {}})
 
     def test_a_fairy_missing_one_forms_moc3_lists_only_the_forms_it_has(self):
         with tempfile.TemporaryDirectory() as assets:
@@ -320,7 +320,41 @@ class Live2dIndexTests(unittest.TestCase):
     def test_manifest_has_no_live2d_kinds_when_the_folder_is_absent(self):
         with tempfile.TemporaryDirectory() as assets:
             manifest = build_manifest.build_v3(assets)
-        self.assertEqual(manifest["live2d"], {"fairies": {}, "hocs": {}})
+        self.assertEqual(manifest["live2d"], {"fairies": {}, "hocs": {}, "tdolls": {}})
+
+    def test_build_live2d_scans_the_tdolls_tree(self):
+        """A skin variant counts once both its moc3 and model3.json exist, keyed by doll id, form and skin key."""
+        with tempfile.TemporaryDirectory() as assets:
+            touch(
+                assets,
+                "live2d/tdolls/104/base/1202/normal/model.moc3",
+                "live2d/tdolls/104/base/1202/normal/model.model3.json",
+                "live2d/tdolls/104/base/1202/damaged/model.moc3",
+                "live2d/tdolls/104/base/1202/damaged/model.model3.json",
+                "live2d/tdolls/104/mod/base/normal/model.moc3",
+                "live2d/tdolls/104/mod/base/normal/model.model3.json",
+            )
+            block = build_manifest.build_live2d(assets)
+        self.assertEqual(block["tdolls"], {"104": {"base": {"1202": ["damaged", "normal"]}, "mod": {"base": ["normal"]}}})
+
+    def test_build_live2d_skips_stray_files_at_the_form_and_skin_level(self):
+        """A stray file sitting where a form or skin folder is expected is skipped instead of crashing the scan."""
+        with tempfile.TemporaryDirectory() as assets:
+            touch(
+                assets,
+                "live2d/tdolls/104/.DS_Store",
+                "live2d/tdolls/104/base/.DS_Store",
+                "live2d/tdolls/104/base/1202/normal/model.moc3",
+                "live2d/tdolls/104/base/1202/normal/model.model3.json",
+            )
+            block = build_manifest.build_live2d(assets)
+        self.assertEqual(block["tdolls"], {"104": {"base": {"1202": ["normal"]}}})
+
+    def test_build_live2d_skips_a_variant_with_no_model(self):
+        """A variant folder with only a texture and no moc3/model3.json is not counted as present."""
+        with tempfile.TemporaryDirectory() as assets:
+            touch(assets, "live2d/tdolls/104/base/1202/normal/texture0.webp")
+            self.assertEqual(build_manifest.build_live2d(assets)["tdolls"], {})
 
 
 class MotionGroupsTests(unittest.TestCase):
@@ -391,6 +425,7 @@ class BuildLive2dIndexTests(unittest.TestCase):
                 "hocs": {
                     "5": {"motions": [{"name": "daiji_idle_01", "group": "idle", "model3Group": "Idle", "seconds": 1.2, "touchArea": None}]}
                 },
+                "tdolls": {},
             },
         )
 
@@ -408,12 +443,71 @@ class BuildLive2dIndexTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             touch(root, "live2d/fairies/1/texture.webp")
             index = build_live2d_index.build_index(root, [])
-        self.assertEqual(index, {"fairies": {}, "hocs": {}})
+        self.assertEqual(index, {"fairies": {}, "hocs": {}, "tdolls": {}})
 
     def test_missing_fairies_and_hocs_folders_yield_an_empty_index(self):
         with tempfile.TemporaryDirectory() as root:
             index = build_live2d_index.build_index(root, [])
-        self.assertEqual(index, {"fairies": {}, "hocs": {}})
+        self.assertEqual(index, {"fairies": {}, "hocs": {}, "tdolls": {}})
+
+
+def test_skin_motion_rows_classify_by_type_and_hurt_flag():
+    rows = [
+        {"id": 1, "type": 101, "motion_name": "motions/daiji_idle_01.mtn", "touch_area": "0", "hold_time": "0", "is_hurt": 0, "text": ""},
+        {"id": 2, "type": 200, "motion_name": "motions/touch_1.mtn", "touch_area": "head", "hold_time": "0", "is_hurt": 0, "text": "GUN|G36C|DIALOGUE1"},
+        {"id": 3, "type": 402, "motion_name": "motions/broken.mtn", "touch_area": "head", "hold_time": "0", "is_hurt": 1, "text": "GUN|G36C|BREAK"},
+    ]
+    lines = {"G36C|DIALOGUE1": "Commander, is there something bothering you?"}
+    normal = build_live2d_index.skin_motion_lookup(rows, [1, 2, 3], "normal", lines)
+    damaged = build_live2d_index.skin_motion_lookup(rows, [1, 2, 3], "damaged", lines)
+
+    assert normal["daiji_idle_01"]["group"] == "idle"
+    assert normal["touch_1"] == {"group": "touch", "touchArea": "head", "line": "Commander, is there something bothering you?"}
+    # is_hurt rows belong to the damaged variant only, so the normal lookup must not carry them.
+    assert "broken" not in normal
+    assert damaged["broken"]["group"] == "other"
+    assert "touch_1" not in damaged
+
+
+def test_skin_motion_lookup_matches_stems_case_insensitively():
+    rows = [{"id": 1, "type": 102, "motion_name": "motions/daiji01_SHOWCACE.mtn", "touch_area": "0", "hold_time": "12,30", "is_hurt": 0, "text": ""}]
+    lookup = build_live2d_index.skin_motion_lookup(rows, [1], "normal", {})
+    assert lookup["daiji01_showcace"]["group"] == "wait"
+
+
+def test_dialogue_lines_drop_the_gun_prefix():
+    lines = build_live2d_index.dialogue_lines(["G36C|DIALOGUE1|Hello there", "G36C|ATTACK|Advance"])
+    assert lines["G36C|DIALOGUE1"] == "Hello there"
+    assert build_live2d_index.dialogue_for("GUN|G36C|DIALOGUE1", lines) == "Hello there"
+    assert build_live2d_index.dialogue_for("", lines) is None
+    assert build_live2d_index.dialogue_for("GUN|G36C|NOPE", lines) is None
+
+
+def test_index_tdolls_walks_doll_form_skin_and_variant(tmp_path):
+    motions_dir = tmp_path / "live2d" / "tdolls" / "104" / "base" / "1202" / "normal" / "motions"
+    motions_dir.mkdir(parents=True)
+    (motions_dir / "touch_1.motion3.json").write_text(json.dumps({"Meta": {"Duration": 2.345}}))
+    table = [{"code": "G36C_1202", "fit_gun": 104, "skin": 1202, "motions": "2"}]
+    rows = [{"id": 2, "type": 200, "motion_name": "motions/touch_1.mtn", "touch_area": "body", "hold_time": "0", "is_hurt": 0, "text": "GUN|G36C|DIALOGUE1"}]
+    index = build_live2d_index.index_tdolls(str(tmp_path / "live2d" / "tdolls"), table, rows, {"G36C|DIALOGUE1": "Hi"})
+    motion = index["104"]["base"]["1202"]["normal"]["motions"][0]
+    assert motion == {"name": "touch_1", "group": "touch", "model3Group": "touch_1", "seconds": 2.35, "touchArea": "body", "line": "Hi"}
+
+
+def test_index_tdolls_skips_stray_files_at_the_form_and_skin_level(tmp_path):
+    """A stray file sitting where a form or skin folder is expected is skipped instead of crashing the walk."""
+    tdolls_root = tmp_path / "live2d" / "tdolls"
+    motions_dir = tdolls_root / "104" / "base" / "1202" / "normal" / "motions"
+    motions_dir.mkdir(parents=True)
+    (motions_dir / "touch_1.motion3.json").write_text(json.dumps({"Meta": {"Duration": 2.345}}))
+    (tdolls_root / "104" / ".DS_Store").write_text("")
+    (tdolls_root / "104" / "base" / ".DS_Store").write_text("")
+    table = [{"code": "G36C_1202", "fit_gun": 104, "skin": 1202, "motions": "2"}]
+    rows = [{"id": 2, "type": 200, "motion_name": "motions/touch_1.mtn", "touch_area": "body", "hold_time": "0", "is_hurt": 0, "text": "GUN|G36C|DIALOGUE1"}]
+    index = build_live2d_index.index_tdolls(str(tdolls_root), table, rows, {"G36C|DIALOGUE1": "Hi"})
+    assert list(index["104"].keys()) == ["base"]
+    assert list(index["104"]["base"].keys()) == ["1202"]
+    assert index["104"]["base"]["1202"]["normal"]["motions"][0]["name"] == "touch_1"
 
 
 if __name__ == "__main__":
