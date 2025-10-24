@@ -1,4 +1,4 @@
-"""Convert fairy and HOC Live2D Unity Cubism bundles into standard Cubism web runtime files.
+"""Convert fairy, HOC and T-Doll skin Live2D Unity Cubism bundles into standard Cubism web runtime files.
 
 Each `live2d` inventory item names one bundle holding a `CubismMoc` (`.moc3` bytes) and prefab per form (three for a fairy, one for a
 HOC), a texture shared by all forms of a fairy or one-per-slot for a HOC, and a `motions/` folder of `<name>.fade.asset` objects that
@@ -13,6 +13,8 @@ Published layout, under `<staging>/assets/live2d/`:
 - `fairies/<id>/texture.webp`, `fairies/<id>/form<n>.moc3`, `fairies/<id>/form<n>.model3.json` (n = 1, 2, 3), and
   `fairies/<id>/motions/<name>.motion3.json` - the texture and motions are shared by all three forms.
 - `hocs/<id>/model.moc3`, `hocs/<id>/model.model3.json`, `hocs/<id>/texture<n>.webp` (n from 0) and `hocs/<id>/motions/<name>.motion3.json`.
+- `tdolls/<id>/<form>/<skin>/<variant>/model.moc3`, `.../model.model3.json`, `.../texture<n>.webp` (n from 0), `.../model.physics3.json`
+  when the model has a physics rig, and `.../motions/<name>.motion3.json`. `variant` is `normal` or `damaged`.
 """
 
 import collections
@@ -24,6 +26,7 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TOOLS_DIR)
 
 from extract_game_assets import CARD_QUALITY, FAIRY_FORMS, encode_webp, new_result, unity_load, write_file  # noqa: E402
+from skin_live2d_table import SKIN_LIVE2D_VARIANTS  # noqa: E402
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,6 +34,10 @@ from extract_game_assets import CARD_QUALITY, FAIRY_FORMS, encode_webp, new_resu
 
 REPORT_TIER_FAIRY = "live2d_fairy"
 REPORT_TIER_HOC = "live2d_hoc"
+# Report tier a skin Live2D model's written files count under, beside the fairy and HOC tiers.
+REPORT_TIER_SKIN = "live2d_skin"
+# Unity's CubismPhysicsSourceComponent, the enum both a physics input and output use to say which component of the source it reads.
+PHYSICS_COMPONENTS = {0: "X", 1: "Y", 2: "Angle"}
 
 # A walked prefab's classification ids and Cubism marker groups.
 PrefabInfo = collections.namedtuple("PrefabInfo", ("params", "parts", "eyeblink", "lipsync", "hit_areas"))
@@ -186,6 +193,22 @@ def model3(moc_name, texture_names, motion_groups, groups, hit_areas):
     }
 
 
+def texture_output_names(paths):
+    """Name a model's textures by their position rather than by their own file names.
+
+    A skin bundle can hold two textures with the same basename, when a nested model folder repeats `texture_00.png`. Naming output files
+    from the basename would write one over the other and lose a texture, so the slot index names the file instead. The order is the
+    container order, which is the order each drawable's `CubismRenderer._mainTexture` refers to.
+
+    Args:
+        paths: The model's texture container paths, in container order.
+
+    Returns:
+        One `texture<n>.webp` name per path, in the same order.
+    """
+    return [f"texture{slot}.webp" for slot in range(len(paths))]
+
+
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # Prefab walking
@@ -267,6 +290,122 @@ def walk_prefab(objs, prefab):
             elif group["m_Name"] == "Drawables" and "CubismHitDrawable" in child_components:
                 hit_areas.append({"Id": name, "Name": child_components["CubismHitDrawable"][0]["Name"]})
     return PrefabInfo(params, parts, eyeblink, lipsync, hit_areas)
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Physics
+
+
+def physics_vector(vector):
+    """Convert a Unity vector to the capitalised form physics3.json uses.
+
+    Args:
+        vector: A `{"x", "y"}` dict from a typetree.
+
+    Returns:
+        An `{"X", "Y"}` dict.
+    """
+    return {"X": vector["x"], "Y": vector["y"]}
+
+
+def physics_range(bounds):
+    """Convert one Unity normalisation range, reordering it the way physics3.json writes it.
+
+    Args:
+        bounds: A `{"Minimum", "Maximum", "Default"}` dict from a typetree.
+
+    Returns:
+        The same three values, minimum first.
+    """
+    return {"Minimum": bounds["Minimum"], "Maximum": bounds["Maximum"], "Default": bounds["Default"]}
+
+
+def physics3(rig):
+    """Convert a `CubismPhysicsController._rig` typetree into a Cubism physics3.json document.
+
+    The Unity rig and the web format hold the same data under different names, so this is a rename
+    rather than a computation. A sub-rig becomes one `PhysicsSettings` entry, its `Particles` become
+    `Vertices`, and an input or output's `SourceComponent` picks both the entry's `Type` and, for an
+    output, which of the two scale fields carries its `Scale`.
+
+    Args:
+        rig: The controller's `_rig` dict, or None when the prefab has no `CubismPhysicsController`.
+
+    Returns:
+        The physics3 document, or None when there is no rig or it holds no sub-rigs, in which case no
+        file should be written.
+    """
+    if not rig or not rig.get("SubRigs"):
+        return None
+    settings, dictionary = [], []
+    for number, sub in enumerate(rig["SubRigs"], start=1):
+        setting_id = f"PhysicsSetting{number}"
+        dictionary.append({"Id": setting_id, "Name": setting_id})
+        inputs = [
+            {
+                "Source": {"Target": "Parameter", "Id": entry["SourceId"]},
+                "Weight": entry["Weight"],
+                "Type": PHYSICS_COMPONENTS[entry["SourceComponent"]],
+                "Reflect": bool(entry["IsInverted"]),
+            }
+            for entry in sub["Input"]
+        ]
+        outputs = []
+        for entry in sub["Output"]:
+            component = PHYSICS_COMPONENTS[entry["SourceComponent"]]
+            scale = (
+                entry["AngleScale"]
+                if component == "Angle"
+                else entry["TranslationScale"]["x" if component == "X" else "y"]
+            )
+            outputs.append(
+                {
+                    "Destination": {"Target": "Parameter", "Id": entry["DestinationId"]},
+                    "VertexIndex": entry["ParticleIndex"],
+                    "Scale": scale,
+                    "Weight": entry["Weight"],
+                    "Type": component,
+                    "Reflect": bool(entry["IsInverted"]),
+                }
+            )
+        vertices = [
+            {
+                "Position": physics_vector(particle["InitialPosition"]),
+                "Mobility": particle["Mobility"],
+                "Delay": particle["Delay"],
+                "Acceleration": particle["Acceleration"],
+                "Radius": particle["Radius"],
+            }
+            for particle in sub["Particles"]
+        ]
+        settings.append(
+            {
+                "Id": setting_id,
+                "Input": inputs,
+                "Output": outputs,
+                "Vertices": vertices,
+                "Normalization": {
+                    "Position": physics_range(sub["Normalization"]["Position"]),
+                    "Angle": physics_range(sub["Normalization"]["Angle"]),
+                },
+            }
+        )
+    return {
+        "Version": 3,
+        "Meta": {
+            "PhysicsSettingCount": len(settings),
+            "TotalInputCount": sum(len(setting["Input"]) for setting in settings),
+            "TotalOutputCount": sum(len(setting["Output"]) for setting in settings),
+            "VertexCount": sum(len(setting["Vertices"]) for setting in settings),
+            "EffectiveForces": {
+                "Gravity": physics_vector(rig["Gravity"]),
+                "Wind": physics_vector(rig["Wind"]),
+            },
+            "PhysicsDictionary": dictionary,
+        },
+        "PhysicsSettings": settings,
+    }
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -471,14 +610,124 @@ def build_hoc_live2d(item, cache_dir, staging, loader):
     return result
 
 
+def prefab_physics_rig(objs, prefab):
+    """Find a prefab's `CubismPhysicsController` rig, if it has one.
+
+    Args:
+        objs: Path id to UnityPy object reader, for the whole bundle.
+        prefab: The prefab root's GameObject typetree dict.
+
+    Returns:
+        The controller's `_rig` dict, or None when the prefab has no physics controller.
+    """
+    for entry in prefab["m_Component"]:
+        obj = objs[entry["component"]["m_PathID"]]
+        if obj.type.name != "MonoBehaviour":
+            continue
+        if obj.read().m_Script.read().m_ClassName == "CubismPhysicsController":
+            return obj.read_typetree().get("_rig")
+    return None
+
+
+def build_skin_variant(item, container, objs, variant, folder, staging, result):
+    """Extract one variant of a skin's model: textures, moc3, physics, motions and model3.
+
+    Args:
+        item: A resolved `live2d` skin item.
+        container: The bundle's container, from `load_container`.
+        objs: Path id to UnityPy object reader, from `load_container`.
+        variant: `normal` or `damaged`, naming the item's asset roles.
+        folder: Output folder for this variant, such as `live2d/tdolls/104/base/1202/normal`.
+        staging: The staging root.
+        result: The worker result to append missing rows and written files to.
+    """
+    key = item["key"]
+    moc_role, prefab_role = f"{variant}_moc", f"{variant}_prefab"
+    if moc_role not in item["assets"] or prefab_role not in item["assets"]:
+        result["missing"].append({"key": key, "role": moc_role, "reason": "not resolved"})
+        return
+
+    texture_names = []
+    if f"{variant}_textures" in item["assets"]:
+        prefix = item["assets"][f"{variant}_textures"]["path"].lower()
+        paths = sorted(path for path, _obj in container.items() if path.startswith(prefix) and path.endswith(".png"))
+        for path, name in zip(paths, texture_output_names(paths)):
+            try:
+                image = container[path].read().image.convert("RGBA")
+                write_file(staging, f"{folder}/{name}", encode_webp(image, CARD_QUALITY), REPORT_TIER_SKIN, result)
+                texture_names.append(name)
+            except Exception as exc:
+                # The moc3's texture units are index-based, so silently dropping one slot would shift every later drawable onto the
+                # wrong image - the model would still load, just render wrong. Failing the whole variant beats that.
+                result["missing"].append({"key": key, "role": f"{variant}_texture:{name}", "reason": f"failed: {exc!r}"})
+                return
+
+    try:
+        moc_bytes = read_moc(container, item["assets"][moc_role])
+        write_file(staging, f"{folder}/model.moc3", moc_bytes, REPORT_TIER_SKIN, result)
+        prefab = container[item["assets"][prefab_role]["path"].lower()].read_typetree()
+        info = walk_prefab(objs, prefab)
+    except Exception as exc:
+        result["missing"].append({"key": key, "role": moc_role, "reason": f"failed: {exc!r}"})
+        return
+
+    physics_name = None
+    try:
+        document = physics3(prefab_physics_rig(objs, prefab))
+        if document is not None:
+            write_file(staging, f"{folder}/model.physics3.json", json.dumps(document, indent=1).encode("utf-8"), REPORT_TIER_SKIN, result)
+            physics_name = "model.physics3.json"
+    except Exception as exc:
+        # Physics is secondary motion only, so a bad rig costs sway rather than the whole model.
+        result["missing"].append({"key": key, "role": f"{variant}_physics", "reason": f"failed: {exc!r}"})
+
+    motion_groups = {}
+    if f"{variant}_motions" not in item["assets"]:
+        result["missing"].append({"key": key, "role": f"{variant}_motions", "reason": "not resolved"})
+    else:
+        motion_groups = build_motions(container, item["assets"][f"{variant}_motions"], info.params, info.parts, folder, REPORT_TIER_SKIN, staging, result, key)
+
+    try:
+        built = model3("model.moc3", texture_names, motion_groups, (info.eyeblink, info.lipsync), info.hit_areas)
+        if physics_name:
+            built["FileReferences"]["Physics"] = physics_name
+        write_file(staging, f"{folder}/model.model3.json", json.dumps(built, indent=1).encode("utf-8"), REPORT_TIER_SKIN, result)
+    except Exception as exc:
+        result["missing"].append({"key": key, "role": prefab_role, "reason": f"model3 write failed: {exc!r}"})
+
+
+def build_skin_live2d(item, cache_dir, staging, loader):
+    """Extract one T-Doll skin's Live2D model, both its normal and damaged variants.
+
+    Args:
+        item: A resolved `live2d` skin item.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    root = f"live2d/tdolls/{item['id']}/{item['form']}/{item['skin']}"
+    try:
+        container, objs = load_container(item["bundles"][0], cache_dir, loader)
+    except Exception as exc:
+        result["missing"].append({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc!r}"})
+        return result
+    for variant, _folder in SKIN_LIVE2D_VARIANTS:
+        build_skin_variant(item, container, objs, variant, f"{root}/{variant}", staging, result)
+    return result
+
+
 def extract_live2d_items(items, cache_dir, staging, loader=unity_load):
-    """Extract every fairy's and HOC's Live2D model into Cubism web files.
+    """Extract every fairy's, HOC's and skin's Live2D model into Cubism web files.
 
     Unlike the art tiers, a Live2D item's bundle is small and belongs to that one item alone, so items are not grouped by shared
     bundle - each is loaded and converted independently, and one item's bundle failure or crash only adds missing rows for that item.
 
     Args:
-        items: Resolved `live2d` inventory items, fairy and HOC kinds mixed.
+        items: Resolved `live2d` inventory items, fairy, HOC and skin kinds mixed.
         cache_dir: The bundle cache directory.
         staging: The staging root.
         loader: Callable opening one `.ab` file, replaceable in tests.
@@ -487,9 +736,10 @@ def extract_live2d_items(items, cache_dir, staging, loader=unity_load):
         A worker result merged over every item.
     """
     result = new_result()
+    builders = {"fairy": build_fairy_live2d, "hoc": build_hoc_live2d, "skin": build_skin_live2d}
     for item in items:
-        build = build_fairy_live2d if item["kind"] == "fairy" else build_hoc_live2d
         try:
+            build = builders[item["kind"]]
             item_result = build(item, cache_dir, staging, loader)
         except Exception as exc:
             item_result = new_result()
