@@ -384,6 +384,99 @@ class Live2dTargetTests(unittest.TestCase):
         self.assertEqual(game_bundles.select_new_items(items, targets), items[1:])
 
 
+def skin_live2d_index():
+    """Build a one-bundle index holding a two-variant skin Live2D bundle.
+
+    Returns:
+        An index dict whose single bundle carries a normal and a destroy variant, the destroy one with two textures.
+    """
+    base = "assets/resources/dabao/live2dnew/gun/g36c_1202"
+    paths = [
+        f"{base}/normal/model_moc.asset",
+        f"{base}/normal/model.prefab",
+        f"{base}/normal/model.2048/texture_00.png",
+        f"{base}/normal/motions/daiji_idle_01.fade.asset",
+        f"{base}/normal/motions/daiji_idle_01.anim",
+        f"{base}/destroy/model_moc.asset",
+        f"{base}/destroy/model.prefab",
+        f"{base}/destroy/model.2048/texture_00.png",
+        f"{base}/destroy/model.2048/texture_01.png",
+        f"{base}/destroy/motions/broken.fade.asset",
+    ]
+    return {"live2dnew_gun_g36c_1202": {"files": [(path, path) for path in paths], "sizeOriginal": 4096}}
+
+
+def test_variant_assets_does_not_mix_a_duplicated_nested_model_folder():
+    """A bundle can carry a stale duplicate of a whole model folder nested one level deeper (this happens for real: AK12Mod's `normal`
+    variant has a full second copy under `Normal/model/`). Every resolved role must come from the same folder - here that has to be the
+    shallower `normal/` folder, since only it has a `.prefab` directly inside it.
+
+    File order matters here, and mirrors the real bundle: the nested duplicate's `moc` and `motions` entries are listed BEFORE the
+    shallower folder's own `moc` and `motions` (same as ResData actually orders AK12Mod's files), while the shallower folder's `texture`
+    and `prefab` are listed first. This is deliberate - a fixture where every top-level file simply comes first would pass under the old,
+    order-dependent, per-role first-hit algorithm too, and would not actually guard this fix."""
+    base = "assets/resources/dabao/live2dnew/gun/dup1234/normal"
+    paths = [
+        f"{base}/model.2048/texture_00.png",
+        f"{base}/model.prefab",
+        # A duplicated model folder nested one level deeper, with no prefab of its own - just moc, textures and motions. Its moc and
+        # motions entries come before the shallower folder's own, the same way AK12Mod's real bundle orders them.
+        f"{base}/model/model.2048/texture_00.png",
+        f"{base}/model/model_moc.asset",
+        f"{base}/model/motions/daiji_idle_01.anim",
+        f"{base}/model_moc.asset",
+        f"{base}/motions/daiji_idle_01.anim",
+    ]
+    bundle = {"files": [(path, path) for path in paths], "sizeOriginal": 1}
+    found = game_bundles.variant_assets("live2dnew_gun_dup1234", bundle, "normal")
+    # The whole point: every role sits in the same folder, none reach into the nested duplicate.
+    assert found["moc"]["path"] == f"{base}/model_moc.asset"
+    assert found["prefab"]["path"] == f"{base}/model.prefab"
+    assert found["textures"]["path"] == f"{base}/model.2048/"
+    assert found["motions"]["path"] == f"{base}/motions/"
+
+
+def test_variant_model_root_is_deterministic_when_two_equal_depth_folders_both_qualify():
+    """Two folders at the same depth that both hold a prefab and a moc sibling must resolve the same way every run, not by `set`
+    iteration order (which `PYTHONHASHSEED` randomises per process). The lexically first path wins the tie."""
+    scoped = [
+        ("a/xk7q/model.prefab", "a/xk7q/model.prefab"),
+        ("a/xk7q/model_moc.asset", "a/xk7q/model_moc.asset"),
+        ("a/m2pz/model.prefab", "a/m2pz/model.prefab"),
+        ("a/m2pz/model_moc.asset", "a/m2pz/model_moc.asset"),
+    ]
+    assert game_bundles.variant_model_root(scoped) == "a/m2pz/"
+
+
+def test_skin_live2d_item_resolves_both_variants_separately():
+    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_g36c_1202", "motion_ids": [1]}
+    item = game_bundles.skin_live2d_item(skin_live2d_index(), model)
+    assert item["status"] == "resolved"
+    assert item["kind"] == "skin"
+    assert item["key"] == "live2d:skin:104:base:1202"
+    # The whole point: the two variants must not collapse onto one another.
+    assert item["assets"]["normal_moc"]["path"].endswith("/normal/model_moc.asset")
+    assert item["assets"]["damaged_moc"]["path"].endswith("/destroy/model_moc.asset")
+    assert item["assets"]["normal_textures"]["path"].endswith("/normal/model.2048/")
+    assert item["assets"]["damaged_motions"]["path"].endswith("/destroy/motions/")
+
+
+def test_skin_live2d_item_is_partial_when_a_variant_is_missing():
+    index = skin_live2d_index()
+    files = [pair for pair in index["live2dnew_gun_g36c_1202"]["files"] if "/destroy/" not in pair[0]]
+    index["live2dnew_gun_g36c_1202"]["files"] = files
+    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_g36c_1202", "motion_ids": [1]}
+    item = game_bundles.skin_live2d_item(index, model)
+    assert item["status"] == "partial"
+    assert "damaged_moc" in item["missing"]
+    assert item["assets"]["normal_moc"]["path"].endswith("/normal/model_moc.asset")
+
+
+def test_skin_live2d_item_is_none_when_the_bundle_is_absent():
+    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_nope", "motion_ids": []}
+    assert game_bundles.skin_live2d_item(skin_live2d_index(), model) is None
+
+
 def live2d_resdata(fairy_bundle, fairy_code, hoc_bundle, hoc_code):
     """Build a minimal `resdata_no_hash.json`-shaped dict with one fairy and one HOC Live2D bundle.
 
@@ -419,6 +512,93 @@ class Live2dInventoryTests(unittest.TestCase):
         self.assertIn("live2d:hoc:1", items)
         self.assertEqual(items["live2d:hoc:1"]["status"], "resolved")
         self.assertEqual(items["live2d:hoc:1"]["bundles"], ["live2dnew_squads_bgm-71"])
+
+
+def resdata_from_index(index):
+    """Build a resdata dict from an index dict shaped like `skin_live2d_index` returns.
+
+    Args:
+        index: A bundle index dict of bundle name to `{"files": [(lowered, real)], "sizeOriginal"}`.
+
+    Returns:
+        A resdata dict `build_inventory` can read via `load_index`.
+    """
+    return {
+        "resUrl": "https://cdn.example/",
+        "BaseAssetBundles": [
+            {
+                "assetBundleName": name,
+                "resname": name,
+                "sizeOriginal": bundle["sizeOriginal"],
+                "assetAllRes": [{"pathKey": path} for _lowered, path in bundle["files"]],
+            }
+            for name, bundle in index.items()
+        ],
+        "AddAssetBundles": [],
+    }
+
+
+def test_build_inventory_includes_skin_live2d_items():
+    index = skin_live2d_index()
+    resdata = resdata_from_index(index)
+    rows = [{"code": "G36C_1202", "fit_gun": 104, "skin": 1202, "motions": "1"}]
+    inventory = game_bundles.build_inventory(resdata, [], [], {}, {}, {}, live2d_rows=rows, doll_ids={104})
+    keys = [item["key"] for item in inventory["items"] if item["tier"] == "live2d"]
+    assert "live2d:skin:104:base:1202" in keys
+
+
+def test_new_targets_lists_skin_live2d_absent_from_the_manifest():
+    manifest = {"version": 3, "dolls": {}, "equipment": {}, "live2d": {"tdolls": {"104": {"base": {"1202": ["normal"]}}}}}
+    models = [
+        {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "b", "motion_ids": []},
+        {"doll_id": 104, "form": "mod", "skin_key": "1202", "bundle": "b", "motion_ids": []},
+    ]
+    targets = game_bundles.new_targets([], [], manifest, live2d_models=models)
+    assert (104, "mod", "1202") in targets["skin"]
+    assert (104, "base", "1202") not in targets["skin"]
+
+
+def write_json(path, value):
+    """Write one JSON file, creating its parent directory.
+
+    Args:
+        path: File path to write.
+        value: The value to serialise.
+    """
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(value, handle)
+
+
+def test_inventory_from_paths_only_missing_threads_skin_live2d_models_into_new_targets():
+    """`inventory_from_paths`'s `--only-missing` branch has to resolve the same skin Live2D models `build_inventory` resolves and pass
+    them into `new_targets`, or `targets["skin"]` stays empty and `select_new_items` drops every skin item no matter what the manifest
+    lists. This drives the real function end to end on a scratch tree, rather than unit-testing `new_targets` alone, since the bug was in
+    the wiring between the two, not in either function by itself."""
+    with tempfile.TemporaryDirectory() as scratch:
+        gf_data = os.path.join(scratch, "gf-data")
+        write_json(os.path.join(gf_data, "stc", "gun.json"), [])
+        write_json(os.path.join(gf_data, "stc", "battle_skill_config.json"), [])
+        write_json(os.path.join(gf_data, "stc", "equip.json"), [])
+        write_json(os.path.join(gf_data, "stc", "live2d.json"), [{"code": "G36C_1202", "fit_gun": 104, "skin": 1202, "motions": "1"}])
+
+        site = os.path.join(scratch, "site")
+        write_json(os.path.join(site, "dolls-1-200.json"), [site_doll(104)])
+        write_json(os.path.join(site, "equipment.json"), {"items": {}})
+
+        resdata_path = os.path.join(scratch, "resdata_no_hash.json")
+        write_json(resdata_path, resdata_from_index(skin_live2d_index()))
+
+        manifest_path = os.path.join(scratch, "manifest.json")
+        write_json(manifest_path, {"dolls": {}, "equipment": {}})
+        inventory = game_bundles.inventory_from_paths(resdata_path, gf_data, site, manifest_path)
+        keys = [item["key"] for item in inventory["items"] if item["tier"] == "live2d"]
+        assert "live2d:skin:104:base:1202" in keys
+
+        write_json(manifest_path, {"dolls": {}, "equipment": {}, "live2d": {"tdolls": {"104": {"base": {"1202": ["normal", "damaged"]}}}}})
+        inventory = game_bundles.inventory_from_paths(resdata_path, gf_data, site, manifest_path)
+        keys = [item["key"] for item in inventory["items"] if item["tier"] == "live2d"]
+        assert "live2d:skin:104:base:1202" not in keys
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -641,7 +821,9 @@ class NewTargetTests(unittest.TestCase):
 
     def test_targets(self):
         """A missing doll, a missing Mod, a missing numeric skin and a missing equipment id are the targets."""
-        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set(), "live2d": set()})
+        self.assertEqual(
+            self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set(), "live2d": set(), "skin": set()}
+        )
 
     def test_selects_forms_of_new_targets(self):
         """Art and rigs follow their form, and hosted forms, known gaps and legacy items are never selected."""
@@ -721,7 +903,12 @@ class NewTargetTests(unittest.TestCase):
 
     def test_committed_data_has_no_new_targets(self):
         """The committed site data and manifest agree on dolls, equipment, HOCs and fairies: every one already has a published art asset, so
-        there are no pending targets left. Fairies and HOCs with published Live2D models are excluded from targets; any unpublished ones are still targets."""
+        there are no pending targets left. Fairies and HOCs with published Live2D models are excluded from targets; any unpublished ones are
+        still targets. `live2d_models` is left at its default here: unlike fairies and HOCs, which this repo enumerates in committed site
+        data, the full set of T-Doll skin Live2D models only exists in the external `stc/live2d.json` table (fetched into the gitignored
+        gf-data-us checkout, not committed), so there is no committed source to check the real manifest's `skin` targets against here. The
+        wiring that resolves and threads real skin models through `new_targets` is covered end to end instead, on a scratch tree, by
+        `test_inventory_from_paths_only_missing_threads_skin_live2d_models_into_new_targets`."""
         dolls, equipment_ids, hocs, fairies = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
         manifest = game_bundles.read_json(game_bundles.MANIFEST_PATH)
         targets = game_bundles.new_targets(dolls, equipment_ids, manifest, hocs=hocs, fairies=fairies)
@@ -730,7 +917,7 @@ class NewTargetTests(unittest.TestCase):
         published_hoc_ids = set(int(hid) for hid in published_live2d.get("hocs", {}))
         expected_live2d = {("fairy", fairy["id"]) for fairy in fairies if fairy["id"] not in published_fairy_ids} | {("hoc", hoc["id"]) for hoc in hocs if hoc["id"] not in published_hoc_ids}
         self.assertEqual(
-            targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set(), "fairies": set(), "live2d": expected_live2d}
+            targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set(), "fairies": set(), "live2d": expected_live2d, "skin": set()}
         )
 
 

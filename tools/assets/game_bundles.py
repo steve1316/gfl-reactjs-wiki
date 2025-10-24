@@ -43,6 +43,7 @@ import time
 import urllib.request
 
 from download_spine import BUNDLE_KEYS, CODE_OVERRIDES, MOD_ID_OFFSET, resolve_code
+from skin_live2d_table import SKIN_LIVE2D_PREFIX, SKIN_LIVE2D_VARIANTS, skin_live2d_models
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,6 +270,19 @@ def load_tables(gf_data_dir):
         skill_codes.setdefault(row["skill_group_id"], row["code"])
     equip_codes = {row["id"]: row["code"] for row in read_json(os.path.join(stc, "equip.json"))}
     return guns, skill_codes, equip_codes
+
+
+def load_live2d_table(gf_data_dir):
+    """Read the `stc/live2d.json` table naming every playable Live2D combination.
+
+    Args:
+        gf_data_dir: The `gf-data-us` checkout.
+
+    Returns:
+        The table's rows, or an empty list when the file is absent, since an older data checkout may not carry it.
+    """
+    path = os.path.join(gf_data_dir, "stc", "live2d.json")
+    return read_json(path) if os.path.isfile(path) else []
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -666,13 +680,138 @@ def live2d_items(index, fairies, hocs):
     return [item for item in candidates if item is not None]
 
 
-def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=()):
+def variant_model_root(scoped):
+    """Pick the one model folder a skin Live2D variant's roles must all come from.
+
+    A Cubism model folder holds `model.prefab`, `<name>_moc.asset`, its texture folder (`model.<res>/`) and its `motions/` folder as direct
+    siblings. Some bundles carry a stale duplicate of the whole folder at another depth (e.g. a leftover top-level copy next to a newer,
+    nested one), so the root is chosen from the folders that hold a `.prefab` file, by this tie-break chain: a folder that also holds a
+    `_moc.asset` sibling beats one that does not; among the survivors, the shallowest (shortest) path wins; and if that is still tied, the
+    lexically first path wins. The chain ends in a full ordering (path length, then the path itself), so the winner never depends on `set`
+    iteration order, which is randomised per process by `PYTHONHASHSEED` and would otherwise let two equal-depth candidates flip at random.
+
+    Args:
+        scoped: `(lowered, path)` pairs already filtered to one variant.
+
+    Returns:
+        The winning folder's path prefix (in lowered form, trailing slash included), or None when no folder in scope holds a `.prefab`.
+    """
+    prefab_dirs = sorted({lowered[: lowered.rfind("/") + 1] for lowered, _path in scoped if lowered.endswith(".prefab")}, key=lambda d: (len(d), d))
+    if not prefab_dirs:
+        return None
+    moc_dirs = {lowered[: lowered.rfind("/") + 1] for lowered, _path in scoped if lowered.endswith("_moc.asset")}
+    with_moc = [candidate for candidate in prefab_dirs if candidate in moc_dirs]
+    return with_moc[0] if with_moc else prefab_dirs[0]
+
+
+def variant_assets(bundle_name, bundle, variant_folder):
+    """Locate one skin Live2D variant's moc, prefab, texture folder and motions folder, all from the same model folder.
+
+    The roles cannot go through `resolve_item`, which matches a role by filename suffix: both variants hold `model_moc.asset` and
+    `model.prefab`, so a suffix match would find whichever comes first and silently drop the other. Scoping to the variant's own folder
+    prefix is not enough either - a bundle can carry a full duplicate model nested one folder deeper (a stale leftover next to the current
+    one), and matching each role independently by first file-order hit can then splice a `moc` from one folder onto a `textures` from the
+    other, still reporting the item resolved. `variant_model_root` picks a single model folder first, and every role here is required to
+    sit directly in that folder or one of its named subfolders (`model.<res>/`, `motions/`), never in the duplicate.
+
+    Args:
+        bundle_name: The bundle's index name.
+        bundle: The index entry, whose `files` is a list of `(lowered, real)` path pairs.
+        variant_folder: The in-bundle folder name, `normal` or `destroy`.
+
+    Returns:
+        A dict of role suffix (`moc`, `prefab`, `textures`, `motions`) to its `{"bundle", "path"}` hit. `textures` and `motions` carry the
+        folder prefix rather than one file. A role with no match is absent, including every role when the variant has no folder with a
+        `.prefab` at all.
+    """
+    marker = f"/{variant_folder}/"
+    scoped = [(lowered, path) for lowered, path in bundle["files"] if marker in lowered]
+    root = variant_model_root(scoped)
+    if root is None:
+        return {}
+
+    found = {}
+    for lowered, path in scoped:
+        if not lowered.startswith(root):
+            continue
+        rel = lowered[len(root) :]
+        if "/" not in rel:
+            if rel.endswith(".prefab") and "prefab" not in found:
+                found["prefab"] = {"bundle": bundle_name, "path": path}
+            elif rel.endswith("_moc.asset") and "moc" not in found:
+                found["moc"] = {"bundle": bundle_name, "path": path}
+        elif rel.count("/") == 1 and rel.endswith(".png") and "textures" not in found:
+            found["textures"] = {"bundle": bundle_name, "path": path[: len(root) + rel.rindex("/") + 1]}
+        elif rel.startswith("motions/") and "motions" not in found:
+            found["motions"] = {"bundle": bundle_name, "path": path[: len(root) + len("motions/")]}
+    return found
+
+
+def skin_live2d_item(index, model):
+    """Resolve one T-Doll skin Live2D model's bundle, both variants.
+
+    Args:
+        index: The bundle index from `load_index`.
+        model: One record from `skin_live2d_table.skin_live2d_models`.
+
+    Returns:
+        The `live2d` item dict with `kind` `"skin"` and `status` of `resolved` or `partial`, or None when the bundle is not in the index.
+    """
+    bundle_name, bundle = None, None
+    for name in bundle_candidates([model["bundle"]]):
+        if name in index:
+            bundle_name, bundle = name, index[name]
+            break
+    if bundle is None:
+        return None
+
+    assets, missing = {}, []
+    for output, folder in SKIN_LIVE2D_VARIANTS:
+        found = variant_assets(bundle_name, bundle, folder)
+        for role in ("moc", "prefab", "textures", "motions"):
+            if role in found:
+                assets[f"{output}_{role}"] = found[role]
+            else:
+                missing.append(f"{output}_{role}")
+    key = f"live2d:skin:{model['doll_id']}:{model['form']}:{model['skin_key']}"
+    return {
+        "key": key,
+        "tier": "live2d",
+        "kind": "skin",
+        "id": model["doll_id"],
+        "form": model["form"],
+        "skin": model["skin_key"],
+        "motion_ids": model["motion_ids"],
+        "code": model["bundle"][len(SKIN_LIVE2D_PREFIX) :],
+        "assets": assets,
+        "missing": missing,
+        "status": "resolved" if not missing else "partial",
+        "bundles": [bundle_name],
+        "sizeOriginal": bundle["sizeOriginal"],
+    }
+
+
+def skin_live2d_items(index, models):
+    """Resolve every skin Live2D model whose bundle the game actually ships.
+
+    Args:
+        index: The bundle index from `load_index`.
+        models: Records from `skin_live2d_table.skin_live2d_models`.
+
+    Returns:
+        A list of `live2d` item dicts. A model whose bundle is absent produces no entry, so it never shows as a false gap.
+    """
+    return [item for item in (skin_live2d_item(index, model) for model in models) if item is not None]
+
+
+def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), live2d_models=()):
     """Work out which dolls, Mods, skins, equipment, HOCs and fairies the committed manifest does not list yet.
 
     A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed. A HOC counts as hosted
     once the manifest lists its art, so a rig added for that HOC later is not picked up as a new target on its own. A fairy counts as hosted
     the same way, once the manifest lists its art. Live2D is tracked separately from art, in its own `manifest["live2d"]["fairies"/"hocs"]`
-    block, since most fairies and HOCs never get a Live2D bundle at all.
+    block, since most fairies and HOCs never get a Live2D bundle at all. T-Doll skin Live2D models are tracked the same way, in
+    `manifest["live2d"]["tdolls"]`, keyed by doll id, form and skin key.
 
     Args:
         dolls: Site doll records.
@@ -680,10 +819,12 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=()):
         manifest: The committed version 3 manifest.
         hocs: HOC records from `load_site`, each `{"id", "code", "name"}`.
         fairies: Fairy records from `load_site`, each `{"id", "code", "name"}`.
+        live2d_models: Records from `skin_live2d_table.skin_live2d_models`.
 
     Returns:
         A dict of `dolls`, `mods`, `equipment`, `hocs` and `fairies` id sets, a `skins` set of `(doll_id, skin_id)` pairs (only numeric skin
-        ids count), and a `live2d` set of `(kind, id)` pairs where `kind` is `"fairy"` or `"hoc"`.
+        ids count), a `live2d` set of `(kind, id)` pairs where `kind` is `"fairy"` or `"hoc"`, and a `skin` set of `(doll_id, form, skin_key)`
+        triples for T-Doll skin Live2D models the manifest does not list.
     """
     listed = manifest["dolls"]
     targets = {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()}
@@ -709,6 +850,12 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=()):
     listed_live2d_hocs = listed_live2d.get("hocs", {})
     targets["live2d"] = {("fairy", fairy["id"]) for fairy in fairies if str(fairy["id"]) not in listed_live2d_fairies} | {
         ("hoc", hoc["id"]) for hoc in hocs if str(hoc["id"]) not in listed_live2d_hocs
+    }
+    listed_tdolls = listed_live2d.get("tdolls", {})
+    targets["skin"] = {
+        (model["doll_id"], model["form"], model["skin_key"])
+        for model in live2d_models
+        if model["skin_key"] not in listed_tdolls.get(str(model["doll_id"]), {}).get(model["form"], {})
     }
     return targets
 
@@ -749,7 +896,10 @@ def select_new_items(items, targets):
         elif tier == "fairy_art":
             keep = item.get("fairy_id") in targets.get("fairies", set())
         elif tier == "live2d":
-            keep = (item.get("kind"), item.get("id")) in targets.get("live2d", set())
+            if item.get("kind") == "skin":
+                keep = (item.get("id"), item.get("form"), item.get("skin")) in targets.get("skin", set())
+            else:
+                keep = (item.get("kind"), item.get("id")) in targets.get("live2d", set())
         else:
             keep = False
         if keep:
@@ -816,7 +966,7 @@ def summarise(items, index, include_ui=True):
     return summary, bundles
 
 
-def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=()):
+def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=(), live2d_rows=(), doll_ids=None):
     """Resolve every wanted asset against the ResData manifest.
 
     Args:
@@ -829,6 +979,8 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         select: Optional callable narrowing the item list before bundles are collected. The UI bundles are then added only for equipment icons.
         hocs: HOC records from `load_site`, each `{"id", "code"}`.
         fairies: Fairy records from `load_site`, each `{"id", "code"}`.
+        live2d_rows: Rows from `stc/live2d.json`, used to resolve T-Doll skin Live2D models. Empty when the checkout has none.
+        doll_ids: Doll ids the wiki hosts, used to filter `live2d_rows`. Defaults to every id in `dolls` when not given.
 
     Returns:
         The inventory dict with `resVersion`, `resUrl`, `summary`, `bundles` and `items`.
@@ -845,6 +997,8 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
     for fairy in fairies:
         items.append(fairy_items(index, fairy))
     items.extend(live2d_items(index, fairies, hocs))
+    known_dolls = doll_ids if doll_ids is not None else {doll["normal"]["id"] for doll in dolls}
+    items.extend(skin_live2d_items(index, skin_live2d_models(live2d_rows, set(index), known_dolls)))
     if select is not None:
         items = select(items)
     include_ui = select is None or any(item["tier"] == "equip_icon" for item in items)
@@ -866,11 +1020,25 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
         The inventory dict from `build_inventory`.
     """
     dolls, equipment_ids, hocs, fairies = load_site(site_dir)
+    live2d_rows = load_live2d_table(gf_data_dir)
+    resdata = read_json(resdata_path)
     if manifest_path is None:
-        return build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs, fairies=fairies)
-    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies)
+        return build_inventory(resdata, dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs, fairies=fairies, live2d_rows=live2d_rows)
+    # `new_targets` needs the resolved skin Live2D models, the same ones `build_inventory` resolves below, or `targets["skin"]` stays empty
+    # and `select_new_items` drops every skin item regardless of what the manifest lists.
+    index, _res_url = load_index(resdata)
+    known_dolls = {doll["normal"]["id"] for doll in dolls}
+    live2d_models = skin_live2d_models(live2d_rows, set(index), known_dolls)
+    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies, live2d_models=live2d_models)
     inventory = build_inventory(
-        read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), select=lambda items: select_new_items(items, targets), hocs=hocs, fairies=fairies
+        resdata,
+        dolls,
+        equipment_ids,
+        *load_tables(gf_data_dir),
+        select=lambda items: select_new_items(items, targets),
+        hocs=hocs,
+        fairies=fairies,
+        live2d_rows=live2d_rows,
     )
     inventory["onlyMissing"] = True
     return inventory
