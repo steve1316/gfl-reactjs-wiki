@@ -12,10 +12,16 @@ each a separate committed file, merged only when `--hoc-spine-partial` or `--liv
 empty partial (a refresh that added no HOC rigs or no Live2D models) is a no-op. Either counts as `{}` (or, for the Live2D index, an empty
 `fairies`/`hocs`/`tdolls` set) when its committed file does not exist yet, and nothing is written when the merge changes nothing.
 
+The Live2D index's `tdolls` block only lists which models are available - the motions themselves live in one file per doll under
+`src/data/live2d-tdolls/`, built by `build_live2d_index.write_tdoll_files`. `--live2d-tdolls-partial` names the directory of those files
+built from the `add` staging folder, merged add-only against `--live2d-tdolls-dir` the same way as everything else here: a doll's
+form/skin/variant already committed is a conflict, a new one is added, and an untouched one survives unchanged.
+
 Usage:
     python3 tools/assets/merge_indexes.py --manifest-partial <file> --spine-partial <file> [--manifest assets-manifest.json] \
         [--spine-index src/data/spine-index.json] [--hoc-spine-partial <file>] [--hoc-spine src/data/hoc-spine-index.json] \
-        [--live2d-partial <file>] [--live2d-index src/data/live2d-index.json]
+        [--live2d-partial <file>] [--live2d-index src/data/live2d-index.json] \
+        [--live2d-tdolls-partial <dir>] [--live2d-tdolls-dir src/data/live2d-tdolls]
 """
 
 import argparse
@@ -228,12 +234,16 @@ def merge_live2d_index(committed, partial):
     """Add a partial Live2D index's new fairy, HOC and T-Doll skin entries into the committed index.
 
     Like a HOC's Spine rigs, a fairy's or HOC's motions are not merged piecemeal: an id is either entirely new or entirely already committed.
-    `tdolls` nests two levels deeper than `fairies` and `hocs`, keyed by doll id then form, so it is merged separately, by skin key within
-    each doll and form: a skin key already committed to a doll and form is a conflict, exactly like a fairy or HOC id the committed index
-    already has, so a partial re-run of one variant can never silently drop the committed record of another. `tdolls` is only written to
-    the merged result when the committed or partial index already has it, mirroring how `merge_manifest` only carries `hocs`, `fairies`
-    and `live2d` forward when one side already has them - so merging an old committed index that predates `tdolls` against a partial with
-    nothing tdoll-related reproduces the old shape exactly, instead of growing an empty `tdolls` key no caller asked for.
+    `tdolls` nests two levels deeper than `fairies` and `hocs`, keyed by doll id then form, so it is merged separately, by variant within
+    each doll, form and skin key - not by skin key alone, since a skin can gain a variant it did not have yet (its `damaged` model added in
+    a later refresh, say) without that being a conflict with the `normal` variant it already has. An already-present doll/form/skin/variant
+    is a conflict, exactly like a fairy or HOC id the committed index already has, so a partial re-run of one variant can never silently
+    drop the committed record of another. Every skin's variant list is written back sorted, matching the alphabetical order
+    `build_manifest.scan_live2d_tdolls` and `build_live2d_index.index_tdolls` both write it in from a fresh directory walk, so a merge and a
+    full rebuild of the same data always agree on file bytes. `tdolls` is only written to the merged result when the committed or partial
+    index already has it, mirroring how `merge_manifest` only carries `hocs`, `fairies` and `live2d` forward when one side already has them
+    - so merging an old committed index that predates `tdolls` against a partial with nothing tdoll-related reproduces the old shape
+    exactly, instead of growing an empty `tdolls` key no caller asked for.
 
     Args:
         committed: The committed Live2D index, `{"fairies": {...}, "hocs": {...}}`, optionally with a `tdolls` key too.
@@ -243,7 +253,7 @@ def merge_live2d_index(committed, partial):
         A merged copy. `committed` is not changed.
 
     Raises:
-        MergeConflict: When the partial has a fairy or HOC id, or a tdoll doll/form/skin key, the committed index already has.
+        MergeConflict: When the partial has a fairy or HOC id, or a tdoll doll/form/skin/variant, the committed index already has.
     """
     conflicts = []
     merged = {}
@@ -263,17 +273,96 @@ def merge_live2d_index(committed, partial):
             for form, skins in forms.items():
                 existing = doll.setdefault(form, {})
                 for skin_key, variants in skins.items():
-                    if skin_key in existing:
-                        conflicts.append(f"live2d tdoll {doll_id} {form} {skin_key}")
-                    else:
-                        existing[skin_key] = variants
+                    existing_variants = existing.setdefault(skin_key, [])
+                    for variant in variants:
+                        if variant in existing_variants:
+                            conflicts.append(f"live2d tdoll {doll_id} {form} {skin_key} {variant}")
+                        else:
+                            existing_variants.append(variant)
         result["tdolls"] = {
-            doll_id: {form: dict(sorted(skins.items(), key=lambda pair: tdoll_skin_sort_key(pair[0]))) for form, skins in sorted(forms.items())}
+            doll_id: {
+                form: {skin_key: sorted(variants) for skin_key, variants in sorted(skins.items(), key=lambda pair: tdoll_skin_sort_key(pair[0]))}
+                for form, skins in sorted(forms.items())
+            }
             for doll_id, forms in sorted(committed_tdolls.items(), key=lambda pair: int(pair[0]))
         }
     if conflicts:
         raise MergeConflict(conflicts)
     return result
+
+
+def merge_live2d_tdoll_file(committed, partial):
+    """Add one doll's partial Live2D motions into its committed per-doll file, add-only.
+
+    A form/skin/variant already in the committed file is a conflict, exactly like `merge_live2d_index`'s availability merge - a partial
+    re-run can never silently replace an already-published variant's motions.
+
+    Args:
+        committed: The doll's committed `{"<form>": {"<skinKey>": {"<variant>": {"motions": [...]}}}}` dict, `{}` when the doll has no
+            file yet.
+        partial: The doll's partial dict, the same shape, from the `add` staging folder.
+
+    Returns:
+        A merged copy, with forms, skin keys and variants sorted the same way `build_live2d_index.index_tdolls` writes them.
+        `committed` is not changed.
+
+    Raises:
+        MergeConflict: When the partial names a form/skin/variant the committed file already has.
+    """
+    conflicts = []
+    merged = copy.deepcopy(committed)
+    for form, skins in partial.items():
+        existing_skins = merged.setdefault(form, {})
+        for skin_key, variants in skins.items():
+            existing_variants = existing_skins.setdefault(skin_key, {})
+            for variant, entry in variants.items():
+                if variant in existing_variants:
+                    conflicts.append(f"{form}/{skin_key}/{variant}")
+                else:
+                    existing_variants[variant] = copy.deepcopy(entry)
+    if conflicts:
+        raise MergeConflict(conflicts)
+    return {
+        form: {
+            skin_key: {variant: variants[variant] for variant in sorted(variants)}
+            for skin_key, variants in sorted(skins.items(), key=lambda pair: tdoll_skin_sort_key(pair[0]))
+        }
+        for form, skins in sorted(merged.items())
+    }
+
+
+def merge_live2d_tdoll_files(committed_dir, partial_dir):
+    """Add every doll's partial Live2D motion file into the committed per-doll files, add-only.
+
+    Only dolls the partial directory names are touched - a doll with no partial file is left alone entirely, since `add-only` here
+    means nothing to merge for it, not an empty result to write.
+
+    Args:
+        committed_dir: The committed per-doll files directory (`src/data/live2d-tdolls`), which may not exist yet.
+        partial_dir: The partial per-doll files directory built from the `add` staging folder.
+
+    Returns:
+        A dict of doll id to its merged content, for every doll the partial touches. Nothing is written to disk here.
+
+    Raises:
+        MergeConflict: When a partial doll file names a form/skin/variant its committed file already has. Conflicts from different
+            dolls are collected together before raising, so one run reports every conflict at once.
+    """
+    conflicts = []
+    merged = {}
+    for name in sorted(os.listdir(partial_dir)):
+        if not name.endswith(".json"):
+            continue
+        doll_id = name[: -len(".json")]
+        committed_path = os.path.join(committed_dir, name)
+        committed = read_json(committed_path) if os.path.isfile(committed_path) else {}
+        try:
+            merged[doll_id] = merge_live2d_tdoll_file(committed, read_json(os.path.join(partial_dir, name)))
+        except MergeConflict as error:
+            conflicts.extend(f"live2d tdoll {doll_id} {conflict}" for conflict in error.conflicts)
+    if conflicts:
+        raise MergeConflict(conflicts)
+    return merged
 
 
 def dump_spine_index(index):
@@ -317,6 +406,11 @@ def main():
     parser.add_argument("--hoc-spine", default="src/data/hoc-spine-index.json", help="The committed HOC Spine index to update.")
     parser.add_argument("--live2d-partial", help="Live2D index built from the add staging folder. An empty partial (no new Live2D models) is a no-op.")
     parser.add_argument("--live2d-index", default="src/data/live2d-index.json", help="The committed Live2D index to update.")
+    parser.add_argument(
+        "--live2d-tdolls-partial",
+        help="Directory of per-doll T-Doll skin Live2D motion files built from the add staging folder. Absent when the refresh added no T-Doll skin motions.",
+    )
+    parser.add_argument("--live2d-tdolls-dir", default="src/data/live2d-tdolls", help="The committed per-doll Live2D motion files directory to update.")
     args = parser.parse_args()
 
     manifest_partial, spine_partial = read_json(args.manifest_partial), read_json(args.spine_partial)
@@ -329,6 +423,11 @@ def main():
         spine_index = merge_spine_index(read_json(args.spine_index), spine_partial)
         hoc_spine_index = merge_hoc_spine_index(committed_hoc_spine, hoc_spine_partial) if hoc_spine_partial is not None else None
         live2d_index = merge_live2d_index(committed_live2d, live2d_partial) if live2d_partial is not None else None
+        live2d_tdoll_files = (
+            merge_live2d_tdoll_files(args.live2d_tdolls_dir, args.live2d_tdolls_partial)
+            if args.live2d_tdolls_partial and os.path.isdir(args.live2d_tdolls_partial)
+            else None
+        )
     except MergeConflict as conflict:
         sys.exit("the partial files list assets that are already hosted:\n  " + "\n  ".join(conflict.conflicts))
 
@@ -349,6 +448,13 @@ def main():
             handle.write(dump_spine_index(live2d_index))
         merged_count = len(live2d_partial.get("fairies", {})) + len(live2d_partial.get("hocs", {}))
         print(f"merged {merged_count} Live2D index entries into {args.live2d_index}")
+
+    if live2d_tdoll_files:
+        os.makedirs(args.live2d_tdolls_dir, exist_ok=True)
+        for doll_id, forms in live2d_tdoll_files.items():
+            with open(os.path.join(args.live2d_tdolls_dir, f"{doll_id}.json"), "w", encoding="utf-8") as handle:
+                handle.write(json.dumps(forms, separators=(",", ":"), ensure_ascii=False) + "\n")
+        print(f"merged {len(live2d_tdoll_files)} T-Doll skin motion files into {args.live2d_tdolls_dir}")
 
 
 if __name__ == "__main__":

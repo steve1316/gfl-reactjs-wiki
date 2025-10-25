@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import unittest
+from types import SimpleNamespace
 
 import pytest
 from PIL import Image
@@ -293,6 +294,139 @@ def test_skin_texture_names_follow_container_order():
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# drawable_texture_paths / prefab_texture_dir
+
+
+class FakePrefabObj:
+    """Minimal stand-in for a UnityPy object reader, for synthetic `CubismRenderer` / `_mainTexture` fixtures."""
+
+    def __init__(self, type_name, typetree, script_class=None, path_id=0):
+        self.type = SimpleNamespace(name=type_name)
+        self.typetree = typetree
+        self.script_class = script_class
+        self.path_id = path_id
+
+    def read_typetree(self):
+        return self.typetree
+
+    def read(self):
+        return SimpleNamespace(m_Script=SimpleNamespace(read=lambda: SimpleNamespace(m_ClassName=self.script_class)))
+
+
+def build_prefab_fixture(texture_path_ids):
+    """Build a synthetic prefab object graph with one Drawable per texture path id, matching what `load_container` and a prefab's own
+    `read_typetree()` give `extract_live2d.drawable_texture_paths`: a root GameObject, one `Drawables` group under it, and one
+    Drawable GameObject with a `CubismRenderer` per id, each `_mainTexture` referencing that id.
+
+    Args:
+        texture_path_ids: One `_mainTexture` PPtr path id per synthetic Drawable, in Drawables order.
+
+    Returns:
+        A `(objs, prefab_typetree)` pair.
+    """
+    objs = {}
+    ids = iter(range(1, 1000))
+
+    def put(type_name, typetree, script_class=None):
+        obj_id = next(ids)
+        objs[obj_id] = FakePrefabObj(type_name, typetree, script_class, path_id=obj_id)
+        return obj_id
+
+    drawables_own_transform_id = next(ids)
+    drawables_go_id = put("GameObject", {"m_Name": "Drawables", "m_Component": [{"component": {"m_PathID": drawables_own_transform_id}}]})
+    drawables_child_transform_id = put("Transform", {"m_GameObject": {"m_PathID": drawables_go_id}})
+    root_transform_id = put("Transform", {"m_Children": [{"m_PathID": drawables_child_transform_id}]})
+    root = {"m_Name": "root", "m_Component": [{"component": {"m_PathID": root_transform_id}}]}
+
+    drawable_children = []
+    for texture_path_id in texture_path_ids:
+        renderer_id = put("MonoBehaviour", {"_mainTexture": {"m_FileID": 0, "m_PathID": texture_path_id}}, script_class="CubismRenderer")
+        drawable_go_id = put("GameObject", {"m_Name": "drawable", "m_Component": [{"component": {"m_PathID": renderer_id}}]})
+        drawable_transform_id = put("Transform", {"m_GameObject": {"m_PathID": drawable_go_id}})
+        drawable_children.append({"m_PathID": drawable_transform_id})
+    objs[drawables_own_transform_id] = FakePrefabObj("Transform", {"m_Children": drawable_children}, path_id=drawables_own_transform_id)
+
+    return objs, root
+
+
+def test_drawable_texture_paths_resolves_maintexture_ppid_to_container_path():
+    """Each Drawable's CubismRenderer._mainTexture PPtr resolves to the container path the texture actually lives at, in order."""
+    objs, prefab = build_prefab_fixture([501, 502])
+    container = {
+        "root/normal/model.2048/texture_00.png": SimpleNamespace(path_id=501),
+        "root/normal/model.1024/texture_00.png": SimpleNamespace(path_id=502),
+    }
+    assert extract_live2d.drawable_texture_paths(objs, container, prefab) == [
+        "root/normal/model.2048/texture_00.png",
+        "root/normal/model.1024/texture_00.png",
+    ]
+
+
+def test_drawable_texture_paths_is_empty_with_no_drawables_group():
+    objs, prefab = build_prefab_fixture([])
+    assert extract_live2d.drawable_texture_paths(objs, {}, prefab) == []
+
+
+def test_prefab_texture_dir_uses_what_the_drawables_actually_reference_not_the_highest_resolution():
+    """The real KP31_1103 regression, reproduced: `model.2048/` exists and outranks `model.1024/` by resolution, but every drawable's
+    CubismRenderer references `model.1024/`, so that is the folder that must win, not the fallback's resolution-based guess."""
+    objs, prefab = build_prefab_fixture([501, 501])
+    container = {"root/normal/model.1024/texture_00.png": SimpleNamespace(path_id=501)}
+    candidates = ["root/normal/model.1024/", "root/normal/model.2048/"]
+    picked, resolved = extract_live2d.prefab_texture_dir(objs, container, prefab, candidates, fallback="root/normal/model.2048/")
+    assert picked == "root/normal/model.1024/"
+    assert resolved is True
+
+
+def test_prefab_texture_dir_returns_the_fallback_unconditionally_with_one_candidate():
+    """No prefab read is even attempted when there is nothing to disambiguate, and that trivial case still reports resolved."""
+    picked, resolved = extract_live2d.prefab_texture_dir(
+        objs=None, container=None, prefab=None, candidates=["root/normal/model.1024/"], fallback="root/normal/model.1024/"
+    )
+    assert picked == "root/normal/model.1024/"
+    assert resolved is True
+
+
+def test_prefab_texture_dir_falls_back_when_no_reference_resolves():
+    """A prefab with no readable texture reference (an odd or stripped model) keeps the resolution-based fallback rather than
+    guessing, and reports the pick as unresolved so the caller can record it."""
+    objs, prefab = build_prefab_fixture([999])
+    container = {}  # the referenced path id has no container entry
+    candidates = ["root/normal/model.1024/", "root/normal/model.2048/"]
+    picked, resolved = extract_live2d.prefab_texture_dir(objs, container, prefab, candidates, fallback="root/normal/model.2048/")
+    assert picked == "root/normal/model.2048/"
+    assert resolved is False
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# texture_dir_siblings
+
+
+def test_texture_dir_siblings_finds_every_model_res_folder_next_to_the_given_one():
+    container = {
+        "root/normal/model.1024/texture_00.png": None,
+        "root/normal/model.2048/texture_00.png": None,
+        "root/normal/model.prefab": None,
+        "root/normal/motions/daiji_idle_01.motion3.json": None,
+    }
+    siblings = extract_live2d.texture_dir_siblings(container, "root/normal/model.2048/")
+    assert siblings == {"root/normal/model.1024/", "root/normal/model.2048/"}
+
+
+def test_texture_dir_siblings_is_a_single_element_set_with_only_one_resolution():
+    container = {"root/normal/model.2048/texture_00.png": None, "root/normal/model.prefab": None}
+    assert extract_live2d.texture_dir_siblings(container, "root/normal/model.2048/") == {"root/normal/model.2048/"}
+
+
+def test_texture_dir_siblings_ignores_non_model_res_folders():
+    """A `motions/` or other non-`model.<res>` sibling does not count."""
+    container = {"root/normal/model.2048/texture_00.png": None, "root/normal/motions/daiji_idle_01.motion3.json": None}
+    assert extract_live2d.texture_dir_siblings(container, "root/normal/model.2048/") == {"root/normal/model.2048/"}
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # build_skin_variant texture failure
 
 
@@ -373,6 +507,139 @@ def test_a_later_failure_removes_the_textures_and_moc3_already_written(tmp_path)
 
     assert result["files"] == []
     assert not (tmp_path / "assets" / folder).exists()
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# build_skin_variant texture-dir warnings
+
+
+class PathIdTexture:
+    """A container texture entry with a distinct path id, for `CubismRenderer._mainTexture` PPtr resolution tests."""
+
+    def __init__(self, path_id):
+        self.path_id = path_id
+
+    def read(self):
+        return self
+
+    @property
+    def image(self):
+        return Image.new("RGBA", (2, 2), (1, 2, 3, 255))
+
+
+class PathIdPrefab:
+    """A container prefab entry with a path id, wrapping a prebuilt typetree - for the same tests, since the reverse container-path
+    map `drawable_texture_paths` builds needs every container entry to carry a path id, not just the texture ones."""
+
+    def __init__(self, typetree, path_id):
+        self.typetree = typetree
+        self.path_id = path_id
+
+    def read_typetree(self):
+        return self.typetree
+
+
+class PathIdMoc:
+    """A container moc entry with a path id, for the same tests."""
+
+    def __init__(self, path_id):
+        self.path_id = path_id
+
+    def read_typetree(self):
+        return {"_bytes": list(b"MOC3" + b"\x00" * 4)}
+
+
+def test_build_skin_variant_does_not_warn_when_there_is_only_one_texture_folder(tmp_path):
+    """A normal, unambiguous model gets no nonstandard row for its texture folder."""
+    item = {
+        "key": "live2d:skin:1:base:base",
+        "assets": {
+            "normal_moc": {"bundle": "x", "path": "moc/path"},
+            "normal_prefab": {"bundle": "x", "path": "prefab/path"},
+            "normal_textures": {"bundle": "x", "path": "root/normal/model.2048/", "candidates": ["root/normal/model.2048/"]},
+        },
+    }
+    container = {"root/normal/model.2048/texture_00.png": GoodTexture(), "moc/path": FakeMocAsset(), "prefab/path": FailingPrefab()}
+    result = extract_live2d.new_result()
+    extract_live2d.build_skin_variant(item, container, {}, "normal", "live2d/tdolls/1/base/base/normal", str(tmp_path), result)
+    assert [row for row in result["nonstandard"] if row["role"] == "normal_textures"] == []
+
+
+def test_build_skin_variant_records_nonstandard_when_the_prefab_does_not_confirm_a_candidate(tmp_path):
+    """The prefab reads fine but its drawables reference no texture with a matching container entry - extraction still succeeds
+    with the fallback folder, and a nonstandard row records that the pick was not confirmed."""
+    objs, prefab_tree = build_prefab_fixture([999])  # no container entry resolves to path id 999
+    item = {
+        "key": "live2d:skin:115:base:1103",
+        "assets": {
+            "normal_moc": {"bundle": "x", "path": "moc/path"},
+            "normal_prefab": {"bundle": "x", "path": "prefab/path"},
+            "normal_textures": {
+                "bundle": "x",
+                "path": "root/normal/model.2048/",
+                "candidates": ["root/normal/model.1024/", "root/normal/model.2048/"],
+            },
+        },
+    }
+    container = {
+        "root/normal/model.2048/texture_00.png": PathIdTexture(1),
+        "moc/path": PathIdMoc(2),
+        "prefab/path": PathIdPrefab(prefab_tree, 3),
+    }
+    result = extract_live2d.new_result()
+    extract_live2d.build_skin_variant(item, container, objs, "normal", "live2d/tdolls/1/base/base/normal", str(tmp_path), result)
+    rows = [row for row in result["nonstandard"] if row["role"] == "normal_textures"]
+    assert len(rows) == 1
+    assert "did not confirm" in rows[0]["size"]
+    assert rows[0]["expected"] == "root/normal/model.2048/"
+
+
+def test_build_skin_variant_records_nonstandard_when_the_prefab_cannot_be_read_for_texture_disambiguation(tmp_path):
+    """An unreadable prefab does not crash the extractor - the texture pick falls back and a nonstandard row records why, distinct
+    from the "candidates did not agree" reason above."""
+    item = {
+        "key": "live2d:skin:115:base:1103",
+        "assets": {
+            "normal_moc": {"bundle": "x", "path": "moc/path"},
+            "normal_prefab": {"bundle": "x", "path": "prefab/path"},
+            "normal_textures": {
+                "bundle": "x",
+                "path": "root/normal/model.2048/",
+                "candidates": ["root/normal/model.1024/", "root/normal/model.2048/"],
+            },
+        },
+    }
+    container = {"root/normal/model.2048/texture_00.png": GoodTexture(), "moc/path": FakeMocAsset(), "prefab/path": FailingPrefab()}
+    result = extract_live2d.new_result()
+    extract_live2d.build_skin_variant(item, container, {}, "normal", "live2d/tdolls/1/base/base/normal", str(tmp_path), result)
+    rows = [row for row in result["nonstandard"] if row["role"] == "normal_textures"]
+    assert len(rows) == 1
+    assert "prefab unreadable" in rows[0]["size"]
+
+
+def test_build_skin_variant_records_nonstandard_for_a_stale_inventory_with_no_candidates_recorded(tmp_path):
+    """An item resolved before `candidates` was ever recorded, whose bundle genuinely ships more than one resolution, still gets
+    flagged - detected straight from the loaded container rather than trusted from the possibly-stale inventory."""
+    item = {
+        "key": "live2d:skin:115:base:1103",
+        "assets": {
+            "normal_moc": {"bundle": "x", "path": "moc/path"},
+            "normal_prefab": {"bundle": "x", "path": "prefab/path"},
+            "normal_textures": {"bundle": "x", "path": "root/normal/model.2048/"},  # no "candidates" key at all
+        },
+    }
+    container = {
+        "root/normal/model.1024/texture_00.png": GoodTexture(),
+        "root/normal/model.2048/texture_00.png": GoodTexture(),
+        "moc/path": FakeMocAsset(),
+        "prefab/path": FailingPrefab(),
+    }
+    result = extract_live2d.new_result()
+    extract_live2d.build_skin_variant(item, container, {}, "normal", "live2d/tdolls/1/base/base/normal", str(tmp_path), result)
+    rows = [row for row in result["nonstandard"] if row["role"] == "normal_textures"]
+    assert len(rows) == 1
+    assert "stale inventory" in rows[0]["size"]
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////

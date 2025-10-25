@@ -40,6 +40,12 @@ export interface Live2dEntry {
 	motions: Live2dMotion[];
 }
 
+/**
+ * Which variant names (`normal`, `damaged`, or both) exist for one T-Doll skin form/skin combination, keyed by skin key. No motions -
+ * see `Live2dIndex.tdolls`.
+ */
+export type Live2dSkinAvailability = Record<string, string[]>;
+
 /** The whole index, each part keyed by stringified id. */
 export interface Live2dIndex {
 	/** Fairy motions keyed by stringified fairy id. */
@@ -47,9 +53,17 @@ export interface Live2dIndex {
 	/** HOC motions keyed by stringified HOC id. */
 	hocs: Record<string, Live2dEntry>;
 	/**
-	 * T-Doll skin motions, keyed by stringified doll id, then form (`base` or `mod`), then skin key (`base` or a skin id as a string), then
-	 * variant (`normal` or `damaged`). Optional because an index built before the skin extraction ran has no `tdolls` key at all - every
-	 * reader must treat a missing key the same as a missing entry, never throw.
+	 * Which T-Doll skin Live2D models are available, keyed by stringified doll id, then form (`base` or `mod`), then skin key (`base` or
+	 * a skin id as a string), to the variant names present (`normal`, `damaged`, or both). This is availability only, with no motions -
+	 * the motions themselves are too large to ship on every doll page, so they live in one file per doll under `src/data/live2d-tdolls/`,
+	 * loaded by `loadSkinLive2dMotions`. Optional because an index built before the skin extraction ran has no `tdolls` key at all -
+	 * every reader must treat a missing key the same as a missing entry, never throw.
 	 */
-	tdolls?: Record<string, Record<string, Record<string, Record<string, Live2dEntry>>>>;
+	tdolls?: Record<string, Record<string, Live2dSkinAvailability>>;
 }
+
+/**
+ * One doll's T-Doll skin Live2D motions, from its own `src/data/live2d-tdolls/<dollId>.json` file: form (`base` or `mod`) to skin key
+ * (`base` or a skin id as a string) to variant (`normal` or `damaged`) to that variant's motions.
+ */
+export type Live2dTdollFile = Record<string, Record<string, Record<string, Live2dEntry>>>;

@@ -705,13 +705,14 @@ def variant_model_root(scoped):
 
 
 def variant_texture_dir(dirs):
-    """Pick a skin Live2D variant's texture folder when its model folder ships more than one resolution.
+    """Pick a fallback texture folder for a skin Live2D variant whose model folder ships more than one resolution.
 
-    A model folder can hold `model.1024/` and `model.2048/` as siblings - a lower-resolution texture set kept alongside the final one.
-    The folder name's trailing `.<res>` segment carries the resolution, so the highest one wins. Picking by file order instead, as a
-    first-hit match does for every other role here, is not resolution-aware and can just as easily land on the low-resolution folder,
-    which is what happened before this function existed. A name with no numeric suffix, or a tie, falls back to the lexically last
-    name, so the winner is a pure function of the candidate set and never depends on `set` iteration order.
+    A model folder can hold `model.1024/` and `model.2048/` as siblings - a lower-resolution texture set kept alongside the final one -
+    and this module has no bundle loaded, only its ResData file list, so it cannot read which one the model's own drawables actually
+    reference. Picking the highest resolution here is only ever a fallback: `extract_live2d.py` has the loaded bundle and picks the
+    real answer from the prefab's own texture references, using every candidate `variant_assets` records, and falls back to this
+    function's pick only when that read fails. A name with no numeric suffix, or a tie, falls back to the lexically last name, so the
+    fallback itself is a pure function of the candidate set and never depends on `set` iteration order.
 
     Args:
         dirs: Candidate texture folder names, trailing slash included and no other path segments, such as `{"model.1024/", "model.2048/"}`.
@@ -744,8 +745,10 @@ def variant_assets(bundle_name, bundle, variant_folder):
 
     Returns:
         A dict of role suffix (`moc`, `prefab`, `textures`, `motions`) to its `{"bundle", "path"}` hit. `textures` and `motions` carry the
-        folder prefix rather than one file. A role with no match is absent, including every role when the variant has no folder with a
-        `.prefab` at all.
+        folder prefix rather than one file, and `textures` additionally carries `candidates`: every texture folder prefix seen, so
+        `extract_live2d.py`, which has the loaded bundle this module does not, can pick among them by what the prefab actually
+        references rather than trusting `path`, which is only this module's resolution-based fallback guess. A role with no match is
+        absent, including every role when the variant has no folder with a `.prefab` at all.
     """
     marker = f"/{variant_folder}/"
     scoped = [(lowered, path) for lowered, path in bundle["files"] if marker in lowered]
@@ -755,8 +758,8 @@ def variant_assets(bundle_name, bundle, variant_folder):
 
     found = {}
     # Every texture folder seen, name (trailing slash included) to a matching path prefix in the bundle's own case. When a model
-    # folder ships more than one resolution, `variant_texture_dir` picks the winner from this dict's keys after the walk, rather
-    # than the first one encountered in file order.
+    # folder ships more than one resolution, `variant_texture_dir` picks a fallback winner from this dict's keys after the walk,
+    # rather than the first one encountered in file order, but every candidate is recorded too - see the docstring above.
     texture_dirs = {}
     for lowered, path in scoped:
         if not lowered.startswith(root):
@@ -774,7 +777,7 @@ def variant_assets(bundle_name, bundle, variant_folder):
             found["motions"] = {"bundle": bundle_name, "path": path[: len(root) + len("motions/")]}
     if texture_dirs:
         best = variant_texture_dir(texture_dirs.keys())
-        found["textures"] = {"bundle": bundle_name, "path": texture_dirs[best]}
+        found["textures"] = {"bundle": bundle_name, "path": texture_dirs[best], "candidates": sorted(texture_dirs.values())}
     return found
 
 

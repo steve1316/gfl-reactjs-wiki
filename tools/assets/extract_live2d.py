@@ -651,6 +651,109 @@ def prefab_physics_rig(objs, prefab):
     return None
 
 
+def drawable_texture_paths(objs, container, prefab):
+    """Resolve every Drawable's `CubismRenderer._mainTexture` reference to its container path.
+
+    This is the ground truth for which texture folder a model actually renders with. A model folder can ship more than one
+    resolution as siblings (a lower one kept alongside the final one, or the other way round), and only each drawable's own PPtr
+    reference, not a folder name or a file-order guess, says which one the model was actually built against.
+
+    Args:
+        objs: Path id to UnityPy object reader, for the whole bundle.
+        container: The bundle's container, lowercased path to UnityPy object reader, from `load_container`.
+        prefab: The prefab root's GameObject typetree dict.
+
+    Returns:
+        Lowercased container paths, one per Drawable whose `CubismRenderer` carries a local `_mainTexture` reference, in Drawables
+        order. Empty when the prefab has no Drawables group, or none of its renderers resolve to a container entry.
+    """
+    reverse = {obj.path_id: path for path, obj in container.items()}
+    _components, root_transform = comp_classes(objs, prefab)
+    if root_transform is None:
+        return []
+    paths = []
+    for group in prefab_children(objs, root_transform):
+        if group["m_Name"] != "Drawables":
+            continue
+        _group_components, group_transform = comp_classes(objs, group)
+        if group_transform is None:
+            continue
+        for child in prefab_children(objs, group_transform):
+            child_components, _child_transform = comp_classes(objs, child)
+            renderers = child_components.get("CubismRenderer")
+            if not renderers:
+                continue
+            reference = renderers[0].get("_mainTexture", {})
+            if reference.get("m_FileID", 0) != 0:
+                continue
+            path = reverse.get(reference.get("m_PathID"))
+            if path is not None:
+                paths.append(path)
+    return paths
+
+
+def prefab_texture_dir(objs, container, prefab, candidates, fallback):
+    """Pick a skin Live2D variant's texture folder from what its prefab's Drawables actually render with.
+
+    `game_bundles.py` records every candidate folder but has no bundle loaded, so it cannot read `CubismRenderer._mainTexture`
+    references and only offers a resolution-based guess as `fallback`. That guess is wrong when a model folder ships more than one
+    resolution and the higher one is not the one the model was built against - `live2d:skin:115:base:1103` (KP31_1103's normal
+    model) ships both `model.1024/` and `model.2048/`, and every drawable's texture reference names `model.1024/`. Reading the real
+    references here, where the bundle is loaded, gives the actual answer instead of a guess.
+
+    Args:
+        objs: Path id to UnityPy object reader, for the whole bundle.
+        container: The bundle's container, lowercased path to UnityPy object reader, from `load_container`.
+        prefab: The prefab root's GameObject typetree dict.
+        candidates: Every candidate texture folder's absolute lowercased path prefix. When there are fewer than two, `fallback` is
+            returned unconditionally, since the ambiguity this function exists for cannot arise.
+        fallback: The folder to use when the prefab's references do not name exactly one of `candidates` - none resolved, or they
+            disagree, which should not happen for a model built from one folder but is not a case worth trusting a guess over.
+
+    Returns:
+        A `(folder, resolved)` pair: `folder` is the winning folder, and `resolved` is True when the prefab's own references decided
+        it (or there was nothing to decide), False when `fallback` was used because the references did not name exactly one
+        candidate - the caller's cue to record that the pick is a guess, not a confirmed answer.
+    """
+    if len(candidates) < 2:
+        return fallback, True
+    texture_paths = drawable_texture_paths(objs, container, prefab)
+    matches = {candidate for candidate in candidates for path in texture_paths if path.startswith(candidate)}
+    if len(matches) == 1:
+        return matches.pop(), True
+    return fallback, False
+
+
+def texture_dir_siblings(container, texture_prefix):
+    """Find every `model.<res>/` folder next to one texture folder, by the same naming `game_bundles.variant_assets` matches.
+
+    Used to detect a stale inventory item with no `candidates` recorded (resolved before `game_bundles.py` started recording them)
+    whose bundle genuinely ships more than one resolution regardless - scanning the loaded container directly is the only way to
+    tell, since the inventory itself is the thing that might be wrong.
+
+    Args:
+        container: The bundle's container, lowercased path to UnityPy object reader, from `load_container`.
+        texture_prefix: One texture folder's absolute lowercased path prefix, trailing slash included.
+
+    Returns:
+        Every sibling `model.<res>/` folder's absolute path prefix found directly under the same parent folder, including
+        `texture_prefix` itself when it matches that naming. A single-element result means there is nothing to disambiguate.
+    """
+    trimmed = texture_prefix.rstrip("/")
+    parent = trimmed[: trimmed.rfind("/") + 1] if "/" in trimmed else ""
+    siblings = set()
+    for path in container:
+        if not path.startswith(parent):
+            continue
+        rest = path[len(parent) :]
+        if "/" not in rest:
+            continue
+        leaf = rest.split("/", 1)[0]
+        if leaf.startswith("model.") and leaf[len("model.") :].isdigit():
+            siblings.add(f"{parent}{leaf}/")
+    return siblings
+
+
 def build_skin_variant(item, container, objs, variant, folder, staging, result):
     """Extract one variant of a skin's model: textures, moc3, physics, motions and model3.
 
@@ -665,7 +768,9 @@ def build_skin_variant(item, container, objs, variant, folder, staging, result):
         variant: `normal` or `damaged`, naming the item's asset roles.
         folder: Output folder for this variant, such as `live2d/tdolls/104/base/1202/normal`.
         staging: The staging root.
-        result: The worker result to append missing rows and written files to.
+        result: The worker result to append missing, non-standard and written rows to. A texture folder pick that is not confirmed
+            by the prefab - an unreadable prefab, no matching candidate, or a stale inventory item with no `candidates` recorded at
+            all - lands in `nonstandard`, not `missing`, since extraction still succeeds with the fallback folder.
     """
     key = item["key"]
     moc_role, prefab_role = f"{variant}_moc", f"{variant}_prefab"
@@ -675,7 +780,41 @@ def build_skin_variant(item, container, objs, variant, folder, staging, result):
 
     texture_names = []
     if f"{variant}_textures" in item["assets"]:
-        prefix = item["assets"][f"{variant}_textures"]["path"].lower()
+        textures_asset = item["assets"][f"{variant}_textures"]
+        prefix = textures_asset["path"].lower()
+        candidates = [candidate.lower() for candidate in textures_asset.get("candidates", [])]
+        if len(candidates) > 1:
+            # More than one resolution was found for this model - game_bundles.py's `prefix` above is only its resolution-based
+            # guess, since it has no bundle loaded to read the prefab's own texture references. The prefab is read again here,
+            # ahead of the read below that also needs it, since this whole block runs before that one and must not depend on it.
+            resolved, reason = False, None
+            try:
+                prefab_for_textures = container[item["assets"][prefab_role]["path"].lower()].read_typetree()
+                prefix, resolved = prefab_texture_dir(objs, container, prefab_for_textures, candidates, prefix)
+            except Exception as exc:
+                reason = f"prefab unreadable: {exc!r}"
+            if not resolved:
+                result["nonstandard"].append(
+                    {
+                        "key": key,
+                        "role": f"{variant}_textures",
+                        "size": reason or f"prefab did not confirm one of the candidates: {candidates}",
+                        "expected": prefix,
+                    }
+                )
+        elif len(candidates) <= 1:
+            # No ambiguity was recorded at all - confirm that against the loaded bundle itself, since the inventory that recorded
+            # `candidates` (or did not) can be stale relative to it.
+            siblings = texture_dir_siblings(container, prefix)
+            if len(siblings) > 1:
+                result["nonstandard"].append(
+                    {
+                        "key": key,
+                        "role": f"{variant}_textures",
+                        "size": f"stale inventory - no candidates recorded, found siblings {sorted(siblings)}",
+                        "expected": prefix,
+                    }
+                )
         paths = sorted(path for path, _obj in container.items() if path.startswith(prefix) and path.endswith(".png"))
         for path, name in zip(paths, texture_output_names(paths)):
             try:

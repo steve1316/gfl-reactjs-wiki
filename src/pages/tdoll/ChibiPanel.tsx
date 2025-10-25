@@ -138,9 +138,11 @@ export default memo(function ChibiPanel({
 	const variant = resolveSkinLive2dVariant(live2dVariants, variantPreference);
 	const hasBothVariants = live2dVariants.length > 1;
 
-	// Gated on hasLive2d, not on the mode being "live2d", so both variants are ready the moment the reader opens
-	// the Live2D toggle instead of flashing a loading state on every mode switch.
-	const motionId = hasLive2d ? normalId : undefined;
+	// Gated on the mode being "live2d", not on hasLive2d, since each doll's motions are their own network request now that they
+	// live in a per-doll file rather than the shared index - fetching them the moment a skin with a model is merely on screen would
+	// mean every visit to such a doll's page downloads motions the reader may never open the Live2D toggle to see. The tradeoff is
+	// a brief loading state the first time the toggle is opened, rather than both variants already being ready.
+	const motionId = mode === "live2d" ? normalId : undefined;
 	const normalMotions = useSkinLive2dMotions(motionId, live2dForm, live2dSkinKey, "normal");
 	const damagedMotions = useSkinLive2dMotions(motionId, live2dForm, live2dSkinKey, "damaged");
 	const motions = variant === "damaged" ? damagedMotions : normalMotions;

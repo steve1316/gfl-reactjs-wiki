@@ -446,10 +446,13 @@ def test_variant_texture_dir_falls_back_to_the_lexically_last_name_on_a_tie_or_u
     assert game_bundles.variant_texture_dir({"model.a/", "model.b/"}) == "model.b/"
 
 
-def test_variant_assets_picks_the_highest_resolution_texture_folder_regardless_of_file_order():
+def test_variant_assets_records_every_texture_candidate_and_falls_back_to_the_highest_resolution():
     """A model folder can ship both `model.1024/` and `model.2048/` (a lower-resolution set kept alongside the final one), the real case
-    being `live2d:skin:115:base:1103` (KP31_1103's normal model). The lower resolution is listed first here, matching KP31_1103's own
-    bundle order, so a fixture that happened to list the higher one first would not actually guard this fix."""
+    being `live2d:skin:115:base:1103` (KP31_1103's normal model), whose real prefab references `model.1024/` - the resolution guess is
+    wrong there, which is exactly why `path` here is only ever `extract_live2d.py`'s fallback: `candidates` carries every folder so the
+    real answer can be read from the loaded bundle's prefab, which this module never has. The lower resolution is listed first here,
+    matching KP31_1103's own bundle order, so a fixture that happened to list the higher one first would not actually guard the
+    fallback's own tie-break."""
     base = "assets/resources/dabao/live2dnew/gun/kp31_1103/normal"
     paths = [
         f"{base}/model.1024/texture_00.png",
@@ -461,6 +464,7 @@ def test_variant_assets_picks_the_highest_resolution_texture_folder_regardless_o
     bundle = {"files": [(path, path) for path in paths], "sizeOriginal": 1}
     found = game_bundles.variant_assets("live2dnew_gun_kp31_1103", bundle, "normal")
     assert found["textures"]["path"] == f"{base}/model.2048/"
+    assert sorted(found["textures"]["candidates"]) == [f"{base}/model.1024/", f"{base}/model.2048/"]
 
 
 def test_variant_model_root_is_deterministic_when_two_equal_depth_folders_both_qualify():

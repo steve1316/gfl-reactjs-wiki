@@ -185,15 +185,26 @@ export default function TDollLive2d() {
 		};
 	}, [id, loadAttempt]);
 
-	// Opened from the doll page, going back returns to it. Opened from a pasted link there is nothing to go back to,
-	// so the doll page opens instead.
+	// Opened from the doll page, going back returns to it exactly as it was left, since that page keeps its skin, Mod and damaged
+	// choice in its address. Opened from a pasted link there is nothing to go back to, so the doll page opens on the combination
+	// being viewed instead, the way tdoll_art.tsx's own close button reconstructs its address. The Live2D "damaged" variant is a
+	// different concept from the doll page's own damaged=1, which flips the card and full art image, not the Live2D model, so it is
+	// deliberately never written here even when the viewer is showing the damaged model.
 	const close = useCallback(() => {
 		if (openedKey.current !== "default") {
 			void navigate(-1);
 			return;
 		}
-		void navigate(`/tdoll/${id ?? ""}`, { replace: true });
-	}, [navigate, id]);
+		const back = new URLSearchParams();
+		if (selection?.form === "mod") {
+			back.set("mod", "1");
+		}
+		if (selection && selection.skinKey !== "base") {
+			back.set("skin", selection.skinKey);
+		}
+		const query = back.toString();
+		void navigate(`/tdoll/${id ?? ""}${query ? `?${query}` : ""}`, { replace: true });
+	}, [navigate, id, selection]);
 
 	useCloseOnEscape(close);
 

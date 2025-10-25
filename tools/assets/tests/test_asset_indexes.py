@@ -450,6 +450,21 @@ class BuildLive2dIndexTests(unittest.TestCase):
             index = build_live2d_index.build_index(root, [])
         self.assertEqual(index, {"fairies": {}, "hocs": {}, "tdolls": {}})
 
+    def test_build_index_tdolls_block_is_availability_only(self):
+        """The top-level index's `tdolls` block lists only variant names, with no motions, matching what `build_manifest` scans."""
+        with tempfile.TemporaryDirectory() as root:
+            touch(
+                root,
+                "live2d/tdolls/104/base/1202/normal/model.moc3",
+                "live2d/tdolls/104/base/1202/normal/model.model3.json",
+                "live2d/tdolls/104/base/1202/damaged/model.moc3",
+                "live2d/tdolls/104/base/1202/damaged/model.model3.json",
+            )
+            index = build_live2d_index.build_index(root, [])
+            manifest_block = build_manifest.build_live2d(root)["tdolls"]
+        self.assertEqual(index["tdolls"], {"104": {"base": {"1202": ["damaged", "normal"]}}})
+        self.assertEqual(index["tdolls"], manifest_block)
+
 
 def test_skin_motion_rows_classify_by_type_and_hurt_flag():
     rows = [
@@ -549,6 +564,26 @@ def test_index_tdolls_skips_stray_files_at_the_form_and_skin_level(tmp_path):
     assert list(index["104"].keys()) == ["base"]
     assert list(index["104"]["base"].keys()) == ["1202"]
     assert index["104"]["base"]["1202"]["normal"]["motions"][0]["name"] == "touch_1"
+
+
+def test_write_tdoll_files_writes_one_file_per_doll(tmp_path):
+    """Each doll's motions land in their own file, shaped exactly like `index_tdolls`'s per-doll value."""
+    tdoll_motions = {
+        "104": {"base": {"1202": {"normal": {"motions": [{"name": "touch_1", "group": "touch", "model3Group": "touch_1", "seconds": 2.35, "touchArea": "body", "line": "Hi"}]}}}},
+        "65": {"mod": {"base": {"normal": {"motions": []}}}},
+    }
+    out_dir = tmp_path / "live2d-tdolls"
+    build_live2d_index.write_tdoll_files(str(out_dir), tdoll_motions)
+    assert sorted(p.name for p in out_dir.iterdir()) == ["104.json", "65.json"]
+    assert json.loads((out_dir / "104.json").read_text()) == tdoll_motions["104"]
+    assert json.loads((out_dir / "65.json").read_text()) == tdoll_motions["65"]
+
+
+def test_write_tdoll_files_creates_the_output_directory(tmp_path):
+    """The output directory is created when it does not already exist, so a first run does not need it pre-made."""
+    out_dir = tmp_path / "nested" / "live2d-tdolls"
+    build_live2d_index.write_tdoll_files(str(out_dir), {"104": {}})
+    assert (out_dir / "104.json").is_file()
 
 
 if __name__ == "__main__":

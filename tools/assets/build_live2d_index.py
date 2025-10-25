@@ -16,7 +16,10 @@ computed by `extract_live2d.motion_group_name` rather than re-derived from the t
 different, semantic classification (idle/wait/touch) used only for labelling and touch-area lookup - it can disagree with the file's
 real model3 group for an oddly named or misclassified clip, so the site must call `playMotion` with `model3Group`, never `group`.
 
-The index is written to `src/data/live2d-index.json` by default, the one the site bundles.
+The index is written to `src/data/live2d-index.json` by default, the one the site bundles. Its `tdolls` block is availability only -
+which doll/form/skin/variant combinations have a model, reusing `build_manifest.scan_live2d_tdolls` so the two never disagree about
+what is playable. The motions themselves are too large to ship on every doll page, so they go to one file per doll under
+`src/data/live2d-tdolls/<dollId>.json` instead, written by `write_tdoll_files`.
 """
 
 import argparse
@@ -24,7 +27,7 @@ import json
 import os
 import sys
 
-from build_manifest import numeric_dirs, tdoll_skin_sort_key
+from build_manifest import numeric_dirs, scan_live2d_tdolls, tdoll_skin_sort_key
 from extract_live2d import motion_group_name
 from skin_live2d_table import MOD_ID_OFFSET, parse_motion_ids
 
@@ -41,6 +44,7 @@ TOUCH_AREAS = {"head": "head", "body": "body"}
 
 DEFAULT_MOTIONS_PATH = "tools/data/.cache/gf-data-us/catchdata/fairy_live2d_motions_info.json"
 DEFAULT_OUT_PATH = "src/data/live2d-index.json"
+DEFAULT_TDOLLS_OUT = "src/data/live2d-tdolls"
 
 # stc/live2d_motions.json's `type` column, mapped to the index's semantic group. 402 is a touch reaction played on the damaged model
 # (`is_hurt=1`), the same way 200 is a touch reaction on the normal model. A type absent here is `other`, which the site labels but does
@@ -355,15 +359,16 @@ def index_tdolls(tdolls_root, table_rows, motion_rows, lines):
     return entries
 
 
-def build_index(staging_root, motion_rows, table_rows=(), skin_motion_rows=(), lines=None):
-    """Index every fairy's, HOC's and T-Doll skin's motions in a Live2D staging tree.
+def build_index(staging_root, motion_rows):
+    """Index every fairy's and HOC's motions, plus which T-Doll skin models are available, in a Live2D staging tree.
+
+    The `tdolls` block is availability only, from `build_manifest.scan_live2d_tdolls` - a doll id to form to skin key to its variant
+    names, with no motions. The motions themselves are indexed separately by `index_tdolls` and written to their own per-doll files by
+    `write_tdoll_files`, since embedding them here would make every doll page's caller fetch every doll's motions.
 
     Args:
         staging_root: The asset staging tree, holding `live2d/fairies/<id>/`, `live2d/hocs/<id>/` and `live2d/tdolls/<id>/`.
         motion_rows: Rows from `fairy_live2d_motions_info.json`.
-        table_rows: Rows from `stc/live2d.json`, naming each T-Doll skin model's motion ids. Defaults to none.
-        skin_motion_rows: Rows from `stc/live2d_motions.json`. Defaults to none.
-        lines: The lookup from `dialogue_lines`. Defaults to none.
 
     Returns:
         The index dict: `{"fairies": {"<id>": {"motions": [...]}}, "hocs": {...}, "tdolls": {...}}`.
@@ -373,8 +378,37 @@ def build_index(staging_root, motion_rows, table_rows=(), skin_motion_rows=(), l
     return {
         "fairies": index_kind(os.path.join(live2d_root, "fairies"), groups),
         "hocs": index_kind(os.path.join(live2d_root, "hocs"), groups),
-        "tdolls": index_tdolls(os.path.join(live2d_root, "tdolls"), table_rows, skin_motion_rows, lines or {}),
+        "tdolls": scan_live2d_tdolls(os.path.join(live2d_root, "tdolls")),
     }
+
+
+def dump_tdoll_file(forms):
+    """Serialise one doll's per-file Live2D motions in the compact production form.
+
+    Args:
+        forms: One doll's `{"<form>": {"<skinKey>": {"<variant>": {"motions": [...]}}}}` dict, from `index_tdolls`.
+
+    Returns:
+        The file contents, ending in a newline.
+    """
+    return json.dumps(forms, separators=(",", ":"), ensure_ascii=False) + "\n"
+
+
+def write_tdoll_files(tdolls_out, tdoll_motions):
+    """Write one Live2D motions file per doll under the per-doll output directory.
+
+    Each doll's forms, skins and variants are already in sorted order from `index_tdolls`'s directory walk, so the same input always
+    writes the same bytes and a regeneration with nothing new does not churn the files.
+
+    Args:
+        tdolls_out: The output directory for per-doll files, created if it does not already exist.
+        tdoll_motions: The doll id to form to skin to variant to motions dict, from `index_tdolls`.
+    """
+    os.makedirs(tdolls_out, exist_ok=True)
+    for doll_id, forms in tdoll_motions.items():
+        path = os.path.join(tdolls_out, f"{doll_id}.json")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(dump_tdoll_file(forms))
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -403,6 +437,7 @@ def main():
     parser.add_argument("--skin-motions", default=DEFAULT_SKIN_MOTIONS_PATH, help="stc/live2d_motions.json. Defaults to the checked-out gf-data-us cache.")
     parser.add_argument("--voice", default=DEFAULT_VOICE_PATH, help="newcharactervoice.txt. Defaults to the checked-out gf-data-us cache.")
     parser.add_argument("--out", default=DEFAULT_OUT_PATH, help="Where to write the index. Defaults to the one the site bundles.")
+    parser.add_argument("--tdolls-out", default=DEFAULT_TDOLLS_OUT, help="Directory for the per-doll T-Doll skin motion files. Defaults to the one the site bundles from.")
     args = parser.parse_args()
 
     if not os.path.isdir(args.staging):
@@ -429,13 +464,18 @@ def main():
         with open(args.voice, encoding="utf-8") as handle:
             lines = dialogue_lines(handle)
 
-    index = build_index(args.staging, motion_rows, table_rows, skin_motion_rows, lines)
+    tdolls_root = os.path.join(args.staging, "live2d", "tdolls")
+    tdoll_motions = index_tdolls(tdolls_root, table_rows, skin_motion_rows, lines)
+    write_tdoll_files(args.tdolls_out, tdoll_motions)
+
+    index = build_index(args.staging, motion_rows)
     with open(args.out, "w", encoding="utf-8") as handle:
         handle.write(dumps(index))
     print(f"wrote {args.out} ({os.path.getsize(args.out) / 1024:.1f} KB)")
     print(f"  fairies  {len(index['fairies'])}")
     print(f"  hocs     {len(index['hocs'])}")
     print(f"  tdolls   {len(index['tdolls'])}")
+    print(f"wrote {len(tdoll_motions)} T-Doll skin motion files to {args.tdolls_out}")
 
 
 if __name__ == "__main__":

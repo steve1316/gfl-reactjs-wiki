@@ -42,3 +42,46 @@ export function findLive2dArtGaps(manifest) {
 	}
 	return gaps;
 }
+
+/**
+ * Find doll/form/skin/variant combinations where the live2d-index availability list and a doll's per-file motions disagree.
+ *
+ * `build_live2d_index.py` writes the availability list (`src/data/live2d-index.json`'s `tdolls` block) and each doll's motions
+ * (`src/data/live2d-tdolls/<dollId>.json`) from the same staging walk, and `merge_indexes.py` merges both add-only from the same
+ * partial run, but they are separate files - a bug in either the builder or the merge could let them drift. Only the availability
+ * list is bundled on every doll page, so a variant it advertises with no matching motions file would 404 when a reader opens it, and
+ * a variant that only exists in a per-doll file would never be offered at all. A doll with an empty availability block and no
+ * per-doll file passes, since most dolls have no Live2D model at all.
+ *
+ * @param {Record<string, Record<string, Record<string, string[]>>>} availability The live2d-index's `tdolls` block: doll id to form
+ *     to skin key to the variant names present.
+ * @param {Record<string, Record<string, Record<string, Record<string, unknown>>>>} tdollFiles Each doll's parsed per-file motions,
+ *     keyed by doll id, one entry per `src/data/live2d-tdolls/<dollId>.json` file that actually exists.
+ * @returns {string[]} One description per mismatched doll/form/skin/variant, naming which side is missing it, sorted.
+ */
+export function findLive2dTdollFileGaps(availability, tdollFiles) {
+	const gaps = [];
+	for (const dollId of new Set([...Object.keys(availability), ...Object.keys(tdollFiles)])) {
+		const forms = availability[dollId] ?? {};
+		const fileForms = tdollFiles[dollId] ?? {};
+		for (const form of new Set([...Object.keys(forms), ...Object.keys(fileForms)])) {
+			const skins = forms[form] ?? {};
+			const fileSkins = fileForms[form] ?? {};
+			for (const skinKey of new Set([...Object.keys(skins), ...Object.keys(fileSkins)])) {
+				const variants = new Set(skins[skinKey] ?? []);
+				const fileVariants = new Set(Object.keys(fileSkins[skinKey] ?? {}));
+				for (const variant of variants) {
+					if (!fileVariants.has(variant)) {
+						gaps.push(`tdoll ${dollId} ${form} ${skinKey} ${variant} (listed as available with no matching per-doll file entry)`);
+					}
+				}
+				for (const variant of fileVariants) {
+					if (!variants.has(variant)) {
+						gaps.push(`tdoll ${dollId} ${form} ${skinKey} ${variant} (has a per-doll file entry but is not listed as available)`);
+					}
+				}
+			}
+		}
+	}
+	return gaps.sort();
+}

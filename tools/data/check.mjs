@@ -8,6 +8,7 @@
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 
 import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
@@ -15,7 +16,7 @@ import { normaliseWithPositions } from "./lib/mentions.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 import { findHocArtGaps } from "./lib/hocs.mjs";
 import { findFairyArtGaps } from "./lib/fairies.mjs";
-import { findLive2dArtGaps } from "./lib/live2d.mjs";
+import { findLive2dArtGaps, findLive2dTdollFileGaps } from "./lib/live2d.mjs";
 import { findSkinArtGaps } from "./lib/skins.mjs";
 import { findSpineIndexProblems } from "./lib/spineIndex.mjs";
 
@@ -24,6 +25,12 @@ const MANIFEST_PATH = "assets-manifest.json";
 
 /** The skin-id Spine index the site bundles. */
 const SPINE_INDEX_PATH = "src/data/spine-index.json";
+
+/** The Live2D index the site bundles, whose `tdolls` block is checked against the per-doll files below. */
+const LIVE2D_INDEX_PATH = "src/data/live2d-index.json";
+
+/** Per-doll T-Doll skin Live2D motion files, one per doll that has any. May not exist at all when nothing has been published yet. */
+const LIVE2D_TDOLLS_DIR = "src/data/live2d-tdolls";
 
 /** Lines of combined stdout+stderr kept in the failure message when `pnpm build` fails. */
 const BUILD_FAILURE_LOG_LINES = 40;
@@ -320,6 +327,23 @@ async function main() {
 	} else {
 		for (const problem of findSpineIndexProblems(JSON.parse(fs.readFileSync(SPINE_INDEX_PATH, "utf8")))) {
 			fail(`${SPINE_INDEX_PATH}: ${problem}`);
+		}
+	}
+
+	if (!fs.existsSync(LIVE2D_INDEX_PATH)) {
+		fail(`the Live2D index ${LIVE2D_INDEX_PATH} is missing. Run tools/assets/build_live2d_index.py`);
+	} else {
+		const live2dIndex = JSON.parse(fs.readFileSync(LIVE2D_INDEX_PATH, "utf8"));
+		const tdollFiles = {};
+		if (fs.existsSync(LIVE2D_TDOLLS_DIR)) {
+			for (const name of fs.readdirSync(LIVE2D_TDOLLS_DIR)) {
+				if (name.endsWith(".json")) {
+					tdollFiles[name.slice(0, -".json".length)] = JSON.parse(fs.readFileSync(path.join(LIVE2D_TDOLLS_DIR, name), "utf8"));
+				}
+			}
+		}
+		for (const gap of findLive2dTdollFileGaps(live2dIndex.tdolls ?? {}, tdollFiles)) {
+			fail(`live2d tdoll availability and per-doll files disagree: ${gap}`);
 		}
 	}
 

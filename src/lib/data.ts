@@ -16,7 +16,7 @@ import searchIndexJson from "../data/search-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { FairyData } from "../types/fairy";
 import type { HocData } from "../types/hoc";
-import type { Live2dIndex, Live2dMotion } from "../types/live2d";
+import type { Live2dIndex, Live2dMotion, Live2dTdollFile } from "../types/live2d";
 import type { HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
 import { equipmentIconUrl } from "./assets";
@@ -79,8 +79,14 @@ export const hocSearchIndex: HocSearchEntry[] = hocSearchIndexJson as HocSearchE
 /** Every Fairy's id and name, for the navbar search. */
 export const fairySearchIndex: FairySearchEntry[] = fairySearchIndexJson as FairySearchEntry[];
 
-/** Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are bundled. */
-const DATA_URLS = import.meta.glob<string>(
+/**
+ * Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are meant to be bundled, but
+ * `hoc-spine-index.json` is small enough (under 4 KB) that Vite's default `assetsInlineLimit` inlines its contents here as a base64
+ * `data:` URI instead of emitting it as its own asset - a pre-existing quirk, not something this glob's own patterns cause, and not
+ * worth a `no-inline` query here since `fetchData` works the same either way. See `TDOLL_LIVE2D_DATA_URLS` below for a pattern where
+ * that same inlining was a real problem worth avoiding.
+ */
+const EXISTING_DATA_URLS = import.meta.glob<string>(
 	[
 		"../data/dolls-*.json",
 		"../data/profiles-*.json",
@@ -97,6 +103,25 @@ const DATA_URLS = import.meta.glob<string>(
 		eager: true
 	}
 );
+
+/**
+ * Hosted URLs of the per-doll T-Doll skin Live2D motion files, keyed the same way as `EXISTING_DATA_URLS`.
+ *
+ * A separate glob because most of these files are small - the median real file is around 3 KB, under the 4 KB `assetsInlineLimit` that
+ * every other file in `EXISTING_DATA_URLS` safely clears. Without `no-inline`, Vite would base64-inline a small doll's file straight
+ * into this eagerly loaded module instead of emitting it as its own asset, defeating the point of splitting them out: the whole doll's
+ * motions would ship on every page's initial bundle rather than being fetched only when a reader opens that doll's Live2D mode.
+ * `no-inline` forces every matched file to stay a separate asset regardless of size, so this glob only ever costs a few bytes of URL
+ * string per doll. The folder may not exist at all (nothing published yet), which a glob with no matches tolerates fine.
+ */
+const TDOLL_LIVE2D_DATA_URLS = import.meta.glob<string>("../data/live2d-tdolls/*.json", {
+	query: "?url&no-inline",
+	import: "default",
+	eager: true
+});
+
+/** The two URL maps above, merged under one lookup key so `fetchData` and `fetchSkinLive2dTdollFile` do not need to know they differ. */
+const DATA_URLS: Record<string, string> = { ...EXISTING_DATA_URLS, ...TDOLL_LIVE2D_DATA_URLS };
 
 /**
  * The generated data shards, in id order. This table mirrors `tools/data/lib/shards.mjs`.
@@ -135,6 +160,12 @@ const fairyCache = new Map<0, Promise<FairyData>>();
 
 /** Cache of the in-flight or loaded Live2D index, under the single key `0`. A failed load is dropped so it can be retried. */
 const live2dIndexCache = new Map<0, Promise<Live2dIndex>>();
+
+/**
+ * Cache of in-flight and loaded T-Doll skin Live2D motion files, keyed by doll id. A doll with no file resolves to undefined and stays
+ * cached that way, since a missing file never appears mid-session. A network failure is dropped so it can be retried.
+ */
+const skinLive2dTdollCache = new Map<number, Promise<Live2dTdollFile | undefined>>();
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -415,22 +446,48 @@ export async function loadHocLive2dMotions(id: number): Promise<Live2dMotion[] |
 }
 
 /**
+ * Fetch one doll's T-Doll skin Live2D motions file.
+ *
+ * @param dollId The doll's base id.
+ * @returns The doll's motions file, or undefined when the doll has no such file bundled at all - not every doll has one, unlike the
+ *   other generated data files this module reads.
+ * @throws When the file is bundled but the request fails or the response is not OK.
+ */
+async function fetchSkinLive2dTdollFile(dollId: number): Promise<Live2dTdollFile | undefined> {
+	const url = DATA_URLS[`../data/live2d-tdolls/${dollId}.json`];
+	if (url === undefined) {
+		return undefined;
+	}
+	const response = await fetch(url);
+	if (!response.ok) {
+		throw new Error(`live2d-tdolls/${dollId}.json failed to load with HTTP ${response.status}`);
+	}
+	return (await response.json()) as Live2dTdollFile;
+}
+
+/**
  * Look up one T-Doll skin variant's Live2D motions.
+ *
+ * Only fetches the one doll's own motion file, cached per doll, rather than the shared index - the motions for every doll's every skin
+ * would be hundreds of KB if they all shipped in one file every doll page paid for.
  *
  * @param dollId The doll's base id.
  * @param form `base` or `mod`, the doll form the model belongs to.
  * @param skinKey `base` for the form's own art, or the skin id as a string.
  * @param variant `normal` or `damaged`.
  * @returns The variant's motions, or undefined when nothing was published for it.
- * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ * @throws When the doll's file is bundled but fails to load. The failed load is not cached, so a later call tries again.
  */
 export async function loadSkinLive2dMotions(dollId: number, form: string, skinKey: string, variant: string): Promise<Live2dMotion[] | undefined> {
-	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
-	return index.tdolls?.[String(dollId)]?.[form]?.[skinKey]?.[variant]?.motions;
+	const file = await (skinLive2dTdollCache.get(dollId) ?? cacheUntilFailure(skinLive2dTdollCache, dollId, fetchSkinLive2dTdollFile(dollId)));
+	return file?.[form]?.[skinKey]?.[variant]?.motions;
 }
 
 /**
  * Look up which form, skin and variant combinations have a published Live2D model for a doll, without loading any motions.
+ *
+ * Reads the shared index's `tdolls` block, which is availability only - safe to load on every doll page, unlike the per-doll motion
+ * files `loadSkinLive2dMotions` fetches on demand.
  *
  * @param dollId The doll's base id.
  * @returns The doll's forms, each mapping a skin key to the variant names it has (`normal`, `damaged`, or both), or undefined when the
@@ -439,17 +496,5 @@ export async function loadSkinLive2dMotions(dollId: number, form: string, skinKe
  */
 export async function loadSkinLive2dForms(dollId: number): Promise<Record<string, Record<string, string[]>> | undefined> {
 	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
-	const forms = index.tdolls?.[String(dollId)];
-	if (forms === undefined) {
-		return undefined;
-	}
-	const result: Record<string, Record<string, string[]>> = {};
-	for (const [form, skins] of Object.entries(forms)) {
-		const skinVariants: Record<string, string[]> = {};
-		for (const [skinKey, variants] of Object.entries(skins)) {
-			skinVariants[skinKey] = Object.keys(variants);
-		}
-		result[form] = skinVariants;
-	}
-	return result;
+	return index.tdolls?.[String(dollId)];
 }

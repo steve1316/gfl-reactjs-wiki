@@ -4,6 +4,7 @@ import copy
 import json
 import os
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -306,23 +307,31 @@ class Live2dMergeTests(unittest.TestCase):
         self.assertEqual(merged["tdolls"]["65"], {"base": {"805": ["normal"]}})
 
     def test_merge_live2d_index_keeps_a_committed_tdoll_the_partial_does_not_mention(self):
-        """A committed tdoll the partial says nothing about is carried through unchanged."""
-        committed = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal", "damaged"]}}}}
+        """A committed tdoll the partial says nothing about is carried through unchanged, its variants in builder (sorted) order."""
+        committed = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["damaged", "normal"]}}}}
         merged = merge_indexes.merge_live2d_index(committed, {"fairies": {}, "hocs": {}, "tdolls": {}})
-        self.assertEqual(merged["tdolls"], {"104": {"base": {"1202": ["normal", "damaged"]}}})
+        self.assertEqual(merged["tdolls"], {"104": {"base": {"1202": ["damaged", "normal"]}}})
 
     def test_no_tdolls_key_when_neither_side_has_one(self):
         """An old committed index that predates `tdolls`, merged against a partial with nothing tdoll-related, gains no `tdolls` key."""
         merged = merge_indexes.merge_live2d_index({"fairies": {}, "hocs": {}}, {"fairies": {}, "hocs": {}})
         self.assertNotIn("tdolls", merged)
 
-    def test_tdoll_skin_conflict_is_refused_instead_of_overwriting(self):
-        """A skin key already committed to a doll and form stops the merge instead of replacing its variant list."""
+    def test_tdoll_skin_gains_a_variant_it_did_not_have_yet(self):
+        """A skin that already has `normal` and later gets `damaged` extracted merges the new variant in, rather than conflicting -
+        the availability merge must be exactly as fine-grained as the per-doll motion file merge, which already works this way."""
         committed = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal"]}}}}
         partial = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["damaged"]}}}}
+        merged = merge_indexes.merge_live2d_index(committed, partial)
+        self.assertEqual(merged["tdolls"]["104"]["base"]["1202"], ["damaged", "normal"])
+
+    def test_tdoll_variant_conflict_is_refused_instead_of_overwriting(self):
+        """A variant already committed to a doll, form and skin stops the merge instead of being silently re-added."""
+        committed = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal"]}}}}
+        partial = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal"]}}}}
         with self.assertRaises(merge_indexes.MergeConflict) as caught:
             merge_indexes.merge_live2d_index(committed, partial)
-        self.assertEqual(caught.exception.conflicts, ["live2d tdoll 104 base 1202"])
+        self.assertEqual(caught.exception.conflicts, ["live2d tdoll 104 base 1202 normal"])
 
     def test_tdoll_skins_sort_with_base_first_then_numeric(self):
         """A merged doll's skin keys order `base` before numeric skin ids, not as plain strings."""
@@ -330,6 +339,98 @@ class Live2dMergeTests(unittest.TestCase):
         partial = {"fairies": {}, "hocs": {}, "tdolls": {"104": {"base": {"1202": ["normal"], "base": ["normal"], "805": ["normal"]}}}}
         merged = merge_indexes.merge_live2d_index(committed, partial)
         self.assertEqual(list(merged["tdolls"]["104"]["base"]), ["base", "805", "1202"])
+
+
+def motion_entry(name):
+    """Build one minimal motion entry for the per-doll Live2D file tests.
+
+    Args:
+        name: The motion's file name stem.
+
+    Returns:
+        A `{"motions": [...]}` dict.
+    """
+    return {"motions": [{"name": name, "group": "idle", "model3Group": "Idle", "seconds": 1.0, "touchArea": None, "line": None}]}
+
+
+class Live2dTdollFileMergeTests(unittest.TestCase):
+    """Adding partial per-doll Live2D motion files, add-only, mirroring the availability merge's rules."""
+
+    def test_merge_live2d_tdoll_file_adds_a_new_skin_and_form(self):
+        """A new skin joins an existing form, and a new form is added whole."""
+        committed = {"base": {"1202": {"normal": motion_entry("idle_01")}}}
+        partial = {"base": {"3802": {"normal": motion_entry("idle_02")}}, "mod": {"base": {"normal": motion_entry("idle_03")}}}
+        merged = merge_indexes.merge_live2d_tdoll_file(committed, partial)
+        self.assertEqual(set(merged["base"]), {"1202", "3802"})
+        self.assertEqual(merged["mod"]["base"]["normal"], motion_entry("idle_03"))
+
+    def test_merge_live2d_tdoll_file_adds_a_variant_to_an_existing_skin(self):
+        """A skin that already has `normal` and gains `damaged` merges the new variant in alongside the existing one, matching the
+        availability merge's own granularity - the two must never disagree about what counts as a conflict."""
+        committed = {"base": {"1202": {"normal": motion_entry("idle_01")}}}
+        partial = {"base": {"1202": {"damaged": motion_entry("hurt_01")}}}
+        merged = merge_indexes.merge_live2d_tdoll_file(committed, partial)
+        self.assertEqual(merged["base"]["1202"], {"normal": motion_entry("idle_01"), "damaged": motion_entry("hurt_01")})
+
+    def test_merge_live2d_tdoll_file_conflict_is_refused(self):
+        """A form/skin/variant already committed stops the merge instead of replacing its motions."""
+        committed = {"base": {"1202": {"normal": motion_entry("idle_01")}}}
+        partial = {"base": {"1202": {"normal": motion_entry("idle_99")}}}
+        with self.assertRaises(merge_indexes.MergeConflict) as caught:
+            merge_indexes.merge_live2d_tdoll_file(committed, partial)
+        self.assertEqual(caught.exception.conflicts, ["base/1202/normal"])
+
+    def test_merge_live2d_tdoll_file_preserves_an_untouched_variant(self):
+        """A committed variant the partial says nothing about survives the merge unchanged."""
+        committed = {"base": {"1202": {"normal": motion_entry("idle_01"), "damaged": motion_entry("hurt_01")}}}
+        merged = merge_indexes.merge_live2d_tdoll_file(committed, {"base": {"1202": {}}})
+        self.assertEqual(merged["base"]["1202"], {"normal": motion_entry("idle_01"), "damaged": motion_entry("hurt_01")})
+
+    def test_merge_live2d_tdoll_file_sorts_skins_and_variants(self):
+        """A merged doll's skin keys order `base` first then numeric, and variants sort alphabetically."""
+        partial = {
+            "base": {
+                "3802": {"normal": motion_entry("a")},
+                "base": {"damaged": motion_entry("b"), "normal": motion_entry("c")},
+                "1202": {"normal": motion_entry("d")},
+            }
+        }
+        merged = merge_indexes.merge_live2d_tdoll_file({}, partial)
+        self.assertEqual(list(merged["base"]), ["base", "1202", "3802"])
+        self.assertEqual(list(merged["base"]["base"]), ["damaged", "normal"])
+
+    def test_merge_live2d_tdoll_files_writes_only_touched_dolls(self):
+        """Only dolls the partial directory names are merged and returned; an untouched committed doll's file is left alone."""
+        with tempfile.TemporaryDirectory() as committed_dir, tempfile.TemporaryDirectory() as partial_dir:
+            with open(os.path.join(committed_dir, "104.json"), "w", encoding="utf-8") as handle:
+                json.dump({"base": {"1202": {"normal": motion_entry("idle_01")}}}, handle)
+            with open(os.path.join(partial_dir, "104.json"), "w", encoding="utf-8") as handle:
+                json.dump({"base": {"3802": {"normal": motion_entry("idle_02")}}}, handle)
+            with open(os.path.join(partial_dir, "65.json"), "w", encoding="utf-8") as handle:
+                json.dump({"base": {"805": {"normal": motion_entry("idle_03")}}}, handle)
+            merged = merge_indexes.merge_live2d_tdoll_files(committed_dir, partial_dir)
+        self.assertEqual(set(merged), {"104", "65"})
+        self.assertEqual(set(merged["104"]["base"]), {"1202", "3802"})
+        self.assertEqual(merged["65"]["base"]["805"], {"normal": motion_entry("idle_03")})
+
+    def test_merge_live2d_tdoll_files_conflict_is_refused(self):
+        """A conflict in one doll's file is reported with the doll id, and does not stop other dolls' conflicts from being collected."""
+        with tempfile.TemporaryDirectory() as committed_dir, tempfile.TemporaryDirectory() as partial_dir:
+            with open(os.path.join(committed_dir, "104.json"), "w", encoding="utf-8") as handle:
+                json.dump({"base": {"1202": {"normal": motion_entry("idle_01")}}}, handle)
+            with open(os.path.join(partial_dir, "104.json"), "w", encoding="utf-8") as handle:
+                json.dump({"base": {"1202": {"normal": motion_entry("idle_99")}}}, handle)
+            with self.assertRaises(merge_indexes.MergeConflict) as caught:
+                merge_indexes.merge_live2d_tdoll_files(committed_dir, partial_dir)
+        self.assertEqual(caught.exception.conflicts, ["live2d tdoll 104 base/1202/normal"])
+
+    def test_merge_live2d_tdoll_files_creates_a_file_for_a_doll_with_no_committed_file(self):
+        """A doll the committed directory has no file for yet merges against an empty starting point."""
+        with tempfile.TemporaryDirectory() as committed_dir, tempfile.TemporaryDirectory() as partial_dir:
+            with open(os.path.join(partial_dir, "104.json"), "w", encoding="utf-8") as handle:
+                json.dump({"base": {"1202": {"normal": motion_entry("idle_01")}}}, handle)
+            merged = merge_indexes.merge_live2d_tdoll_files(committed_dir, partial_dir)
+        self.assertEqual(merged["104"]["base"]["1202"], {"normal": motion_entry("idle_01")})
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
