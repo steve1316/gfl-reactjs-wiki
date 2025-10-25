@@ -22,21 +22,25 @@ interface DollFilterRowsProps {
 	typeFilter: SimpleFilterEntry[];
 	/** The single Mod filter entry and its current selected state. */
 	modFilter: SimpleFilterEntry;
+	/** The single Live2D filter entry and its current selected state. */
+	live2dFilter: SimpleFilterEntry;
 	/** Toggles the rarity entry with this key. */
 	onToggleRarity: (key?: string | number) => void;
 	/** Toggles the weapon-type entry with this key. */
 	onToggleType: (key?: string | number) => void;
 	/** Toggles the Mod filter. */
 	onToggleMod: () => void;
+	/** Toggles the Live2D filter. */
+	onToggleLive2d: () => void;
 }
 
 /**
- * The T-Doll Index's chip rows: rarity, weapon class and Mod.
+ * The T-Doll Index's chip rows: rarity, weapon class, and Mod alongside Live2D.
  *
  * @param props Component props.
  * @returns The three rows with dividers between them.
  */
-export default memo(function DollFilterRows({ rarityFilter, typeFilter, modFilter, onToggleRarity, onToggleType, onToggleMod }: DollFilterRowsProps) {
+export default memo(function DollFilterRows({ rarityFilter, typeFilter, modFilter, live2dFilter, onToggleRarity, onToggleType, onToggleMod, onToggleLive2d }: DollFilterRowsProps) {
 	const theme = useTheme();
 	return (
 		<>
@@ -63,6 +67,9 @@ export default memo(function DollFilterRows({ rarityFilter, typeFilter, modFilte
 			<ChipRow>
 				<li>
 					<FilterChip label={modFilter.label} selected={modFilter.selected} onToggle={onToggleMod} avatar={MOD_AVATAR} />
+				</li>
+				<li>
+					<FilterChip label={live2dFilter.label} selected={live2dFilter.selected} onToggle={onToggleLive2d} />
 				</li>
 			</ChipRow>
 		</>

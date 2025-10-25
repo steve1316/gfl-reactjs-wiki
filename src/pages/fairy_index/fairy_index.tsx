@@ -17,6 +17,7 @@ import FairyCard from "./FairyCard";
 import { FAIRY_MAX_STARS, FAIRY_STAT_KEYS, FAIRY_STAT_LABELS, fairyStats } from "../../lib/fairyStats";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
 import { useFairies } from "../../lib/useFairies";
+import { useLive2dAvailability } from "../../lib/useLive2dAvailability";
 import type { Fairy, FairyStatKey, FairyStatValues } from "../../types/fairy";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +53,8 @@ interface IndexFairy extends Fairy {
 interface SavedFilters {
 	/** Type names and, if on, `"Collab"`, whose chips are on. */
 	chips: string[];
+	/** Whether the Live2D chip is on. Absent from filters saved before the chip existed, which restores as off. */
+	live2d: boolean;
 	/** The name search text. */
 	name: string;
 	/** What the results are sorted by. */
@@ -61,7 +64,7 @@ interface SavedFilters {
 }
 
 /** The state a first visit starts from. */
-const DEFAULT_FILTERS: SavedFilters = { chips: [], name: "", sortKey: "type", sortDescending: false };
+const DEFAULT_FILTERS: SavedFilters = { chips: [], live2d: false, name: "", sortKey: "type", sortDescending: false };
 
 /** The type list before the data loads. Shared so the memoised rows keep a stable dependency. */
 const NO_TYPES: string[] = [];
@@ -105,6 +108,7 @@ function readSavedFilters(): SavedFilters {
 	}
 	return {
 		chips: Array.isArray(saved.chips) ? saved.chips.filter((label): label is string => typeof label === "string") : [],
+		live2d: saved.live2d === true,
 		name: typeof saved.name === "string" ? saved.name : "",
 		sortKey: isSortKey(saved.sortKey) ? saved.sortKey : "type",
 		sortDescending: saved.sortDescending === true
@@ -155,9 +159,13 @@ export default function FairyIndex() {
 	// Read once, on the first render, so a restored visit never flashes the defaults.
 	const [saved] = useState(readSavedFilters);
 	const [selectedChips, setSelectedChips] = useState<ReadonlySet<string>>(() => new Set(saved.chips));
+	const [live2dFilter, setLive2dFilter] = useState(saved.live2d);
 	const [nameQuery, setNameQuery] = useState(saved.name);
 	const [sortKey, setSortKey] = useState<SortKey>(saved.sortKey);
 	const [sortDescending, setSortDescending] = useState(saved.sortDescending);
+
+	// Fetched only once the Live2D filter is switched on, whether by a click or by a saved filter restoring it already on.
+	const live2dAvailability = useLive2dAvailability(live2dFilter);
 
 	const deferredQuery = useDeferredValue(nameQuery);
 
@@ -187,8 +195,16 @@ export default function FairyIndex() {
 		const typeOn = types.some((label) => selectedChips.has(label));
 		const collabOn = selectedChips.has(COLLAB_CHIP);
 		const anyChipOn = typeOn || collabOn;
-		return entries.filter((entry) => (!anyChipOn || selectedChips.has(entry.typeName) || (collabOn && entry.source === "Collab")) && matchesAnyName([entry.searchKey], query));
-	}, [entries, types, selectedChips, deferredQuery]);
+		// Availability is fetched lazily, so the filter stays off until it has actually loaded rather than
+		// matching nothing for the moment in between and flashing an empty result.
+		const live2dIds = live2dFilter ? (live2dAvailability?.fairyIds ?? null) : null;
+		return entries.filter(
+			(entry) =>
+				(!anyChipOn || selectedChips.has(entry.typeName) || (collabOn && entry.source === "Collab")) &&
+				matchesAnyName([entry.searchKey], query) &&
+				(live2dIds === null || live2dIds.has(entry.id))
+		);
+	}, [entries, types, selectedChips, live2dFilter, live2dAvailability, deferredQuery]);
 
 	const sorted = useMemo(() => sortEntries(matches, sortKey, sortDescending), [matches, sortKey, sortDescending]);
 
@@ -200,13 +216,13 @@ export default function FairyIndex() {
 
 	// Remember everything for the rest of the tab, so coming back from a Fairy page restores the view.
 	useEffect(() => {
-		const filters: SavedFilters = { chips: [...selectedChips], name: nameQuery, sortKey, sortDescending };
+		const filters: SavedFilters = { chips: [...selectedChips], live2d: live2dFilter, name: nameQuery, sortKey, sortDescending };
 		try {
 			sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
 		} catch {
 			// Storage can be blocked, such as in a locked-down browser. The view is just not remembered then.
 		}
-	}, [selectedChips, nameQuery, sortKey, sortDescending]);
+	}, [selectedChips, live2dFilter, nameQuery, sortKey, sortDescending]);
 
 	const handleToggleChip = useCallback((key?: string | number) => {
 		if (typeof key === "string") {
@@ -222,11 +238,14 @@ export default function FairyIndex() {
 
 	const handleClearName = useCallback(() => setNameQuery(""), []);
 
+	const handleToggleLive2d = useCallback(() => setLive2dFilter((current) => !current), []);
+
 	const handleToggleSortDirection = useCallback(() => setSortDescending((descending) => !descending), []);
 
 	// Clears the chips and the name search for the panel's Clear all button. The sort is not a filter, so it stays.
 	const handleClearAll = useCallback(() => {
 		setSelectedChips(new Set());
+		setLive2dFilter(false);
 		setNameQuery("");
 	}, []);
 
@@ -234,9 +253,10 @@ export default function FairyIndex() {
 	const activeFilters = useMemo(
 		(): ActiveFilter[] => [
 			...chipOptions.filter((label) => selectedChips.has(label)).map((label) => ({ id: `chip-${label}`, label, onDelete: () => handleToggleChip(label) })),
+			...(live2dFilter ? [{ id: "live2d", label: "Live2D", onDelete: handleToggleLive2d }] : []),
 			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : [])
 		],
-		[chipOptions, selectedChips, nameQuery, handleToggleChip, handleClearName]
+		[chipOptions, selectedChips, live2dFilter, nameQuery, handleToggleChip, handleToggleLive2d, handleClearName]
 	);
 
 	// Built once per filter change rather than per render, so the memoised panel skips renders that only touch the results.
@@ -256,9 +276,15 @@ export default function FairyIndex() {
 						<FilterChip label={COLLAB_CHIP} selected={selectedChips.has(COLLAB_CHIP)} value={COLLAB_CHIP} onToggle={handleToggleChip} />
 					</li>
 				</ChipRow>
+				<ChipRowDivider />
+				<ChipRow>
+					<li>
+						<FilterChip label="Live2D" selected={live2dFilter} onToggle={handleToggleLive2d} />
+					</li>
+				</ChipRow>
 			</>
 		),
-		[types, selectedChips, handleToggleChip]
+		[types, selectedChips, live2dFilter, handleToggleChip, handleToggleLive2d]
 	);
 
 	return (

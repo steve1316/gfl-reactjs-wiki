@@ -7,7 +7,7 @@ import type { SxProps, Theme } from "@mui/material";
 // Component imports
 import FilterChip from "../../components/FilterChip";
 import FilterPanel from "../../components/FilterPanel";
-import { ChipRow } from "../../components/FilterRows";
+import { ChipRow, ChipRowDivider } from "../../components/FilterRows";
 import IndexSummaryBar from "../../components/IndexSummaryBar";
 import type { ActiveFilter, SortOption } from "../../components/IndexSummaryBar";
 import LoadError from "../../components/LoadError";
@@ -17,6 +17,7 @@ import HocCard from "./HocCard";
 import { useHocs } from "../../lib/useHocs";
 import { hocStats } from "../../lib/hocStats";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
+import { useLive2dAvailability } from "../../lib/useLive2dAvailability";
 import type { Hoc, HocStatValues } from "../../types/hoc";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +58,8 @@ interface IndexHoc extends Hoc {
 interface SavedFilters {
 	/** Class names whose chips are on. */
 	classes: string[];
+	/** Whether the Live2D chip is on. Absent from filters saved before the chip existed, which restores as off. */
+	live2d: boolean;
 	/** The name search text. */
 	name: string;
 	/** What the results are sorted by. */
@@ -66,7 +69,7 @@ interface SavedFilters {
 }
 
 /** The state a first visit starts from. */
-const DEFAULT_FILTERS: SavedFilters = { classes: [], name: "", sortKey: "class", sortDescending: false };
+const DEFAULT_FILTERS: SavedFilters = { classes: [], live2d: false, name: "", sortKey: "class", sortDescending: false };
 
 /** The class list before the data loads. Shared so the memoised rows keep a stable dependency. */
 const NO_CLASSES: string[] = [];
@@ -110,6 +113,7 @@ function readSavedFilters(): SavedFilters {
 	}
 	return {
 		classes: Array.isArray(saved.classes) ? saved.classes.filter((label): label is string => typeof label === "string") : [],
+		live2d: saved.live2d === true,
 		name: typeof saved.name === "string" ? saved.name : "",
 		sortKey: isSortKey(saved.sortKey) ? saved.sortKey : "class",
 		sortDescending: saved.sortDescending === true
@@ -163,9 +167,13 @@ export default function HOCIndex() {
 	// Read once, on the first render, so a restored visit never flashes the defaults.
 	const [saved] = useState(readSavedFilters);
 	const [selectedClasses, setSelectedClasses] = useState<ReadonlySet<string>>(() => new Set(saved.classes));
+	const [live2dFilter, setLive2dFilter] = useState(saved.live2d);
 	const [nameQuery, setNameQuery] = useState(saved.name);
 	const [sortKey, setSortKey] = useState<SortKey>(saved.sortKey);
 	const [sortDescending, setSortDescending] = useState(saved.sortDescending);
+
+	// Fetched only once the Live2D filter is switched on, whether by a click or by a saved filter restoring it already on.
+	const live2dAvailability = useLive2dAvailability(live2dFilter);
 
 	const deferredQuery = useDeferredValue(nameQuery);
 
@@ -186,8 +194,11 @@ export default function HOCIndex() {
 		const query = normaliseName(deferredQuery);
 		// Only classes the data still has count, so a class saved from an older dataset cannot silently empty the list.
 		const classOn = classes.some((label) => selectedClasses.has(label));
-		return entries.filter((entry) => (!classOn || selectedClasses.has(entry.className)) && matchesAnyName([entry.searchKey], query));
-	}, [entries, classes, selectedClasses, deferredQuery]);
+		// Availability is fetched lazily, so the filter stays off until it has actually loaded rather than
+		// matching nothing for the moment in between and flashing an empty result.
+		const live2dIds = live2dFilter ? (live2dAvailability?.hocIds ?? null) : null;
+		return entries.filter((entry) => (!classOn || selectedClasses.has(entry.className)) && matchesAnyName([entry.searchKey], query) && (live2dIds === null || live2dIds.has(entry.id)));
+	}, [entries, classes, selectedClasses, live2dFilter, live2dAvailability, deferredQuery]);
 
 	const sorted = useMemo(() => sortEntries(matches, sortKey, sortDescending), [matches, sortKey, sortDescending]);
 
@@ -199,13 +210,13 @@ export default function HOCIndex() {
 
 	// Remember everything for the rest of the tab, so coming back from a HOC page restores the view.
 	useEffect(() => {
-		const filters: SavedFilters = { classes: [...selectedClasses], name: nameQuery, sortKey, sortDescending };
+		const filters: SavedFilters = { classes: [...selectedClasses], live2d: live2dFilter, name: nameQuery, sortKey, sortDescending };
 		try {
 			sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
 		} catch {
 			// Storage can be blocked, such as in a locked-down browser. The view is just not remembered then.
 		}
-	}, [selectedClasses, nameQuery, sortKey, sortDescending]);
+	}, [selectedClasses, live2dFilter, nameQuery, sortKey, sortDescending]);
 
 	const handleToggleClass = useCallback((key?: string | number) => {
 		if (typeof key === "string") {
@@ -221,11 +232,14 @@ export default function HOCIndex() {
 
 	const handleClearName = useCallback(() => setNameQuery(""), []);
 
+	const handleToggleLive2d = useCallback(() => setLive2dFilter((current) => !current), []);
+
 	const handleToggleSortDirection = useCallback(() => setSortDescending((descending) => !descending), []);
 
 	// Clears the class chips and the name search for the panel's Clear all button. The sort is not a filter, so it stays.
 	const handleClearAll = useCallback(() => {
 		setSelectedClasses(new Set());
+		setLive2dFilter(false);
 		setNameQuery("");
 	}, []);
 
@@ -233,23 +247,32 @@ export default function HOCIndex() {
 	const activeFilters = useMemo(
 		(): ActiveFilter[] => [
 			...classes.filter((label) => selectedClasses.has(label)).map((label) => ({ id: `class-${label}`, label, onDelete: () => handleToggleClass(label) })),
+			...(live2dFilter ? [{ id: "live2d", label: "Live2D", onDelete: handleToggleLive2d }] : []),
 			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : [])
 		],
-		[classes, selectedClasses, nameQuery, handleToggleClass, handleClearName]
+		[classes, selectedClasses, live2dFilter, nameQuery, handleToggleClass, handleToggleLive2d, handleClearName]
 	);
 
 	// Built once per filter change rather than per render, so the memoised panel skips renders that only touch the results.
 	const filterRows = useMemo(
 		() => (
-			<ChipRow>
-				{classes.map((label) => (
-					<li key={label}>
-						<FilterChip label={label} selected={selectedClasses.has(label)} value={label} onToggle={handleToggleClass} />
+			<>
+				<ChipRow>
+					{classes.map((label) => (
+						<li key={label}>
+							<FilterChip label={label} selected={selectedClasses.has(label)} value={label} onToggle={handleToggleClass} />
+						</li>
+					))}
+				</ChipRow>
+				<ChipRowDivider />
+				<ChipRow>
+					<li>
+						<FilterChip label="Live2D" selected={live2dFilter} onToggle={handleToggleLive2d} />
 					</li>
-				))}
-			</ChipRow>
+				</ChipRow>
+			</>
 		),
-		[classes, selectedClasses, handleToggleClass]
+		[classes, selectedClasses, live2dFilter, handleToggleClass, handleToggleLive2d]
 	);
 
 	return (

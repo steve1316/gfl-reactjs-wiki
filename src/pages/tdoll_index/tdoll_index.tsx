@@ -16,6 +16,7 @@ import type { SxProps, Theme } from "@mui/material";
 import { loadAllDolls, searchIndex } from "../../lib/data";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
 import { formatBuildTimeQuery, isIncompleteBuildTime, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
+import { useLive2dAvailability } from "../../lib/useLive2dAvailability";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
@@ -155,6 +156,15 @@ export default function TDoll_Index() {
 		selected: false
 	});
 
+	const [live2dFilter, setLive2dFilter] = useState({
+		key: 0,
+		label: "Live2D",
+		selected: false
+	});
+
+	// Fetched only once the Live2D filter is switched on, whether by a click or by a saved filter restoring it already on.
+	const live2dAvailability = useLive2dAvailability(live2dFilter.selected);
+
 	/** How many results are on screen. Raised by the load-more button rather than by paging. */
 	const [shown, setShown] = useState(PAGE_SIZE);
 
@@ -191,6 +201,10 @@ export default function TDoll_Index() {
 		const typeOn = typeFilter.some((entry) => entry.selected);
 		const rarityOn = rarityFilter.some((entry) => entry.selected);
 		const modOn = modFilter.selected;
+		// Live2D availability is fetched lazily, so the filter stays off until it has actually loaded rather than
+		// matching nothing for the moment in between and flashing an empty result.
+		const live2dOn = live2dFilter.selected && live2dAvailability !== null;
+		const live2dIds = modOn ? live2dAvailability?.tdollModIds : live2dAvailability?.tdollIds;
 		const query = normaliseName(deferredQuery);
 
 		return allDolls.flatMap<IndexEntry>((data) => {
@@ -200,6 +214,10 @@ export default function TDoll_Index() {
 				return [];
 			}
 			if (buildTimeQuery && !(data.production && matchesBuildTime(data.production.seconds, buildTimeQuery))) {
+				return [];
+			}
+			// With Mod also on, only a Mod-form model counts, since that is the form the list is showing.
+			if (live2dOn && !live2dIds?.has(data.normal.id)) {
 				return [];
 			}
 			if (!typeOn && !rarityOn && !modOn) {
@@ -226,7 +244,7 @@ export default function TDoll_Index() {
 			}
 			return (typeOn ? matchesType : matchesRarity) ? entry : [];
 		});
-	}, [allDolls, searchKeys, typeFilter, rarityFilter, modFilter, deferredQuery, buildTimeQuery]);
+	}, [allDolls, searchKeys, typeFilter, rarityFilter, modFilter, live2dFilter, live2dAvailability, deferredQuery, buildTimeQuery]);
 
 	const sorted = useMemo(() => sortEntries(matches, sortKey, sortDescending), [matches, sortKey, sortDescending]);
 
@@ -264,6 +282,8 @@ export default function TDoll_Index() {
 			setRarityFilter(temp.rarityFilter);
 			setTypeFilter(temp.typeFilter);
 			setModFilter(temp.modFilter);
+			// Absent from filters saved before the Live2D filter existed.
+			setLive2dFilter((current) => ({ ...current, selected: temp.live2dFilter?.selected === true }));
 			// Absent from filters saved before the name search existed.
 			setNameQuery(typeof temp.nameQuery === "string" ? temp.nameQuery : "");
 			// Absent from filters saved before build time search existed.
@@ -283,13 +303,14 @@ export default function TDoll_Index() {
 			rarityFilter: rarityFilter,
 			typeFilter: typeFilter,
 			modFilter: modFilter,
+			live2dFilter: live2dFilter,
 			nameQuery: nameQuery,
 			buildTime: buildTimeText,
 			sortKey: sortKey,
 			sortDescending: sortDescending
 		};
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-	}, [modFilter, rarityFilter, typeFilter, nameQuery, buildTimeText, sortKey, sortDescending]);
+	}, [modFilter, live2dFilter, rarityFilter, typeFilter, nameQuery, buildTimeText, sortKey, sortDescending]);
 
 	// Every handler below is stable across renders and toggles from the current state rather than a captured copy,
 	// so the memoised FilterPanel, its chips and the result cards can all skip renders they have no part in.
@@ -303,6 +324,10 @@ export default function TDoll_Index() {
 
 	const handleToggleMod = useCallback(() => {
 		setModFilter((mod) => ({ ...mod, selected: !mod.selected }));
+	}, []);
+
+	const handleToggleLive2d = useCallback(() => {
+		setLive2dFilter((live2d) => ({ ...live2d, selected: !live2d.selected }));
 	}, []);
 
 	const handleClearName = useCallback(() => setNameQuery(""), []);
@@ -320,6 +345,7 @@ export default function TDoll_Index() {
 		setRarityFilter((rarities) => rarities.map((rarity) => ({ ...rarity, selected: false })));
 		setTypeFilter((types) => types.map((type) => ({ ...type, selected: false })));
 		setModFilter((mod) => ({ ...mod, selected: false }));
+		setLive2dFilter((live2d) => ({ ...live2d, selected: false }));
 		setNameQuery("");
 		setBuildTimeText("");
 	}, []);
@@ -331,10 +357,11 @@ export default function TDoll_Index() {
 			...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: () => handleToggleRarity(rarity.key) })),
 			...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: () => handleToggleType(type.key) })),
 			...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleToggleMod }] : []),
+			...(live2dFilter.selected ? [{ id: "live2d", label: live2dFilter.label, onDelete: handleToggleLive2d }] : []),
 			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : []),
 			...(buildTimeQuery ? [{ id: "build-time", label: `Build time ${formatBuildTimeQuery(buildTimeQuery)}`, onDelete: handleClearBuildTime }] : [])
 		],
-		[rarityFilter, typeFilter, modFilter, nameQuery, buildTimeQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName, handleClearBuildTime]
+		[rarityFilter, typeFilter, modFilter, live2dFilter, nameQuery, buildTimeQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleToggleLive2d, handleClearName, handleClearBuildTime]
 	);
 
 	// Built once per filter change rather than per render, so the memoised panel skips renders that only touch the results.
@@ -344,12 +371,14 @@ export default function TDoll_Index() {
 				rarityFilter={rarityFilter}
 				typeFilter={typeFilter}
 				modFilter={modFilter}
+				live2dFilter={live2dFilter}
 				onToggleRarity={handleToggleRarity}
 				onToggleType={handleToggleType}
 				onToggleMod={handleToggleMod}
+				onToggleLive2d={handleToggleLive2d}
 			/>
 		),
-		[rarityFilter, typeFilter, modFilter, handleToggleRarity, handleToggleType, handleToggleMod]
+		[rarityFilter, typeFilter, modFilter, live2dFilter, handleToggleRarity, handleToggleType, handleToggleMod, handleToggleLive2d]
 	);
 
 	return (

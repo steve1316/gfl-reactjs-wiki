@@ -498,3 +498,42 @@ export async function loadSkinLive2dForms(dollId: number): Promise<Record<string
 	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
 	return index.tdolls?.[String(dollId)];
 }
+
+/** Which fairies, HOCs and T-Dolls have a Live2D model, for the index pages' Live2D filter chips. */
+export interface Live2dAvailability {
+	/** Ids of every Fairy with a Live2D model. */
+	fairyIds: Set<number>;
+	/** Ids of every HOC with a Live2D model. */
+	hocIds: Set<number>;
+	/** Ids of every T-Doll with a Live2D model in at least one form. */
+	tdollIds: Set<number>;
+	/** Ids of every T-Doll whose Mod form specifically has a Live2D model. */
+	tdollModIds: Set<number>;
+}
+
+/**
+ * Look up which fairies, HOCs and T-Dolls have a Live2D model.
+ *
+ * The index's `tdolls` block is only present once the T-Doll models are published, so `tdollIds` and `tdollModIds` come back
+ * empty on an older index rather than throwing.
+ *
+ * @returns The id sets the Live2D filter chips match against.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadLive2dAvailability(): Promise<Live2dAvailability> {
+	const index = await (live2dIndexCache.get(0) ?? cacheUntilFailure(live2dIndexCache, 0, fetchData<Live2dIndex>("live2d-index")));
+	const tdollIds = new Set<number>();
+	const tdollModIds = new Set<number>();
+	for (const [id, forms] of Object.entries(index.tdolls ?? {})) {
+		tdollIds.add(Number(id));
+		if (forms.mod) {
+			tdollModIds.add(Number(id));
+		}
+	}
+	return {
+		fairyIds: new Set(Object.keys(index.fairies).map(Number)),
+		hocIds: new Set(Object.keys(index.hocs).map(Number)),
+		tdollIds,
+		tdollModIds
+	};
+}
