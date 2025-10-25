@@ -544,6 +544,21 @@ class CommitMessageTests(unittest.TestCase):
         paths = ["hocs/6/card.webp", "live2d/hocs/6/model.model3.json", "fairies/9/form1.webp", "live2d/fairies/9/form1.model3.json"]
         self.assertEqual(publish.commit_message(paths), "Add art for hoc 6, fairy 9, live2d hoc 6 and live2d fairy 9")
 
+    def test_live2d_skin_names_the_doll_once_across_form_skin_and_variant(self):
+        """A T-Doll skin Live2D batch names each doll once, not once per form, skin or variant folder."""
+        paths = [
+            "live2d/tdolls/104/base/1202/normal/model.model3.json",
+            "live2d/tdolls/104/base/1202/damaged/model.model3.json",
+            "live2d/tdolls/104/base/base/normal/model.model3.json",
+            "live2d/tdolls/57/mod/4508/normal/model.model3.json",
+        ]
+        self.assertEqual(publish.commit_message(paths), "Add art for live2d dolls 57, 104")
+
+    def test_live2d_skin_mixed_with_other_live2d_tiers(self):
+        """A batch mixing skin models with fairy or HOC ones still names every tier separately."""
+        paths = ["live2d/tdolls/104/base/base/normal/model.model3.json", "live2d/fairies/9/form1.model3.json"]
+        self.assertEqual(publish.commit_message(paths), "Add art for live2d fairy 9 and live2d doll 104")
+
 
 class PlannedTreeTests(unittest.TestCase):
     """Combining hosted and staged sizes under GitHub's 5 GB repo recommendation."""
@@ -551,6 +566,30 @@ class PlannedTreeTests(unittest.TestCase):
     def test_staged_file_replaces_hosted_size(self):
         """A staged file at a hosted path counts once, at its staged size."""
         self.assertEqual(publish.planned_tree({"a": 5, "b": 7}, [("b", 9), ("c", 1)]), [("a", 5), ("b", 9), ("c", 1)])
+
+
+class BatchPathsTests(unittest.TestCase):
+    """Grouping files into commit-sized batches."""
+
+    def test_batch_paths_splits_on_the_byte_budget(self):
+        """Files are packed into a batch until the next one would go over the budget."""
+        with tempfile.TemporaryDirectory() as tmp_path:
+            for name, size in (("a", 400), ("b", 400), ("c", 400)):
+                write(tmp_path, name, b"x" * size)
+            batches = publish.batch_paths([os.path.join(tmp_path, n) for n in ("a", "b", "c")], 900)
+            self.assertEqual([len(batch) for batch in batches], [2, 1])
+
+    def test_batch_paths_keeps_a_file_larger_than_the_budget_in_its_own_batch(self):
+        """A single file over the budget is never dropped, it just gets a batch of its own."""
+        with tempfile.TemporaryDirectory() as tmp_path:
+            write(tmp_path, "big", b"x" * 5000)
+            write(tmp_path, "small", b"x" * 10)
+            batches = publish.batch_paths([os.path.join(tmp_path, n) for n in ("big", "small")], 900)
+            self.assertEqual([len(batch) for batch in batches], [1, 1])
+
+    def test_batch_paths_returns_nothing_for_no_paths(self):
+        """No paths means no batches."""
+        self.assertEqual(publish.batch_paths([], 900), [])
 
 
 @mock.patch.dict(os.environ, GIT_IDENTITY)
@@ -611,6 +650,31 @@ class AddTests(unittest.TestCase):
         """A missing or empty staging tree returns no paths without touching the remote."""
         with tempfile.TemporaryDirectory() as scratch, contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(publish.add(os.path.join(scratch, "missing"), "file:///nowhere", sizes=no_sizes), [])
+
+    def test_publishes_multiple_batches_as_separate_commits(self):
+        """Files over the batch budget go out as their own commits, each pushed before the next batch is built."""
+        with tempfile.TemporaryDirectory() as scratch:
+            remote, bare = make_remote(scratch, {".nojekyll": b""})
+            tree = os.path.join(scratch, "staging", "assets")
+            stage(
+                tree,
+                {"tdolls/424/card.webp": b"x" * 400, "tdolls/425/card.webp": b"x" * 400, "tdolls/426/card.webp": b"x" * 400},
+            )
+            with contextlib.redirect_stdout(io.StringIO()):
+                paths = publish.add(tree, remote, sizes=no_sizes, batch_bytes=900)
+            self.assertEqual(paths, ["tdolls/424/card.webp", "tdolls/425/card.webp", "tdolls/426/card.webp"])
+            subjects = git_in(bare, "log", "--format=%s", "main").split("\n")
+            self.assertEqual(subjects[:2], ["Add art for doll 426", "Add art for dolls 424, 425"])
+            revs = git_in(bare, "log", "--format=%H", "main").split("\n")
+            first_batch, second_batch = revs[1], revs[0]
+            self.assertEqual(
+                git_in(bare, "ls-tree", "-r", "--name-only", first_batch).split("\n"),
+                [".nojekyll", "tdolls/424/card.webp", "tdolls/425/card.webp"],
+            )
+            self.assertEqual(
+                git_in(bare, "ls-tree", "-r", "--name-only", second_batch).split("\n"),
+                [".nojekyll", "tdolls/424/card.webp", "tdolls/425/card.webp", "tdolls/426/card.webp"],
+            )
 
 
 class WaitLiveTests(unittest.TestCase):

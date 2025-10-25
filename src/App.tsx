@@ -26,6 +26,9 @@ const FairyPage = lazy(() => import("./pages/fairy/fairy"));
 const FairyArt = lazy(() => import("./pages/fairy_art/fairy_art"));
 const FairyLive2d = lazy(() => import("./pages/fairy_live2d/fairy_live2d"));
 
+/** The T-Doll skin Live2D viewer loads on first visit, since few readers open it and it would otherwise add to every T-Doll route. */
+const TDollLive2d = lazy(() => import("./pages/tdoll_live2d/tdoll_live2d"));
+
 /**
  * The application shell: theme, navigation and routes.
  *
@@ -91,6 +94,14 @@ export default function App() {
 					/>
 					<Route path="/formation" element={<FormationSimulator />} />
 					<Route path="/tdoll/:id/art" element={<TDollArt />} />
+					<Route
+						path="/tdoll/:id/live2d"
+						element={
+							<Suspense>
+								<TDollLive2d />
+							</Suspense>
+						}
+					/>
 					<Route path="/tdoll/:id" element={<TDoll />} />
 					<Route path="/tdoll" element={<TDoll />} />
 					<Route path="/404" element={<NotFound404 />} />

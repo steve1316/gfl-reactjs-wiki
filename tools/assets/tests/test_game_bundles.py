@@ -436,6 +436,33 @@ def test_variant_assets_does_not_mix_a_duplicated_nested_model_folder():
     assert found["motions"]["path"] == f"{base}/motions/"
 
 
+def test_variant_texture_dir_picks_the_highest_resolution():
+    """The numbered suffix decides, not iteration order - checked both ways round since a `set` gives no order guarantee."""
+    assert game_bundles.variant_texture_dir({"model.1024/", "model.2048/"}) == "model.2048/"
+    assert game_bundles.variant_texture_dir({"model.2048/", "model.1024/"}) == "model.2048/"
+
+
+def test_variant_texture_dir_falls_back_to_the_lexically_last_name_on_a_tie_or_unparsable_suffix():
+    assert game_bundles.variant_texture_dir({"model.a/", "model.b/"}) == "model.b/"
+
+
+def test_variant_assets_picks_the_highest_resolution_texture_folder_regardless_of_file_order():
+    """A model folder can ship both `model.1024/` and `model.2048/` (a lower-resolution set kept alongside the final one), the real case
+    being `live2d:skin:115:base:1103` (KP31_1103's normal model). The lower resolution is listed first here, matching KP31_1103's own
+    bundle order, so a fixture that happened to list the higher one first would not actually guard this fix."""
+    base = "assets/resources/dabao/live2dnew/gun/kp31_1103/normal"
+    paths = [
+        f"{base}/model.1024/texture_00.png",
+        f"{base}/model.2048/texture_00.png",
+        f"{base}/model.prefab",
+        f"{base}/model_moc.asset",
+        f"{base}/motions/daiji_idle_01.anim",
+    ]
+    bundle = {"files": [(path, path) for path in paths], "sizeOriginal": 1}
+    found = game_bundles.variant_assets("live2dnew_gun_kp31_1103", bundle, "normal")
+    assert found["textures"]["path"] == f"{base}/model.2048/"
+
+
 def test_variant_model_root_is_deterministic_when_two_equal_depth_folders_both_qualify():
     """Two folders at the same depth that both hold a prefab and a moc sibling must resolve the same way every run, not by `set`
     iteration order (which `PYTHONHASHSEED` randomises per process). The lexically first path wins the tie."""

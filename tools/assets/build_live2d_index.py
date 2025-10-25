@@ -42,9 +42,10 @@ TOUCH_AREAS = {"head": "head", "body": "body"}
 DEFAULT_MOTIONS_PATH = "tools/data/.cache/gf-data-us/catchdata/fairy_live2d_motions_info.json"
 DEFAULT_OUT_PATH = "src/data/live2d-index.json"
 
-# stc/live2d_motions.json's `type` column, mapped to the index's semantic group. A type absent here is `other`, which the site labels but
-# does not treat specially.
-SKIN_MOTION_TYPE_GROUPS = {101: "idle", 401: "idle", 102: "wait", 403: "wait", 200: "touch", 300: "shake", 301: "shake", 500: "wedding"}
+# stc/live2d_motions.json's `type` column, mapped to the index's semantic group. 402 is a touch reaction played on the damaged model
+# (`is_hurt=1`), the same way 200 is a touch reaction on the normal model. A type absent here is `other`, which the site labels but does
+# not treat specially.
+SKIN_MOTION_TYPE_GROUPS = {101: "idle", 401: "idle", 102: "wait", 403: "wait", 200: "touch", 402: "touch", 300: "shake", 301: "shake", 500: "wedding"}
 
 # stc/live2d_motions.json's `touch_area` column for a touch row. Skins add `leg`, which fairies never have.
 SKIN_TOUCH_AREAS = {"head": "head", "body": "body", "leg": "leg"}
@@ -155,6 +156,24 @@ def dialogue_for(text_code, lines):
     return lines.get(key)
 
 
+def normalize_skin_touch_area(touch_area):
+    """Map a touch row's `touch_area` to one of the site's three areas, tolerating a numbered variant.
+
+    The table names most touch spots directly (`head`, `body`, `leg`), but a model that has more than one hit region for the same area
+    numbers them (`body1`, `body2`, `leg2`, `head2`). Stripping a trailing digit run recovers the base area for those. An area this still
+    does not recognise (`arm`, `feetL`, `bodyA`, ...) stays unmapped, since it names a spot the site has no icon or label for.
+
+    Args:
+        touch_area: The row's raw `touch_area` value, such as `body1`.
+
+    Returns:
+        `head`, `body` or `leg`, or None when the area is not one of those, numbered or not.
+    """
+    if touch_area in SKIN_TOUCH_AREAS:
+        return SKIN_TOUCH_AREAS[touch_area]
+    return SKIN_TOUCH_AREAS.get(touch_area.rstrip("0123456789"))
+
+
 def skin_motion_lookup(rows, motion_ids, variant, lines):
     """Build one skin variant's stem-keyed motion classification.
 
@@ -182,7 +201,7 @@ def skin_motion_lookup(rows, motion_ids, variant, lines):
         if stem in lookup:
             continue
         group = SKIN_MOTION_TYPE_GROUPS.get(int(row["type"]), "other")
-        touch_area = SKIN_TOUCH_AREAS.get(str(row["touch_area"])) if group == "touch" else None
+        touch_area = normalize_skin_touch_area(str(row["touch_area"])) if group == "touch" else None
         lookup[stem] = {"group": group, "touchArea": touch_area, "line": dialogue_for(row.get("text", ""), lines)}
     return lookup
 
@@ -318,11 +337,15 @@ def index_tdolls(tdolls_root, table_rows, motion_rows, lines):
                 skin_root = os.path.join(form_root, skin)
                 variants = {}
                 for variant in sorted(os.listdir(skin_root)):
-                    motions_dir = os.path.join(skin_root, variant, "motions")
-                    if not os.path.isdir(motions_dir):
+                    variant_root = os.path.join(skin_root, variant)
+                    # Same presence rule as build_manifest.scan_live2d_tdolls: moc3 and model3.json both exist. Checking the motions
+                    # folder instead let a variant whose model3 write failed still get indexed and offered, 404ing when played.
+                    if not os.path.isfile(os.path.join(variant_root, "model.moc3")) or not os.path.isfile(os.path.join(variant_root, "model.model3.json")):
                         continue
+                    motions_dir = os.path.join(variant_root, "motions")
                     motion_ids = ids_by_key.get((int(doll_id), form, skin), [])
-                    variants[variant] = {"motions": index_skin_motions(motions_dir, skin_motion_lookup(motion_rows, motion_ids, variant, lines))}
+                    motions = index_skin_motions(motions_dir, skin_motion_lookup(motion_rows, motion_ids, variant, lines)) if os.path.isdir(motions_dir) else []
+                    variants[variant] = {"motions": motions}
                 if variants:
                     skins[skin] = variants
             if skins:

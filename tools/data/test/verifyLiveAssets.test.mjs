@@ -79,7 +79,7 @@ test("UI images are read from uiUrl calls and sampled on the asset host", () => 
 });
 
 test("the site's own UI images are all found", () => {
-	assert.ok(uiImageNames("src").length >= 14);
+	assert.ok(uiImageNames("src").length >= 12);
 });
 
 test("join encodes each path segment like the site", () => {

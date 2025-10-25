@@ -54,6 +54,10 @@ WARN_TOTAL_BYTES = 4000 * BYTES_PER_MB
 # GitHub warns above 50 MB per file and rejects above 100 MB.
 MAX_FILE_BYTES = 50 * BYTES_PER_MB
 
+# Bytes of new files one publish commit carries at most. The skin Live2D tier adds roughly 500 MB, which is slow and all-or-nothing as a
+# single push, so it goes out in batches instead.
+BATCH_BYTES = 200 * BYTES_PER_MB
+
 # Files the repo may carry that the staging tree does not produce, kept when present in the clone.
 KEEP_FILES = ("CNAME",)
 
@@ -602,6 +606,32 @@ def planned_tree(existing, staged):
     return sorted(sizes.items())
 
 
+def batch_paths(paths, batch_bytes):
+    """Group files into commit-sized batches.
+
+    A file larger than the whole budget still gets its own batch rather than being dropped, so no file is ever skipped for
+    being too big.
+
+    Args:
+        paths: Absolute paths to the files to publish, in the order they should go out.
+        batch_bytes: Maximum bytes per batch.
+
+    Returns:
+        A list of path lists, each within the budget except where one file alone exceeds it.
+    """
+    batches, current, total = [], [], 0
+    for path in paths:
+        size = os.path.getsize(path)
+        if current and total + size > batch_bytes:
+            batches.append(current)
+            current, total = [], 0
+        current.append(path)
+        total += size
+    if current:
+        batches.append(current)
+    return batches
+
+
 def join_numbers(label, values):
     """Name a group of ids, such as `dolls 424, 425`.
 
@@ -625,12 +655,13 @@ def commit_message(paths):
 
     Args:
         paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel`, `equipment/301.png`, `hocs/6/card.webp`,
-            `fairies/9/form1.webp`, `live2d/fairies/9/form1.model3.json` or `live2d/hocs/6/model.model3.json`.
+            `fairies/9/form1.webp`, `live2d/fairies/9/form1.model3.json`, `live2d/hocs/6/model.model3.json` or
+            `live2d/tdolls/104/base/1202/normal/model.model3.json`.
 
     Returns:
         A subject line such as `Add art for dolls 424, 425, skin 65:9001, equipment 301, hoc 6 and fairy 9`.
     """
-    dolls, skins, equipment, hocs, fairies, live2d_hocs, live2d_fairies = set(), set(), set(), set(), set(), set(), set()
+    dolls, skins, equipment, hocs, fairies, live2d_hocs, live2d_fairies, live2d_tdolls = set(), set(), set(), set(), set(), set(), set(), set()
     for rel in paths:
         parts = rel.split("/")
         if parts[0] == "equipment" and len(parts) == 2 and parts[1][:-4].isdigit():
@@ -649,6 +680,8 @@ def commit_message(paths):
                 live2d_hocs.add(int(parts[2]))
             elif parts[1] == "fairies":
                 live2d_fairies.add(int(parts[2]))
+            elif parts[1] == "tdolls":
+                live2d_tdolls.add(int(parts[2]))
     groups = []
     if dolls:
         groups.append(join_numbers("doll", [str(doll_id) for doll_id in sorted(dolls)]))
@@ -665,6 +698,8 @@ def commit_message(paths):
         groups.append(join_numbers("live2d hoc", [str(hoc_id) for hoc_id in sorted(live2d_hocs)]))
     if live2d_fairies:
         groups.append(join_numbers("live2d fairy", [str(fairy_id) for fairy_id in sorted(live2d_fairies)]))
+    if live2d_tdolls:
+        groups.append(join_numbers("live2d doll", [str(doll_id) for doll_id in sorted(live2d_tdolls)]))
     if not groups:
         return "Add assets"
     return f"Add art for {groups[0] if len(groups) == 1 else ', '.join(groups[:-1]) + ' and ' + groups[-1]}"
@@ -698,20 +733,24 @@ def run_with_input(clone, args, text):
         sys.exit(f"git {' '.join(args)} failed in {clone}:\n{result.stderr.strip()}")
 
 
-def add(staging_tree, remote, branch="main", dry_run=False, sizes=None, token=None):
-    """Commit an incremental staging tree onto the asset repo's branch and push it.
+def add(staging_tree, remote, branch="main", dry_run=False, sizes=None, token=None, batch_bytes=BATCH_BYTES):
+    """Commit an incremental staging tree onto the asset repo's branch in commit-sized batches and push each one.
 
     The clone is shallow, has no blobs and checks out only the staged paths, so nothing hosted is downloaded except an earlier failed run's
     leftovers at those paths. A leftover is overwritten: the merge step already refused anything the manifest or Spine index lists, so a hosted
-    file at a staged path can only come from a run whose site commit never landed. Identical files make no commit.
+    file at a staged path can only come from a run whose site commit never landed. Identical files make no commit. The size check against the
+    hosted tree runs once, over everything staged, before any batch is committed. Each batch is then committed and pushed before the next
+    starts, so a failure partway through only costs the batches still to come: everything already pushed is already live, since the manifest
+    and search index that reference these files live in the site repo, not this one.
 
     Args:
         staging_tree: The staging tree, such as `<staging>/assets`.
         remote: The repo URL to clone and push, such as `git@github.com:steve1316/gfl-wiki-assets.git`.
         branch: The branch to commit onto.
-        dry_run: Commit in the throwaway clone and print it, but do not push.
+        dry_run: Commit each batch in the throwaway clone and print it, but do not push any of them.
         sizes: Callable `(repo_title, branch)` returning hosted sizes by path. Defaults to the Git Trees API.
         token: Optional GitHub token for the API.
+        batch_bytes: Maximum bytes of new files per commit. Defaults to `BATCH_BYTES`.
 
     Returns:
         The staged relative paths, empty when nothing was staged.
@@ -731,29 +770,37 @@ def add(staging_tree, remote, branch="main", dry_run=False, sizes=None, token=No
         sys.exit(f"{REPO_TITLE} cannot take these files:\n  " + "\n  ".join(limits["errors"]))
 
     paths = [rel for rel, _size in staged]
+    rel_by_abs = {os.path.join(staging_tree, *rel.split("/")): rel for rel in paths}
+    batches = [[rel_by_abs[abs_path] for abs_path in batch] for batch in batch_paths(list(rel_by_abs), batch_bytes)]
+
     with tempfile.TemporaryDirectory(prefix="add-") as scratch:
         clone = os.path.join(scratch, "clone")
         result = subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--no-checkout", "--branch", branch, remote, clone], capture_output=True, text=True)
         if result.returncode != 0:
             sys.exit(f"cloning {remote} failed:\n{result.stderr.strip()}")
-        run_with_input(clone, ["sparse-checkout", "set", "--no-cone", "--stdin"], "".join(f"{sparse_pattern(rel)}\n" for rel in paths))
         git(clone, "checkout", "-q", branch)
-        for rel in paths:
-            target = os.path.join(clone, *rel.split("/"))
-            os.makedirs(os.path.dirname(target), exist_ok=True)
-            shutil.copyfile(os.path.join(staging_tree, *rel.split("/")), target)
-        run_with_input(clone, ["add", "--sparse", "--pathspec-from-file=-"], "".join(f"{rel}\n" for rel in paths))
-        if not git(clone, "status", "--porcelain"):
+        committed_any = False
+        for batch in batches:
+            run_with_input(clone, ["sparse-checkout", "set", "--no-cone", "--stdin"], "".join(f"{sparse_pattern(rel)}\n" for rel in batch))
+            for rel in batch:
+                target = os.path.join(clone, *rel.split("/"))
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                shutil.copyfile(os.path.join(staging_tree, *rel.split("/")), target)
+            run_with_input(clone, ["add", "--sparse", "--pathspec-from-file=-"], "".join(f"{rel}\n" for rel in batch))
+            if not git(clone, "status", "--porcelain"):
+                print(f"{REPO_TITLE}: batch of {len(batch)} file(s) already hosted, nothing to commit")
+                continue
+            committed_any = True
+            message = commit_message(batch)
+            git(clone, "commit", "-q", "-m", message)
+            print(git(clone, "show", "--stat", "--format=%h %s", "HEAD"))
+            if dry_run:
+                print(f"{REPO_TITLE}: dry run, not pushed")
+                continue
+            git(clone, "push", "-q", "origin", branch)
+            print(f"{REPO_TITLE}: pushed {message}")
+        if not committed_any:
             print(f"{REPO_TITLE}: every staged file is already hosted, nothing to commit")
-            return paths
-        message = commit_message(paths)
-        git(clone, "commit", "-q", "-m", message)
-        print(git(clone, "show", "--stat", "--format=%h %s", "HEAD"))
-        if dry_run:
-            print(f"{REPO_TITLE}: dry run, not pushed")
-            return paths
-        git(clone, "push", "-q", "origin", branch)
-        print(f"{REPO_TITLE}: pushed {message}")
     return paths
 
 

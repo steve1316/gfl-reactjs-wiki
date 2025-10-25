@@ -7,6 +7,7 @@ import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
 import ChibiPanel from "./ChibiPanel";
+import type { ChibiMode } from "./ChibiPanel";
 import DollHero from "./DollHero";
 import PageBackdrop from "./PageBackdrop";
 import SkillsPanel from "./SkillsPanel";
@@ -20,6 +21,7 @@ import type { SxProps, Theme } from "@mui/material";
 import { skinFormKey } from "../../lib/assets";
 import { loadDollDetails, loadSpineRigs } from "../../lib/data";
 import { animationTabs, nextAnimationValue } from "../../lib/spine";
+import { useSkinLive2dForms } from "../../lib/useLive2dMotions";
 import type { SpineDollEntry } from "../../types/spine";
 import type { TDoll as TDollData, TDollForm, TDollWithDetails } from "../../types/tdoll";
 
@@ -281,6 +283,13 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 	const [animationMode, setAnimationMode] = useState(0); // 0 for Normal animations, 1 for Dorm animations.
 	const [animationTabSelected, setAnimationTabSelected] = useState("wait");
 	const [animationDormTabSelected, setAnimationDormTabSelected] = useState("wait");
+	// Which animation source the Animations card shows. Separate from animationMode above, which keeps its
+	// existing 0/1 meaning for picking the Spine rig even while Live2D is on screen.
+	const [chibiMode, setChibiMode] = useState<ChibiMode>("battle");
+
+	// The doll's published Live2D forms, for the Animations card's Live2D toggle option. Null before the load
+	// settles, undefined once resolved with no T-Doll skin Live2D models at all.
+	const live2dForms = useSkinLive2dForms(tdoll.normal.id);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// useEffect and helper functions
@@ -344,6 +353,24 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 	// The Mod's spec sheet is null when it matches the base form's, so the base sheet stands in.
 	const specs = (isModForm ? tdoll.specs.mod : null) ?? tdoll.specs.normal;
 
+	// The Live2D key for the selection on screen, matching `skinLive2dModelUrl`'s own key scheme: `mod` only while
+	// the Mod form is showing, and `base` for the base form's own skin slot when no skin is selected.
+	const live2dForm = isModForm ? "mod" : "base";
+	const live2dSkinKey = skinKey ?? "base";
+	// The variants this exact form/skin actually has, such as ["normal"] or ["normal", "damaged"]. Passed to ChibiPanel so it can
+	// resolve its own variant synchronously in render, instead of loading motions first to find out what exists.
+	const live2dVariants = useMemo(() => live2dForms?.[live2dForm]?.[live2dSkinKey] ?? [], [live2dForms, live2dForm, live2dSkinKey]);
+	const hasLive2d = live2dVariants.length > 0;
+
+	// Falls back to Battle when the selection no longer has a Live2D model, such as switching to a skin with none
+	// while Live2D is open. Effect-driven, rather than derived straight from hasLive2d during render, so returning
+	// to a skin that does have a model leaves Live2D chosen again instead of the fallback sticking.
+	useEffect(() => {
+		if (!hasLive2d) {
+			setChibiMode((current) => (current === "live2d" ? "battle" : current));
+		}
+	}, [hasLive2d]);
+
 	// The backdrop's full art follows the same selection as the card portrait: the current skin when one is
 	// shown, otherwise the Normal/Mod form, and the damaged version whenever the portrait has been flipped to
 	// it. A skin worn by the Mod has only cards of its own, so the skin's full art stands in. The base Normal form
@@ -400,11 +427,27 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 		helperResetAnimationTabs();
 	}, [tdoll, mode, hasMod, helperResetAnimationTabs]);
 
-	// Switch the animations between Normal and Dorm.
-	const switchAnimationMode = useCallback(() => {
-		helperResetAnimationTabs();
-		setAnimationMode((current) => (current === 0 ? 1 : 0));
-	}, [helperResetAnimationTabs]);
+	// Switch which animation source the Animations card shows. Battle and Dorm keep driving animationMode's
+	// existing 0/1 meaning for the Spine rig and reset the tab selection exactly as the old toggle did, but only
+	// when the target rig actually differs from the one already selected. Without that check, clicking back to the
+	// rig already showing (Live2D -> the same Battle or Dorm the reader started from) would reset the tab too, even
+	// though the rig itself never changed. Live2D only changes chibiMode and leaves the Spine rig and its tab
+	// selection untouched, so it plays on unchanged after a reader steps away to Live2D and back.
+	const selectChibiMode = useCallback(
+		(newMode: ChibiMode) => {
+			if (newMode === "live2d") {
+				setChibiMode("live2d");
+				return;
+			}
+			const nextAnimationMode = newMode === "dorm" ? 1 : 0;
+			if (nextAnimationMode !== animationMode) {
+				helperResetAnimationTabs();
+				setAnimationMode(nextAnimationMode);
+			}
+			setChibiMode(newMode);
+		},
+		[animationMode, helperResetAnimationTabs]
+	);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for Card images
@@ -561,14 +604,18 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 								<Box sx={styles.chibiColumn}>
 									<LazySection minHeight={320}>
 										<ChibiPanel
-											animationMode={animationMode}
+											mode={chibiMode}
+											onSelectMode={selectChibiMode}
 											spineAnimationName={spineAnimationName}
 											spineTabs={spineTabs}
 											onSwitchAnimations={switchAnimations}
-											onSwitchAnimationMode={switchAnimationMode}
 											spineRig={spineRig}
 											normalId={tdoll.normal.id}
 											onPlayerSwitchAnimations={playerSwitchAnimations}
+											live2dForm={live2dForm}
+											live2dSkinKey={live2dSkinKey}
+											live2dVariants={live2dVariants}
+											hasLive2d={hasLive2d}
 										/>
 									</LazySection>
 								</Box>

@@ -11,6 +11,24 @@ import { loadFairyLive2dMotions, loadHocLive2dMotions, loadSkinLive2dForms, load
 export const IDLE_TAB_VALUE = "Idle";
 
 /**
+ * Resolve a T-Doll skin's variant preference to one the current form/skin combination actually has, shared by the doll card and the
+ * full-page viewer so both fall back to the same variant instead of each reimplementing the rule.
+ *
+ * Preferring `normal` when nothing is preferred, or when the preference does not apply to this combination, mirrors the game's own
+ * default and keeps a reader's Damaged pick from carrying over to a skin that was never modeled damaged.
+ *
+ * @param variants The variants this form/skin's model actually has, such as `["normal"]` or `["normal", "damaged"]`.
+ * @param preferred The variant the reader last picked, or null before any pick.
+ * @returns A variant from `variants`, or `normal` when the list is empty.
+ */
+export function resolveSkinLive2dVariant(variants: readonly string[], preferred: string | null): string {
+	if (preferred !== null && variants.includes(preferred)) {
+		return preferred;
+	}
+	return variants.includes("normal") ? "normal" : (variants[0] ?? "normal");
+}
+
+/**
  * A readable label for a raw motion file name, such as `wait_01`.
  *
  * @param name The motion's file name from the Live2D index.

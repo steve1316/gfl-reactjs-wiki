@@ -704,6 +704,29 @@ def variant_model_root(scoped):
     return with_moc[0] if with_moc else prefab_dirs[0]
 
 
+def variant_texture_dir(dirs):
+    """Pick a skin Live2D variant's texture folder when its model folder ships more than one resolution.
+
+    A model folder can hold `model.1024/` and `model.2048/` as siblings - a lower-resolution texture set kept alongside the final one.
+    The folder name's trailing `.<res>` segment carries the resolution, so the highest one wins. Picking by file order instead, as a
+    first-hit match does for every other role here, is not resolution-aware and can just as easily land on the low-resolution folder,
+    which is what happened before this function existed. A name with no numeric suffix, or a tie, falls back to the lexically last
+    name, so the winner is a pure function of the candidate set and never depends on `set` iteration order.
+
+    Args:
+        dirs: Candidate texture folder names, trailing slash included and no other path segments, such as `{"model.1024/", "model.2048/"}`.
+
+    Returns:
+        The winning folder name.
+    """
+
+    def resolution(name):
+        stem = name.rstrip("/").rsplit(".", 1)[-1]
+        return int(stem) if stem.isdigit() else -1
+
+    return sorted(dirs, key=lambda name: (resolution(name), name))[-1]
+
+
 def variant_assets(bundle_name, bundle, variant_folder):
     """Locate one skin Live2D variant's moc, prefab, texture folder and motions folder, all from the same model folder.
 
@@ -731,6 +754,10 @@ def variant_assets(bundle_name, bundle, variant_folder):
         return {}
 
     found = {}
+    # Every texture folder seen, name (trailing slash included) to a matching path prefix in the bundle's own case. When a model
+    # folder ships more than one resolution, `variant_texture_dir` picks the winner from this dict's keys after the walk, rather
+    # than the first one encountered in file order.
+    texture_dirs = {}
     for lowered, path in scoped:
         if not lowered.startswith(root):
             continue
@@ -740,10 +767,14 @@ def variant_assets(bundle_name, bundle, variant_folder):
                 found["prefab"] = {"bundle": bundle_name, "path": path}
             elif rel.endswith("_moc.asset") and "moc" not in found:
                 found["moc"] = {"bundle": bundle_name, "path": path}
-        elif rel.count("/") == 1 and rel.endswith(".png") and "textures" not in found:
-            found["textures"] = {"bundle": bundle_name, "path": path[: len(root) + rel.rindex("/") + 1]}
+        elif rel.count("/") == 1 and rel.endswith(".png"):
+            texture_dir = rel[: rel.index("/") + 1]
+            texture_dirs.setdefault(texture_dir, path[: len(root) + len(texture_dir)])
         elif rel.startswith("motions/") and "motions" not in found:
             found["motions"] = {"bundle": bundle_name, "path": path[: len(root) + len("motions/")]}
+    if texture_dirs:
+        best = variant_texture_dir(texture_dirs.keys())
+        found["textures"] = {"bundle": bundle_name, "path": texture_dirs[best]}
     return found
 
 

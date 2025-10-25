@@ -10,6 +10,7 @@ import sys
 import unittest
 
 import pytest
+from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -322,6 +323,56 @@ def test_a_failing_texture_aborts_the_variant_instead_of_shifting_slots(tmp_path
     assert len(result["missing"]) == 1
     assert result["missing"][0]["role"] == "normal_texture:texture0.webp"
     assert not (tmp_path / "assets" / "live2d" / "tdolls" / "1" / "base" / "base" / "normal" / "model.model3.json").exists()
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# build_skin_variant cleanup on a later failure
+
+
+class GoodTexture:
+    """A container entry whose `read()` succeeds, standing in for a texture that decodes fine."""
+
+    def read(self):
+        return self
+
+    @property
+    def image(self):
+        return Image.new("RGBA", (2, 2), (1, 2, 3, 255))
+
+
+class FailingPrefab:
+    """A container entry whose `read_typetree()` always raises, standing in for a prefab that fails to parse."""
+
+    def read_typetree(self):
+        raise ValueError("prefab boom")
+
+
+class FakeMocAsset:
+    """A container entry whose `read_typetree()` returns MOC3 bytes, so `read_moc` succeeds."""
+
+    def read_typetree(self):
+        return {"_bytes": list(b"MOC3" + b"\x00" * 4)}
+
+
+def test_a_later_failure_removes_the_textures_and_moc3_already_written(tmp_path):
+    """A texture writes fine, then the prefab read fails: the variant has no model3.json to make it playable, so the texture and the
+    moc3 that already reached disk before the failure must not stay behind as orphans."""
+    item = {
+        "key": "live2d:skin:1:base:base",
+        "assets": {
+            "normal_moc": {"bundle": "x", "path": "moc/path"},
+            "normal_prefab": {"bundle": "x", "path": "prefab/path"},
+            "normal_textures": {"bundle": "x", "path": "root/normal/"},
+        },
+    }
+    container = {"root/normal/texture_00.png": GoodTexture(), "moc/path": FakeMocAsset(), "prefab/path": FailingPrefab()}
+    result = extract_live2d.new_result()
+    folder = "live2d/tdolls/1/base/base/normal"
+    extract_live2d.build_skin_variant(item, container, {}, "normal", folder, str(tmp_path), result)
+
+    assert result["files"] == []
+    assert not (tmp_path / "assets" / folder).exists()
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////

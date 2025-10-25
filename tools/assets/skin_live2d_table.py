@@ -7,7 +7,8 @@ and `skin` is the skin id or 0 for the form's own base art. A row's `code` names
 The key is `(doll_id, form, skin_key)` and all three parts are load bearing. Dropping `form` collides in 41 cases, and one of those is a real
 difference rather than a duplicate: `AR15_4508` and `AR15Mod` both describe skin 4508, but resolve to `live2dnew_gun_ar15_4508` and
 `live2dnew_gun_ar15mod`, which are different models. A Mod row whose own `<Code>Mod_<skinId>` bundle does not exist instead points at the base
-doll's `<code>_<skinId>` bundle, because that Mod really does wear the base model. Two keys then name one bundle, which is published once.
+doll's `<code>_<skinId>` bundle, because that Mod really does wear the base model. Two keys then name the same bundle, but each still gets its
+own extraction and its own published folder - a duplicated copy of the model per key, not a shared one - for 41 of the 238 keys.
 
 Rows that are not dolls carry `fit_gun` of 0 or -1: the `cg_*` scenes, `NPC_Kalina` and `NPC_William_live2d`. The filter is `fit_gun > 0`, not
 `fit_gun != -1`, because the cg rows use 0.

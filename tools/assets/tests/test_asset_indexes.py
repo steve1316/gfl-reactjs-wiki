@@ -465,7 +465,8 @@ def test_skin_motion_rows_classify_by_type_and_hurt_flag():
     assert normal["touch_1"] == {"group": "touch", "touchArea": "head", "line": "Commander, is there something bothering you?"}
     # is_hurt rows belong to the damaged variant only, so the normal lookup must not carry them.
     assert "broken" not in normal
-    assert damaged["broken"]["group"] == "other"
+    # type 402 is the damaged model's touch reaction, same family as 200 on the normal model.
+    assert damaged["broken"] == {"group": "touch", "touchArea": "head", "line": None}
     assert "touch_1" not in damaged
 
 
@@ -473,6 +474,25 @@ def test_skin_motion_lookup_matches_stems_case_insensitively():
     rows = [{"id": 1, "type": 102, "motion_name": "motions/daiji01_SHOWCACE.mtn", "touch_area": "0", "hold_time": "12,30", "is_hurt": 0, "text": ""}]
     lookup = build_live2d_index.skin_motion_lookup(rows, [1], "normal", {})
     assert lookup["daiji01_showcace"]["group"] == "wait"
+
+
+def test_skin_touch_area_normalizes_a_numbered_area_to_its_base():
+    rows = [
+        {"id": 1, "type": 200, "motion_name": "motions/touch_body2.mtn", "touch_area": "body2", "hold_time": "0", "is_hurt": 0, "text": ""},
+        {"id": 2, "type": 402, "motion_name": "motions/touch_leg2.mtn", "touch_area": "leg2", "hold_time": "0", "is_hurt": 1, "text": ""},
+        {"id": 3, "type": 402, "motion_name": "motions/touch_head2.mtn", "touch_area": "head2", "hold_time": "0", "is_hurt": 1, "text": ""},
+    ]
+    normal = build_live2d_index.skin_motion_lookup(rows, [1, 2, 3], "normal", {})
+    damaged = build_live2d_index.skin_motion_lookup(rows, [1, 2, 3], "damaged", {})
+    assert normal["touch_body2"]["touchArea"] == "body"
+    assert damaged["touch_leg2"]["touchArea"] == "leg"
+    assert damaged["touch_head2"]["touchArea"] == "head"
+
+
+def test_skin_touch_area_stays_unmapped_for_a_genuinely_unknown_area():
+    rows = [{"id": 1, "type": 402, "motion_name": "motions/touch_arm.mtn", "touch_area": "arm2", "hold_time": "0", "is_hurt": 1, "text": ""}]
+    damaged = build_live2d_index.skin_motion_lookup(rows, [1], "damaged", {})
+    assert damaged["touch_arm"]["touchArea"] is None
 
 
 def test_dialogue_lines_drop_the_gun_prefix():
@@ -484,9 +504,12 @@ def test_dialogue_lines_drop_the_gun_prefix():
 
 
 def test_index_tdolls_walks_doll_form_skin_and_variant(tmp_path):
-    motions_dir = tmp_path / "live2d" / "tdolls" / "104" / "base" / "1202" / "normal" / "motions"
+    variant_dir = tmp_path / "live2d" / "tdolls" / "104" / "base" / "1202" / "normal"
+    motions_dir = variant_dir / "motions"
     motions_dir.mkdir(parents=True)
     (motions_dir / "touch_1.motion3.json").write_text(json.dumps({"Meta": {"Duration": 2.345}}))
+    (variant_dir / "model.moc3").write_bytes(b"")
+    (variant_dir / "model.model3.json").write_text("{}")
     table = [{"code": "G36C_1202", "fit_gun": 104, "skin": 1202, "motions": "2"}]
     rows = [{"id": 2, "type": 200, "motion_name": "motions/touch_1.mtn", "touch_area": "body", "hold_time": "0", "is_hurt": 0, "text": "GUN|G36C|DIALOGUE1"}]
     index = build_live2d_index.index_tdolls(str(tmp_path / "live2d" / "tdolls"), table, rows, {"G36C|DIALOGUE1": "Hi"})
@@ -494,12 +517,30 @@ def test_index_tdolls_walks_doll_form_skin_and_variant(tmp_path):
     assert motion == {"name": "touch_1", "group": "touch", "model3Group": "touch_1", "seconds": 2.35, "touchArea": "body", "line": "Hi"}
 
 
+def test_index_tdolls_skips_a_variant_missing_its_model3(tmp_path):
+    """A variant whose model3.json write failed is not indexed, even though its motions folder exists - matching
+    `build_manifest.scan_live2d_tdolls`'s presence rule, so the manifest and the index never disagree about what is playable."""
+    variant_dir = tmp_path / "live2d" / "tdolls" / "104" / "base" / "1202" / "normal"
+    motions_dir = variant_dir / "motions"
+    motions_dir.mkdir(parents=True)
+    (motions_dir / "touch_1.motion3.json").write_text(json.dumps({"Meta": {"Duration": 2.345}}))
+    (variant_dir / "model.moc3").write_bytes(b"")
+    # model.model3.json deliberately missing.
+    table = [{"code": "G36C_1202", "fit_gun": 104, "skin": 1202, "motions": "2"}]
+    rows = [{"id": 2, "type": 200, "motion_name": "motions/touch_1.mtn", "touch_area": "body", "hold_time": "0", "is_hurt": 0, "text": "GUN|G36C|DIALOGUE1"}]
+    index = build_live2d_index.index_tdolls(str(tmp_path / "live2d" / "tdolls"), table, rows, {"G36C|DIALOGUE1": "Hi"})
+    assert index == {}
+
+
 def test_index_tdolls_skips_stray_files_at_the_form_and_skin_level(tmp_path):
     """A stray file sitting where a form or skin folder is expected is skipped instead of crashing the walk."""
     tdolls_root = tmp_path / "live2d" / "tdolls"
-    motions_dir = tdolls_root / "104" / "base" / "1202" / "normal" / "motions"
+    variant_dir = tdolls_root / "104" / "base" / "1202" / "normal"
+    motions_dir = variant_dir / "motions"
     motions_dir.mkdir(parents=True)
     (motions_dir / "touch_1.motion3.json").write_text(json.dumps({"Meta": {"Duration": 2.345}}))
+    (variant_dir / "model.moc3").write_bytes(b"")
+    (variant_dir / "model.model3.json").write_text("{}")
     (tdolls_root / "104" / ".DS_Store").write_text("")
     (tdolls_root / "104" / "base" / ".DS_Store").write_text("")
     table = [{"code": "G36C_1202", "fit_gun": 104, "skin": 1202, "motions": "2"}]

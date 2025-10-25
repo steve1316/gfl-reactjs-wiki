@@ -20,12 +20,13 @@ Published layout, under `<staging>/assets/live2d/`:
 import collections
 import json
 import os
+import shutil
 import sys
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TOOLS_DIR)
 
-from extract_game_assets import CARD_QUALITY, FAIRY_FORMS, encode_webp, new_result, unity_load, write_file  # noqa: E402
+from extract_game_assets import CARD_QUALITY, FAIRY_FORMS, TREE, encode_webp, new_result, unity_load, write_file  # noqa: E402
 from skin_live2d_table import SKIN_LIVE2D_VARIANTS  # noqa: E402
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -610,6 +611,27 @@ def build_hoc_live2d(item, cache_dir, staging, loader):
     return result
 
 
+def cleanup_variant_folder(staging, folder, result):
+    """Remove a skin variant's folder after its build failed partway through, so a partial write never stays published.
+
+    `write_file` writes each texture, the moc3, physics and motions file to disk as soon as its own step succeeds, so a later step
+    failing (the moc3 read, or the final model3.json write) can leave earlier files sitting on disk with nothing to make them
+    playable. `build_manifest.scan_live2d_tdolls` and `build_live2d_index.index_tdolls` both require `model.moc3` and
+    `model.model3.json` together, so those orphans are never offered, but they still take up space on the asset host and would
+    confuse a manual look at the tree. Removing the whole folder is simpler than buffering every write in memory until the variant
+    is known to succeed, and costs nothing extra since a failed variant has no files worth keeping anyway.
+
+    Args:
+        staging: The staging root.
+        folder: The variant's folder, such as `live2d/tdolls/104/base/1202/normal`.
+        result: The worker result, whose `files` list is filtered to drop entries under `folder`.
+    """
+    path = os.path.join(staging, TREE, *folder.split("/"))
+    shutil.rmtree(path, ignore_errors=True)
+    prefix = f"{folder}/"
+    result["files"] = [entry for entry in result["files"] if not entry[0].startswith(prefix)]
+
+
 def prefab_physics_rig(objs, prefab):
     """Find a prefab's `CubismPhysicsController` rig, if it has one.
 
@@ -631,6 +653,10 @@ def prefab_physics_rig(objs, prefab):
 
 def build_skin_variant(item, container, objs, variant, folder, staging, result):
     """Extract one variant of a skin's model: textures, moc3, physics, motions and model3.
+
+    A texture, moc3 or model3 failure removes whatever this variant already wrote via `cleanup_variant_folder`, rather than leaving a
+    folder with some files but no `model.model3.json` to make them playable. Physics and motions failures do not, since both are
+    optional or partial by nature - see their own comments below.
 
     Args:
         item: A resolved `live2d` skin item.
@@ -660,6 +686,7 @@ def build_skin_variant(item, container, objs, variant, folder, staging, result):
                 # The moc3's texture units are index-based, so silently dropping one slot would shift every later drawable onto the
                 # wrong image - the model would still load, just render wrong. Failing the whole variant beats that.
                 result["missing"].append({"key": key, "role": f"{variant}_texture:{name}", "reason": f"failed: {exc!r}"})
+                cleanup_variant_folder(staging, folder, result)
                 return
 
     try:
@@ -669,6 +696,7 @@ def build_skin_variant(item, container, objs, variant, folder, staging, result):
         info = walk_prefab(objs, prefab)
     except Exception as exc:
         result["missing"].append({"key": key, "role": moc_role, "reason": f"failed: {exc!r}"})
+        cleanup_variant_folder(staging, folder, result)
         return
 
     physics_name = None
@@ -694,6 +722,7 @@ def build_skin_variant(item, container, objs, variant, folder, staging, result):
         write_file(staging, f"{folder}/model.model3.json", json.dumps(built, indent=1).encode("utf-8"), REPORT_TIER_SKIN, result)
     except Exception as exc:
         result["missing"].append({"key": key, "role": prefab_role, "reason": f"model3 write failed: {exc!r}"})
+        cleanup_variant_folder(staging, folder, result)
 
 
 def build_skin_live2d(item, cache_dir, staging, loader):
