@@ -704,30 +704,6 @@ def variant_model_root(scoped):
     return with_moc[0] if with_moc else prefab_dirs[0]
 
 
-def variant_texture_dir(dirs):
-    """Pick a fallback texture folder for a skin Live2D variant whose model folder ships more than one resolution.
-
-    A model folder can hold `model.1024/` and `model.2048/` as siblings - a lower-resolution texture set kept alongside the final one -
-    and this module has no bundle loaded, only its ResData file list, so it cannot read which one the model's own drawables actually
-    reference. Picking the highest resolution here is only ever a fallback: `extract_live2d.py` has the loaded bundle and picks the
-    real answer from the prefab's own texture references, using every candidate `variant_assets` records, and falls back to this
-    function's pick only when that read fails. A name with no numeric suffix, or a tie, falls back to the lexically last name, so the
-    fallback itself is a pure function of the candidate set and never depends on `set` iteration order.
-
-    Args:
-        dirs: Candidate texture folder names, trailing slash included and no other path segments, such as `{"model.1024/", "model.2048/"}`.
-
-    Returns:
-        The winning folder name.
-    """
-
-    def resolution(name):
-        stem = name.rstrip("/").rsplit(".", 1)[-1]
-        return int(stem) if stem.isdigit() else -1
-
-    return sorted(dirs, key=lambda name: (resolution(name), name))[-1]
-
-
 def variant_assets(bundle_name, bundle, variant_folder):
     """Locate one skin Live2D variant's moc, prefab, texture folder and motions folder, all from the same model folder.
 
@@ -744,11 +720,11 @@ def variant_assets(bundle_name, bundle, variant_folder):
         variant_folder: The in-bundle folder name, `normal` or `destroy`.
 
     Returns:
-        A dict of role suffix (`moc`, `prefab`, `textures`, `motions`) to its `{"bundle", "path"}` hit. `textures` and `motions` carry the
-        folder prefix rather than one file, and `textures` additionally carries `candidates`: every texture folder prefix seen, so
-        `extract_live2d.py`, which has the loaded bundle this module does not, can pick among them by what the prefab actually
-        references rather than trusting `path`, which is only this module's resolution-based fallback guess. A role with no match is
-        absent, including every role when the variant has no folder with a `.prefab` at all.
+        A dict of role suffix (`moc`, `prefab`, `textures`, `motions`) to its `{"bundle", "path"}` hit. `motions` carries its folder
+        prefix rather than one file. `textures` is present when the model folder holds at least one texture folder (`model.<res>/`),
+        and its `path` is the model folder itself: a model folder can ship more than one resolution, and only the prefab, which this
+        module never loads, says which one the model uses, so `extract_live2d.py` picks the folder from the loaded bundle. A role with no
+        match is absent, including every role when the variant has no folder with a `.prefab` at all.
     """
     marker = f"/{variant_folder}/"
     scoped = [(lowered, path) for lowered, path in bundle["files"] if marker in lowered]
@@ -757,10 +733,6 @@ def variant_assets(bundle_name, bundle, variant_folder):
         return {}
 
     found = {}
-    # Every texture folder seen, name (trailing slash included) to a matching path prefix in the bundle's own case. When a model
-    # folder ships more than one resolution, `variant_texture_dir` picks a fallback winner from this dict's keys after the walk,
-    # rather than the first one encountered in file order, but every candidate is recorded too - see the docstring above.
-    texture_dirs = {}
     for lowered, path in scoped:
         if not lowered.startswith(root):
             continue
@@ -771,13 +743,9 @@ def variant_assets(bundle_name, bundle, variant_folder):
             elif rel.endswith("_moc.asset") and "moc" not in found:
                 found["moc"] = {"bundle": bundle_name, "path": path}
         elif rel.count("/") == 1 and rel.endswith(".png"):
-            texture_dir = rel[: rel.index("/") + 1]
-            texture_dirs.setdefault(texture_dir, path[: len(root) + len(texture_dir)])
+            found.setdefault("textures", {"bundle": bundle_name, "path": path[: len(root)]})
         elif rel.startswith("motions/") and "motions" not in found:
             found["motions"] = {"bundle": bundle_name, "path": path[: len(root) + len("motions/")]}
-    if texture_dirs:
-        best = variant_texture_dir(texture_dirs.keys())
-        found["textures"] = {"bundle": bundle_name, "path": texture_dirs[best], "candidates": sorted(texture_dirs.values())}
     return found
 
 
@@ -815,7 +783,6 @@ def skin_live2d_item(index, model):
         "id": model["doll_id"],
         "form": model["form"],
         "skin": model["skin_key"],
-        "motion_ids": model["motion_ids"],
         "code": model["bundle"][len(SKIN_LIVE2D_PREFIX) :],
         "assets": assets,
         "missing": missing,

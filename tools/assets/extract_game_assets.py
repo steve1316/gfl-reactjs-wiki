@@ -1651,8 +1651,8 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             futures[pool.submit(extract_hoc_art_items, hoc_items, cache_dir, staging)] = "worker:hoc_art"
         if fairy_items:
             futures[pool.submit(extract_fairy_art_items, fairy_items, cache_dir, staging)] = "worker:fairy_art"
-        if live2d_items:
-            futures[pool.submit(extract_live2d_items, live2d_items, cache_dir, staging)] = "worker:live2d"
+        # One future per Live2D item, so the models convert in parallel. The report sorts its rows, so completion order never shows.
+        futures.update({pool.submit(extract_live2d_items, [item], cache_dir, staging): item["key"] for item in live2d_items})
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()

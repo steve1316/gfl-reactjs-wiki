@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skin_live2d_table import skin_live2d_models  # noqa: E402
+from skin_live2d_table import parse_motion_ids, skin_live2d_models  # noqa: E402
 
 
 def row(code, fit_gun, skin, motions="1,2"):
@@ -65,9 +65,7 @@ def test_rows_with_no_bundle_are_dropped():
 
 
 def test_motion_ids_are_parsed_from_the_newline_littered_column():
-    rows = [row("G36C_1202", 104, 1202, motions="1000,1001\n,1002\n,1003")]
-    models = skin_live2d_models(rows, {"live2dnew_gun_g36c_1202"}, {104})
-    assert models[0]["motion_ids"] == [1000, 1001, 1002, 1003]
+    assert parse_motion_ids("1000,1001\n,1002\n,1003") == [1000, 1001, 1002, 1003]
 
 
 def test_models_are_sorted_and_deduplicated():

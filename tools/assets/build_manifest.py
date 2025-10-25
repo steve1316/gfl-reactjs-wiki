@@ -122,43 +122,48 @@ def tdoll_skin_sort_key(key):
     return (0, 0) if key == "base" else (1, int(key))
 
 
-def scan_live2d_tdolls(tdolls_root):
-    """Scan `live2d/tdolls` for the skin models that exist, by doll, form and skin.
+def iter_live2d_tdoll_variants(tdolls_root):
+    """Walk `live2d/tdolls` and yield each skin model variant that exists, in the canonical order.
 
     A variant counts only when it holds both a `model.moc3` and a `model.model3.json`, so a half-written folder is not recorded as present.
-    A stray file sitting where a form or skin folder is expected is skipped rather than crashing the scan.
+    A stray file sitting where a form or skin folder is expected is skipped rather than crashing the walk. Dolls come in numeric id order,
+    forms and variants by name, and skins by `tdoll_skin_sort_key`.
+
+    Args:
+        tdolls_root: The `live2d/tdolls` folder, which may not exist.
+
+    Yields:
+        A `(doll_id, form, skin, variant, variant_root)` tuple per present variant, with `variant_root` the variant's folder path.
+    """
+    if not os.path.isdir(tdolls_root):
+        return
+    for doll_id in numeric_dirs(tdolls_root):
+        for form in sorted(os.listdir(os.path.join(tdolls_root, doll_id))):
+            form_root = os.path.join(tdolls_root, doll_id, form)
+            if not os.path.isdir(form_root):
+                continue
+            skin_names = sorted((name for name in os.listdir(form_root) if os.path.isdir(os.path.join(form_root, name))), key=tdoll_skin_sort_key)
+            for skin in skin_names:
+                skin_root = os.path.join(form_root, skin)
+                for variant in sorted(os.listdir(skin_root)):
+                    variant_root = os.path.join(skin_root, variant)
+                    if os.path.isfile(os.path.join(variant_root, "model.moc3")) and os.path.isfile(os.path.join(variant_root, "model.model3.json")):
+                        yield doll_id, form, skin, variant, variant_root
+
+
+def scan_live2d_tdolls(tdolls_root):
+    """Scan `live2d/tdolls` for the skin models that exist, by doll, form and skin.
 
     Args:
         tdolls_root: The `live2d/tdolls` folder, which may not exist.
 
     Returns:
-        A dict of doll id to form to skin key to its sorted variant names, `base` before numeric skin ids, in numeric doll id order.
-        Empty when nothing is published.
+        A dict of doll id to form to skin key to its sorted variant names, `base` before numeric skin ids, in numeric doll id order, with
+        only the variants `iter_live2d_tdoll_variants` finds present. Empty when nothing is published.
     """
     entries = {}
-    if not os.path.isdir(tdolls_root):
-        return entries
-    for doll_id in numeric_dirs(tdolls_root):
-        forms = {}
-        for form in sorted(os.listdir(os.path.join(tdolls_root, doll_id))):
-            form_root = os.path.join(tdolls_root, doll_id, form)
-            if not os.path.isdir(form_root):
-                continue
-            skins = {}
-            skin_names = sorted((name for name in os.listdir(form_root) if os.path.isdir(os.path.join(form_root, name))), key=tdoll_skin_sort_key)
-            for skin in skin_names:
-                skin_root = os.path.join(form_root, skin)
-                variants = [
-                    variant
-                    for variant in sorted(os.listdir(skin_root))
-                    if os.path.isfile(os.path.join(skin_root, variant, "model.moc3")) and os.path.isfile(os.path.join(skin_root, variant, "model.model3.json"))
-                ]
-                if variants:
-                    skins[skin] = variants
-            if skins:
-                forms[form] = skins
-        if forms:
-            entries[doll_id] = forms
+    for doll_id, form, skin, variant, _variant_root in iter_live2d_tdoll_variants(tdolls_root):
+        entries.setdefault(doll_id, {}).setdefault(form, {}).setdefault(skin, []).append(variant)
     return entries
 
 

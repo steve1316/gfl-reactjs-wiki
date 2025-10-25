@@ -432,27 +432,14 @@ def test_variant_assets_does_not_mix_a_duplicated_nested_model_folder():
     # The whole point: every role sits in the same folder, none reach into the nested duplicate.
     assert found["moc"]["path"] == f"{base}/model_moc.asset"
     assert found["prefab"]["path"] == f"{base}/model.prefab"
-    assert found["textures"]["path"] == f"{base}/model.2048/"
+    assert found["textures"]["path"] == f"{base}/"
     assert found["motions"]["path"] == f"{base}/motions/"
 
 
-def test_variant_texture_dir_picks_the_highest_resolution():
-    """The numbered suffix decides, not iteration order - checked both ways round since a `set` gives no order guarantee."""
-    assert game_bundles.variant_texture_dir({"model.1024/", "model.2048/"}) == "model.2048/"
-    assert game_bundles.variant_texture_dir({"model.2048/", "model.1024/"}) == "model.2048/"
-
-
-def test_variant_texture_dir_falls_back_to_the_lexically_last_name_on_a_tie_or_unparsable_suffix():
-    assert game_bundles.variant_texture_dir({"model.a/", "model.b/"}) == "model.b/"
-
-
-def test_variant_assets_records_every_texture_candidate_and_falls_back_to_the_highest_resolution():
-    """A model folder can ship both `model.1024/` and `model.2048/` (a lower-resolution set kept alongside the final one), the real case
-    being `live2d:skin:115:base:1103` (KP31_1103's normal model), whose real prefab references `model.1024/` - the resolution guess is
-    wrong there, which is exactly why `path` here is only ever `extract_live2d.py`'s fallback: `candidates` carries every folder so the
-    real answer can be read from the loaded bundle's prefab, which this module never has. The lower resolution is listed first here,
-    matching KP31_1103's own bundle order, so a fixture that happened to list the higher one first would not actually guard the
-    fallback's own tie-break."""
+def test_variant_assets_records_the_model_folder_for_textures_when_it_ships_several_resolutions():
+    """A model folder can ship both `model.1024/` and `model.2048/`, the real case being `live2d:skin:115:base:1103` (KP31_1103's
+    normal model), whose prefab references `model.1024/`. This module cannot read the prefab, so it records no resolution guess, only
+    the model folder, and `extract_live2d.py` picks the texture folder from the loaded bundle."""
     base = "assets/resources/dabao/live2dnew/gun/kp31_1103/normal"
     paths = [
         f"{base}/model.1024/texture_00.png",
@@ -463,8 +450,7 @@ def test_variant_assets_records_every_texture_candidate_and_falls_back_to_the_hi
     ]
     bundle = {"files": [(path, path) for path in paths], "sizeOriginal": 1}
     found = game_bundles.variant_assets("live2dnew_gun_kp31_1103", bundle, "normal")
-    assert found["textures"]["path"] == f"{base}/model.2048/"
-    assert sorted(found["textures"]["candidates"]) == [f"{base}/model.1024/", f"{base}/model.2048/"]
+    assert found["textures"] == {"bundle": "live2dnew_gun_kp31_1103", "path": f"{base}/"}
 
 
 def test_variant_model_root_is_deterministic_when_two_equal_depth_folders_both_qualify():
@@ -480,7 +466,7 @@ def test_variant_model_root_is_deterministic_when_two_equal_depth_folders_both_q
 
 
 def test_skin_live2d_item_resolves_both_variants_separately():
-    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_g36c_1202", "motion_ids": [1]}
+    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_g36c_1202"}
     item = game_bundles.skin_live2d_item(skin_live2d_index(), model)
     assert item["status"] == "resolved"
     assert item["kind"] == "skin"
@@ -488,7 +474,7 @@ def test_skin_live2d_item_resolves_both_variants_separately():
     # The whole point: the two variants must not collapse onto one another.
     assert item["assets"]["normal_moc"]["path"].endswith("/normal/model_moc.asset")
     assert item["assets"]["damaged_moc"]["path"].endswith("/destroy/model_moc.asset")
-    assert item["assets"]["normal_textures"]["path"].endswith("/normal/model.2048/")
+    assert item["assets"]["normal_textures"]["path"].endswith("/normal/")
     assert item["assets"]["damaged_motions"]["path"].endswith("/destroy/motions/")
 
 
@@ -496,7 +482,7 @@ def test_skin_live2d_item_is_partial_when_a_variant_is_missing():
     index = skin_live2d_index()
     files = [pair for pair in index["live2dnew_gun_g36c_1202"]["files"] if "/destroy/" not in pair[0]]
     index["live2dnew_gun_g36c_1202"]["files"] = files
-    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_g36c_1202", "motion_ids": [1]}
+    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_g36c_1202"}
     item = game_bundles.skin_live2d_item(index, model)
     assert item["status"] == "partial"
     assert "damaged_moc" in item["missing"]
@@ -504,7 +490,7 @@ def test_skin_live2d_item_is_partial_when_a_variant_is_missing():
 
 
 def test_skin_live2d_item_is_none_when_the_bundle_is_absent():
-    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_nope", "motion_ids": []}
+    model = {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "live2dnew_gun_nope"}
     assert game_bundles.skin_live2d_item(skin_live2d_index(), model) is None
 
 
@@ -581,8 +567,8 @@ def test_build_inventory_includes_skin_live2d_items():
 def test_new_targets_lists_skin_live2d_absent_from_the_manifest():
     manifest = {"version": 3, "dolls": {}, "equipment": {}, "live2d": {"tdolls": {"104": {"base": {"1202": ["normal"]}}}}}
     models = [
-        {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "b", "motion_ids": []},
-        {"doll_id": 104, "form": "mod", "skin_key": "1202", "bundle": "b", "motion_ids": []},
+        {"doll_id": 104, "form": "base", "skin_key": "1202", "bundle": "b"},
+        {"doll_id": 104, "form": "mod", "skin_key": "1202", "bundle": "b"},
     ]
     targets = game_bundles.new_targets([], [], manifest, live2d_models=models)
     assert (104, "mod", "1202") in targets["skin"]

@@ -13,6 +13,7 @@ import FilterChip from "../../components/FilterChip";
 import SpineAnimation from "../../components/SpineAnimation";
 import { FAB_EXPAND_SX } from "../../lib/artLayout";
 import { skinLive2dModelUrl, spineImageBase, spineUrl } from "../../lib/assets";
+import { LIVE2D_CANVAS_STYLE, LIVE2D_STAGE_STYLE, LIVE2D_STATUS_STYLE, STAGE_STYLE } from "../../lib/live2dStageStyles";
 import type { AnimationTab } from "../../lib/spine";
 import { motionTabs, resolveSkinLive2dVariant, useSkinLive2dMotions } from "../../lib/useLive2dMotions";
 import { useLive2dStage } from "../../lib/useLive2dStage";
@@ -20,26 +21,6 @@ import type { SpineRig } from "../../types/spine";
 
 /** Which animation source is on screen: the battle rig, the dorm rig, or the skin's Live2D model. */
 export type ChibiMode = "battle" | "dorm" | "live2d";
-
-/** Style for the clickable Spine stage wrapper. A module constant, since an inline object is a new prop on every render. */
-const STAGE_STYLE = { cursor: "pointer" } as const;
-
-/** The square Live2D stage, sized to match `HocAnimationsPanel`'s so the two players read the same across pages. */
-const LIVE2D_STAGE_STYLE = { width: "100%", maxWidth: 340, aspectRatio: "1 / 1", position: "relative", cursor: "pointer" } as const;
-
-/** Fills the Live2D stage box exactly, matching `fairy_live2d.tsx`'s canvas style. */
-const LIVE2D_CANVAS_STYLE = { position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" } as const;
-
-/** Centred loading/error text over the Live2D stage, matching `SpineAnimation`'s own status overlay. */
-const LIVE2D_STATUS_STYLE = {
-	position: "absolute",
-	inset: 0,
-	display: "flex",
-	alignItems: "center",
-	justifyContent: "center",
-	fontSize: "0.85rem",
-	opacity: 0.7
-} as const;
 
 const styles = {
 	pillList: {

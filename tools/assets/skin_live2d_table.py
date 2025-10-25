@@ -47,6 +47,23 @@ def parse_motion_ids(motions):
     return [int(part) for part in motions.replace("\n", "").split(",") if part.strip()]
 
 
+def row_model_key(row):
+    """Derive a `stc/live2d.json` row's model key.
+
+    Args:
+        row: One row from `stc/live2d.json`.
+
+    Returns:
+        The `(doll_id, form, skin_key)` tuple, with `form` `base` or `mod` and `skin_key` `base` or the stringified skin id, or None when
+        the row is not a doll (`fit_gun <= 0`).
+    """
+    fit_gun = row["fit_gun"]
+    if fit_gun <= 0:
+        return None
+    is_mod = fit_gun > MOD_ID_OFFSET
+    return (fit_gun - MOD_ID_OFFSET if is_mod else fit_gun, "mod" if is_mod else "base", "base" if row["skin"] == 0 else str(row["skin"]))
+
+
 def skin_live2d_models(rows, bundle_names, doll_ids):
     """Pick the skin Live2D models to build from the game's table.
 
@@ -56,17 +73,13 @@ def skin_live2d_models(rows, bundle_names, doll_ids):
         doll_ids: Doll ids the wiki hosts, so a row for a doll we do not have is dropped.
 
     Returns:
-        A list of `{"doll_id", "form", "skin_key", "bundle", "motion_ids"}` dicts, one per distinct key, sorted by doll id then form then
+        A list of `{"doll_id", "form", "skin_key", "bundle"}` dicts, one per distinct key, sorted by doll id then form then
         skin key. `form` is `base` or `mod` and `skin_key` is `base` or the stringified skin id.
     """
     models = {}
     for row in rows:
-        fit_gun = row["fit_gun"]
-        if fit_gun <= 0:
-            continue
-        is_mod = fit_gun > MOD_ID_OFFSET
-        doll_id = fit_gun - MOD_ID_OFFSET if is_mod else fit_gun
-        if doll_id not in doll_ids:
+        key = row_model_key(row)
+        if key is None or key[0] not in doll_ids:
             continue
         bundle = SKIN_LIVE2D_PREFIX + row["code"].lower()
         if bundle not in bundle_names:
@@ -74,7 +87,6 @@ def skin_live2d_models(rows, bundle_names, doll_ids):
             bundle = f"{SKIN_LIVE2D_PREFIX}{match.group(1).lower()}_{match.group(2)}" if match else None
         if bundle is None or bundle not in bundle_names:
             continue
-        key = (doll_id, "mod" if is_mod else "base", "base" if row["skin"] == 0 else str(row["skin"]))
         if key in models:
             continue
         models[key] = {
@@ -82,6 +94,5 @@ def skin_live2d_models(rows, bundle_names, doll_ids):
             "form": key[1],
             "skin_key": key[2],
             "bundle": bundle,
-            "motion_ids": parse_motion_ids(row.get("motions", "")),
         }
     return [models[key] for key in sorted(models)]

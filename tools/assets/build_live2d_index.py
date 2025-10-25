@@ -27,9 +27,9 @@ import json
 import os
 import sys
 
-from build_manifest import numeric_dirs, scan_live2d_tdolls, tdoll_skin_sort_key
+from build_manifest import iter_live2d_tdoll_variants, numeric_dirs, scan_live2d_tdolls
 from extract_live2d import motion_group_name
-from skin_live2d_table import MOD_ID_OFFSET, parse_motion_ids
+from skin_live2d_table import parse_motion_ids, row_model_key
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,10 +299,11 @@ def index_tdolls(tdolls_root, table_rows, motion_rows, lines):
     """Index every skin Live2D model's motions under `live2d/tdolls`.
 
     Rows are joined directly here rather than through `skin_live2d_table.skin_live2d_models`, since that helper filters by bundle name and
-    doll id, neither of which the index has or needs - calling it with empty filter sets would drop every row.
+    doll id, neither of which the index has or needs - calling it with empty filter sets would drop every row. Both derive a row's key
+    with `skin_live2d_table.row_model_key`.
 
-    A stray file sitting where a form or skin folder is expected is skipped rather than crashing the walk, mirroring
-    `build_manifest.scan_live2d_tdolls`.
+    Variants are walked by `build_manifest.iter_live2d_tdoll_variants`, the same walk and presence rule the manifest uses, so a variant
+    whose model3 write failed is never indexed.
 
     Args:
         tdolls_root: The `live2d/tdolls` folder, which may not exist.
@@ -319,43 +320,15 @@ def index_tdolls(tdolls_root, table_rows, motion_rows, lines):
 
     ids_by_key = {}
     for row in table_rows:
-        if row["fit_gun"] <= 0:
-            continue
-        is_mod = row["fit_gun"] > MOD_ID_OFFSET
-        key = (
-            row["fit_gun"] - MOD_ID_OFFSET if is_mod else row["fit_gun"],
-            "mod" if is_mod else "base",
-            "base" if row["skin"] == 0 else str(row["skin"]),
-        )
-        ids_by_key.setdefault(key, parse_motion_ids(row.get("motions", "")))
+        key = row_model_key(row)
+        if key is not None:
+            ids_by_key.setdefault(key, parse_motion_ids(row.get("motions", "")))
 
-    for doll_id in numeric_dirs(tdolls_root):
-        forms = {}
-        for form in sorted(os.listdir(os.path.join(tdolls_root, doll_id))):
-            form_root = os.path.join(tdolls_root, doll_id, form)
-            if not os.path.isdir(form_root):
-                continue
-            skins = {}
-            skin_names = sorted((name for name in os.listdir(form_root) if os.path.isdir(os.path.join(form_root, name))), key=tdoll_skin_sort_key)
-            for skin in skin_names:
-                skin_root = os.path.join(form_root, skin)
-                variants = {}
-                for variant in sorted(os.listdir(skin_root)):
-                    variant_root = os.path.join(skin_root, variant)
-                    # Same presence rule as build_manifest.scan_live2d_tdolls: moc3 and model3.json both exist. Checking the motions
-                    # folder instead let a variant whose model3 write failed still get indexed and offered, 404ing when played.
-                    if not os.path.isfile(os.path.join(variant_root, "model.moc3")) or not os.path.isfile(os.path.join(variant_root, "model.model3.json")):
-                        continue
-                    motions_dir = os.path.join(variant_root, "motions")
-                    motion_ids = ids_by_key.get((int(doll_id), form, skin), [])
-                    motions = index_skin_motions(motions_dir, skin_motion_lookup(motion_rows, motion_ids, variant, lines)) if os.path.isdir(motions_dir) else []
-                    variants[variant] = {"motions": motions}
-                if variants:
-                    skins[skin] = variants
-            if skins:
-                forms[form] = skins
-        if forms:
-            entries[doll_id] = forms
+    for doll_id, form, skin, variant, variant_root in iter_live2d_tdoll_variants(tdolls_root):
+        motions_dir = os.path.join(variant_root, "motions")
+        motion_ids = ids_by_key.get((int(doll_id), form, skin), [])
+        motions = index_skin_motions(motions_dir, skin_motion_lookup(motion_rows, motion_ids, variant, lines)) if os.path.isdir(motions_dir) else []
+        entries.setdefault(doll_id, {}).setdefault(form, {}).setdefault(skin, {})[variant] = {"motions": motions}
     return entries
 
 

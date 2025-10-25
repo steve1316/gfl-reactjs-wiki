@@ -30,6 +30,7 @@ import json
 import os
 import sys
 
+from build_live2d_index import dump_tdoll_file
 from build_manifest import SKILL_KINDS, dumps, tdoll_skin_sort_key
 
 
@@ -453,7 +454,7 @@ def main():
         os.makedirs(args.live2d_tdolls_dir, exist_ok=True)
         for doll_id, forms in live2d_tdoll_files.items():
             with open(os.path.join(args.live2d_tdolls_dir, f"{doll_id}.json"), "w", encoding="utf-8") as handle:
-                handle.write(json.dumps(forms, separators=(",", ":"), ensure_ascii=False) + "\n")
+                handle.write(dump_tdoll_file(forms))
         print(f"merged {len(live2d_tdoll_files)} T-Doll skin motion files into {args.live2d_tdolls_dir}")
 
 

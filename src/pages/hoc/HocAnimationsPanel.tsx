@@ -8,6 +8,7 @@ import type { SxProps, Theme } from "@mui/material";
 import FilterChip from "../../components/FilterChip";
 import SpineAnimation from "../../components/SpineAnimation";
 import { hocLive2dModelUrl, hocSpineImageBase, hocSpineUrl } from "../../lib/assets";
+import { LIVE2D_CANVAS_STYLE, LIVE2D_STAGE_STYLE, LIVE2D_STATUS_STYLE, STAGE_STYLE } from "../../lib/live2dStageStyles";
 import { hasHocLive2d } from "../../lib/processData";
 import { animationTabs, nextAnimationValue } from "../../lib/spine";
 import { motionTabs, useHocLive2dMotions } from "../../lib/useLive2dMotions";
@@ -16,26 +17,6 @@ import type { HocSpineEntry, SpineRig } from "../../types/spine";
 
 /** The animation a rig opens on, when it defines one. */
 const DEFAULT_ANIMATION = "wait";
-
-/** Shows the stage is clickable. A module constant, so the wrapper is not handed a new style object each render. */
-const STAGE_STYLE = { cursor: "pointer" } as const;
-
-/** The square Live2D stage, sized directly on the flex item Card hands it rather than an inner width:100% that would collapse to 0. */
-const LIVE2D_STAGE_STYLE = { width: "100%", maxWidth: 340, aspectRatio: "1 / 1", position: "relative", cursor: "pointer" } as const;
-
-/** Fills the Live2D stage box exactly, matching `fairy_live2d.tsx`'s canvas style. */
-const LIVE2D_CANVAS_STYLE = { position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" } as const;
-
-/** Centred loading/error text over the Live2D stage, matching `SpineAnimation`'s own status overlay. */
-const LIVE2D_STATUS_STYLE = {
-	position: "absolute",
-	inset: 0,
-	display: "flex",
-	alignItems: "center",
-	justifyContent: "center",
-	fontSize: "0.85rem",
-	opacity: 0.7
-} as const;
 
 const styles = {
 	// The same full-width toggle the Stats card uses to switch views.
