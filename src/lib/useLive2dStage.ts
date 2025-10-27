@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
 import type { Live2dStage } from "./live2d";
+import { preloadLive2dRuntime, warmLive2dModel } from "./live2dPreload";
 import type { AnimationTab } from "./spine";
 import { nextAnimationValue } from "./spine";
 import { IDLE_TAB_VALUE } from "./useLive2dMotions";
@@ -37,8 +38,12 @@ export interface Live2dStageState {
  * box cannot be trusted, such as the viewer's zoom container, which keeps a stable size while the canvas itself
  * carries a zoom transform.
  *
+ * The stage is paused while its canvas is scrolled out of view or the page is hidden, and resumes where it left off on return, so a
+ * model nobody can see stops costing CPU and GPU time.
+ *
  * The runtime loader is imported dynamically, gated on `modelUrl` being defined, so a page that renders this hook
- * for a model-less fairy or HOC never parses `live2d.ts` at all.
+ * for a model-less fairy or HOC never parses `live2d.ts` at all. The same gate starts the runtime and model downloads through
+ * `live2dPreload.ts` before that import, so they run in parallel instead of one after another.
  *
  * The caller must give its canvas element `key={modelUrl}`. Swapping models on a canvas that stays mounted - the
  * fairy card's form toggle, or the viewer's star rank picker, while Live2D stays selected - tears down one WebGL
@@ -74,6 +79,25 @@ export function useLive2dStage(canvasRef: RefObject<HTMLCanvasElement | null>, m
 		setStatus("loading");
 		setMotion("");
 
+		// Start every download now. Aborted on cleanup, so a stage that unmounts or switches models mid-load stops warming the old one.
+		const warmup = new AbortController();
+		preloadLive2dRuntime();
+		warmLive2dModel(modelUrl, warmup.signal);
+
+		// Pause while the canvas is off screen or the page is hidden. Tracks this effect's own stage rather than `stageRef`, so a late
+		// callback from this observer can never pause the stage a later model mounts.
+		let stage: Live2dStage | undefined;
+		let inView = true;
+		const syncPaused = () => {
+			stage?.setPaused(!inView || document.visibilityState === "hidden");
+		};
+		const observer = new IntersectionObserver((entries) => {
+			inView = entries[entries.length - 1]?.isIntersecting ?? inView;
+			syncPaused();
+		});
+		observer.observe(canvas);
+		document.addEventListener("visibilitychange", syncPaused);
+
 		const rect = sizeBox.getBoundingClientRect();
 		const resolution = window.devicePixelRatio || 1;
 		canvas.width = Math.max(1, Math.round(rect.width * resolution));
@@ -81,12 +105,14 @@ export function useLive2dStage(canvasRef: RefObject<HTMLCanvasElement | null>, m
 
 		import("./live2d")
 			.then(({ createLive2dStage }) => createLive2dStage(canvas, modelUrl))
-			.then((stage) => {
+			.then((created) => {
 				if (!active) {
-					stage.destroy();
+					created.destroy();
 					return;
 				}
-				stageRef.current = stage;
+				stage = created;
+				stageRef.current = created;
+				syncPaused();
 				setStatus("ready");
 			})
 			.catch((error: unknown) => {
@@ -98,6 +124,9 @@ export function useLive2dStage(canvasRef: RefObject<HTMLCanvasElement | null>, m
 
 		return () => {
 			active = false;
+			warmup.abort();
+			observer.disconnect();
+			document.removeEventListener("visibilitychange", syncPaused);
 			stageRef.current?.destroy();
 			stageRef.current = null;
 		};

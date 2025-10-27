@@ -10,6 +10,7 @@
  * actually wants a model, which keeps its ~790 KB off every other route.
  */
 
+import { LIVE2D_RUNTIME_BASE, LIVE2D_RUNTIME_SCRIPTS } from "./live2dPreload";
 import { claimPixiGlobal, withLoadLock } from "./pixiRuntimeLock";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +34,8 @@ interface Live2dModel {
 	scale: { set(value: number): void };
 	/** The loaded Cubism model and its motion state. */
 	internalModel: { motionManager: { definitions: Record<string, unknown> } };
+	/** Whether the model advances on the shared ticker. Its motion clock only moves while this is on, so turning it off freezes the motion. */
+	autoUpdate: boolean;
 	/**
 	 * Start playing a motion group. Looping is driven by the `Loop` flag baked into the motion's own JSON, so nothing
 	 * here needs to restart it.
@@ -53,7 +56,16 @@ interface Live2dModelOptions {
 
 /** The pixi-live2d-display plugin namespace pixi.js exposes as `PIXI.live2d` once all three scripts have loaded. */
 interface Live2dPlugin {
-	Live2DModel: { from(url: string, options: Live2dModelOptions): Promise<Live2dModel> };
+	Live2DModel: {
+		from(url: string, options: Live2dModelOptions): Promise<Live2dModel>;
+		/**
+		 * Set the ticker every model advances on. Without it, the plugin looks up `window.PIXI.Ticker` the first time a model turns
+		 * on its updates, which may be the Spine runtime's global by then.
+		 *
+		 * @param ticker The `Ticker` class of the pixi.js build the plugin is attached to.
+		 */
+		registerTicker(ticker: unknown): void;
+	};
 	MotionPriority: { FORCE: number };
 }
 
@@ -76,6 +88,10 @@ interface PixiApplicationOptions {
 /** A pixi.js `Application` instance, narrowed to what this module calls. */
 interface PixiApplication {
 	stage: { addChild(child: Live2dModel): void };
+	/** Start the application's render loop. */
+	start(): void;
+	/** Stop the application's render loop. The canvas keeps showing the last frame it drew. */
+	stop(): void;
 	/**
 	 * Tear the application down and release its WebGL context.
 	 *
@@ -85,10 +101,20 @@ interface PixiApplication {
 	destroy(removeView: boolean, stageOptions: { children: boolean; texture: boolean; baseTexture: boolean }): void;
 }
 
+/** The pixi.js global `settings` object, narrowed to the one flag this module sets. */
+interface PixiSettings {
+	/** Whether image textures are decoded into an `ImageBitmap` off the main thread before upload, instead of synchronously inside the first upload. */
+	CREATE_IMAGE_BITMAP: boolean;
+}
+
 /** The `PIXI` UMD global, narrowed to what this module uses. `pixi-live2d-display` attaches itself at `PIXI.live2d` once loaded. */
 interface PixiGlobal {
 	Application: new (options: PixiApplicationOptions) => PixiApplication;
+	/** The pixi.js `Ticker` class, whose shared instance drives model updates. */
+	Ticker: unknown;
 	live2d: Live2dPlugin;
+	/** Global defaults read by pixi.js whenever it creates a resource. */
+	settings: PixiSettings;
 }
 
 declare global {
@@ -100,9 +126,6 @@ declare global {
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Runtime loading
-
-/** Script filenames, in the order they must load: Cubism Core, then pixi.js, then the pixi-live2d-display plugin. */
-const RUNTIME_SCRIPTS = ["live2dcubismcore.min.js", "pixi.min.js", "pixi-live2d-display.cubism4.min.js"];
 
 /** The motion group name the publish pipeline always gives the idle animation, on both fairies and HOCs. */
 const IDLE_MOTION_GROUP = "Idle";
@@ -150,12 +173,22 @@ export function loadLive2dRuntime(): Promise<void> {
 		return runtimePromise;
 	}
 
-	const base = `${import.meta.env.BASE_URL}vendor/live2d/`;
 	// Queued behind `withLoadLock` so a concurrent first load of the Spine runtime cannot interleave its scripts
 	// with these: see `pixiRuntimeLock.ts` for why that would attach `.live2d` to the wrong `PIXI` object.
+	// Each script is still injected only once the one before it has run. `preloadLive2dRuntime` has usually already started all three
+	// downloading, so each injection runs its preloaded copy straight away instead of starting a download of its own.
 	runtimePromise = withLoadLock(() =>
-		RUNTIME_SCRIPTS.reduce((chain, name) => chain.then(() => loadScript(`${base}${name}`)), Promise.resolve()).then(() => {
+		LIVE2D_RUNTIME_SCRIPTS.reduce((chain, name) => chain.then(() => loadScript(`${LIVE2D_RUNTIME_BASE}${name}`)), Promise.resolve()).then(() => {
 			live2dPixi = window.PIXI;
+			// Decode textures off the main thread. A 2048px texture otherwise decodes inside its first upload, a ~100 ms desktop and
+			// ~800 ms mobile long task. Set on this runtime's own pixi v6 `settings` only, never on the Spine runtime's pixi v4.
+			if (live2dPixi) {
+				live2dPixi.settings.CREATE_IMAGE_BITMAP = true;
+				// Hand the plugin its ticker now, while the global is still this runtime's. Left to itself, it reads `window.PIXI.Ticker` when
+				// the first model initialises, deep inside `Live2DModel.from`, where a Spine rig being created at the same time may have
+				// repointed the global. It then finds no ticker and that model draws one frame but never animates.
+				live2dPixi.live2d.Live2DModel.registerTicker(live2dPixi.Ticker);
+			}
 		})
 	);
 	return runtimePromise;
@@ -169,6 +202,8 @@ export function loadLive2dRuntime(): Promise<void> {
 export interface Live2dStage {
 	/** Play a motion by its group name, looping per the motion's own data. Unknown names are ignored by the runtime. */
 	playMotion(name: string): void;
+	/** Stop or restart updating and rendering. Resuming carries on from the same point in the current motion rather than restarting it. */
+	setPaused(paused: boolean): void;
 	/** Tear down the renderer and free its WebGL context. */
 	destroy(): void;
 }
@@ -224,6 +259,7 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 	app.stage.addChild(model);
 
 	let destroyed = false;
+	let paused = false;
 
 	/**
 	 * Play a motion group, ignoring a rejected or unresolved promise since `Live2dStage.playMotion` is fire-and-forget.
@@ -241,6 +277,21 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 		playMotion(name: string) {
 			if (!destroyed) {
 				play(name);
+			}
+		},
+		setPaused(next: boolean) {
+			if (destroyed || next === paused) {
+				return;
+			}
+			paused = next;
+			// Dropping the model off the shared ticker freezes its motion clock, and stopping the application's own ticker stops rendering.
+			// Neither touches the motion queue, so resuming picks the current motion up where it left off.
+			claimPixiGlobal(PIXI);
+			model.autoUpdate = !next;
+			if (next) {
+				app.stop();
+			} else {
+				app.start();
 			}
 		},
 		destroy() {
