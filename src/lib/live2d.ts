@@ -134,12 +134,11 @@ const IDLE_MOTION_GROUP = "Idle";
 let runtimePromise: Promise<void> | undefined;
 
 /**
- * The Live2D runtime's own `PIXI` (v6, with `.live2d` attached), captured the moment its scripts finish loading. `lib/spine.ts`
- * loads a different major version of PixiJS onto the same `window.PIXI` global, so opening a Spine rig after this runtime has
- * loaded points `window.PIXI` at that other runtime instead. This capture lets `createLive2dStage` re-point the global back
- * via `claimPixiGlobal` before it runs, the same way `createSpinePlayer` does - see its matching `spinePixi` docstring for
- * why a captured reference alone is not enough. The claim is repeated after the model-load `await` too, since a Spine
- * stage created while that is in flight could otherwise leave the global wrong once it resolves.
+ * The Live2D runtime's own `PIXI` (v6, with `.live2d` attached), captured the moment its scripts finish loading. `lib/spine.ts` loads a
+ * different major version of PixiJS onto the same `window.PIXI` global, and its vendored code reads that bare global every frame and
+ * whenever a new attachment appears, so a chibi breaks the moment the global points at this runtime instead. Nothing in this runtime
+ * reads the global once its scripts have run and `loadLive2dRuntime` has registered the plugin's ticker, so everything here uses this
+ * capture and the loader hands the global straight back to its previous owner.
  */
 let live2dPixi: PixiGlobal | undefined;
 
@@ -166,7 +165,7 @@ function loadScript(src: string): Promise<void> {
 /**
  * Load the Live2D runtime, once.
  *
- * @returns A promise that settles when `window.PIXI` and `PIXI.live2d` are available.
+ * @returns A promise that settles once the runtime's own `PIXI`, with `.live2d` attached, has been captured in `live2dPixi`.
  */
 export function loadLive2dRuntime(): Promise<void> {
 	if (runtimePromise) {
@@ -177,20 +176,27 @@ export function loadLive2dRuntime(): Promise<void> {
 	// with these: see `pixiRuntimeLock.ts` for why that would attach `.live2d` to the wrong `PIXI` object.
 	// Each script is still injected only once the one before it has run. `preloadLive2dRuntime` has usually already started all three
 	// downloading, so each injection runs its preloaded copy straight away instead of starting a download of its own.
-	runtimePromise = withLoadLock(() =>
-		LIVE2D_RUNTIME_SCRIPTS.reduce((chain, name) => chain.then(() => loadScript(`${LIVE2D_RUNTIME_BASE}${name}`)), Promise.resolve()).then(() => {
-			live2dPixi = window.PIXI;
-			// Decode textures off the main thread. A 2048px texture otherwise decodes inside its first upload, a ~100 ms desktop and
-			// ~800 ms mobile long task. Set on this runtime's own pixi v6 `settings` only, never on the Spine runtime's pixi v4.
-			if (live2dPixi) {
-				live2dPixi.settings.CREATE_IMAGE_BITMAP = true;
-				// Hand the plugin its ticker now, while the global is still this runtime's. Left to itself, it reads `window.PIXI.Ticker` when
-				// the first model initialises, deep inside `Live2DModel.from`, where a Spine rig being created at the same time may have
-				// repointed the global. It then finds no ticker and that model draws one frame but never animates.
-				live2dPixi.live2d.Live2DModel.registerTicker(live2dPixi.Ticker);
-			}
-		})
-	);
+	runtimePromise = withLoadLock(() => {
+		// pixi.js takes over the global while these scripts run, and pixi-live2d-display attaches itself to whatever the global is when it
+		// runs. Whatever owned it before, usually the Spine runtime's PIXI with a chibi still animating, gets it back afterwards.
+		const previousPixi = window.PIXI;
+		return LIVE2D_RUNTIME_SCRIPTS.reduce((chain, name) => chain.then(() => loadScript(`${LIVE2D_RUNTIME_BASE}${name}`)), Promise.resolve())
+			.then(() => {
+				live2dPixi = window.PIXI;
+				// Decode textures off the main thread. A 2048px texture otherwise decodes inside its first upload, a ~100 ms desktop and
+				// ~800 ms mobile long task. Set on this runtime's own pixi v6 `settings` only, never on the Spine runtime's pixi v4.
+				if (live2dPixi) {
+					live2dPixi.settings.CREATE_IMAGE_BITMAP = true;
+					// Hand the plugin its ticker now, while the global is still this runtime's. Left to itself, it reads `window.PIXI.Ticker`
+					// when the first model initialises, by which point the global belongs to the Spine runtime again. It then finds no
+					// ticker and that model draws one frame but never animates.
+					live2dPixi.live2d.Live2DModel.registerTicker(live2dPixi.Ticker);
+				}
+			})
+			.finally(() => {
+				claimPixiGlobal(previousPixi);
+			});
+	});
 	return runtimePromise;
 }
 
@@ -223,10 +229,6 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 	if (!PIXI) {
 		throw new Error("Live2D runtime failed to load");
 	}
-	// Re-point the global at this runtime's own PIXI before touching anything below, including tearing down a
-	// previous stage: see `live2dPixi`'s docstring for why. Done before `currentStage?.destroy()` too, since that
-	// destroy call is also vendor code that could read the bare global.
-	claimPixiGlobal(PIXI);
 	currentStage?.destroy();
 
 	const width = canvas.width;
@@ -247,8 +249,6 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 		app.destroy(false, { children: true, texture: true, baseTexture: true });
 		throw error;
 	}
-	// Re-claim after the model-load await: a Spine stage created while this was in flight could have repointed the global.
-	claimPixiGlobal(PIXI);
 
 	// Fit against the model's natural size, then set scale, then re-read width/height: pixi.js reports both already
 	// multiplied by the current scale, so centring afterwards needs no second multiplication.
@@ -286,7 +286,6 @@ export async function createLive2dStage(canvas: HTMLCanvasElement, modelUrl: str
 			paused = next;
 			// Dropping the model off the shared ticker freezes its motion clock, and stopping the application's own ticker stops rendering.
 			// Neither touches the motion queue, so resuming picks the current motion up where it left off.
-			claimPixiGlobal(PIXI);
 			model.autoUpdate = !next;
 			if (next) {
 				app.stop();

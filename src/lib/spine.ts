@@ -23,13 +23,13 @@ let runtimePromise: Promise<void> | undefined;
 
 /**
  * The Spine runtime's own `PIXI` (v4, with `.spine` attached), captured the moment its scripts finish loading. `lib/live2d.ts`
- * loads a different major version of PixiJS onto the same `window.PIXI` global, so once a page has opened a Live2D stage,
+ * loads a different major version of PixiJS onto the same `window.PIXI` global, so while its scripts are loading,
  * `window.PIXI` points at that other runtime instead. This capture lets `createSpinePlayer` re-point the global back via
  * `claimPixiGlobal` before it runs: the vendored `pixi-spine-sjzs.js` reads the bare global `PIXI` identifier inside some of
  * its own methods (such as `Spine.createMesh`), not a value closed over at load time, so a stale `window.PIXI` breaks it even
  * when this module's own calls use the captured reference directly. The claim is repeated after every `await` in
- * `createSpinePlayer`, not just once at the top, since Live2D's loader or teardown can repoint the global while this
- * function is suspended waiting on a fetch.
+ * `createSpinePlayer`, not just once at the top, since Live2D's loader can repoint the global while this function is
+ * suspended waiting on a fetch.
  */
 let spinePixi: unknown;
 
