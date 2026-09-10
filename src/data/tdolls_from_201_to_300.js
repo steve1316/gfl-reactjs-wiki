@@ -9,7 +9,6 @@
 	- TODO: Include exclusive equipment for Mods.
 */
 
-import processData from "./processData";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////// START OF #201-#300 JSON DATA ///////////////////////////////////////
@@ -4602,7 +4601,5 @@ var tdolls = [
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //console.log("Now processing images and animations for #201-#300 T-Doll Index JSON.");
-tdolls = processData(tdolls);
-console.log("Finished processing images and animations for #201-#300 T-Doll Index JSON.");
 
 export default tdolls;

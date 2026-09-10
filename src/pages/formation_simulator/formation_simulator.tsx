@@ -1,16 +1,19 @@
-import React from "react";
-import { makeStyles, Container, Typography } from "@material-ui/core";
+import { Container, Typography, makeStyles } from "@material-ui/core";
 
-// Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 
-export default function HOC_Index() {
-	const useStyles = makeStyles((theme) => ({
-		root: {
-			marginTop: "5rem"
-		}
-	}));
+const useStyles = makeStyles({
+	root: {
+		marginTop: "5rem"
+	}
+});
 
+/**
+ * Placeholder page, pending the data model this section needs.
+ *
+ * @returns The under-construction notice.
+ */
+export default function FormationSimulator() {
 	const classes = useStyles();
 
 	return (

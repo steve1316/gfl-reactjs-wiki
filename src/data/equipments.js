@@ -2019,29 +2019,4 @@ var equipments = {
     ]
 };
 
-var keys = Object.keys(equipments)
-var imageName = ""
-
-/* eslint-disable */
-for(var i = 0; i < keys.length; i++){
-    equipments[keys[i]].forEach((equipment) => {
-        if(equipment.name[0] === "."){
-            imageName = equipment.name.substring(1)
-        }
-        else if(equipment.name[0] === "#"){
-            imageName = equipment.name.substring(1)
-        }
-        else if(equipment.name === "ILM Hollow Point Ammo"){
-            imageName = `${equipment.name} (${equipment.rarity})`
-        }
-        else{
-            imageName = equipment.name
-        }
-
-        equipment.image = require(`../images/equipment/${keys[i]}/${imageName}.png`)
-    })
-}
-
-console.log("Finished processing images for all T-Doll equipment.");
-
 export default equipments;
