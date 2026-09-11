@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
@@ -91,6 +91,9 @@ export default function TDoll_Index() {
 
 	/** Whether the filter sheet is open. */
 	const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+
+	/** The Filters button, so the filter sheet's popover anchors to it instead of a fixed position. */
+	const filterButtonRef = useRef<HTMLButtonElement>(null);
 
 	/**
 	 * The dolls matching the current filters.
@@ -226,7 +229,7 @@ export default function TDoll_Index() {
 								{activeFilters.length} filter{activeFilters.length === 1 ? "" : "s"} active
 							</Typography>
 						)}
-						<Button variant="outlined" startIcon={<FilterListIcon />} onClick={() => setFilterSheetOpen(true)}>
+						<Button ref={filterButtonRef} variant="outlined" startIcon={<FilterListIcon />} onClick={() => setFilterSheetOpen(true)}>
 							Filters
 						</Button>
 					</Box>
@@ -245,6 +248,7 @@ export default function TDoll_Index() {
 			<FilterSheet
 				open={filterSheetOpen}
 				onClose={() => setFilterSheetOpen(false)}
+				anchorEl={filterButtonRef.current}
 				rarityFilter={rarityFilter}
 				typeFilter={typeFilter}
 				modFilter={modFilter}

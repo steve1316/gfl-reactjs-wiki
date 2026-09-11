@@ -69,6 +69,8 @@ interface FilterSheetProps {
 	open: boolean;
 	/** Called when the sheet should close: the Done button, a backdrop click, or Escape. */
 	onClose: () => void;
+	/** The Filters button to anchor the popover to on `sm` and up. Unused on the mobile drawer. */
+	anchorEl: HTMLElement | null;
 	/** The five rarity filter entries and their current selected state. */
 	rarityFilter: RarityFilterEntry[];
 	/** The six weapon-type filter entries and their current selected state. */
@@ -95,7 +97,7 @@ interface FilterSheetProps {
  * @param props Component props.
  * @returns The drawer or popover, whichever the current breakpoint calls for.
  */
-export default function FilterSheet({ open, onClose, rarityFilter, typeFilter, modFilter, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterSheetProps) {
+export default function FilterSheet({ open, onClose, anchorEl, rarityFilter, typeFilter, modFilter, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterSheetProps) {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -171,8 +173,7 @@ export default function FilterSheet({ open, onClose, rarityFilter, typeFilter, m
 		<Popover
 			open={open}
 			onClose={onClose}
-			anchorReference="anchorPosition"
-			anchorPosition={{ top: 80, left: window.innerWidth - 24 }}
+			anchorEl={anchorEl}
 			anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
 			transformOrigin={{ vertical: "top", horizontal: "right" }}
 			slotProps={{ paper: { sx: styles.popoverPaper } }}
