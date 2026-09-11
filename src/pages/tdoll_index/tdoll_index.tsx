@@ -3,24 +3,24 @@ import { Link } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
-import FilterChip from "../../components/FilterChip";
+import FilterSheet from "../../components/FilterSheet";
 import { RarityLabel, TypeBadge } from "../../components/DollBadges";
 
 // Library imports
 import { cardArtSx } from "../../lib/artLayout";
 
 // MaterialUI imports
-import { Box, Container, Grid, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, tooltipClasses, styled, Fade, Zoom, useTheme, Button } from "@mui/material";
+import { Box, Container, Grid, Chip, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, tooltipClasses, styled, Fade, Button } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import { uiUrl } from "../../lib/assets";
+// MaterialUI icon imports
+import FilterListIcon from "@mui/icons-material/FilterList";
+
 import { loadAllDolls } from "../../lib/data";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
 const PAGE_SIZE = 30;
-
-const mod_button = uiUrl("mod.png");
 
 /** A doll paired with the form the current filters mean we should show. */
 interface IndexEntry extends TDoll {
@@ -42,8 +42,27 @@ const HtmlTooltip = styled(Tooltip)({
 
 const styles = {
 	root: { py: 3 },
+	summaryContainer: { pt: 2 },
+	summaryRow: {
+		display: "flex",
+		flexWrap: "wrap",
+		alignItems: "center",
+		justifyContent: "space-between",
+		gap: 1
+	},
+	summaryActions: {
+		display: "flex",
+		alignItems: "center",
+		gap: 1.5
+	},
+	activeChipList: {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: 0.5,
+		mt: 1
+	},
 	cardGrid: {
-		pt: 8,
+		pt: 4,
 		pb: 8,
 		minWidth: "70%"
 	},
@@ -54,21 +73,6 @@ const styles = {
 		maxHeight: 500
 	},
 	cardMedia: cardArtSx,
-	chip: {
-		m: 0.5
-	},
-	chipList: {
-		display: "flex",
-		justifyContent: "center",
-		listStyle: "none",
-		flexWrap: "wrap",
-		"& > *": {
-			m: 0.5
-		}
-	},
-	dividerForChips: {
-		margin: "5px"
-	},
 	topDividerForCards: {
 		marginTop: "10px",
 		marginBottom: "25px"
@@ -80,8 +84,6 @@ const styles = {
 } satisfies Record<string, SxProps<Theme>>;
 
 export default function TDoll_Index() {
-	const theme = useTheme();
-
 	const [allDolls, setAllDolls] = useState<TDoll[]>([]);
 
 	const [rarityFilter, setRarityFilter] = useState([
@@ -109,6 +111,9 @@ export default function TDoll_Index() {
 
 	/** How many results are on screen. Raised by the load-more button rather than by paging. */
 	const [shown, setShown] = useState(PAGE_SIZE);
+
+	/** Whether the filter sheet is open. */
+	const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
 	/**
 	 * The dolls matching the current filters.
@@ -212,78 +217,68 @@ export default function TDoll_Index() {
 		});
 	};
 
+	// Deselects every filter at once, for the sheet's Clear all button.
+	const handleClearAll = () => {
+		setRarityFilter((rarities) => rarities.map((rarity) => ({ ...rarity, selected: false })));
+		setTypeFilter((types) => types.map((type) => ({ ...type, selected: false })));
+		setModFilter({ ...modFilter, selected: false });
+	};
+
+	// The currently active filters, flattened into one list the summary bar can render as removable chips.
+	// Each entry keeps a reference to its own toggle handler so its delete button clears just that filter.
+	const activeFilters = [
+		...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: handleOnClickRarity(rarity) })),
+		...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: handleOnClickType(type) })),
+		...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleOnClickMod }] : [])
+	];
+
 	return (
 		<Box component="main" sx={styles.root}>
 			<ScrollToTop />
-			<Container>
-				<br />
 
-				{/* Chips List */}
-				<Box component="div" sx={styles.chipList}>
-					{rarityFilter.map((rarity) => {
-						return (
-							<li key={rarity.key}>
-								<Zoom in={true} timeout={400}>
-									<span>
-										<FilterChip
-											label={rarity.label}
-											selected={rarity.selected}
-											onToggle={handleOnClickRarity(rarity)}
-											colour={theme.palette.rarity[rarity.rarity as keyof typeof theme.palette.rarity]}
-											avatar={<Avatar>{rarity.rarity}</Avatar>}
-										/>
-									</span>
-								</Zoom>
-							</li>
-						);
-					})}
+			{/* Summary bar */}
+			<Container maxWidth="lg" sx={styles.summaryContainer}>
+				<Box sx={styles.summaryRow}>
+					<Typography variant="body1" color="textSecondary">
+						Showing {rangeLabel} of {matches.length}
+					</Typography>
+
+					<Box sx={styles.summaryActions}>
+						{activeFilters.length > 0 && (
+							<Typography variant="body2" color="textSecondary">
+								{activeFilters.length} filter{activeFilters.length === 1 ? "" : "s"} active
+							</Typography>
+						)}
+						<Button variant="outlined" startIcon={<FilterListIcon />} onClick={() => setFilterSheetOpen(true)}>
+							Filters
+						</Button>
+					</Box>
 				</Box>
 
-				<Divider sx={styles.dividerForChips} />
-
-				<Box component="div" sx={styles.chipList}>
-					{typeFilter.map((type) => {
-						return (
-							<li key={type.key}>
-								<Zoom in={true} timeout={600}>
-									<span>
-										<FilterChip
-											label={type.label}
-											selected={type.selected}
-											onToggle={handleOnClickType(type)}
-											colour={theme.palette.weaponType[type.label as keyof typeof theme.palette.weaponType]}
-										/>
-									</span>
-								</Zoom>
-							</li>
-						);
-					})}
-				</Box>
-
-				<Divider sx={styles.dividerForChips} />
-
-				<Box component="div" sx={styles.chipList}>
-					<Zoom in={true} timeout={800}>
-						<span>
-							<FilterChip
-								label={modFilter.label}
-								selected={modFilter.selected}
-								onToggle={handleOnClickMod}
-								avatar={
-									<Avatar>
-										<img src={mod_button} alt="" style={{ width: 20, height: 20 }} />
-									</Avatar>
-								}
-							/>
-						</span>
-					</Zoom>
-				</Box>
-
-				{/* End of Chips List */}
+				{activeFilters.length > 0 && (
+					<Box sx={styles.activeChipList}>
+						{activeFilters.map((filter) => (
+							<Chip key={filter.id} label={filter.label} onDelete={filter.onDelete} size="small" />
+						))}
+					</Box>
+				)}
 			</Container>
+			{/* End of summary bar */}
+
+			<FilterSheet
+				open={filterSheetOpen}
+				onClose={() => setFilterSheetOpen(false)}
+				rarityFilter={rarityFilter}
+				typeFilter={typeFilter}
+				modFilter={modFilter}
+				onToggleRarity={handleOnClickRarity}
+				onToggleType={handleOnClickType}
+				onToggleMod={handleOnClickMod}
+				onClear={handleClearAll}
+			/>
 
 			{/* T-Dolls List */}
-			<Container sx={styles.cardGrid} maxWidth="md">
+			<Container sx={styles.cardGrid} maxWidth="lg">
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
 					Now showing {rangeLabel} of {matches.length}
 				</Typography>
