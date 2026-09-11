@@ -80,7 +80,7 @@ export default function ChibiPanel({
 }: ChibiPanelProps) {
 	return (
 		<>
-			{/************** T-Doll's animations: the combat/dorm toggle sits in normal flow above the pills, so it never overlaps them however many rows they wrap to **************/}
+			{/* T-Doll's animations: the toggle sits in normal flow above the pills, so it never overlaps them */}
 			<Fab color="primary" size="small" sx={styles.dormToggle} onClick={onSwitchAnimationMode} aria-label={animationMode === 0 ? "Switch to Dorm Animations" : "Switch to Normal Animations"}>
 				{animationMode === 0 ? (
 					<img src={combat_button} alt="" style={{ height: 32, width: 32, paddingTop: 3 }} />
