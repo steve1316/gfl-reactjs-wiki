@@ -56,10 +56,7 @@ export function loadSpineRuntime(): Promise<void> {
 	globals.enable_clear_fail_step = false;
 
 	const base = `${import.meta.env.BASE_URL}vendor/spine/`;
-	runtimePromise = RUNTIME_SCRIPTS.reduce(
-		(chain, name) => chain.then(() => loadScript(`${base}${name}`)),
-		Promise.resolve()
-	);
+	runtimePromise = RUNTIME_SCRIPTS.reduce((chain, name) => chain.then(() => loadScript(`${base}${name}`)), Promise.resolve());
 	return runtimePromise;
 }
 
@@ -147,10 +144,39 @@ const ANIMATION_LABELS: Record<string, string> = {
 
 /** Preferred tab order. Anything not listed keeps its relative order and follows these. */
 const ANIMATION_ORDER = [
-	"wait", "wait2", "move", "attack", "attack1", "attack2", "snipe", "reload", "squatreload",
-	"s", "skill", "skill2", "crouch", "squat", "action", "action1", "action2",
-	"spattack", "spa", "spattack2", "spc", "sp", "sp1", "sp2", "landing",
-	"die", "victory", "victory2", "victoryloop", "pick", "sit", "sit2", "lying"
+	"wait",
+	"wait2",
+	"move",
+	"attack",
+	"attack1",
+	"attack2",
+	"snipe",
+	"reload",
+	"squatreload",
+	"s",
+	"skill",
+	"skill2",
+	"crouch",
+	"squat",
+	"action",
+	"action1",
+	"action2",
+	"spattack",
+	"spa",
+	"spattack2",
+	"spc",
+	"sp",
+	"sp1",
+	"sp2",
+	"landing",
+	"die",
+	"victory",
+	"victory2",
+	"victoryloop",
+	"pick",
+	"sit",
+	"sit2",
+	"lying"
 ];
 
 /** One animation tab: the skeleton's own name, and what to show for it. */
@@ -211,6 +237,14 @@ export interface SpinePlayerOptions {
 	imageBase: string;
 	/** Canvas size in CSS pixels. */
 	size?: number;
+	/**
+	 * Device pixels per CSS pixel for the canvas backing store.
+	 *
+	 * Pixi defaults this to 1, which on a 2.8125 ratio phone renders a 250x250 canvas and lets the
+	 * compositor stretch it across 703x703 physical pixels. The texture is still the game's own 256px
+	 * atlas, so this buys sharp edges and clean motion rather than new detail.
+	 */
+	resolution?: number;
 	/** Animation to start with. */
 	initialAnimation?: string;
 }
@@ -229,10 +263,7 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	const SkeletonBinary = (window as unknown as { SkeletonBinary: any }).SkeletonBinary;
 	const runtime = PIXI.spine.SpineRuntime;
 
-	const [skelBuffer, atlasText] = await Promise.all([
-		fetch(options.skelUrl).then((response) => response.arrayBuffer()),
-		fetch(options.atlasUrl).then((response) => response.text())
-	]);
+	const [skelBuffer, atlasText] = await Promise.all([fetch(options.skelUrl).then((response) => response.arrayBuffer()), fetch(options.atlasUrl).then((response) => response.text())]);
 
 	// The .skel is Spine's binary format; skb.js converts it to the JSON the runtime parses.
 	const binary = new SkeletonBinary();
@@ -257,7 +288,9 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	const atlas = new runtime.Atlas(atlasText, loadPage, () => {});
 	const skeletonData = new runtime.SkeletonJsonParser(new runtime.AtlasAttachmentParser(atlas)).readSkeletonData(binary.json);
 
-	const app = new PIXI.Application(size, size, { backgroundColor: 0x000000, transparent: true, antialias: true });
+	// Clamped, because fill cost grows with the square of this and there is nothing to gain past 3x.
+	const resolution = Math.min(options.resolution ?? 1, 3);
+	const app = new PIXI.Application(size, size, { backgroundColor: 0x000000, transparent: true, antialias: true, resolution, autoResize: true });
 	options.container.appendChild(app.view);
 
 	const spine = new PIXI.spine.Spine(skeletonData);
