@@ -128,6 +128,22 @@ export function spineUrl(id: number, bundle: string, extension: string): string 
 }
 
 /**
+ * Directory holding a Spine atlas's page images, with a trailing slash.
+ *
+ * The atlas refers to its page by bare filename, so the runtime needs the directory to resolve it.
+ * Some dolls keep their Spine files in a subdirectory, which is why this is derived from the atlas
+ * path rather than assumed to be the doll's root.
+ *
+ * @param id Doll id.
+ * @param atlasPath Atlas basename from the Spine index, possibly including a subdirectory.
+ * @returns An absolute URL ending in a slash.
+ */
+export function spineImageBase(id: number, atlasPath: string): string {
+	const directory = atlasPath.includes("/") ? atlasPath.slice(0, atlasPath.lastIndexOf("/")) : "";
+	return `${join(ASSET_BASE, `spine/${id}${directory ? `/${directory}` : ""}`)}/`;
+}
+
+/**
  * URL for an equipment icon.
  *
  * @param category Category directory, such as `chip`.

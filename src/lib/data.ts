@@ -8,7 +8,9 @@
  */
 
 import searchIndexJson from "../data/search-index.json";
+import spineIndexJson from "../data/spine-index.json";
 import type { Equipment, RawEquipment } from "../types/equipment";
+import type { SpineDollEntry, SpineIndex } from "../types/spine";
 import type { RawTDoll, TDoll } from "../types/tdoll";
 import { equipmentUrl } from "./assets";
 import { processDoll, processDolls } from "./processData";
@@ -31,6 +33,24 @@ export interface SearchEntry {
  * Small enough to load eagerly on every route, unlike the full dataset.
  */
 export const searchIndex: SearchEntry[] = searchIndexJson as SearchEntry[];
+
+/**
+ * Which Spine rigs exist for each doll.
+ *
+ * Small enough to ship with the app: 45 KB raw, under 8 KB gzipped. Paths inside it are relative to
+ * the doll's Spine directory and are turned into URLs by `src/lib/assets.ts`.
+ */
+const spineIndex: SpineIndex = spineIndexJson as SpineIndex;
+
+/**
+ * Look up a doll's Spine rigs.
+ *
+ * @param id Doll id.
+ * @returns The doll's rigs, or undefined when nothing was published for it.
+ */
+export function spineFor(id: number): SpineDollEntry | undefined {
+	return spineIndex[String(id)];
+}
 
 /**
  * The data shards, in id order.
