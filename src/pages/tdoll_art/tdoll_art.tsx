@@ -13,6 +13,51 @@ import { loadDoll } from "../../lib/data";
 import type { TDoll } from "../../types/tdoll";
 
 /**
+ * Sort rank for a form key: Base first, then skins in order, then Mod last.
+ *
+ * @param key The form's key, such as `normal`, `skin1` or `mod`.
+ * @returns A rank to sort by, ascending.
+ */
+function formRank(key: string): number {
+	if (key === "normal") {
+		return 0;
+	}
+	if (key === "mod") {
+		return 2;
+	}
+	return 1;
+}
+
+/**
+ * The skin number encoded in a `skinN` form key, for ordering skins amongst themselves.
+ *
+ * @param key The form's key.
+ * @returns The skin's 1-based number, or 0 for a non-skin key.
+ */
+function skinNumber(key: string): number {
+	const match = /^skin(\d+)$/.exec(key);
+	return match ? Number(match[1]) : 0;
+}
+
+/**
+ * The human-readable label for a form key, matching what `DollHero` shows for the same doll.
+ *
+ * @param key The form's key, such as `normal`, `skin1` or `mod`.
+ * @param skinNames The doll's skin names, in skin order, from `skins.skin_names`.
+ * @returns The label to show on the form's toggle button.
+ */
+function formLabel(key: string, skinNames: string[]): string {
+	if (key === "normal") {
+		return "Base";
+	}
+	if (key === "mod") {
+		return "Mod";
+	}
+	const number = skinNumber(key);
+	return (number > 0 ? skinNames[number - 1] : undefined) ?? key;
+}
+
+/**
  * Full-screen viewer for a doll's full art.
  *
  * A route rather than an overlay, so the browser Back button closes it and the view can be linked to.
@@ -57,14 +102,17 @@ export default function TDollArt() {
 	}, [close]);
 
 	// Every form the doll actually published with full art. Mod-skin forms only ever carry card art, so
-	// they are filtered out here rather than offered as a button that opens onto a broken image.
+	// they are filtered out here rather than offered as a button that opens onto a broken image. Labels
+	// and order match DollHero, which reads the same skin names from skins.skin_names.
 	const forms = useMemo(() => {
 		if (!doll) {
 			return [];
 		}
+		const skinNames = doll.skins?.skin_names ?? [];
 		return Object.entries(doll.forms)
 			.filter(([, form]) => form.images.full)
-			.map(([key, form]) => ({ key, label: key === "normal" ? "Base" : key, images: form.images }));
+			.map(([key, form]) => ({ key, label: formLabel(key, skinNames), images: form.images }))
+			.sort((a, b) => formRank(a.key) - formRank(b.key) || skinNumber(a.key) - skinNumber(b.key));
 	}, [doll]);
 
 	const current = forms.find((form) => form.key === formKey) ?? forms[0];
