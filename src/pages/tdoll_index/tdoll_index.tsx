@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 import FilterSheet from "../../components/FilterSheet";
-import { RarityLabel, TypeBadge } from "../../components/DollBadges";
-
-// Library imports
-import { cardArtSx } from "../../lib/artLayout";
+import DollCard from "../../components/DollCard";
 
 // MaterialUI imports
-import { Box, Container, Grid, Chip, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, tooltipClasses, styled, Fade, Button } from "@mui/material";
+import { Box, Container, Grid, Chip, Divider, Typography, Button } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // MaterialUI icon imports
@@ -27,18 +23,6 @@ interface IndexEntry extends TDoll {
 	/** Either the base form or the Mod, depending on the Mod filter. */
 	selected: TDollForm;
 }
-
-/**
- * A tooltip with room for a couple of lines, used on the T-Doll cards.
- *
- * Colour and border now come from the theme's own `MuiTooltip` defaults, so only the width is left
- * to say here. It used to hardcode a pale background that stayed light in every mode.
- */
-const HtmlTooltip = styled(Tooltip)({
-	[`& .${tooltipClasses.tooltip}`]: {
-		maxWidth: 220
-	}
-});
 
 const styles = {
 	root: { py: 3 },
@@ -66,13 +50,6 @@ const styles = {
 		pb: 8,
 		minWidth: "70%"
 	},
-	card: {
-		display: "flex",
-		flexDirection: "column",
-		maxWidth: 200,
-		maxHeight: 500
-	},
-	cardMedia: cardArtSx,
 	topDividerForCards: {
 		marginTop: "10px",
 		marginBottom: "25px"
@@ -279,51 +256,21 @@ export default function TDoll_Index() {
 
 			{/* T-Dolls List */}
 			<Container sx={styles.cardGrid} maxWidth="lg">
-				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
-					Now showing {rangeLabel} of {matches.length}
-				</Typography>
-
 				<Divider sx={styles.topDividerForCards} />
 
 				{/* Search Results */}
 				<Grid container spacing={4}>
-					{visible.map((tdoll, index) => (
-						<Grid key={tdoll.selected.name} size={{ xs: 4, sm: 4, md: 2 }}>
-							<Fade in={true} timeout={(index * 50) % 1000}>
-								<Card sx={styles.card}>
-									<Link
-										to={{
-											pathname: "/tdoll",
-											search: "?id=" + tdoll.normal.id
-										}}
-										onClick={() => sessionStorage.setItem(String(tdoll.normal.id), JSON.stringify(tdoll))}
-									>
-										<HtmlTooltip
-											title={
-												<>
-													<Typography color="inherit">
-														{tdoll.selected.name}
-														<small>
-															<sup>[#{tdoll.normal.id}]</sup>
-														</small>
-													</Typography>
-													<b>{tdoll.selected.rarity + "* " + tdoll.selected.type}</b>
-												</>
-											}
-											placement="right"
-										>
-											<CardActionArea>
-												<CardMedia component="img" sx={styles.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
-												{/* Rarity and type used to live only in a hover tooltip, which a touch screen cannot open. */}
-												<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, px: 0.75, py: 0.5 }}>
-													<TypeBadge type={tdoll.selected.type} dense />
-													<RarityLabel rarity={tdoll.selected.rarity} isMod={tdoll.selected === tdoll.mod} />
-												</Box>
-											</CardActionArea>
-										</HtmlTooltip>
-									</Link>
-								</Card>
-							</Fade>
+					{visible.map((tdoll) => (
+						<Grid key={tdoll.normal.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+							<DollCard
+								id={tdoll.normal.id}
+								name={tdoll.selected.name}
+								type={tdoll.selected.type}
+								rarity={tdoll.selected.rarity}
+								isMod={tdoll.selected === tdoll.mod}
+								image={tdoll.selected.assets.images.card ?? ""}
+								to={`/tdoll/${tdoll.normal.id}`}
+							/>
 						</Grid>
 					))}
 				</Grid>
@@ -337,10 +284,6 @@ export default function TDoll_Index() {
 				)}
 
 				<Divider sx={styles.bottomDividerForCards} />
-
-				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
-					Now showing {rangeLabel} of {matches.length}
-				</Typography>
 
 				{/* End of Search Results */}
 			</Container>
