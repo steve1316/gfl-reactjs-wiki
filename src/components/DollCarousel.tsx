@@ -44,6 +44,23 @@ function cardProps(doll: TDoll | undefined) {
 }
 
 /**
+ * Whether a keyboard event's target is a place the user types, so global shortcuts should back off.
+ *
+ * @param target The event target to check.
+ * @returns True when the target is a text input, textarea, select, or any contenteditable element.
+ */
+function isTypingTarget(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) {
+		return false;
+	}
+	if (target.isContentEditable) {
+		return true;
+	}
+	const tag = target.tagName;
+	return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
+/**
  * A rotating strip of dolls.
  *
  * What this replaces was not a carousel. One doll rerolled itself every five seconds and there was no
@@ -98,6 +115,9 @@ export default function DollCarousel({ ids }: DollCarouselProps) {
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
+			if (isTypingTarget(event.target)) {
+				return;
+			}
 			if (event.key === "ArrowLeft") {
 				step(-1);
 			}
