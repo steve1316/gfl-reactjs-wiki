@@ -6,16 +6,6 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
 	base: process.env.VITE_BASE ?? "/gfl-reactjs-wiki/",
 	plugins: [react()],
-	resolve: {
-		alias: [
-			// MUI v4 ships an ESM build but only maps the barrel through its `module` field, so deep
-			// imports such as `@material-ui/icons/Menu` resolve to CommonJS. Vite's interop then wraps
-			// those a second time, and the icon arrives as `{ default: Component }`, which React rejects
-			// with "Element type is invalid". Pointing deep icon imports at the ESM build avoids both the
-			// double wrap and the cost of pulling in the whole icon barrel.
-			{ find: /^@material-ui\/icons\/(?!esm\/)(.*)$/, replacement: "@material-ui/icons/esm/$1" }
-		]
-	},
 	build: {
 		outDir: "build",
 		sourcemap: true

@@ -1,17 +1,34 @@
 import { useEffect, useState } from "react";
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, JSX } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, makeStyles, Grid, Chip, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, withStyles, Fade, Zoom } from "@material-ui/core";
+import {
+    Box,
+    Container,
+    Grid,
+    Chip,
+    Avatar,
+    Divider,
+    Card,
+    CardActionArea,
+    CardMedia,
+    Typography,
+    Tooltip,
+    tooltipClasses,
+    styled,
+    Fade,
+    Zoom,
+} from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
 
-import Pagination from "@material-ui/lab/Pagination";
+import Pagination from '@mui/material/Pagination';
 
 // MaterialUI icon imports
-import DoneIcon from "@material-ui/icons/Done";
+import DoneIcon from "@mui/icons-material/Done";
 
 import { uiUrl } from "../../lib/assets";
 import { loadAllDolls } from "../../lib/data";
@@ -25,63 +42,63 @@ interface IndexEntry extends TDoll {
 	selected: TDollForm;
 }
 
-const HtmlTooltip = withStyles((theme) => ({
-	tooltip: {
+/** A pale tooltip with room for a couple of lines, used for the T-Doll cards. */
+const HtmlTooltip = styled(Tooltip)(({ theme }) => ({
+	[`& .${tooltipClasses.tooltip}`]: {
 		backgroundColor: "#f5f5f9",
 		color: "rgba(0, 0, 0, 0.87)",
 		maxWidth: 220,
 		fontSize: theme.typography.pxToRem(12),
 		border: "1px solid #dadde9"
 	}
-}))(Tooltip);
+}));
+
+const styles = {
+	root: {
+		marginTop: "4rem"
+	},
+	cardGrid: (theme: Theme) => ({
+		paddingTop: theme.spacing(8),
+		paddingBottom: theme.spacing(8),
+		minWidth: "70%"
+	}),
+	card: {
+		display: "flex",
+		flexDirection: "column",
+		maxWidth: 200,
+		maxHeight: 500
+	},
+	cardMedia: {
+		height: "100%",
+		width: "100%",
+		objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
+	},
+	chip: (theme: Theme) => ({
+		margin: theme.spacing(0.5)
+	}),
+	chipList: (theme: Theme) => ({
+		display: "flex",
+		justifyContent: "center",
+		listStyle: "none",
+		flexWrap: "wrap",
+		"& > *": {
+			margin: theme.spacing(0.5)
+	}
+	}),
+	dividerForChips: {
+		margin: 5
+	},
+	topDividerForCards: {
+		marginTop: 10,
+		marginBottom: 25
+	},
+	bottomDividerForCards: {
+		marginTop: 25,
+		marginBottom: 10
+	}
+} satisfies Record<string, SxProps<Theme>>;
 
 export default function TDoll_Index() {
-	const useStyles = makeStyles((theme) => ({
-		root: {
-			marginTop: "4rem"
-		},
-		cardGrid: {
-			paddingTop: theme.spacing(8),
-			paddingBottom: theme.spacing(8),
-			minWidth: "70%"
-		},
-		card: {
-			display: "flex",
-			flexDirection: "column",
-			maxWidth: 200,
-			maxHeight: 500
-		},
-		cardMedia: {
-			height: "100%",
-			width: "100%",
-			objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
-		},
-		chip: {
-			margin: theme.spacing(0.5)
-		},
-		chipList: {
-			display: "flex",
-			justifyContent: "center",
-			listStyle: "none",
-			flexWrap: "wrap",
-			"& > *": {
-				margin: theme.spacing(0.5)
-			}
-		},
-		dividerForChips: {
-			margin: 5
-		},
-		topDividerForCards: {
-			marginTop: 10,
-			marginBottom: 25
-		},
-		bottomDividerForCards: {
-			marginTop: 25,
-			marginBottom: 10
-		}
-	}));
-
-	const classes = useStyles();
 
 	const [totalSearchResults, setTotalSearchResults] = useState(0);
 	const [allDolls, setAllDolls] = useState<TDoll[]>([]);
@@ -274,9 +291,9 @@ export default function TDoll_Index() {
 		if(tempArrayOfSearchResults.length > 0){
 			(tempArrayOfSearchResults[tempPageSelected - 1] ?? []).forEach((tdoll) => {
 				tempArray.push(
-					<Grid item key={tdoll.selected.name} xs={4} sm={4} md={2}>
+					<Grid key={tdoll.selected.name} size={{ xs: 4, sm: 4, md: 2 }}>
 						<Fade in={true} timeout={stagger}>
-							<Card className={classes.card} elevation={12}>
+							<Card sx={styles.card} elevation={12}>
 								<Link
 									to={{
 										pathname: "/tdoll",
@@ -299,7 +316,7 @@ export default function TDoll_Index() {
 										placement="right"
 									>
 										<CardActionArea>
-											<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
+											<CardMedia component="img" sx={styles.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
 										</CardActionArea>
 									</HtmlTooltip>
 								</Link>
@@ -346,19 +363,19 @@ export default function TDoll_Index() {
 	}
 
 	return (
-		<main className={classes.root}>
+		<Box component="main" sx={styles.root}>
 			<ScrollToTop />
 			<Container>
 				<br />
 
 				{/* Chips List */}
-				<div className={classes.chipList}>
+				<Box component="div" sx={styles.chipList}>
 					{rarityFilter.map((rarity) => {
 						return (
 							<li key={rarity.key}>
 								<Zoom in={true} timeout={400}>
 									<Chip
-										className={classes.chip}
+										sx={styles.chip}
 										avatar={<Avatar>{rarity.rarity}*</Avatar>}
 										clickable
 										color={rarity.selected ? "primary" : "secondary"}
@@ -376,17 +393,17 @@ export default function TDoll_Index() {
 							</li>
 						);
 					})}
-				</div>
+				</Box>
 
-				<Divider className={classes.dividerForChips} />
+				<Divider sx={styles.dividerForChips} />
 
-				<div className={classes.chipList}>
+				<Box component="div" sx={styles.chipList}>
 					{typeFilter.map((type) => {
 						return (
 							<li key={type.key}>
 								<Zoom in={true} timeout={600}>
 									<Chip
-										className={classes.chip}
+										sx={styles.chip}
 										avatar={<Avatar style={{ width: 30 }}>{type.label}</Avatar>}
 										clickable
 										color={type.selected ? "primary" : "secondary"}
@@ -404,14 +421,14 @@ export default function TDoll_Index() {
 							</li>
 						);
 					})}
-				</div>
+				</Box>
 
-				<Divider className={classes.dividerForChips} />
+				<Divider sx={styles.dividerForChips} />
 
-				<div className={classes.chipList}>
+				<Box component="div" sx={styles.chipList}>
 					<Zoom in={true} timeout={800}>
 						<Chip
-							className={classes.chip}
+							sx={styles.chip}
 							avatar={
 								<Avatar>
 									<img src={mod_button} alt="Mod" style={{ width: 20, height: 20 }} />
@@ -430,13 +447,13 @@ export default function TDoll_Index() {
 							}
 						/>
 					</Zoom>
-				</div>
+				</Box>
 
 				{/* End of Chips List */}
 			</Container>
 
 			{/* T-Dolls List */}
-			<Container className={classes.cardGrid} maxWidth="md">
+			<Container sx={styles.cardGrid} maxWidth="md">
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
 					Now showing {calculateRemainingResults()} of {totalSearchResults}
 				</Typography>
@@ -444,14 +461,14 @@ export default function TDoll_Index() {
 				{/* Pagination Component */}
 				<Pagination count={searchResultPages.length} color="primary" page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
 
-				<Divider className={classes.topDividerForCards} />
+				<Divider sx={styles.topDividerForCards} />
 
 				{/* Search Results */}
 				<Grid container spacing={4}>
 					{searchResults}
 				</Grid>
 
-				<Divider className={classes.bottomDividerForCards} />
+				<Divider sx={styles.bottomDividerForCards} />
 
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
 					Now showing {calculateRemainingResults()} of {totalSearchResults}
@@ -464,6 +481,6 @@ export default function TDoll_Index() {
 			</Container>
 
 			{/* End of T-Dolls List */}
-		</main>
+		</Box>
 	);
 }

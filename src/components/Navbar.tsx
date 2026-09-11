@@ -1,18 +1,33 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, withRouter } from "react-router-dom";
-import type { RouteComponentProps } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // MaterialUI imports
-import { AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, fade, makeStyles, Icon, Divider, TextField } from "@material-ui/core";
+import {
+    Box,
+    AppBar,
+    Toolbar,
+    IconButton,
+    Typography,
+    Drawer,
+    List,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    alpha,
+    Icon,
+    Divider,
+    TextField,
+} from "@mui/material";
+import type { Theme } from "@mui/material";
 
 // Autocomplete imports
-import Autocomplete from "@material-ui/lab/Autocomplete";
+import Autocomplete from '@mui/material/Autocomplete';
 import parse from "autosuggest-highlight/parse";
 import match from "autosuggest-highlight/match";
 
 // MaterialUI icon imports
-import MenuIcon from "@material-ui/icons/Menu";
+import MenuIcon from "@mui/icons-material/Menu";
 
 import { uiUrl } from "../lib/assets";
 import { searchIndex } from "../lib/data";
@@ -47,52 +62,38 @@ const options: SearchOption[] = searchIndex
 	})
 	.sort((a, b) => a.firstLetter.localeCompare(b.firstLetter) || a.name.localeCompare(b.name));
 
-function Navbar(props: RouteComponentProps) {
-	const useStyles = makeStyles((theme) => ({
-		root: {
-			flexGrow: 1
+/**
+ * Styles for the navigation bar, as `sx` entries.
+ *
+ * `search` reads the theme, which `sx` supplies through a callback, and `title` uses the responsive
+ * object form in place of a breakpoint media query. The old `backdrop` rule is gone, since nothing
+ * referenced it.
+ */
+const styles = {
+	root: { flexGrow: 1 },
+	menuButton: { mr: 2 },
+	title: { display: { xs: "none", sm: "block" }, flexGrow: 1 },
+	search: (theme: Theme) => ({
+		position: "relative",
+		borderRadius: theme.shape.borderRadius,
+		backgroundColor: alpha(theme.palette.common.white, 0.15),
+		"&:hover": {
+			backgroundColor: alpha(theme.palette.common.white, 0.25)
 		},
-		menuButton: {
-			marginRight: theme.spacing(2)
-		},
-		title: {
-			display: "none",
-			flexGrow: 1,
-			[theme.breakpoints.up("sm")]: {
-				display: "block"
-			}
-		},
-		search: {
-			position: "relative",
-			borderRadius: theme.shape.borderRadius,
-			backgroundColor: fade(theme.palette.common.white, 0.15),
-			"&:hover": {
-				backgroundColor: fade(theme.palette.common.white, 0.25)
-			},
-			marginRight: theme.spacing(2),
-			marginLeft: 0,
-			width: "100%",
-			[theme.breakpoints.up("sm")]: {
-				marginLeft: theme.spacing(3),
-				width: "auto"
-			}
-		},
-		drawerPaper: {
-			width: "inherit"
-		},
-		link: {
-			textDecoration: "none",
-			color: theme.palette.text.primary
-		},
-		backdrop: {
-			zIndex: theme.zIndex.drawer + 1,
-			color: "#fff",
-			marginTop: "4rem",
-			backdropFilter: "blur(5px)"
+		marginRight: theme.spacing(2),
+		marginLeft: 0,
+		width: "100%",
+		[theme.breakpoints.up("sm")]: {
+			marginLeft: theme.spacing(3),
+			width: "auto"
 		}
-	}));
+	}),
+	drawerPaper: { width: "inherit" },
+	link: { textDecoration: "none", color: "text.primary" }
+} as const;
 
-	const classes = useStyles();
+export default function Navbar() {
+	const navigate = useNavigate();
 
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
@@ -114,7 +115,7 @@ function Navbar(props: RouteComponentProps) {
 			return;
 		}
 		setHasError(false);
-		props.history.push(`/tdoll/${selected.id}`);
+		void navigate(`/tdoll/${selected.id}`);
 	};
 
 	const listItems = [
@@ -163,18 +164,24 @@ function Navbar(props: RouteComponentProps) {
 	];
 
 	return (
-		<div className={classes.root}>
-			<AppBar position="fixed">
+        <Box component="div" sx={styles.root}>
+            <AppBar position="fixed">
 				<Toolbar>
-					<IconButton edge="start" onClick={handleDrawerToggle} className={classes.menuButton} color="inherit" aria-label="menu">
+					<IconButton
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={styles.menuButton}
+                        color="inherit"
+                        aria-label="menu"
+                        size="large">
 						<MenuIcon />
 					</IconButton>
-					<Typography variant="h6" className={classes.title} noWrap>
+					<Typography variant="h6" sx={styles.title} noWrap>
 						Girls' Frontline Database
 					</Typography>
 
 					{/* Search Bar with Autocomplete */}
-					<div className={classes.search}>
+					<Box component="div" sx={styles.search}>
 						<form onSubmit={handleSubmit}>
 							<Autocomplete
 								options={options}
@@ -188,52 +195,51 @@ function Navbar(props: RouteComponentProps) {
 								}}
 								clearOnEscape
 								renderInput={(params) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} value={searchValue} variant="outlined" />}
-								renderOption={(option, { inputValue }) => {
+								renderOption={(optionProps, option, { inputValue }) => {
 									const matches = match(option.name, inputValue);
 									const parts = parse(option.name, matches);
+									const { key, ...rest } = optionProps;
 
 									return (
-										<div>
+										<li key={key} {...rest}>
 											{parts.map((part, index) => (
 												<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
 													{part.text}
 												</span>
 											))}
-										</div>
+										</li>
 									);
 								}}
 							/>
 						</form>
-					</div>
+					</Box>
 					{/* End of Search Bar with Autocomplete */}
 				</Toolbar>
 			</AppBar>
 
-			{/* Drawer */}
-			<Drawer style={{ width: "200px" }} anchor="left" open={drawerOpen} onClose={handleDrawerToggle} variant="temporary" classes={{ paper: classes.drawerPaper }}>
+            {/* Drawer */}
+            <Drawer style={{ width: "200px" }} anchor="left" open={drawerOpen} onClose={handleDrawerToggle} variant="temporary" slotProps={{ paper: { sx: styles.drawerPaper } }}>
 				<List>
 					{listItems.map((item) => {
 						return (
 							<div key={item.title}>
-								<Link to={item.link} className={classes.link}>
-									<ListItem button>
+								<Box component={Link} to={item.link} sx={styles.link}>
+									<ListItemButton>
 										<ListItemIcon>
 											<Icon>
 												<img src={item.image} height={item.height} width={item.width} alt={item.title} />
 											</Icon>
 										</ListItemIcon>
 										<ListItemText primary={item.title} />
-									</ListItem>
-								</Link>
+									</ListItemButton>
+								</Box>
 								<Divider />
 							</div>
 						);
 					})}
 				</List>
 			</Drawer>
-			{/* End of Drawer */}
-		</div>
-	);
+            {/* End of Drawer */}
+        </Box>
+    );
 }
-
-export default withRouter(Navbar); // Wrap Navbar in withRouter to allow access to props.history for navigation.

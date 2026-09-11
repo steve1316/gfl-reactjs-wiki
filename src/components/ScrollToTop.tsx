@@ -2,7 +2,6 @@
 Source: https://github.com/codegeous/react-component-depot/blob/master/src/components/ScrollIndicator/index.js
 */
 import { useEffect, useState } from "react";
-import { useWindowScroll } from "react-use";
 
 /** Scroll distance in pixels before the button appears. */
 const REVEAL_AFTER_PX = 600;
@@ -15,12 +14,16 @@ const REVEAL_AFTER_PX = 600;
  * @returns The button once the page is scrolled far enough, otherwise nothing.
  */
 export default function ScrollToTop() {
-	const { y: pageYOffset } = useWindowScroll();
 	const [visible, setVisible] = useState(false);
 
+	// This was `useWindowScroll` from react-use, a whole dependency for one hook that had not been
+	// released for React 19. Listening directly is shorter and only re-renders when the button flips.
 	useEffect(() => {
-		setVisible(pageYOffset > REVEAL_AFTER_PX);
-	}, [pageYOffset]);
+		const onScroll = () => setVisible(window.scrollY > REVEAL_AFTER_PX);
+		onScroll();
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => window.removeEventListener("scroll", onScroll);
+	}, []);
 
 	if (!visible) {
 		return null;

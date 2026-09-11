@@ -1,4 +1,4 @@
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { HashRouter as Router } from "react-router-dom";
 
 import App from "./App";
@@ -10,11 +10,10 @@ if (!container) {
 	throw new Error("index.html is missing the #root element");
 }
 
-ReactDOM.render(
+createRoot(container).render(
 	<Router>
 		<ScrollToTopOnNavigate>
 			<App />
 		</ScrollToTopOnNavigate>
-	</Router>,
-	container
+	</Router>
 );

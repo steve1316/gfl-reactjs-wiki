@@ -5,12 +5,26 @@ import { Link } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
-import { Container, Button, makeStyles, Grid, Card, CardMedia, CardActionArea, CardActions, CardContent, Typography, Grow, LinearProgress, Box } from "@material-ui/core";
+import {
+    Container,
+    Button,
+    Grid,
+    Card,
+    CardMedia,
+    CardActionArea,
+    CardActions,
+    CardContent,
+    Typography,
+    Grow,
+    LinearProgress,
+    Box,
+} from "@mui/material";
 
-import Skeleton from "@material-ui/lab/Skeleton";
+
+import Skeleton from '@mui/material/Skeleton';
 
 // MaterialUI icon imports
-import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 import { uiUrl } from "../../lib/assets";
 import { loadDoll } from "../../lib/data";
@@ -22,63 +36,35 @@ const hoc_index_logo = uiUrl("hoc_index_logo.jpg");
 const fairy_index_logo = uiUrl("fairy_index_logo.jpg");
 const formation_logo = uiUrl("formation_logo.jpg");
 
+/**
+ * Styles for this page, as `sx` entries.
+ *
+ * These were a style hook built inside the component body, so a fresh hook was created on every
+ * render. `sx` needs no hook and the values sit at module scope with the rest of the configuration.
+ */
+const styles = {
+	root: { marginTop: "4rem" },
+	heroContent: { backgroundColor: "background.paper", pt: 8, pb: 6 },
+	heroButtons: { mt: 4 },
+	cardGrid: { py: 8 },
+	card: { height: "100%", display: "flex", flexDirection: "column" },
+	// 16:9, held open by padding because the image is a background.
+	cardMedia: { paddingTop: "56.25%" },
+	cardContent: { flexGrow: 1 },
+	cardButton: { display: "flex", margin: "10px", justifyContent: "flex-end" },
+	heroCardRoot: { display: "flex" },
+	heroCardDetails: { display: "flex", alignContent: "center", flexDirection: "column" },
+	cardImageBox: { width: 130 },
+	heroCardContent: { flex: "1 0 auto" },
+	heroCardMedia: { height: 256, width: 128 }
+} as const;
+
+/**
+ * The landing page: a rotating random T-Doll and cards linking to each section.
+ *
+ * @returns The home page.
+ */
 export default function Home() {
-	const useStyles = makeStyles((theme) => ({
-		root: {
-			marginTop: "4rem"
-		},
-		paper: {
-			padding: theme.spacing(2)
-		},
-		heroContent: {
-			backgroundColor: theme.palette.background.paper,
-			padding: theme.spacing(8, 0, 6)
-		},
-		heroButtons: {
-			marginTop: theme.spacing(4)
-		},
-		cardGrid: {
-			paddingTop: theme.spacing(8),
-			paddingBottom: theme.spacing(8)
-		},
-		card: {
-			height: "100%",
-			display: "flex",
-			flexDirection: "column"
-		},
-		cardMedia: {
-			paddingTop: "56.25%" // 16:9
-		},
-		cardContent: {
-			flexGrow: 1
-		},
-		cardButton: {
-			display: "flex",
-			margin: 10,
-			justifyContent: "flex-end"
-		},
-		heroCardRoot: {
-			display: "flex"
-		},
-		heroCardDetails: {
-			display: "flex",
-			alignContent: "center",
-			flexDirection: "column"
-		},
-		cardImageBox: {
-			width: 130
-		},
-		heroCardContent: {
-			flex: "1 0 auto"
-		},
-		heroCardMedia: {
-			height: 256,
-			width: 128
-		}
-	}));
-
-	const classes = useStyles();
-
 	var stagger = 100; // Stagger timeout for this page's animations.
 
 	// Set initial states for the progress state for the LinearProgress component.
@@ -231,22 +217,22 @@ export default function Home() {
 	}
 
 	return (
-		<main className={classes.root}>
-			<ScrollToTop />
+        <Box component="main" sx={styles.root}>
+            <ScrollToTop />
 
-			{/* Hero Unit */}
-			<Box boxShadow={1}>
-				<div className={classes.heroContent}>
+            {/* Hero Unit */}
+            <Box sx={{ boxShadow: 1 }}>
+				<Box component="div" sx={styles.heroContent}>
 					<Container maxWidth="sm">
-						<Box boxShadow={5}>
-							<Card className={classes.heroCardRoot}>
-								<div className={classes.heroCardDetails}>
+						<Box sx={{ boxShadow: 5 }}>
+							<Card sx={styles.heroCardRoot}>
+								<Box component="div" sx={styles.heroCardDetails}>
 									{/* Skeleton components will display when the randomization function selects an ID for a T-Doll that does not exist. */}
-									<Box className={classes.cardImageBox} boxShadow={6} border={1} borderColor="primary.main">
-										{tdollImage !== undefined ? <CardMedia className={classes.heroCardMedia} image={tdollImage} title={tdollName} /> : <Skeleton variant="rect" height={256} width={128} />}
+									<Box sx={{ ...styles.cardImageBox, boxShadow: 6, border: 1, borderColor: "primary.main" }}>
+										{tdollImage !== undefined ? <CardMedia sx={styles.heroCardMedia} image={tdollImage} title={tdollName} /> : <Skeleton variant="rectangular" height={256} width={128} />}
 									</Box>
 
-									<CardContent className={classes.heroCardContent}>
+									<CardContent sx={styles.heroCardContent}>
 										<Typography component="h5" variant="h5">
 											{tdollName !== "" ? tdollName : <Skeleton />}
 										</Typography>
@@ -257,15 +243,15 @@ export default function Home() {
 											{tdollType !== "" ? tdollType : <Skeleton />}
 										</Typography>
 									</CardContent>
-								</div>
+								</Box>
 							</Card>
 						</Box>
 
 						<LinearProgress variant="determinate" value={progress} />
 
-						<div className={classes.heroButtons}>
-							<Grid container spacing={2} justify="center">
-								<Grid item>
+						<Box component="div" sx={styles.heroButtons}>
+							<Grid container spacing={2} sx={{ justifyContent: "center" }}>
+								<Grid>
 									{/* The doll page loads by id, so nothing needs stashing in sessionStorage first. */}
 									<Link to={`/tdoll/${tdoll?.normal.id ?? ""}`}>
 										<Button variant="contained" color="primary" disabled={tdoll === undefined}>
@@ -273,37 +259,37 @@ export default function Home() {
 										</Button>
 									</Link>
 								</Grid>
-								<Grid item>
+								<Grid>
 									<Button variant="outlined" color="primary" onClick={() => manualReroll()}>
 										Reroll for a different one
 									</Button>
 								</Grid>
 							</Grid>
-						</div>
+						</Box>
 					</Container>
-				</div>
+				</Box>
 			</Box>
-			{/* End of Hero Unit */}
+            {/* End of Hero Unit */}
 
-			{/* Cards Section for Navigation */}
-			<Container className={classes.cardGrid} maxWidth="md">
+            {/* Cards Section for Navigation */}
+            <Container sx={styles.cardGrid} maxWidth="md">
 				<Grid container spacing={4}>
 					{cards.map((card) => {
 						stagger += 100;
 						return (
-							<Grid item key={card.title} xs={12} sm={6} md={4}>
+							<Grid key={card.title} size={{ xs: 12, sm: 6, md: 4 }}>
 								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={400 + stagger}>
-									<Card className={classes.card} elevation={12}>
+									<Card sx={styles.card} elevation={12}>
 										<CardActionArea>
-											<CardMedia className={classes.cardMedia} image={card.image} title={card.title} />
+											<CardMedia sx={styles.cardMedia} image={card.image} title={card.title} />
 										</CardActionArea>
-										<CardContent className={classes.cardContent}>
+										<CardContent sx={styles.cardContent}>
 											<Typography component="h2" variant="h5" gutterBottom>
 												{card.title}
 											</Typography>
 											<Typography color="textSecondary">{card.description}</Typography>
 										</CardContent>
-										<CardActions className={classes.cardButton}>
+										<CardActions sx={styles.cardButton}>
 											<Link to={card.link}>
 												<Button size="small" variant="contained" color="primary">
 													<ArrowForwardIcon />
@@ -317,7 +303,7 @@ export default function Home() {
 					})}
 				</Grid>
 			</Container>
-			{/* End of Cards Section */}
-		</main>
-	);
+            {/* End of Cards Section */}
+        </Box>
+    );
 }

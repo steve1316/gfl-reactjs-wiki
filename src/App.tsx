@@ -1,6 +1,6 @@
-import { CssBaseline, ThemeProvider, createMuiTheme } from "@material-ui/core";
-import { deepOrange, orange } from "@material-ui/core/colors";
-import { Redirect, Route, Switch } from "react-router-dom";
+import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
+import { deepOrange, orange } from "@mui/material/colors";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import NotFound404 from "./not_found_404";
@@ -14,9 +14,9 @@ import TDollIndex from "./pages/tdoll_index/tdoll_index";
 
 import "./styles.css";
 
-const theme = createMuiTheme({
+const theme = createTheme({
 	palette: {
-		type: "dark",
+		mode: "dark",
 		primary: {
 			main: orange[500]
 		},
@@ -37,18 +37,19 @@ export default function App() {
 			<CssBaseline />
 			<Navbar />
 			<div className="App">
-				<Switch>
-					<Route exact path="/" component={Home} />
-					<Route path="/index" component={TDollIndex} />
-					<Route path="/equipment-index" component={EquipmentIndex} />
-					<Route path="/hoc-index" component={HOCIndex} />
-					<Route path="/fairy-index" component={FairyIndex} />
-					<Route path="/formation" component={FormationSimulator} />
-					<Route path="/tdoll/:id" component={TDoll} />
-					<Route path="/tdoll" component={TDoll} />
-					<Route path="/404" component={NotFound404} />
-					<Redirect to="/404" />
-				</Switch>
+				<Routes>
+					<Route path="/" element={<Home />} />
+					<Route path="/index" element={<TDollIndex />} />
+					<Route path="/equipment-index" element={<EquipmentIndex />} />
+					<Route path="/hoc-index" element={<HOCIndex />} />
+					<Route path="/fairy-index" element={<FairyIndex />} />
+					<Route path="/formation" element={<FormationSimulator />} />
+					<Route path="/tdoll/:id" element={<TDoll />} />
+					<Route path="/tdoll" element={<TDoll />} />
+					<Route path="/404" element={<NotFound404 />} />
+					{/* Anything unmatched lands on the 404 page, which `Redirect` used to do in router v5. */}
+					<Route path="*" element={<Navigate to="/404" replace />} />
+				</Routes>
 			</div>
 		</ThemeProvider>
 	);

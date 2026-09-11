@@ -2,9 +2,28 @@ import { useEffect, useState } from "react";
 import type { ChangeEvent } from "react";
 
 // MaterialUI imports
-import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, Zoom, Fade, Box, CardActionArea, CardMedia, CardContent, CardHeader, Slider, Accordion, AccordionSummary, AccordionDetails} from "@material-ui/core";
-import DoneIcon from "@material-ui/icons/Done";
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import {
+    Container,
+    Typography,
+    Divider,
+    Chip,
+    Grid,
+    Card,
+    Zoom,
+    Fade,
+    Box,
+    CardActionArea,
+    CardMedia,
+    CardContent,
+    CardHeader,
+    Slider,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+} from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
+import DoneIcon from "@mui/icons-material/Done";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
@@ -13,43 +32,45 @@ import { loadEquipment } from "../../lib/data";
 import type { Equipment } from "../../types/equipment";
 
 // Declared outside the component so the stylesheet is created once rather than on every render.
-const useStyles = makeStyles((theme) => ({
-		root: {
-			marginTop: "5rem"
-		},
-		bottomDividerForCards: {
-			marginTop: 25,
-			marginBottom: 10
-		},
-		cardGrid: {
-			paddingTop: theme.spacing(8),
-			paddingBottom: theme.spacing(8),
-			maxWidth: "90%"
-		},
-		chip: {
+
+const styles = {
+	root: {
+		marginTop: "5rem"
+	},
+	bottomDividerForCards: {
+		marginTop: 25,
+		marginBottom: 10
+	},
+	cardGrid: (theme: Theme) => ({
+		paddingTop: theme.spacing(8),
+		paddingBottom: theme.spacing(8),
+		maxWidth: "90%"
+	}),
+	chip: (theme: Theme) => ({
+		margin: theme.spacing(0.5)
+	}),
+	chipList: (theme: Theme) => ({
+		display: "flex",
+		justifyContent: "center",
+		listStyle: "none",
+		flexWrap: "wrap",
+		"& > *": {
 			margin: theme.spacing(0.5)
-		},
-		chipList: {
-			display: "flex",
-			justifyContent: "center",
-			listStyle: "none",
-			flexWrap: "wrap",
-			"& > *": {
-				margin: theme.spacing(0.5)
-			}
-		},
-		dividerForChips: {
-			margin: 5
-		},
-		heading: {
-			fontSize: theme.typography.pxToRem(15),
-			fontWeight: theme.typography.fontWeightRegular as number,
-		},
-		topDividerForCards: {
-			marginTop: 10,
-			marginBottom: 25
-		},
-}));
+	}
+	}),
+	dividerForChips: {
+		margin: 5
+	},
+	heading: (theme: Theme) => ({
+		fontSize: theme.typography.pxToRem(15),
+		fontWeight: theme.typography.fontWeightRegular as number,
+	}),
+	topDividerForCards: {
+		marginTop: 10,
+		marginBottom: 25
+	}
+} satisfies Record<string, SxProps<Theme>>;
+
 
 /**
  * The equipment index: filterable cards for every piece of equipment.
@@ -57,8 +78,6 @@ const useStyles = makeStyles((theme) => ({
  * @returns The equipment index page.
  */
 export default function EquipmentIndex() {
-	const classes = useStyles();
-
 	const [equipmentByCategory, setEquipmentByCategory] = useState<Record<string, Equipment[]>>({});
 
 	const [typeFilter, setTypeFilter] = useState([
@@ -224,7 +243,7 @@ export default function EquipmentIndex() {
 		return `${value}`
 	}
 
-	const handleSlider = (_event: ChangeEvent<{}>, newValue: number | number[]) => {
+	const handleSlider = (_event: Event, newValue: number | number[]) => {
 		setCurrentLevel(Array.isArray(newValue) ? (newValue[0] ?? 1) : newValue);
 	};
 
@@ -246,19 +265,19 @@ export default function EquipmentIndex() {
 	}
 
 	return (
-		<main className={classes.root}>
+		<Box component="main" sx={styles.root}>
 			<ScrollToTop />
 			<Container>
 				<br />
 
 				{/* Filters List */}
-				<div className={classes.chipList}>
+				<Box component="div" sx={styles.chipList}>
 					{typeFilter.map((type) => {
 						return (
 							<li key={type.key}>
 								<Zoom in={true} timeout={400}>
 									<Chip 
-										className={classes.chip}
+										sx={styles.chip}
 										clickable
 										color={type.selected ? "primary" : "secondary"}
 										label={type.label}
@@ -275,14 +294,14 @@ export default function EquipmentIndex() {
 							</li>
 						)
 					})}
-				</div>
+				</Box>
 
-				<Divider className={classes.dividerForChips} />
+				<Divider sx={styles.dividerForChips} />
 
-				<div className={classes.chipList}>
+				<Box component="div" sx={styles.chipList}>
 					<Zoom in={true} timeout={600}>
 						<Chip
-							className={classes.chip}
+							sx={styles.chip}
 							clickable
 							color={exclusiveFilter.selected ? "primary" : "secondary"}
 							label={exclusiveFilter.label}
@@ -296,28 +315,28 @@ export default function EquipmentIndex() {
 							}
 						/>
 					</Zoom>
-				</div>
+				</Box>
 
 			</Container>
 
-			<Box display="flex" width="80%" m="auto" marginTop={5}>
+			<Box sx={{ display: "flex", width: "80%", m: "auto", marginTop: 5 }}>
 				<Fade in={true} timeout={500}>
 					<Slider step={1} defaultValue={1} value={currentLevel} onChange={handleSlider} valueLabelDisplay="auto" getAriaValueText={valuetext} valueLabelFormat={valuetext} marks={customSliderMarks} min={1} max={10} />
 				</Fade>
 			</Box>
 
-			<Container className={classes.cardGrid} maxWidth="md">
+			<Container sx={styles.cardGrid} maxWidth="md">
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
 					Now showing {currentSearchResults} search results
 				</Typography>
 
-				<Divider className={classes.topDividerForCards} />
+				<Divider sx={styles.topDividerForCards} />
 
 				{/* Filtered Equipment Results */}
 				<Grid container spacing={4}>
 					{searchResults.map((equipment, index) => {
 						return(
-							<Grid item key={equipment.name + equipment.rarity} xs={12} sm={6} md={3} lg={3} xl={2}>
+							<Grid key={equipment.name + equipment.rarity} size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 2 }}>
 								<Fade in={true} timeout={calculateTimeout(index)}>
 									<Card elevation={12}>
 										{/* Equipment Name and what types of T-Dolls can use it */}
@@ -388,10 +407,10 @@ export default function EquipmentIndex() {
 										{/* Equipment Description */}
 										<Accordion expanded={expanded === equipment.name + equipment.rarity} onChange={handleChange(equipment.name + equipment.rarity)}>
 											<AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-												<Typography className="classes.heading">Description</Typography>
+												<Typography sx={styles.heading}>Description</Typography>
 											</AccordionSummary>
 											<AccordionDetails>
-												<Typography paragraph>{equipment.description}</Typography>
+												<Typography component="p" sx={{ mb: 2 }}>{equipment.description}</Typography>
 											</AccordionDetails>
 										</Accordion>
 									</Card>
@@ -401,9 +420,9 @@ export default function EquipmentIndex() {
 					})}
 				</Grid>
 
-				<Divider className={classes.bottomDividerForCards} />
+				<Divider sx={styles.bottomDividerForCards} />
 			</Container>
 
-		</main>
+		</Box>
 	);
 }

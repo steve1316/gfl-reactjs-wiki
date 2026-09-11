@@ -1,10 +1,4 @@
-import { makeStyles } from "@material-ui/core";
-
-const useStyles = makeStyles({
-	root: {
-		marginTop: "4rem"
-	}
-});
+import { Box, Typography } from "@mui/material";
 
 /**
  * The catch-all page for unknown routes.
@@ -12,13 +6,11 @@ const useStyles = makeStyles({
  * @returns The 404 message.
  */
 export default function NotFound404() {
-	const classes = useStyles();
-
 	return (
-		<main>
-			<div className={classes.root}>
-				<h1 style={{ textAlign: "center" }}>404 Not Found</h1>
-			</div>
-		</main>
+		<Box component="main" sx={{ marginTop: "4rem" }}>
+			<Typography component="h1" variant="h4" align="center">
+				404 Not Found
+			</Typography>
+		</Box>
 	);
 }
