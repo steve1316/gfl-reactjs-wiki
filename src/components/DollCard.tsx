@@ -43,8 +43,7 @@ export default function DollCard({ id, name, type, rarity, isMod, image, to, den
 					<Typography
 						component="div"
 						sx={{
-							// 11px is the floor for this to be readable on the target phone. The old badges
-							// rendered at 9.92px.
+							// Name must be readable on mobile (11+ px).
 							fontSize: dense ? "0.72rem" : "0.8rem",
 							fontWeight: 700,
 							lineHeight: 1.25,
