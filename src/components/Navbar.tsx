@@ -181,7 +181,7 @@ export default function Navbar() {
 							// One shape, not two. The wrapper used to draw a 64px pill behind an 8px
 							// rectangle, so the pill's corners showed around a near-square box.
 							"& .MuiOutlinedInput-root": {
-								borderRadius: 999,
+								borderRadius: "999px",
 								backgroundColor: alpha(theme.palette.common.white, 0.11),
 								"&:hover": { backgroundColor: alpha(theme.palette.common.white, 0.17) },
 								"& fieldset": { borderColor: "transparent" },
