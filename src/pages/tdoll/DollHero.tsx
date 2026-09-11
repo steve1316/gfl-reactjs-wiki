@@ -152,11 +152,28 @@ export default function DollHero({ name, id, type, rarity, isMod, artUrl, skins,
 
 				{skinNames.length > 0 ? (
 					<Box sx={styles.pillRow} role="group" aria-label="Skins">
-						<Chip label="Base" size="small" clickable onClick={(event) => onSkinChange(event, false)} sx={skinValue === false ? styles.pillSelected : styles.pill} />
+						<Chip
+							label="Base"
+							size="small"
+							clickable
+							onClick={(event) => onSkinChange(event, false)}
+							aria-pressed={skinValue === false}
+							sx={skinValue === false ? styles.pillSelected : styles.pill}
+						/>
 						{skinNames.map((skinName, index) => {
 							const value = index * 2;
 							const selected = skinValue === value;
-							return <Chip key={value} label={skinName} size="small" clickable onClick={(event) => onSkinChange(event, value)} sx={selected ? styles.pillSelected : styles.pill} />;
+							return (
+								<Chip
+									key={value}
+									label={skinName}
+									size="small"
+									clickable
+									onClick={(event) => onSkinChange(event, value)}
+									aria-pressed={selected}
+									sx={selected ? styles.pillSelected : styles.pill}
+								/>
+							);
 						})}
 					</Box>
 				) : null}
