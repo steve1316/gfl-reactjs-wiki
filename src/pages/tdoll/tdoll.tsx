@@ -140,6 +140,11 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Whether the doll's Mod is currently the form on screen, which SkillsPanel uses to show Skill 2.
 	const [showModSkill, setShowModSkill] = useState(false);
 
+	// Owned here rather than in SkillsPanel, since every section panel mounts only while its tab is
+	// active. Local state there would reset on every trip away from the Skills tab and back.
+	const [skillLevel, setSkillLevel] = useState(10);
+	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Skill 1, 1 for Skill 2 if the doll has a Mod.
+
 	// Set initial states for animations.
 	const [animation, setAnimation] = useState<string | undefined>(undefined);
 	const [animationMode, setAnimationMode] = useState(0); // 0 for Normal animations, 1 for Dorm animations.
@@ -296,8 +301,8 @@ function TDollContent({ doll }: TDollContentProps) {
 			setAnimation(tdoll_temp.selected.assets.animations.wait);
 		}
 
-		// Finalize state updates. `tdoll_temp` is the same object as `tdoll`, mutated in place, so the
-		// setMode/setShowModSkill calls above are what schedule the re-render that shows the change.
+		// Reset back to Skill 1 whenever the Mod toggle flips, in either direction.
+		setSelectedSkill(0);
 		helperResetAnimationTabs();
 	};
 
@@ -358,7 +363,7 @@ function TDollContent({ doll }: TDollContentProps) {
 	};
 
 	// Switch back to base art for the current mode, undoing a skin selection. Leaves Normal/Mod alone,
-	// since the Mod toggle already owns that axis; this only clears the skin one, the inverse of switchSkinSelected below.
+	// since the Mod toggle already owns that axis. This only clears the skin one, the inverse of switchSkinSelected below.
 	const switchToBaseArt = () => {
 		setShowSkin(false);
 		setSkinSelected(0);
@@ -738,6 +743,10 @@ function TDollContent({ doll }: TDollContentProps) {
 							<Box sx={styles.textColumn}>
 								<SkillsPanel
 									showModSkill={showModSkill}
+									selectedSkill={selectedSkill}
+									onSelectedSkillChange={setSelectedSkill}
+									skillLevel={skillLevel}
+									onSkillLevelChange={setSkillLevel}
 									skill={tdoll.selected.skill}
 									skill2={tdoll.selected.skill2}
 									normalSkillDescription={tdoll.normal.skill.description}

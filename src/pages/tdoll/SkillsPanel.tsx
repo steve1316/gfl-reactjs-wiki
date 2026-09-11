@@ -31,6 +31,14 @@ const styles = {
 interface SkillsPanelProps {
 	/** Whether the doll has a Mod, which shows the Skill 1/2 toggle and Skill 2 itself. */
 	showModSkill: boolean;
+	/** Which skill is on screen: 0 for Skill 1, 1 for Skill 2. Owned by the page so it survives tab switches. */
+	selectedSkill: number;
+	/** Called with the new value when the Skill 1/2 toggle changes. */
+	onSelectedSkillChange: (newValue: number) => void;
+	/** The level the description and cooldown are shown at, 1-10. Owned by the page so it survives tab switches. */
+	skillLevel: number;
+	/** Called with the new level when the level select changes. */
+	onSkillLevelChange: (level: number) => void;
 	/** The currently selected form's primary skill. Its `description` is reset and reformatted in place on every level change. */
 	skill: RawSkill;
 	/** The currently selected form's second skill, present only on Mods. Reformatted the same way as `skill`. */
@@ -51,16 +59,21 @@ interface SkillsPanelProps {
  * @param props Component props.
  * @returns The skill toggle and the skill card.
  */
-export default function SkillsPanel({ showModSkill, skill, skill2, normalSkillDescription, modSkill2Description, dollId, skillImages }: SkillsPanelProps) {
-	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Skill 1, 1 for Skill 2 if the doll has a Mod.
-	const [skillLevel, setSkillLevel] = useState(10);
+export default function SkillsPanel({
+	showModSkill,
+	selectedSkill,
+	onSelectedSkillChange,
+	skillLevel,
+	onSkillLevelChange,
+	skill,
+	skill2,
+	normalSkillDescription,
+	modSkill2Description,
+	dollId,
+	skillImages
+}: SkillsPanelProps) {
 	const [skillDescription1, setSkillDescription1] = useState("");
 	const [skillDescription2, setSkillDescription2] = useState("");
-
-	// Reset back to Skill 1 whenever the Mod toggle flips, in either direction.
-	useEffect(() => {
-		setSelectedSkill(0);
-	}, [showModSkill]);
 
 	/*
 	A hack-job attempt at programmatically replacing all delimiters with the appropriate stats at the chosen skill level.
@@ -178,7 +191,7 @@ export default function SkillsPanel({ showModSkill, skill, skill2, normalSkillDe
 					exclusive
 					onChange={(_e, newValue: number | null) => {
 						if (newValue !== null) {
-							setSelectedSkill(newValue);
+							onSelectedSkillChange(newValue);
 						}
 					}}
 					sx={styles.skillToggle}
@@ -203,7 +216,7 @@ export default function SkillsPanel({ showModSkill, skill, skill2, normalSkillDe
 									id="skill-level-select"
 									value={skillLevel}
 									onChange={(e) => {
-										setSkillLevel(Number(e.target.value));
+										onSkillLevelChange(Number(e.target.value));
 									}}
 									// MenuProps will shift the drop down menu to the right.
 									MenuProps={{

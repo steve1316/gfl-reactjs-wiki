@@ -33,13 +33,9 @@ const styles = {
 		backgroundSize: "5.66px 5.66px",
 		cursor: "pointer"
 	}),
-	fab_dorm: {
-		display: "block",
-		transform: "translate(5px, 100px)",
-		height: 40,
-		width: 40,
-		opacity: "85%",
-		zIndex: 100
+	dormToggle: {
+		mb: 1,
+		opacity: "85%"
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -84,12 +80,12 @@ export default function ChibiPanel({
 }: ChibiPanelProps) {
 	return (
 		<>
-			{/************** T-Doll's animations **************/}
-			<Fab color="primary" sx={styles.fab_dorm} onClick={onSwitchAnimationMode}>
+			{/************** T-Doll's animations: the combat/dorm toggle sits in normal flow above the pills, so it never overlaps them however many rows they wrap to **************/}
+			<Fab color="primary" size="small" sx={styles.dormToggle} onClick={onSwitchAnimationMode} aria-label={animationMode === 0 ? "Switch to Dorm Animations" : "Switch to Normal Animations"}>
 				{animationMode === 0 ? (
-					<img src={combat_button} alt="Switch to Dorm Animations" style={{ height: 32, width: 32, paddingTop: 3 }} />
+					<img src={combat_button} alt="" style={{ height: 32, width: 32, paddingTop: 3 }} />
 				) : (
-					<img src={dorm_button} alt="Switch to Normal Animations" style={{ height: 29, width: 29, paddingTop: 3 }} />
+					<img src={dorm_button} alt="" style={{ height: 29, width: 29, paddingTop: 3 }} />
 				)}
 			</Fab>
 
