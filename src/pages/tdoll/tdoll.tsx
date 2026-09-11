@@ -178,7 +178,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		setTDollImage(tdoll.selected.assets.images.card);
 		setAnimation(tdoll.selected.assets.animations.wait);
 
-		console.log("Initial T-Doll state: ", tdoll);
 		// Depends on tdoll: the shard loads after mount, so an empty dependency list would run this
 		// once while the doll is still undefined and never set the initial image or animation.
 	}, [tdoll]);
