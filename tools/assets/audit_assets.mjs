@@ -115,11 +115,19 @@ function main() {
 			problems.push(`doll ${id}: no combat rig, the animation panel would be empty`);
 			continue;
 		}
+		// A doll with a Mod form but no Mod rig silently plays the base animations, which is exactly the
+		// bug this check exists to catch.
+		if (doll.forms.mod && !rigs.mod?.combat) {
+			problems.push(`doll ${id}: has a Mod form but no Mod rig, so it would play the base animations`);
+		}
 
-		// Skin rigs live in an array under skinRigs and are checked separately below.
+		// The Mod form is a nested pair and skin rigs are an array of them, so both are flattened here.
+		// Every rig the page can reach has to be checked: one nobody audits is one that 404s at a reader.
 		const rigEntries = [
 			["combat", rigs.combat],
 			["dorm", rigs.dorm],
+			["mod", rigs.mod?.combat],
+			["mod dorm", rigs.mod?.dorm],
 			...(rigs.skinRigs ?? []).flatMap((skin, position) =>
 				skin ? [[`skin${position}`, skin.combat], [`skin${position} dorm`, skin.dorm]] : []
 			)

@@ -56,8 +56,8 @@ function main() {
 	let rigs = 0;
 	const vocabulary = new Set();
 	for (const [id, entry] of Object.entries(index)) {
-		for (const kind of ["combat", "dorm"]) {
-			const rig = entry[kind];
+		// The doll's own rigs, then the Mod's, which is a separate chibi with its own animation set.
+		for (const rig of [entry.combat, entry.dorm, entry.mod?.combat, entry.mod?.dorm]) {
 			if (!rig) continue;
 			rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
 			rig.anims.forEach((name) => vocabulary.add(name));

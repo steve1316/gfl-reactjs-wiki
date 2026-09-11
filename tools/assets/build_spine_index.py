@@ -6,6 +6,7 @@ Each doll directory holds one or more skeletons. Naming follows the game's own c
     FG42.skel        combat rig
     RFG42.skel       dorm rig, an `R` prefix on the same code
     M1873_2105.skel  a skin, the code plus the skin's id
+    G3Mod.skel       the Mod rig, `Mod` appended to the code, with its own RG3Mod dorm counterpart
 
 Atlases are not one per skeleton. The dorm rig usually shares the combat atlas, and some skins do
 too, so each skeleton is paired with the closest atlas that actually exists rather than an assumed
@@ -39,7 +40,7 @@ def index_doll(doll_dir):
         doll_dir: Directory holding that doll's Spine files.
 
     Returns:
-        A dict with `combat`, `dorm` and `skins` entries, each naming a skeleton and its atlas.
+        A dict with `combat`, `dorm`, `mod` and `skins` entries, each naming a skeleton and its atlas.
     """
     # Some dolls keep their Spine files in a subdirectory rather than flat, so one level is walked.
     names = []
@@ -108,11 +109,28 @@ def index_doll(doll_dir):
     combat = min(ranked, key=lambda s: (len(split_skeleton(s)[1]), s))
     dorm = dorm_of(combat)
 
-    entry = {}
-    for label, skeleton in (("combat", combat), ("dorm", dorm)):
+    def rig_pair(skeleton):
+        """Describe a combat skeleton and its dorm counterpart, skipping either if it has no atlas."""
+        pair = {}
         atlas = atlas_for(skeleton) if skeleton else None
         if atlas:
-            entry[label] = {"skel": skeleton, "atlas": atlas}
+            pair["combat"] = {"skel": skeleton, "atlas": atlas}
+        counterpart = dorm_of(skeleton) if skeleton else None
+        dorm_atlas = atlas_for(counterpart) if counterpart else None
+        if dorm_atlas:
+            pair["dorm"] = {"skel": counterpart, "atlas": dorm_atlas}
+        return pair
+
+    entry = rig_pair(combat)
+
+    # A Mod doll is a different chibi with its own animations, so it needs its own rig. It is filed
+    # next to the combat rig with `Mod` appended, and carries an R-prefixed dorm counterpart like any
+    # other rig. Mod skins do not exist: a Mod doll wearing a skin shows the skin's own chibi.
+    prefix, stem = split_skeleton(combat)
+    mod = skeleton_by_name.get(f"{prefix}{stem}Mod".lower())
+    mod_pair = rig_pair(mod) if mod else {}
+    if mod_pair:
+        entry["mod"] = mod_pair
 
     # Skins carry their own combat and dorm rigs, the latter prefixed with R exactly like the base one.
     # Dorm rigs are recognised by `is_dorm` rather than by a leading R, for the same reason the base
@@ -167,10 +185,12 @@ def main():
         handle.write("\n")
 
     with_dorm = sum(1 for entry in index.values() if "dorm" in entry)
+    with_mod = sum(1 for entry in index.values() if "mod" in entry)
     with_skins = sum(1 for entry in index.values() if "skins" in entry)
     print(f"wrote {args.out} ({os.path.getsize(args.out) / 1024:.0f} KB)")
     print(f"  dolls        {len(index)}")
     print(f"  with dorm    {with_dorm}")
+    print(f"  with mod     {with_mod}")
     print(f"  with skins   {with_skins}")
 
 

@@ -389,10 +389,11 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Skin tabs carry a doubled value, the same halving helperSkinSelected does. It is inlined because
 	// that helper is declared further down and would still be in the temporal dead zone here.
 	const selectedSkinRigs = showSkin ? (spineEntry?.skinRigs?.[skinSelected / 2] ?? null) : null;
-	const baseRig = animationMode === 0 ? spineEntry?.combat : (spineEntry?.dorm ?? spineEntry?.combat);
-	const skinRig = selectedSkinRigs ? (animationMode === 0 ? selectedSkinRigs.combat : (selectedSkinRigs.dorm ?? selectedSkinRigs.combat)) : null;
-	// Many skins have no rig of their own, so the doll's base rig stands in rather than showing nothing.
-	const spineRig = skinRig ?? baseRig;
+	// A Mod doll is a different chibi with its own animations, so the base rig cannot stand in for it.
+	// A skin still wins, since Mod skins do not exist and the game shows the skin's own chibi either way.
+	// Many skins have no rig published, so the doll's own rigs stand in rather than showing nothing.
+	const rigs = selectedSkinRigs ?? (mode === 1 ? spineEntry?.mod : undefined) ?? spineEntry;
+	const spineRig = animationMode === 0 ? rigs?.combat : (rigs?.dorm ?? rigs?.combat);
 	const requestedAnimation = animationMode === 0 ? animationTabSelected : animationDormTabSelected;
 
 	// One tab per animation the skeleton defines. A fixed list, whether from the old GIF filenames or

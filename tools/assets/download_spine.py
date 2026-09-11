@@ -10,6 +10,10 @@ Spine files with UnityPy.
 Only the bundles for the requested dolls are fetched, not the whole 478 MB chibi tier, which keeps a
 refresh to tens of megabytes.
 
+Three kinds of rig are available. `--ids` fetches base rigs, `--ids --mod` fetches the Mod rigs of the
+same dolls, and `--skin-pairs` fetches individual skins. Mod skins are not a thing: a Mod doll wearing
+a skin shows the skin's own chibi, and the wiki has no Mod skin animations either.
+
 Each bundle yields:
 
 - one `.skel` TextAsset per skeleton, the combat rig plus an `R`-prefixed dorm rig
@@ -48,6 +52,10 @@ CODE_OVERRIDES = {
     1008: "seele",
 }
 
+# Mod rigs are a separate doll in `gun.hjson`, filed 20000 above the original with `Mod` appended to
+# the codename, so `G3` at 63 becomes `G3Mod` at 20063.
+MOD_ID_OFFSET = 20000
+
 RECORD_OPEN = "  {"
 RECORD_CLOSE = ("  },", "  }")
 FIELD_RE = re.compile(r"^    (id|code): (.*)$")
@@ -82,6 +90,23 @@ def parse_guns(path):
                 if match:
                     current.setdefault(match.group(1), match.group(2).strip().strip('"').strip("'"))
     return codes
+
+
+def resolve_code(doll_id, codes, mod=False):
+    """Find the weapon codename whose bundles hold a doll's Spine data.
+
+    Args:
+        doll_id: The doll's id in the wiki's own numbering.
+        codes: Doll id to codename, as from `parse_guns`.
+        mod: Whether to resolve the Mod rig rather than the base one.
+
+    Returns:
+        The codename, or an empty string when the doll is not in `gun.hjson` at all.
+    """
+    if mod:
+        base = codes.get(doll_id) or CODE_OVERRIDES.get(doll_id, "")
+        return codes.get(MOD_ID_OFFSET + doll_id) or (f"{base}Mod" if base else "")
+    return CODE_OVERRIDES.get(doll_id) or codes.get(doll_id, "")
 
 
 def index_bundles(resdata_zip, region):
@@ -160,7 +185,7 @@ def fetch_skins(args, codes, bundles, res_url):
 
     resolved, unresolved, failed = 0, [], []
     for doll_id, skin_id in pairs:
-        code = CODE_OVERRIDES.get(doll_id) or codes.get(doll_id, "")
+        code = resolve_code(doll_id, codes)
         name = f"character_{code.lower()}_{skin_id}_spine"
         bundle = bundles.get(name)
         if not bundle:
@@ -198,6 +223,7 @@ def main():
     parser.add_argument("--region", default="us", help="Region whose manifest to read.")
     parser.add_argument("--ids", help="JSON file holding a list of doll ids under a 'missing' key, or a comma-separated list.")
     parser.add_argument("--skin-pairs", help="JSON file of [doll_id, skin_id] pairs, for fetching skin rigs.")
+    parser.add_argument("--mod", action="store_true", help="Fetch the Mod rigs for the given ids rather than the base ones.")
     parser.add_argument("--out", required=True, help="Staging directory to write spine/<id>/ into.")
     parser.add_argument("--cache", required=True, help="Directory to keep downloaded .ab files in.")
     args = parser.parse_args()
@@ -221,7 +247,7 @@ def main():
 
     resolved, unresolved, failed = {}, [], []
     for doll_id in sorted(doll_ids):
-        code = CODE_OVERRIDES.get(doll_id) or codes.get(doll_id, "")
+        code = resolve_code(doll_id, codes, args.mod)
         name, bundle = None, None
         for template in BUNDLE_TEMPLATES:
             candidate = template.format(code=code.lower())
