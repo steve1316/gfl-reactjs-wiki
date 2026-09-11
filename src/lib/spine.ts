@@ -100,6 +100,91 @@ export function resolveAnimation(available: readonly string[], name: string): st
 	return undefined;
 }
 
+/**
+ * Human-readable labels for skeleton animation names.
+ *
+ * Several names are the game's internal ones rather than anything a reader would recognise, and a few
+ * skeletons carry animations the GIF era never exposed at all, such as the RF `snipe` pose.
+ */
+const ANIMATION_LABELS: Record<string, string> = {
+	wait: "Wait",
+	wait2: "Wait 2",
+	move: "Move",
+	attack: "Attack",
+	attack1: "Attack",
+	attack2: "Attack 2",
+	reload: "Reload",
+	squatreload: "Reload (Crouched)",
+	s: "Skill",
+	skill: "Skill",
+	skill2: "Skill 2",
+	crouch: "Crouch",
+	squat: "Crouch",
+	snipe: "Snipe",
+	action: "Action",
+	action1: "Action",
+	action2: "Action 2",
+	spattack: "Special Attack",
+	spattack2: "Special Attack 2",
+	spa: "Special Attack",
+	spc: "Special Attack 2",
+	sp: "Special",
+	sp1: "Special 1",
+	sp2: "Special 2",
+	landing: "Landing",
+	die: "Die",
+	victory: "Victory",
+	victory2: "Victory 2",
+	victoryloop: "Victory Loop",
+	pick: "Pick",
+	sit: "Sit",
+	sit2: "Sit 2",
+	lying: "Lying",
+	violin: "Violin",
+	book: "Book",
+	therun2: "Run"
+};
+
+/** Preferred tab order. Anything not listed keeps its relative order and follows these. */
+const ANIMATION_ORDER = [
+	"wait", "wait2", "move", "attack", "attack1", "attack2", "snipe", "reload", "squatreload",
+	"s", "skill", "skill2", "crouch", "squat", "action", "action1", "action2",
+	"spattack", "spa", "spattack2", "spc", "sp", "sp1", "sp2", "landing",
+	"die", "victory", "victory2", "victoryloop", "pick", "sit", "sit2", "lying"
+];
+
+/** One animation tab: the skeleton's own name, and what to show for it. */
+export interface AnimationTab {
+	/** The skeleton's animation name, used verbatim to play it. */
+	value: string;
+	/** Label for the tab. */
+	label: string;
+}
+
+/**
+ * Build the tab list for a skeleton.
+ *
+ * Every animation the skeleton defines gets a tab. Deriving the list from a fixed set instead left
+ * real animations unreachable: `snipe` on nine rifles, and the dorm poses on three dolls that keep
+ * them inside the combat rig rather than a separate one.
+ *
+ * @param available Animation names the skeleton defines.
+ * @returns Tabs in a stable, readable order.
+ */
+export function animationTabs(available: readonly string[]): AnimationTab[] {
+	const rank = (name: string) => {
+		const index = ANIMATION_ORDER.indexOf(name);
+		return index === -1 ? ANIMATION_ORDER.length : index;
+	};
+	return [...available]
+		.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+		.map((value) => ({
+			value,
+			// Unknown names are shown as-is rather than hidden, so nothing is silently unreachable.
+			label: ANIMATION_LABELS[value] ?? value.charAt(0).toUpperCase() + value.slice(1)
+		}));
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Player

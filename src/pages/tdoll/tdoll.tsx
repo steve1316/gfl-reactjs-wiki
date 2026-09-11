@@ -46,7 +46,7 @@ import "./styles.css";
 import { uiUrl } from "../../lib/assets";
 import { loadDoll, spineFor } from "../../lib/data";
 import { spineImageBase, spineUrl } from "../../lib/assets";
-import { resolveAnimation } from "../../lib/spine";
+import { animationTabs } from "../../lib/spine";
 import SpineAnimation from "../../components/SpineAnimation";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
@@ -385,13 +385,17 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
 	const spineEntry = spineFor(tdoll.normal.id);
-	const spineRig = animationMode === 0 ? spineEntry?.combat : spineEntry?.dorm;
-	const spineAnimationName = animationMode === 0 ? animationTabSelected : animationDormTabSelected;
+	const spineRig = animationMode === 0 ? spineEntry?.combat : (spineEntry?.dorm ?? spineEntry?.combat);
+	const requestedAnimation = animationMode === 0 ? animationTabSelected : animationDormTabSelected;
 
-	// Tabs are offered based on what the skeleton actually defines. Deriving them from the old GIF
-	// filenames or the hand-maintained `has*Animation` flags produced tabs that did nothing when
-	// clicked, and hid animations the skeleton did have.
-	const hasAnim = (name: string) => resolveAnimation(spineRig?.anims ?? [], name) !== undefined;
+	// One tab per animation the skeleton defines. A fixed list, whether from the old GIF filenames or
+	// the hand-maintained `has*Animation` flags, both offered tabs that did nothing when clicked and
+	// hid animations the skeleton did have, such as the rifles' `snipe` pose.
+	const spineTabs = animationTabs(spineRig?.anims ?? []);
+
+	// Tabs default to "wait", which most but not all skeletons define. Falling back to the first tab
+	// keeps the selection valid instead of leaving MUI with a value none of its children carry.
+	const spineAnimationName = spineTabs.some((tab) => tab.value === requestedAnimation) ? requestedAnimation : (spineTabs[0]?.value ?? requestedAnimation);
 
 	/**
 	 * Look up a skin's resolved assets.
@@ -710,27 +714,16 @@ function TDollContent({ doll }: TDollContentProps) {
 				return (
 					<Tabs
 						className={classes.tabs}
-						value={animationTabSelected}
+						value={spineAnimationName}
 						onChange={(_e, value) => switchAnimations(value)}
 						indicatorColor="primary"
 						textColor="primary"
 						scrollButtons="on"
 						variant="scrollable"
 					>
-						{hasAnim("wait") ? <Tab label="Wait" value="wait" /> : ""}
-						{hasAnim("wait2") ? <Tab label="Wait2" value="wait2" /> : ""}
-						{hasAnim("move") ? <Tab label="Move" value="move" /> : ""}
-						{hasAnim("attack") ? <Tab label="Attack" value="attack" /> : ""}
-						{hasAnim("reload") ? <Tab label="Reload" value="reload" /> : ""}
-						{hasAnim("skill") ? <Tab label="Skill" value="skill" /> : ""}
-						{hasAnim("crouch") ? <Tab label="Crouch" value="crouch" /> : ""}
-						{hasAnim("attack2") ? <Tab label="Attack2" value="attack2" /> : ""}
-						{hasAnim("action") ? <Tab label="Action" value="action" /> : ""}
-						{hasAnim("action2") ? <Tab label="Action2" value="action2" /> : ""}
-						{hasAnim("die") ? <Tab label="Die" value="die" /> : ""}
-						{hasAnim("victory") ? <Tab label="Victory" value="victory" /> : ""}
-						{hasAnim("victory2") ? <Tab label="Victory2" value="victory2" /> : ""}
-						{hasAnim("victoryloop") ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
+						{spineTabs.map((tab) => (
+							<Tab key={tab.value} label={tab.label} value={tab.value} />
+						))}
 					</Tabs>
 				);
 			} else {
@@ -738,31 +731,16 @@ function TDollContent({ doll }: TDollContentProps) {
 				return (
 					<Tabs
 						className={classes.tabs}
-						value={animationTabSelected}
+						value={spineAnimationName}
 						onChange={(_e, value) => switchAnimations(value)}
 						indicatorColor="primary"
 						textColor="primary"
 						scrollButtons="on"
 						variant="scrollable"
 					>
-						{hasAnim("wait") ? <Tab label="Wait" value="wait" /> : ""}
-						{hasAnim("wait2") ? <Tab label="Wait2" value="wait2" /> : ""}
-						{hasAnim("move") ? <Tab label="Move" value="move" /> : ""}
-						{hasAnim("attack") ? <Tab label="Attack" value="attack" /> : ""}
-						{hasAnim("reload") ? <Tab label="Reload" value="reload" /> : ""}
-						{hasAnim("skill") ? <Tab label="Skill" value="skill" /> : ""}
-						{hasAnim("skill2") ? <Tab label="Skill2" value="skill2" /> : ""}
-						{hasAnim("crouch") ? <Tab label="Crouch" value="crouch" /> : ""}
-						{hasAnim("attack2") ? <Tab label="Attack2" value="attack2" /> : ""}
-						{hasAnim("action") ? <Tab label="Action" value="action" /> : ""}
-						{hasAnim("action2") ? <Tab label="Action2" value="action2" /> : ""}
-						{hasAnim("spattack") ? <Tab label="Special Attack" value="spattack" /> : ""}
-						{hasAnim("spattack2") ? <Tab label="Special Attack2" value="spattack2" /> : ""}
-						{hasAnim("landing") ? <Tab label="Landing" value="landing" /> : ""}
-						{hasAnim("die") ? <Tab label="Die" value="die" /> : ""}
-						{hasAnim("victory") ? <Tab label="Victory" value="victory" /> : ""}
-						{hasAnim("victory2") ? <Tab label="Victory2" value="victory2" /> : ""}
-						{hasAnim("victoryloop") ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
+						{spineTabs.map((tab) => (
+							<Tab key={tab.value} label={tab.label} value={tab.value} />
+						))}
 					</Tabs>
 				);
 			}
@@ -771,20 +749,16 @@ function TDollContent({ doll }: TDollContentProps) {
 			return (
 				<Tabs
 					className={classes.tabs}
-					value={animationDormTabSelected}
+					value={spineAnimationName}
 					onChange={(_e, value) => switchAnimations(value)}
 					indicatorColor="primary"
 					textColor="primary"
 					scrollButtons="on"
 					variant="scrollable"
 				>
-					{hasAnim("wait") ? <Tab label="Wait" value="wait" /> : ""}
-					{hasAnim("move") ? <Tab label="Move" value="move" /> : ""}
-					{hasAnim("action") ? <Tab label="Action" value="action" /> : ""}
-					{hasAnim("pick") ? <Tab label="Pick" value="pick" /> : ""}
-					{hasAnim("sit") ? <Tab label="Sit" value="sit" /> : ""}
-					{hasAnim("sit2") ? <Tab label="Sit2" value="sit2" /> : ""}
-					{hasAnim("lying") ? <Tab label="Lying" value="lying" /> : ""}
+					{spineTabs.map((tab) => (
+						<Tab key={tab.value} label={tab.label} value={tab.value} />
+					))}
 				</Tabs>
 			);
 		}
