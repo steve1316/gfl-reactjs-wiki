@@ -214,6 +214,8 @@ export default function SkillsPanel({
 
 								<Select
 									id="skill-level-select"
+									labelId="skill-level-select-label"
+									label="Level"
 									value={skillLevel}
 									onChange={(e) => {
 										onSkillLevelChange(Number(e.target.value));
