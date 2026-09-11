@@ -100,8 +100,8 @@ interface DollHeroProps {
 	skins: RawSkins | null;
 	/** The doubled index of the selected skin pill, or false when no skin is selected. */
 	skinValue: number | false;
-	/** Called with the doubled skin index when a skin pill is clicked. */
-	onSkinChange: (event: unknown, newValue: number) => void;
+	/** Called with the doubled skin index when a skin pill is clicked, or false when the Base pill is clicked. */
+	onSkinChange: (event: unknown, newValue: number | false) => void;
 	/** Whether the doll has a Mod, which shows the Mod toggle. */
 	hasMod: boolean;
 	/** Whether the Mod toggle is currently on. */
@@ -152,6 +152,7 @@ export default function DollHero({ name, id, type, rarity, isMod, artUrl, skins,
 
 				{skinNames.length > 0 ? (
 					<Box sx={styles.pillRow} role="group" aria-label="Skins">
+						<Chip label="Base" size="small" clickable onClick={(event) => onSkinChange(event, false)} sx={skinValue === false ? styles.pillSelected : styles.pill} />
 						{skinNames.map((skinName, index) => {
 							const value = index * 2;
 							const selected = skinValue === value;

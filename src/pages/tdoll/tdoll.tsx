@@ -357,8 +357,31 @@ function TDollContent({ doll }: TDollContentProps) {
 		}
 	};
 
-	// Replace Card image with the Normal version of the selected skin.
-	const switchSkinSelected = (_event: unknown, newValue: number) => {
+	// Switch back to base art for the current mode, undoing a skin selection. Leaves Normal/Mod alone,
+	// since the Mod toggle already owns that axis; this only clears the skin one, the inverse of switchSkinSelected below.
+	const switchToBaseArt = () => {
+		setShowSkin(false);
+		setSkinSelected(0);
+		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
+
+		setTDollImage(tdoll.selected.assets.images.card);
+
+		if (animationMode === 0) {
+			setAnimation(tdoll.selected.assets.animations.wait);
+		} else {
+			setAnimation(tdoll.selected.assets.dormAnimations.wait);
+		}
+
+		helperResetAnimationTabs();
+	};
+
+	// Replace Card image with the Normal version of the selected skin, or the Base pill's false to go back.
+	const switchSkinSelected = (_event: unknown, newValue: number | false) => {
+		if (newValue === false) {
+			switchToBaseArt();
+			return;
+		}
+
 		setSkinSelected(newValue);
 		setShowSkin(true);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
