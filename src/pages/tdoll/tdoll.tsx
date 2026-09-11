@@ -13,17 +13,17 @@ import TilesPanel from "./TilesPanel";
 import {
 	Box,
 	Container,
-	Grid,
 	Typography,
 	Card,
-	CardContent
+	CardContent,
+	Tab,
+	Tabs
 	//Grow
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { loadDoll, spineFor } from "../../lib/data";
 import { animationTabs } from "../../lib/spine";
-import { INGREDIENT_COLOURS } from "../../theme";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
 /** A doll paired with the form currently being displayed. */
@@ -31,6 +31,9 @@ interface DisplayTDoll extends TDollData {
 	/** The form on screen: the base form, the Mod, or a skin. */
 	selected: TDollForm;
 }
+
+/** Which of the doll page's four sections is currently shown. */
+type SectionTab = "overview" | "skills" | "tiles" | "chibi";
 
 const styles = {
 	cardGrid: {
@@ -40,6 +43,23 @@ const styles = {
 	card: {
 		height: "100%",
 		width: "100%"
+	},
+	sectionTabs: (theme: Theme) => ({
+		width: "100%",
+		backgroundColor: theme.palette.background.paper,
+		mb: 2
+	}),
+	// Overview and Chibi are image-centric, so they stay in a compact column even though the page
+	// itself is wide. Skills and Tiles are text and table heavy, so they get a wider reading column.
+	// Kept under SpineAnimation's 420px default stage cap so the chibi's size reflects this column
+	// rather than the clamp, which would report the same width whether this layout was right or not.
+	mediaColumn: {
+		maxWidth: 400,
+		mx: "auto"
+	},
+	textColumn: {
+		maxWidth: 700,
+		mx: "auto"
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -104,6 +124,9 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Initialization of States
 	///////////////////////////////////////////////////////////////////////////////////////////
 
+	// Which of the four section tabs (Overview/Skills/Tiles/Chibi) is currently shown.
+	const [sectionTab, setSectionTab] = useState<SectionTab>("overview");
+
 	// Set initial states for the Normal/Mod modes.
 	const [hasMod, setHasMod] = useState(false);
 	const [mode, setMode] = useState(0); // 0 for Normal, 1 for MOD.
@@ -114,12 +137,8 @@ function TDollContent({ doll }: TDollContentProps) {
 	const [showSkin, setShowSkin] = useState(false);
 	const [skinSelected, setSkinSelected] = useState(0); // The value of this is dependent on how many skins a T-Doll has.
 
-	// Set initial states for the skills. Set Skill 2 to the description of Skill 1 in case T-Doll does not have a Neural Upgrade.
+	// Whether the doll's Mod is currently the form on screen, which SkillsPanel uses to show Skill 2.
 	const [showModSkill, setShowModSkill] = useState(false);
-	const [skillLevel, setSkillLevel] = useState(10);
-	const [skillDescription1, setSkillDescription1] = useState("");
-	const [skillDescription2, setSkillDescription2] = useState("");
-	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Normal skill, 1 for MOD skill if it exists.
 
 	// Set initial states for animations.
 	const [animation, setAnimation] = useState<string | undefined>(undefined);
@@ -150,9 +169,6 @@ function TDollContent({ doll }: TDollContentProps) {
 			setHasMod(false);
 		}
 
-		// Run skill description formatter.
-		handleChangeSkillDescription();
-
 		// Set the initial image and animation to be displayed for the T-Doll.
 		setTDollImage(tdoll.selected.assets.images.card);
 		setAnimation(tdoll.selected.assets.animations.wait);
@@ -174,11 +190,6 @@ function TDollContent({ doll }: TDollContentProps) {
 			}
 		}
 	}, [showSkin, skinSelected]);
-
-	// This will update the skill descriptions when different skills are selected or their skill levels change.
-	useEffect(() => {
-		handleChangeSkillDescription();
-	}, [skillLevel, mode, tdoll]);
 
 	// // Print out debugging information at each render.
 	// useEffect(() => {
@@ -286,8 +297,7 @@ function TDollContent({ doll }: TDollContentProps) {
 		}
 
 		// Finalize state updates. `tdoll_temp` is the same object as `tdoll`, mutated in place, so the
-		// setSelectedSkill call below is what schedules the re-render that shows the change.
-		setSelectedSkill(0);
+		// setMode/setShowModSkill calls above are what schedule the re-render that shows the change.
 		helperResetAnimationTabs();
 	};
 
@@ -314,125 +324,6 @@ function TDollContent({ doll }: TDollContentProps) {
 			}
 
 			setAnimationMode(0);
-		}
-	};
-
-	///////////////////////////////////////////////////////////////////////////////////////////
-	// Functions for skill descriptions
-	///////////////////////////////////////////////////////////////////////////////////////////
-
-	// Switch between Skills 1 and 2 if T-Doll has Mod.
-	const handleChangeSkills = (_event: unknown, newValue: number) => {
-		setSelectedSkill(newValue);
-	};
-
-	/*
-	A hack-job attempt at programmatically replacing all delimiters with the appropriate stats at the chosen skill level.
-	It will also insert into the strings some <span> and <ins> tags for visual clarity.
-	The npm package html-react-parser will parse the inserted span tags and properly render them into HTML tags.
-	Note: The styling being inserted is using HTML styling and not using React styling.
-	*/
-	const handleChangeSkillDescription = () => {
-		const tdollTemp = tdoll;
-
-		// Reset the descriptions to have it include the delimiters again and set variables to be used.
-		tdollTemp.selected.skill.description = tdoll.normal.skill.description;
-		let tempSkillDescription1 = tdollTemp.selected.skill.description;
-		const numberOfStats1 = tdollTemp.selected.skill.number_of_stats;
-
-		const skill2 = tdollTemp.selected.skill2;
-		let tempSkillDescription2 = "";
-		let numberOfStats2 = 0;
-		if (skill2) {
-			skill2.description = tdoll.mod?.skill2?.description ?? skill2.description;
-			tempSkillDescription2 = skill2.description;
-			numberOfStats2 = skill2.number_of_stats;
-		}
-
-		// If T-Doll has Mod, format both Skills 1 and 2. If not, only format Skill 1.
-		if (showModSkill) {
-			// Format Skill 1 first.
-			for (let statIndex = 1; statIndex <= numberOfStats1; statIndex++) {
-				const values = tdollTemp.selected.skill[`stat${statIndex}`] ?? [];
-				tempSkillDescription1 = tempSkillDescription1.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
-			}
-
-			// Format Skill 2 next.
-			for (let statIndex = 1; statIndex <= numberOfStats2; statIndex++) {
-				const values = skill2?.[`stat${statIndex}`] ?? [];
-				tempSkillDescription2 = tempSkillDescription2.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
-			}
-
-			if ("passive_active_description" in tdollTemp.selected.skill) {
-				tempSkillDescription1 = tempSkillDescription1.replace("[Passive]:", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
-				tempSkillDescription1 = tempSkillDescription1.replace("[Active]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
-			}
-
-			if (skill2 && "passive_active_description" in skill2) {
-				tempSkillDescription2 = tempSkillDescription2.replace("[Passive]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
-				tempSkillDescription2 = tempSkillDescription2.replace("[Active]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
-			}
-
-			if (skill2 && "passive_passive_description" in skill2) {
-				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 1]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive 1]</ins></span>: ');
-				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 2]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Passive 2]</ins></span>: ');
-			}
-
-			setSkillDescription1(tempSkillDescription1);
-			setSkillDescription2(tempSkillDescription2);
-		} else {
-			// Only format Skill 1.
-			for (let statIndex = 1; statIndex <= numberOfStats1; statIndex++) {
-				const values = tdollTemp.selected.skill[`stat${statIndex}`] ?? [];
-				tempSkillDescription1 = tempSkillDescription1.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
-			}
-
-			if ("passive_active_description" in tdollTemp.selected.skill) {
-				tempSkillDescription1 = tempSkillDescription1.replace("[Passive]:", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
-				tempSkillDescription1 = tempSkillDescription1.replace("[Active]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
-			}
-
-			// Insert HTML <br /> tags whenever there is an occurrence of \n inside string.abs
-			tempSkillDescription1 = tempSkillDescription1.replaceAll("\n", "<br />");
-
-			// Deal with Jill's special skill description menu.
-			if (tdoll.selected.id === 1017) {
-				// The ingredient colours come from the palette rather than being written out five times.
-				for (const [ingredient, colour] of Object.entries(INGREDIENT_COLOURS)) {
-					tempSkillDescription1 = tempSkillDescription1.replaceAll(`■${ingredient}`, `<span style="color: ${colour};">■${ingredient}</span>`);
-				}
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("❈❈❈", `<span style="color: ${INGREDIENT_COLOURS.Adelhyde};">❈❈❈</span>`);
-
-				tempSkillDescription1 = tempSkillDescription1.replace("Big Beer", '<span style="font-size: 120%;"><ins>Big Beer</ins></span>');
-				tempSkillDescription1 = tempSkillDescription1.replace("Brandtini", '<span style="font-size: 120%;"><ins>Brandtini</ins></span>');
-				tempSkillDescription1 = tempSkillDescription1.replace("Piano Woman", '<span style="font-size: 120%;"><ins>Piano Woman</ins></span>');
-				tempSkillDescription1 = tempSkillDescription1.replace("Moonblast", '<span style="font-size: 120%;"><ins>Moonblast</ins></span>');
-				tempSkillDescription1 = tempSkillDescription1.replace("Bleeding Jane", '<span style="font-size: 120%;"><ins>Bleeding Jane</ins></span>');
-				tempSkillDescription1 = tempSkillDescription1.replace("Fringe Weaver", '<span style="font-size: 120%;"><ins>Fringe Weaver</ins></span>');
-				tempSkillDescription1 = tempSkillDescription1.replace("Sugar Rush", '<span style="font-size: 120%;"><ins>Sugar Rush</ins></span>');
-			}
-
-			// Deal with the other T-Dolls from the Valhalla colloboration event.
-			if (tdoll.selected.id >= 1018 && tdoll.selected.id <= 1022) {
-				if (tdoll.selected.id === 1018) {
-					tempSkillDescription1 = tempSkillDescription1.replaceAll("Moonblast", '<span style="font-size: 110%;"><ins>Moonblast</ins></span>');
-				} else if (tdoll.selected.id === 1019) {
-					tempSkillDescription1 = tempSkillDescription1.replace("[MIRD-113]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[MIRD-113]</ins></span>: ');
-					tempSkillDescription1 = tempSkillDescription1.replace("[Nano-Camo]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Nano-Camo]</ins></span>: ');
-					tempSkillDescription1 = tempSkillDescription1.replace("Piano Woman", '<span style="font-size: 110%;"><ins>Piano Woman</ins></span>');
-				} else if (tdoll.selected.id === 1020) {
-					tempSkillDescription1 = tempSkillDescription1.replace("Bleeding Jane", '<span style="font-size: 110%;"><ins>Bleeding Jane</ins></span>');
-				} else if (tdoll.selected.id === 1021) {
-					tempSkillDescription1 = tempSkillDescription1.replace("Brandtini", '<span style="font-size: 110%;"><ins>Brandtini</ins></span>');
-				} else {
-					tempSkillDescription1 = tempSkillDescription1.replace("[Normal Attack]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Normal Attack]</ins></span>: ');
-					tempSkillDescription1 = tempSkillDescription1.replace("Big Beer", '<span style="font-size: 110%;"><ins>Big Beer</ins></span>');
-				}
-
-				tempSkillDescription1 = tempSkillDescription1.replace("[Favorite Drink]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Favorite Drink]</ins></span>: ');
-			}
-
-			setSkillDescription1(tempSkillDescription1);
 		}
 	};
 
@@ -775,7 +666,7 @@ function TDollContent({ doll }: TDollContentProps) {
 		<main>
 			<ScrollToTop />
 			{/* <Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}> */}
-			<Container sx={styles.cardGrid} maxWidth="md">
+			<Container sx={styles.cardGrid} maxWidth="lg">
 				<br />
 
 				<Card sx={styles.card}>
@@ -796,9 +687,25 @@ function TDollContent({ doll }: TDollContentProps) {
 							onToggleMod={switchModes}
 						/>
 
-						{/************** T-Doll image and skin images (Card/Full) **************/}
-						<Grid container direction="row" spacing={2}>
-							<Grid key="T-Doll image" size={{ xs: 12, sm: 6 }}>
+						{/************** Section tabs: only the active panel mounts, so the chibi never sizes itself against a hidden ancestor **************/}
+						<Tabs
+							sx={styles.sectionTabs}
+							value={sectionTab}
+							onChange={(_e, value: SectionTab) => setSectionTab(value)}
+							indicatorColor="primary"
+							textColor="primary"
+							variant="scrollable"
+							scrollButtons
+							allowScrollButtonsMobile
+						>
+							<Tab label="Overview" value="overview" />
+							<Tab label="Skills" value="skills" />
+							<Tab label="Tiles" value="tiles" />
+							<Tab label="Chibi" value="chibi" />
+						</Tabs>
+
+						{sectionTab === "overview" && (
+							<Box sx={styles.mediaColumn}>
 								<OverviewPanel
 									showSkin={showSkin}
 									tdollImage={tdollImage}
@@ -806,11 +713,35 @@ function TDollContent({ doll }: TDollContentProps) {
 									dollName={tdoll.selected.name}
 									onSwitchToNormalArt={switchToNormalArt}
 									normalId={tdoll.normal.id}
+									stats={tdoll.selected}
 								/>
+							</Box>
+						)}
 
+						{sectionTab === "skills" && (
+							<Box sx={styles.textColumn}>
+								<SkillsPanel
+									showModSkill={showModSkill}
+									skill={tdoll.selected.skill}
+									skill2={tdoll.selected.skill2}
+									normalSkillDescription={tdoll.normal.skill.description}
+									modSkill2Description={tdoll.mod?.skill2?.description}
+									dollId={tdoll.selected.id}
+									skillImages={tdoll.skillImages}
+								/>
+							</Box>
+						)}
+
+						{sectionTab === "tiles" && (
+							<Box sx={styles.textColumn}>
+								<TilesPanel tileSet={tdoll.selected.tile_set} />
+							</Box>
+						)}
+
+						{sectionTab === "chibi" && (
+							<Box sx={styles.mediaColumn}>
 								<ChibiPanel
 									animationMode={animationMode}
-									showSkin={showSkin}
 									spineAnimationName={spineAnimationName}
 									spineTabs={spineTabs}
 									onSwitchAnimations={switchAnimations}
@@ -820,27 +751,8 @@ function TDollContent({ doll }: TDollContentProps) {
 									animation={animation}
 									onPlayerSwitchAnimations={playerSwitchAnimations}
 								/>
-							</Grid>
-
-							<Grid key="T-Doll stat table and skill card" size={{ xs: 12, sm: 6 }}>
-								<SkillsPanel
-									showModSkill={showModSkill}
-									selectedSkill={selectedSkill}
-									onSelectedSkillChange={handleChangeSkills}
-									skill={tdoll.selected.skill}
-									skill2={tdoll.selected.skill2}
-									skillImages={tdoll.skillImages}
-									skillDescription1={skillDescription1}
-									skillDescription2={skillDescription2}
-									skillLevel={skillLevel}
-									onSkillLevelChange={setSkillLevel}
-								/>
-
-								<br />
-
-								<TilesPanel tileSet={tdoll.selected.tile_set} stats={tdoll.selected} />
-							</Grid>
-						</Grid>
+							</Box>
+						)}
 					</CardContent>
 				</Card>
 			</Container>

@@ -1,7 +1,8 @@
 // MaterialUI imports
-import { Card, Fab, Tab, Tabs } from "@mui/material";
+import { Box, Card, Fab } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import FilterChip from "../../components/FilterChip";
 import SpineAnimation from "../../components/SpineAnimation";
 import { spineImageBase, spineUrl, uiUrl } from "../../lib/assets";
 import type { AnimationTab } from "../../lib/spine";
@@ -11,23 +12,22 @@ const dorm_button = uiUrl("dorm_button.png");
 const combat_button = uiUrl("combat_button.png");
 
 const styles = {
-	tabs: (theme: Theme) => ({
-		width: "100%",
-		backgroundColor: theme.palette.background.paper
-	}),
-	cardForCombatAnimations: (theme: Theme) => ({
+	pillList: {
+		display: "flex",
+		flexWrap: "wrap",
+		listStyle: "none",
+		p: 0,
+		m: 0,
+		mb: 1,
+		gap: 0.5
+	},
+	cardForAnimation: (theme: Theme) => ({
 		display: "flex",
 		justifyContent: "center",
 		width: "100%",
-		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
-		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
-		backgroundSize: "5.66px 5.66px",
-		cursor: "pointer"
-	}),
-	cardForDormAnimations: (theme: Theme) => ({
-		display: "flex",
-		justifyContent: "center",
-		width: "100%",
+		// The card is the ancestor SpineAnimation's ResizeObserver measures, so clipping happens here
+		// rather than on SpineAnimation's own wrapper, which resolves to zero width and would hide it.
+		overflow: "hidden",
 		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
 		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
 		backgroundSize: "5.66px 5.66px",
@@ -47,8 +47,6 @@ const styles = {
 interface ChibiPanelProps {
 	/** 0 for combat animations, 1 for dorm animations. */
 	animationMode: number;
-	/** Whether a skin is currently selected. */
-	showSkin: boolean;
 	/** The animation name currently playing, resolved to one the skeleton actually defines. */
 	spineAnimationName: string;
 	/** Tabs to render for the current skeleton's animations. */
@@ -68,14 +66,13 @@ interface ChibiPanelProps {
 }
 
 /**
- * The doll's chibi animation: the combat/dorm toggle, the animation tab strip and the Spine or GIF player.
+ * The doll's chibi animation: the combat/dorm toggle, the animation pill row and the Spine or GIF player.
  *
  * @param props Component props.
- * @returns The animation toggle, tabs and player.
+ * @returns The animation toggle, pill row and player.
  */
 export default function ChibiPanel({
 	animationMode,
-	showSkin,
 	spineAnimationName,
 	spineTabs,
 	onSwitchAnimations,
@@ -85,67 +82,6 @@ export default function ChibiPanel({
 	animation,
 	onPlayerSwitchAnimations
 }: ChibiPanelProps) {
-	// Render tabs for animation selection based on Normal or Dorm animation mode active.
-	const renderAnimationTabs = () => {
-		if (animationMode === 0) {
-			if (showSkin) {
-				// Skin animations for Combat.
-				return (
-					<Tabs
-						sx={styles.tabs}
-						value={spineAnimationName}
-						onChange={(_e, value) => onSwitchAnimations(value)}
-						indicatorColor="primary"
-						textColor="primary"
-						scrollButtons
-						variant="scrollable"
-						allowScrollButtonsMobile
-					>
-						{spineTabs.map((tab) => (
-							<Tab key={tab.value} label={tab.label} value={tab.value} />
-						))}
-					</Tabs>
-				);
-			} else {
-				// Normal Animations for Combat.
-				return (
-					<Tabs
-						sx={styles.tabs}
-						value={spineAnimationName}
-						onChange={(_e, value) => onSwitchAnimations(value)}
-						indicatorColor="primary"
-						textColor="primary"
-						scrollButtons
-						variant="scrollable"
-						allowScrollButtonsMobile
-					>
-						{spineTabs.map((tab) => (
-							<Tab key={tab.value} label={tab.label} value={tab.value} />
-						))}
-					</Tabs>
-				);
-			}
-		} else {
-			// Animations for Dorm.
-			return (
-				<Tabs
-					sx={styles.tabs}
-					value={spineAnimationName}
-					onChange={(_e, value) => onSwitchAnimations(value)}
-					indicatorColor="primary"
-					textColor="primary"
-					scrollButtons
-					variant="scrollable"
-					allowScrollButtonsMobile
-				>
-					{spineTabs.map((tab) => (
-						<Tab key={tab.value} label={tab.label} value={tab.value} />
-					))}
-				</Tabs>
-			);
-		}
-	};
-
 	return (
 		<>
 			{/************** T-Doll's animations **************/}
@@ -157,39 +93,28 @@ export default function ChibiPanel({
 				)}
 			</Fab>
 
-			{renderAnimationTabs()}
+			<Box component="ul" sx={styles.pillList} role="group" aria-label="Animations">
+				{spineTabs.map((tab) => (
+					<li key={tab.value}>
+						<FilterChip label={tab.label} selected={tab.value === spineAnimationName} onToggle={() => onSwitchAnimations(tab.value)} />
+					</li>
+				))}
+			</Box>
 
-			{animationMode === 0 ? (
-				<Card sx={styles.cardForCombatAnimations}>
-					{spineRig ? (
-						<div onClick={() => onPlayerSwitchAnimations()} style={{ cursor: "pointer" }}>
-							<SpineAnimation
-								skelUrl={spineUrl(normalId, spineRig.skel, "skel")}
-								atlasUrl={spineUrl(normalId, spineRig.atlas, "atlas")}
-								imageBase={spineImageBase(normalId, spineRig.atlas)}
-								animation={spineAnimationName}
-							/>
-						</div>
-					) : (
-						<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => onPlayerSwitchAnimations()} />
-					)}
-				</Card>
-			) : (
-				<Card sx={styles.cardForDormAnimations}>
-					{spineRig ? (
-						<div onClick={() => onPlayerSwitchAnimations()} style={{ cursor: "pointer" }}>
-							<SpineAnimation
-								skelUrl={spineUrl(normalId, spineRig.skel, "skel")}
-								atlasUrl={spineUrl(normalId, spineRig.atlas, "atlas")}
-								imageBase={spineImageBase(normalId, spineRig.atlas)}
-								animation={spineAnimationName}
-							/>
-						</div>
-					) : (
-						<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => onPlayerSwitchAnimations()} />
-					)}
-				</Card>
-			)}
+			<Card sx={styles.cardForAnimation}>
+				{spineRig ? (
+					<div onClick={() => onPlayerSwitchAnimations()} style={{ cursor: "pointer" }}>
+						<SpineAnimation
+							skelUrl={spineUrl(normalId, spineRig.skel, "skel")}
+							atlasUrl={spineUrl(normalId, spineRig.atlas, "atlas")}
+							imageBase={spineImageBase(normalId, spineRig.atlas)}
+							animation={spineAnimationName}
+						/>
+					</div>
+				) : (
+					<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => onPlayerSwitchAnimations()} />
+				)}
+			</Card>
 		</>
 	);
 }

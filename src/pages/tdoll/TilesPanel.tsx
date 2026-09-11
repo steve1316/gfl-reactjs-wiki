@@ -2,36 +2,15 @@ import type { JSX } from "react";
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the tile-set buff description.
 
 // MaterialUI imports
-import { Box, Card, CardContent, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Card, CardContent, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import type { RawForm, RawTileSet } from "../../types/tdoll";
-
-/**
- * The stat rows on the doll page, in display order.
- *
- * These were five hand-written table rows differing only by label and field, which is how the header
- * and the rows drifted apart in wording. Listing them keeps the order and the labels in one place.
- */
-const STAT_ROWS = [
-	{ label: "HP", key: "max_hp" },
-	{ label: "Damage", key: "max_dmg" },
-	{ label: "Accuracy", key: "max_acc" },
-	{ label: "Evasion", key: "max_eva" },
-	{ label: "Rate of fire", key: "max_rof" }
-] as const;
+import type { RawTileSet } from "../../types/tdoll";
 
 const styles = {
 	cardForTileSet: {
 		width: "100%"
 	},
-	tableContainer: {
-		width: "100%"
-	},
-	table: (theme: Theme) => ({
-		width: "100%",
-		backgroundColor: theme.palette.raised
-	}),
 	title: {
 		fontSize: 14
 	},
@@ -80,17 +59,15 @@ const styles = {
 interface TilesPanelProps {
 	/** The currently selected form's 3x3 tile buff grid and buff description. */
 	tileSet: RawTileSet;
-	/** The currently selected form's stats, shown in the stat table. */
-	stats: Pick<RawForm, "max_hp" | "max_dmg" | "max_acc" | "max_eva" | "max_rof">;
 }
 
 /**
- * The doll's tile buff grid and its stat table.
+ * The doll's tile buff grid.
  *
  * @param props Component props.
- * @returns The tileset card and the stat table.
+ * @returns The tileset card.
  */
-export default function TilesPanel({ tileSet, stats }: TilesPanelProps) {
+export default function TilesPanel({ tileSet }: TilesPanelProps) {
 	// This function will return tiles depending on the tile set information in the JSON.
 	const createTileSetRow = (tile: number, index: number) => {
 		let temp: JSX.Element;
@@ -131,64 +108,38 @@ export default function TilesPanel({ tileSet, stats }: TilesPanelProps) {
 	};
 
 	return (
-		<>
-			{/************** T-Doll's tileset information **************/}
-			<Card sx={styles.cardForTileSet}>
-				<Box component="div" sx={styles.tileSetDiv}>
-					<CardContent sx={styles.content}>
-						<Box component="table" sx={styles.tableTileSet} id="tdoll-tileset">
-							<tbody>
-								<tr>
-									{tileSet.row1.map((tile, index) => {
-										return createTileSetRow(tile, index);
-									})}
-								</tr>
-								<tr>
-									{tileSet.row2.map((tile, index) => {
-										return createTileSetRow(tile, index);
-									})}
-								</tr>
-								<tr>
-									{tileSet.row3.map((tile, index) => {
-										return createTileSetRow(tile, index);
-									})}
-								</tr>
-							</tbody>
-						</Box>
-					</CardContent>
+		// T-Doll's tileset information.
+		<Card sx={styles.cardForTileSet}>
+			<Box component="div" sx={styles.tileSetDiv}>
+				<CardContent sx={styles.content}>
+					<Box component="table" sx={styles.tableTileSet} id="tdoll-tileset">
+						<tbody>
+							<tr>
+								{tileSet.row1.map((tile, index) => {
+									return createTileSetRow(tile, index);
+								})}
+							</tr>
+							<tr>
+								{tileSet.row2.map((tile, index) => {
+									return createTileSetRow(tile, index);
+								})}
+							</tr>
+							<tr>
+								{tileSet.row3.map((tile, index) => {
+									return createTileSetRow(tile, index);
+								})}
+							</tr>
+						</tbody>
+					</Box>
+				</CardContent>
 
-					<CardContent sx={styles.tileSetInformation}>
-						<Typography sx={styles.title} color="textPrimary" gutterBottom>
-							{tileSet.targets}
-						</Typography>
-						<Typography color="textSecondary">{parse(renderTileSetInformation())}</Typography>
-					</CardContent>
-				</Box>
-			</Card>
-
-			<br />
-
-			{/************** T-Doll's stats in table format **************/}
-			<TableContainer sx={styles.tableContainer} component={Paper}>
-				<Table sx={styles.table} size="small">
-					<TableHead>
-						<TableRow>
-							<TableCell>Stats</TableCell>
-							<TableCell align="right">At max level</TableCell>
-						</TableRow>
-					</TableHead>
-					<TableBody>
-						{STAT_ROWS.map((stat) => (
-							<TableRow key={stat.key}>
-								<TableCell component="th" scope="row">
-									{stat.label}
-								</TableCell>
-								<TableCell align="right">{stats[stat.key]}</TableCell>
-							</TableRow>
-						))}
-					</TableBody>
-				</Table>
-			</TableContainer>
-		</>
+				<CardContent sx={styles.tileSetInformation}>
+					<Typography sx={styles.title} color="textPrimary" gutterBottom>
+						{tileSet.targets}
+					</Typography>
+					<Typography color="textSecondary">{parse(renderTileSetInformation())}</Typography>
+				</CardContent>
+			</Box>
+		</Card>
 	);
 }
