@@ -95,16 +95,7 @@ export default function TDollArt() {
 				</IconButton>
 			</Box>
 
-			{/* touchAction is set here, not just on the image: this element is what receives the pointer handlers, and the
-			    browser only stops claiming a gesture for scrolling on the element the listener is actually attached to.
-			    onDoubleClick is recast: the hook types every handler as a pointer handler since pinch and drag share pointer
-			    events, but a native double click fires as a MouseEvent. The handler body only calls preventDefault and reads
-			    the current scale, so the cast is safe. */}
-			<Box
-				sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center", touchAction: "none" }}
-				{...zoom.handlers}
-				onDoubleClick={(event) => zoom.handlers.onDoubleClick(event as never)}
-			>
+			<Box sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
 				{source ? <Box component="img" src={source} alt="" sx={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} style={zoom.contentStyle} /> : null}
 			</Box>
 
