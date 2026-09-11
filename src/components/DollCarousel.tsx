@@ -136,6 +136,11 @@ export default function DollCarousel({ ids }: DollCarouselProps) {
 					step(end < start ? 1 : -1);
 				}
 				touchStart.current = null;
+				setPaused(false);
+			}}
+			onTouchCancel={() => {
+				touchStart.current = null;
+				setPaused(false);
 			}}
 			sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: { xs: 1, sm: 2 }, py: 2 }}
 		>
