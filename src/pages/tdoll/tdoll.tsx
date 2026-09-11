@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { JSX } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
 
 // Component imports
@@ -35,7 +35,6 @@ import {
 	Tabs,
 	Tab,
 	Fab,
-	Backdrop,
 	//Grow
 	Divider
 } from "@mui/material";
@@ -306,9 +305,6 @@ function TDollContent({ doll }: TDollContentProps) {
 	const [animationMode, setAnimationMode] = useState(0); // 0 for Normal animations, 1 for Dorm animations.
 	const [animationTabSelected, setAnimationTabSelected] = useState("wait");
 	const [animationDormTabSelected, setAnimationDormTabSelected] = useState("wait");
-
-	// Set initial miscellaneous states.
-	const [open, setOpen] = useState(false);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// useEffect and helper functions
@@ -677,24 +673,6 @@ function TDollContent({ doll }: TDollContentProps) {
 
 		// Reset animation tab selected.
 		helperResetAnimationTabs();
-	};
-
-	// Show full images for the Backdrop component depending on whether it is the skin or Normal/Mod selected.
-	const renderImage = () => {
-		if (showSkin) {
-			const skin = skinForm(helperSkinSelected(), mode === 1);
-			if (switchImage) {
-				return <Box component="img" src={skin?.images.full_damaged} sx={styles.fullImage} alt="Damaged Full Skin" />;
-			} else {
-				return <Box component="img" src={skin?.images.full} sx={styles.fullImage} alt="Normal Full Skin" />;
-			}
-		} else {
-			if (switchImage) {
-				return <Box component="img" src={tdoll.selected.assets.images.full_damaged} sx={styles.fullImage} alt="Damaged Full" />;
-			} else {
-				return <Box component="img" src={tdoll.selected.assets.images.full} sx={styles.fullImage} alt="Normal Full" />;
-			}
-		}
 	};
 
 	// Switch back to Normal information if user already selected a skin.
@@ -1096,18 +1074,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		return tempStat;
 	};
 
-	///////////////////////////////////////////////////////////////////////////////////////////
-	// Misc Functions
-	///////////////////////////////////////////////////////////////////////////////////////////
-
-	// The following 2 handle functions control the Backdrop component.
-	const handleToggle = () => {
-		setOpen(!open);
-	};
-	const handleClose = () => {
-		setOpen(false);
-	};
-
 	return (
 		<main>
 			<ScrollToTop />
@@ -1181,14 +1147,9 @@ function TDollContent({ doll }: TDollContentProps) {
 									)}
 
 									{/************** Floating Action Button overlayed over image at the bottom left **************/}
-									<Fab color="primary" sx={styles.fabExpand} onClick={handleToggle}>
+									<Fab color="primary" component={Link} to={`/tdoll/${tdoll.normal.id}/art`} sx={styles.fabExpand} aria-label="view full art">
 										<ZoomOutMapIcon />
 									</Fab>
-
-									{/************** Display full size images based on boolean **************/}
-									<Backdrop sx={styles.backdrop} open={open} onClick={handleClose}>
-										{renderImage()}
-									</Backdrop>
 								</Card>
 
 								{/************** T-Doll's animations **************/}
