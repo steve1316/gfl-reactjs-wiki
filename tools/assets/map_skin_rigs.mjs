@@ -7,14 +7,20 @@
  * have no Spine rig published at all: doll 20 has three skins and two rigs, doll 26 has four and
  * three. Guessing by position would show the wrong outfit's animations.
  *
- * `skin.hjson` from gf-data-us resolves it properly. It maps every skin id to its name and the doll it
- * belongs to, so each name in `skin_names` can be matched to an id, and that id to a rig.
+ * `skin.hjson` from gf-data-us maps every skin id to its name and the doll it belongs to, so each name
+ * in `skin_names` can be matched to an id, and that id to a rig. Names alone do not get far, since the
+ * wiki's were written in 2021 and the game's have been retranslated since, sometimes past recognition.
+ * `match_skin_art.py` settles those by comparing the artwork itself. Neither signal wins outright, so
+ * the stronger one is taken: an exact or prefix name match is as good as certain, artwork decides
+ * where it wins by a clear margin, and a loose name match is the last resort. Reversing any of that
+ * gets real skins wrong. SAA's two outfits are close enough in palette that artwork swaps them, while
+ * Grizzly MkV's `Rainy Starry Night` shares two words with the wrong skin and needs the artwork.
  *
  * The result is written into `spine-index.json` as `skinRigs`, indexed by the same position the tabs
  * use, with nulls where a skin has no rig.
  *
  * Usage:
- *     node tools/assets/map_skin_rigs.mjs --skins <skin.hjson> [--index src/data/spine-index.json]
+ *     node tools/assets/map_skin_rigs.mjs --skins <skin.hjson> [--art <matches.json>] [--index src/data/spine-index.json]
  */
 
 import fs from "node:fs";
@@ -27,6 +33,15 @@ const SHARDS = [
 	"src/data/tdolls_from_301_to_400.js",
 	"src/data/tdolls_from_1000_to_1050.js"
 ];
+
+/** How far artwork must beat its runner-up before it is allowed to overrule a loose name match. */
+const CLEAR_ART_MARGIN = 0.05;
+
+/** Names differ in punctuation and case between the two sources, so comparison is loosened. */
+const normalise = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** Reduce a name to the words worth comparing, dropping single letters as too common to mean anything. */
+const words = (value) => new Set(value.toLowerCase().split(/[^a-z0-9]+/i).filter((word) => word.length > 1));
 
 /**
  * Read skin id, name and owning doll out of `skin.hjson`.
@@ -78,9 +93,6 @@ function parseSkinNames() {
 	return names;
 }
 
-/** Names differ in punctuation and case between the two sources, so comparison is loosened. */
-const normalise = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
-
 /**
  * Find the catalogue entry for a skin name.
  *
@@ -110,13 +122,12 @@ function matchSkin(name, position, catalogue, allNames) {
 	// Gr G36", "Every Child's Christmas Dream" became "Every Child's X'mas Dream". Word overlap catches
 	// those. The threshold is deliberately high, since a wrong match shows the wrong outfit and is worse
 	// than showing the doll's default rig.
-	const words = (value) => new Set(value.toLowerCase().split(/[^a-z0-9]+/i).filter((w) => w.length > 1));
 	const targetWords = words(name);
 	let best = null;
 	let bestScore = 0;
 	for (const candidate of catalogue) {
 		const other = words(candidate.name);
-		const shared = [...targetWords].filter((w) => other.has(w)).length;
+		const shared = [...targetWords].filter((word) => other.has(word)).length;
 		const score = shared / new Set([...targetWords, ...other]).size;
 		if (score > bestScore) {
 			bestScore = score;
@@ -133,10 +144,31 @@ function matchSkin(name, position, catalogue, allNames) {
 	return null;
 }
 
+/**
+ * Pick between the name match and the artwork match, taking whichever is the stronger signal.
+ *
+ * An exact or prefix name match is as good as certain, so it wins outright. Artwork comes next, but
+ * only where it beat its runner-up by a clear margin. A loose name match is the last resort, ahead of
+ * an artwork match that was too close to call.
+ *
+ * @param {{skin: {id: number}, how: string}|null} named The name match, if one was found.
+ * @param {{skin: number, margin: number}|null} art The artwork match, if one was found.
+ * @returns {{skinId: number, how: string}|null} The skin that won and how, or null when neither signal has one.
+ */
+function chooseSkin(named, art) {
+	if (named?.how === "name" || named?.how === "prefix") return { skinId: named.skin.id, how: named.how };
+	if (art && art.margin >= CLEAR_ART_MARGIN) return { skinId: art.skin, how: "art" };
+	if (named) return { skinId: named.skin.id, how: named.how };
+	if (art) return { skinId: art.skin, how: "art (close)" };
+	return null;
+}
+
+/** Resolve every doll's skin rigs by position and write them back into the index. */
 function main() {
 	const args = process.argv.slice(2);
 	const skinsPath = args[args.indexOf("--skins") + 1];
 	const indexPath = args.includes("--index") ? args[args.indexOf("--index") + 1] : "src/data/spine-index.json";
+	const artPath = args.includes("--art") ? args[args.indexOf("--art") + 1] : null;
 	if (!skinsPath || !fs.existsSync(skinsPath)) {
 		console.error("pass --skins <skin.hjson>");
 		process.exit(1);
@@ -145,28 +177,43 @@ function main() {
 	const gameSkins = parseSkins(skinsPath);
 	const uiNames = parseSkinNames();
 	const index = JSON.parse(fs.readFileSync(indexPath, "utf8"));
+	const artMatches = artPath ? JSON.parse(fs.readFileSync(artPath, "utf8")) : {};
 
 	let matched = 0;
 	let withoutRig = 0;
-	let unmatchedName = 0;
+	let unmatched = 0;
 	const strategy = {};
+	const agreement = { agree: 0, disagree: 0 };
+	const disagreements = [];
 
 	for (const [id, entry] of Object.entries(index)) {
 		const names = uiNames.get(Number(id));
 		if (!names) continue;
 
-		// Ordered by id, which is release order in both sources.
+		// Ordered by id, which only roughly tracks release order, so this is a weak signal on its own.
 		const catalogue = (gameSkins.get(Number(id)) ?? []).slice().sort((a, b) => a.id - b.id);
 		const rigs = entry.skins ?? {};
 
 		entry.skinRigs = names.map((name, position) => {
-			const found = matchSkin(name, position, catalogue, names);
-			if (!found) {
-				unmatchedName++;
+			// The artwork matcher counts skins the way the old image filenames did, from one.
+			const art = artMatches[id]?.[String(position + 1)] ?? null;
+			const named = matchSkin(name, position, catalogue, names);
+
+			if (art && named) {
+				agreement[art.skin === named.skin.id ? "agree" : "disagree"]++;
+				if (art.skin !== named.skin.id) {
+					const label = (skinId) => catalogue.find((candidate) => candidate.id === skinId)?.name ?? "?";
+					disagreements.push(`doll ${id} "${name}": art ${art.skin} ${label(art.skin)} by ${art.margin} / ${named.how} ${named.skin.id} ${label(named.skin.id)}`);
+				}
+			}
+
+			const choice = chooseSkin(named, art);
+			if (!choice) {
+				unmatched++;
 				return null;
 			}
-			strategy[found.how] = (strategy[found.how] ?? 0) + 1;
-			const rig = rigs[String(found.skin.id)];
+			strategy[choice.how] = (strategy[choice.how] ?? 0) + 1;
+			const rig = rigs[String(choice.skinId)];
 			if (!rig) {
 				withoutRig++;
 				return null;
@@ -182,8 +229,10 @@ function main() {
 	console.log(`updated ${indexPath} (${(fs.statSync(indexPath).size / 1024).toFixed(0)} KB)`);
 	console.log(`  skins matched to a rig   ${matched}`);
 	console.log(`  skins with no rig        ${withoutRig}`);
-	console.log(`  names not in skin.hjson  ${unmatchedName}`);
-	console.log(`  matched by              ${JSON.stringify(strategy)}`);
+	console.log(`  no match at all          ${unmatched}`);
+	console.log(`  matched by               ${JSON.stringify(strategy)}`);
+	console.log(`  art against names        ${JSON.stringify(agreement)}`);
+	disagreements.slice(0, 15).forEach((line) => console.log(`     ${line}`));
 }
 
 main();
