@@ -6,7 +6,6 @@ import {
 	Container,
 	Typography,
 	Divider,
-	Chip,
 	Grid,
 	Card,
 	Zoom,
@@ -22,11 +21,11 @@ import {
 	AccordionDetails,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
-import DoneIcon from "@mui/icons-material/Done";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
+import FilterChip from "../../components/FilterChip";
 
 import { loadEquipment } from "../../lib/data";
 import type { Equipment } from "../../types/equipment";
@@ -172,10 +171,6 @@ export default function EquipmentIndex() {
 		setSearchResults(filterEquipment());
 	}, [typeFilter, exclusiveFilter, equipmentByCategory]);
 
-	const handleDelete = () => {
-		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
-	};
-
 	const handleOnClickType = (selectedType: { key: number; selected: boolean }) => {
 		const key = selectedType.key
 		const newSelected = !selectedType.selected
@@ -275,20 +270,9 @@ export default function EquipmentIndex() {
 						return (
 							<li key={type.key}>
 								<Zoom in={true} timeout={400}>
-									<Chip 
-										sx={styles.chip}
-										clickable
-										color={type.selected ? "primary" : "secondary"}
-										label={type.label}
-										onClick={() => handleOnClickType(type)}
-										onDelete={type.selected ? handleDelete : undefined}
-										deleteIcon={
-											<>
-												<Divider orientation="vertical" flexItem />
-												<DoneIcon />
-											</>
-										} 
-									/>
+									<span>
+										<FilterChip label={type.label} selected={type.selected} onToggle={() => handleOnClickType(type)} />
+									</span>
 								</Zoom>
 							</li>
 						)
@@ -299,20 +283,9 @@ export default function EquipmentIndex() {
 
 				<Box component="div" sx={styles.chipList}>
 					<Zoom in={true} timeout={600}>
-						<Chip
-							sx={styles.chip}
-							clickable
-							color={exclusiveFilter.selected ? "primary" : "secondary"}
-							label={exclusiveFilter.label}
-							onClick={() => handleOnClickExclusive()}
-							onDelete={exclusiveFilter.selected ? handleDelete : undefined}
-							deleteIcon={
-								<>
-									<Divider orientation="vertical" flexItem />
-									<DoneIcon />
-								</>
-							}
-						/>
+						<span>
+							<FilterChip label={exclusiveFilter.label} selected={exclusiveFilter.selected} onToggle={handleOnClickExclusive} />
+						</span>
 					</Zoom>
 				</Box>
 

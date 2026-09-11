@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
+import FilterChip from "../../components/FilterChip";
 
 // MaterialUI imports
 import {
 	Box,
 	Container,
 	Grid,
-	Chip,
 	Avatar,
 	Divider,
 	Card,
@@ -22,13 +22,11 @@ import {
 	styled,
 	Fade,
 	Zoom,
+	useTheme,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import Pagination from '@mui/material/Pagination';
-
-// MaterialUI icon imports
-import DoneIcon from "@mui/icons-material/Done";
 
 import { uiUrl } from "../../lib/assets";
 import { loadAllDolls } from "../../lib/data";
@@ -100,6 +98,7 @@ const styles = {
 } satisfies Record<string, SxProps<Theme>>;
 
 export default function TDoll_Index() {
+	const theme = useTheme();
 
 	const [totalSearchResults, setTotalSearchResults] = useState(0);
 	const [allDolls, setAllDolls] = useState<TDoll[]>([]);
@@ -129,10 +128,6 @@ export default function TDoll_Index() {
 		label: "Mod",
 		selected: false
 	});
-
-	const handleDelete = () => {
-		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
-	};
 
 	// The index renders every doll, so it is the one route that legitimately loads all shards.
 	useEffect(() => {
@@ -375,21 +370,15 @@ export default function TDoll_Index() {
 						return (
 							<li key={rarity.key}>
 								<Zoom in={true} timeout={400}>
-									<Chip
-										sx={styles.chip}
-										avatar={<Avatar>{rarity.rarity}*</Avatar>}
-										clickable
-										color={rarity.selected ? "primary" : "secondary"}
-										label={rarity.label}
-										onClick={handleOnClickRarity(rarity)}
-										onDelete={rarity.selected ? handleDelete : undefined}
-										deleteIcon={
-											<>
-												<Divider orientation="vertical" flexItem />
-												<DoneIcon />
-											</>
-										}
-									/>
+									<span>
+										<FilterChip
+											label={rarity.label}
+											selected={rarity.selected}
+											onToggle={handleOnClickRarity(rarity)}
+											colour={theme.palette.rarity[rarity.rarity as keyof typeof theme.palette.rarity]}
+											avatar={<Avatar>{rarity.rarity}</Avatar>}
+										/>
+									</span>
 								</Zoom>
 							</li>
 						);
@@ -403,21 +392,14 @@ export default function TDoll_Index() {
 						return (
 							<li key={type.key}>
 								<Zoom in={true} timeout={600}>
-									<Chip
-										sx={styles.chip}
-										avatar={<Avatar style={{ width: 30 }}>{type.label}</Avatar>}
-										clickable
-										color={type.selected ? "primary" : "secondary"}
-										label={type.label}
-										onClick={handleOnClickType(type)}
-										onDelete={type.selected ? handleDelete : undefined}
-										deleteIcon={
-											<>
-												<Divider orientation="vertical" flexItem />
-												<DoneIcon />
-											</>
-										}
-									/>
+									<span>
+										<FilterChip
+											label={type.label}
+											selected={type.selected}
+											onToggle={handleOnClickType(type)}
+											colour={theme.palette.weaponType[type.label as keyof typeof theme.palette.weaponType]}
+										/>
+									</span>
 								</Zoom>
 							</li>
 						);
@@ -428,25 +410,18 @@ export default function TDoll_Index() {
 
 				<Box component="div" sx={styles.chipList}>
 					<Zoom in={true} timeout={800}>
-						<Chip
-							sx={styles.chip}
-							avatar={
-								<Avatar>
-									<img src={mod_button} alt="Mod" style={{ width: 20, height: 20 }} />
-								</Avatar>
-							}
-							clickable
-							color={modFilter.selected ? "primary" : "secondary"}
-							label={modFilter.label}
-							onClick={() => handleOnClickMod()}
-							onDelete={modFilter.selected ? handleDelete : undefined}
-							deleteIcon={
-								<>
-									<Divider orientation="vertical" flexItem />
-									<DoneIcon />
-								</>
-							}
-						/>
+						<span>
+							<FilterChip
+								label={modFilter.label}
+								selected={modFilter.selected}
+								onToggle={handleOnClickMod}
+								avatar={
+									<Avatar>
+										<img src={mod_button} alt="" style={{ width: 20, height: 20 }} />
+									</Avatar>
+								}
+							/>
+						</span>
 					</Zoom>
 				</Box>
 
