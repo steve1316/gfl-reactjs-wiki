@@ -4,6 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 import ChibiPanel from "./ChibiPanel";
+import DollHero from "./DollHero";
 import OverviewPanel from "./OverviewPanel";
 import SkillsPanel from "./SkillsPanel";
 import TilesPanel from "./TilesPanel";
@@ -22,7 +23,6 @@ import type { SxProps, Theme } from "@mui/material";
 
 import { loadDoll, spineFor } from "../../lib/data";
 import { animationTabs } from "../../lib/spine";
-import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import { INGREDIENT_COLOURS } from "../../theme";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
@@ -234,6 +234,15 @@ function TDollContent({ doll }: TDollContentProps) {
 
 		return tempSkinSelected / 2;
 	};
+
+	// Whether the form currently on screen is the Mod. Drives both the rarity star colour and the
+	// hero's Mod toggle, which stay in lockstep since they describe the same underlying state.
+	const isModForm = tdoll.selected === tdoll.mod;
+
+	// The hero's full art follows the same selection as the card portrait: the current skin when one is
+	// shown, otherwise the Normal/Mod form. mod_skin* forms only ever publish card art, so the base
+	// Normal form's full art stands in whenever the selected form has none of its own.
+	const heroArtUrl = (showSkin ? skinForm(helperSkinSelected(), mode === 1)?.images.full : tdoll.selected.assets.images.full) ?? tdoll.normal.assets.images.full;
 
 	// Helper function to reset selected animation tab back to the default tab.
 	const helperResetAnimationTabs = () => {
@@ -771,32 +780,30 @@ function TDollContent({ doll }: TDollContentProps) {
 
 				<Card sx={styles.card}>
 					<CardContent>
-						{/************** T-Doll's Name, Rarity in stars, type, and Index Number **************/}
-						<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-							<TypeBadge type={tdoll.selected.type} />
-							<RarityStars rarity={tdoll.selected.rarity} isMod={tdoll.selected === tdoll.mod} />
-						</Box>
-						<Typography variant="h3" component="h2">
-							{tdoll.selected.name}
-							<Typography component="span" sx={{ display: "inline" }} color="textSecondary">
-								{" "}
-								#{tdoll.selected.id}
-							</Typography>
-						</Typography>
+						{/************** T-Doll's hero: full art, name, rarity, type, skin pills and Mod toggle **************/}
+						<DollHero
+							name={tdoll.selected.name}
+							id={tdoll.selected.id}
+							type={tdoll.selected.type}
+							rarity={tdoll.selected.rarity}
+							isMod={isModForm}
+							artUrl={heroArtUrl}
+							skins={tdoll.skins}
+							skinValue={showSkin ? skinSelected : false}
+							onSkinChange={switchSkinSelected}
+							hasMod={hasMod}
+							modOn={isModForm}
+							onToggleMod={switchModes}
+						/>
 
 						{/************** T-Doll image and skin images (Card/Full) **************/}
 						<Grid container direction="row" spacing={2}>
 							<Grid key="T-Doll image" size={{ xs: 12, sm: 6 }}>
 								<OverviewPanel
-									skins={tdoll.skins}
 									showSkin={showSkin}
-									skinSelected={skinSelected}
-									onSkinTabChange={switchSkinSelected}
 									tdollImage={tdollImage}
 									onCardImageClick={switchBetweenNormalDamagedCardImages}
 									dollName={tdoll.selected.name}
-									hasMod={hasMod}
-									onSwitchModes={switchModes}
 									onSwitchToNormalArt={switchToNormalArt}
 									normalId={tdoll.normal.id}
 								/>
