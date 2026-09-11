@@ -30,3 +30,6 @@ __pycache__/
 # vite
 /build
 .vite
+
+# playwright mcp scratch output
+.playwright-mcp/
