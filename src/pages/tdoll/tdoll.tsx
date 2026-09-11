@@ -6,6 +6,9 @@ import parse from "html-react-parser"; // This is needed to parse the span tags 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 
+// Library imports
+import { cardArtSx } from "../../lib/artLayout";
+
 // MaterialUI imports
 import {
 	Box,
@@ -34,14 +37,13 @@ import {
 	Fab,
 	Backdrop,
 	//Grow
-	Divider,
+	Divider
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // MaterialUI icon imports
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-
 
 import { uiUrl } from "../../lib/assets";
 import { loadDoll, spineFor } from "../../lib/data";
@@ -86,12 +88,10 @@ const styles = {
 		width: "100%"
 	},
 	cardForImage: {
-		// Capped at the artwork's own 256x512 rather than stretched, since upscaling a bitmap that is
-		// already undersampled at this pixel ratio only makes it softer. The ratio lets it shrink.
-		width: "100%",
+		...cardArtSx,
+		// Capped at the artwork's own 256px rather than stretched, since upscaling a bitmap that is
+		// already undersampled at this pixel ratio only makes it softer.
 		maxWidth: 256,
-		aspectRatio: "1 / 2",
-		// Centred, so the cap reads as deliberate rather than as a card that failed to fill its column.
 		mx: "auto",
 		marginBottom: "10px"
 	},
@@ -317,10 +317,10 @@ function TDollContent({ doll }: TDollContentProps) {
 	/* eslint-disable */
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
-		document.title = `#${tdoll.normal.id} - ${tdoll.normal.name}`
+		document.title = `#${tdoll.normal.id} - ${tdoll.normal.name}`;
 		document.querySelector('meta[name="description"]')?.setAttribute("content", `#${tdoll.normal.id} - ${tdoll.normal.name}`);
-	}, [tdoll])
-	
+	}, [tdoll]);
+
 	// This will be used to initialize the functionality of the page.
 	useEffect(() => {
 		// Set initial information displayed to Normal.
@@ -720,7 +720,8 @@ function TDollContent({ doll }: TDollContentProps) {
 						textColor="primary"
 						scrollButtons
 						variant="scrollable"
-						allowScrollButtonsMobile>
+						allowScrollButtonsMobile
+					>
 						{spineTabs.map((tab) => (
 							<Tab key={tab.value} label={tab.label} value={tab.value} />
 						))}
@@ -737,7 +738,8 @@ function TDollContent({ doll }: TDollContentProps) {
 						textColor="primary"
 						scrollButtons
 						variant="scrollable"
-						allowScrollButtonsMobile>
+						allowScrollButtonsMobile
+					>
 						{spineTabs.map((tab) => (
 							<Tab key={tab.value} label={tab.label} value={tab.value} />
 						))}
@@ -755,7 +757,8 @@ function TDollContent({ doll }: TDollContentProps) {
 					textColor="primary"
 					scrollButtons
 					variant="scrollable"
-					allowScrollButtonsMobile>
+					allowScrollButtonsMobile
+				>
 					{spineTabs.map((tab) => (
 						<Tab key={tab.value} label={tab.label} value={tab.value} />
 					))}
@@ -969,7 +972,7 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Functions for Tileset functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Switch the animation playing to the next one when you click on the GIF Player. This also influences the movement trhough the animation Tabs as well. 
+	// Switch the animation playing to the next one when you click on the GIF Player. This also influences the movement trhough the animation Tabs as well.
 	// If you encounter the bug that moving forward suddenly skips a few tabs, chances are that animationArray is missing some of your newly added animations.
 	const playerSwitchAnimations = () => {
 		var currentAnimation = "";
@@ -982,15 +985,12 @@ function TDollContent({ doll }: TDollContentProps) {
 			currentAnimation = animationTabSelected;
 
 			animationArray.push("wait");
-			if (
-				(!showSkin && "hasWait2Animation" in tdoll.selected.animations) ||
-				(showSkin && ("wait2" in (skinForm(tempSkinSelected)?.animations ?? {})))
-			) {
+			if ((!showSkin && "hasWait2Animation" in tdoll.selected.animations) || (showSkin && "wait2" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("wait2");
 			}
 			animationArray.push("move");
 			animationArray.push("attack");
-			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && ("skill" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
+			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && "skill" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("skill");
 			}
 			if (!showSkin && "skill2" in tdoll.selected.animations) {
@@ -999,7 +999,7 @@ function TDollContent({ doll }: TDollContentProps) {
 			if ((!showSkin && "crouch" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.crouch)) {
 				animationArray.push("crouch");
 			}
-			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && ("attack2" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
+			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && "attack2" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("attack2");
 			}
 			if ((!showSkin && "action" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.action)) {
@@ -1025,7 +1025,7 @@ function TDollContent({ doll }: TDollContentProps) {
 			if ("victory2" in tdoll.selected.animations && !showSkin) {
 				animationArray.push("victory2");
 			}
-			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && ("victoryloop" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
+			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && "victoryloop" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
 				animationArray.push("victoryloop");
 			}
 		} else {
@@ -1034,12 +1034,12 @@ function TDollContent({ doll }: TDollContentProps) {
 
 			animationArray.push("wait");
 			animationArray.push("move");
-			if ((tdoll.skins && showSkin && ("action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) || "hasActionAnimation" in tdoll.selected.animations) {
+			if ((tdoll.skins && showSkin && "action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) || "hasActionAnimation" in tdoll.selected.animations) {
 				animationArray.push("action");
 			}
 			animationArray.push("pick");
 			animationArray.push("sit");
-			if (tdoll.skins && showSkin && ("sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) {
+			if (tdoll.skins && showSkin && "sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) {
 				animationArray.push("sit2");
 			}
 			animationArray.push("lying");
@@ -1143,7 +1143,8 @@ function TDollContent({ doll }: TDollContentProps) {
 											textColor="primary"
 											variant="fullWidth"
 											scrollButtons
-											allowScrollButtonsMobile>
+											allowScrollButtonsMobile
+										>
 											{renderSkinsTabs()}
 										</Tabs>
 									) : (
@@ -1155,7 +1156,8 @@ function TDollContent({ doll }: TDollContentProps) {
 											textColor="primary"
 											variant="scrollable"
 											scrollButtons
-											allowScrollButtonsMobile>
+											allowScrollButtonsMobile
+										>
 											{renderSkinsTabs()}
 										</Tabs>
 									)
@@ -1252,7 +1254,9 @@ function TDollContent({ doll }: TDollContentProps) {
 											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.skillImages.skill2 : tdoll.skillImages.skill1} />}
 											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
 											subheader={
-												selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? "Initial CD: " + tdoll.selected.skill2.initial_cooldown : "Initial CD: " + tdoll.selected.skill.initial_cooldown
+												selectedSkill === 1 && tdoll.selected.skill2 !== undefined
+													? "Initial CD: " + tdoll.selected.skill2.initial_cooldown
+													: "Initial CD: " + tdoll.selected.skill.initial_cooldown
 											}
 											action={
 												<FormControl>
@@ -1304,7 +1308,7 @@ function TDollContent({ doll }: TDollContentProps) {
 													Cooldown:{" "}
 													{
 														<Box component="span" sx={{ color: "secondary.main" }}>
-															<ins>{(tdoll.selected.skill.cooldown?.[skillLevel - 1] ?? "?")}s</ins>
+															<ins>{tdoll.selected.skill.cooldown?.[skillLevel - 1] ?? "?"}s</ins>
 														</Box>
 													}
 												</Typography>

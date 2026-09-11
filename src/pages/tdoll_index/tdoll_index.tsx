@@ -7,27 +7,14 @@ import ScrollToTop from "../../components/ScrollToTop";
 import FilterChip from "../../components/FilterChip";
 import { RarityLabel, TypeBadge } from "../../components/DollBadges";
 
+// Library imports
+import { cardArtSx } from "../../lib/artLayout";
+
 // MaterialUI imports
-import {
-	Box,
-	Container,
-	Grid,
-	Avatar,
-	Divider,
-	Card,
-	CardActionArea,
-	CardMedia,
-	Typography,
-	Tooltip,
-	tooltipClasses,
-	styled,
-	Fade,
-	Zoom,
-	useTheme,
-} from "@mui/material";
+import { Box, Container, Grid, Avatar, Divider, Card, CardActionArea, CardMedia, Typography, Tooltip, tooltipClasses, styled, Fade, Zoom, useTheme } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import Pagination from '@mui/material/Pagination';
+import Pagination from "@mui/material/Pagination";
 
 import { uiUrl } from "../../lib/assets";
 import { loadAllDolls } from "../../lib/data";
@@ -66,11 +53,7 @@ const styles = {
 		maxWidth: 200,
 		maxHeight: 500
 	},
-	cardMedia: {
-		height: "100%",
-		width: "100%",
-		objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
-	},
+	cardMedia: cardArtSx,
 	chip: {
 		m: 0.5
 	},
@@ -135,9 +118,9 @@ export default function TDoll_Index() {
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
-		document.title = "T-Doll Index"
+		document.title = "T-Doll Index";
 		document.querySelector('meta[name="description"]')?.setAttribute("content", "Index of filterable T-Dolls");
-	}, [])
+	}, []);
 
 	// Checks for filters in sessionStorage. Set the number of search results to the length of the T-Doll JSON. Runs once for now.
 	useEffect(() => {
@@ -200,50 +183,48 @@ export default function TDoll_Index() {
 
 	// Create and return an array of T-Dolls that match filters.
 	const createSearchResults = (): IndexEntry[][] => {
-		const typeSelected = typeFilter.filter((type) => type.selected).length
-		const raritySelected = rarityFilter.filter((rarity) => rarity.selected).length
-		const typeFilterCheck = typeSelected > 0
-		const rarityFilterCheck = raritySelected > 0
-		const modFilterCheck = modFilter.selected
+		const typeSelected = typeFilter.filter((type) => type.selected).length;
+		const raritySelected = rarityFilter.filter((rarity) => rarity.selected).length;
+		const typeFilterCheck = typeSelected > 0;
+		const rarityFilterCheck = raritySelected > 0;
+		const modFilterCheck = modFilter.selected;
 
 		// Copies are returned rather than a `selected` property assigned onto the doll. The dolls come
 		// from a shared cache, so mutating them here would leak the current filter into every later read.
 		const tempArray: IndexEntry[] = allDolls.flatMap((data) => {
 			if (!typeFilterCheck && !rarityFilterCheck && !modFilterCheck) {
-				return [{ ...data, selected: data.normal }]
+				return [{ ...data, selected: data.normal }];
 			}
 
 			// Filter if T-Dolls have Mod or not.
-			let selected: TDollForm
+			let selected: TDollForm;
 			if (modFilter.selected) {
 				if (data.mod === null) {
-					return []
+					return [];
 				}
-				selected = data.mod
+				selected = data.mod;
 
 				// If the only filter enabled is the Mod filter, return this T-Doll.
 				if (!typeFilterCheck && !rarityFilterCheck) {
-					return [{ ...data, selected }]
+					return [{ ...data, selected }];
 				}
 			} else {
-				selected = data.normal
+				selected = data.normal;
 			}
 
-			const entry: IndexEntry[] = [{ ...data, selected }]
-			const matchesType = typeFilter.some((type) => type.selected && type.label === selected.type)
+			const entry: IndexEntry[] = [{ ...data, selected }];
+			const matchesType = typeFilter.some((type) => type.selected && type.label === selected.type);
 
 			// A Mod at 6 stars is shown under the 5 star filter, since that is the rarity it upgraded from.
-			const matchesRarity = rarityFilter.some(
-				(rarity) => rarity.selected && (rarity.rarity === selected.rarity || (modFilterCheck && rarity.rarity === 5 && selected.rarity === 6))
-			)
+			const matchesRarity = rarityFilter.some((rarity) => rarity.selected && (rarity.rarity === selected.rarity || (modFilterCheck && rarity.rarity === 5 && selected.rarity === 6)));
 
 			if (typeSelected > 0 && raritySelected > 0) {
-				return matchesType && matchesRarity ? entry : []
+				return matchesType && matchesRarity ? entry : [];
 			}
 			if (typeSelected === 0) {
-				return matchesRarity ? entry : []
+				return matchesRarity ? entry : [];
 			}
-			return matchesType ? entry : []
+			return matchesType ? entry : [];
 		});
 
 		// Partition search results by 30 at a time (static for now).
@@ -283,7 +264,7 @@ export default function TDoll_Index() {
 
 		// Go through the Search Results array from createSearchResults() and push 30 at a time until the remainder is left.
 		// This is expecting that tdoll.selected has been set back in createSearchResults(). Otherwise, it will only see [Object object] and will error.
-		if(tempArrayOfSearchResults.length > 0){
+		if (tempArrayOfSearchResults.length > 0) {
 			(tempArrayOfSearchResults[tempPageSelected - 1] ?? []).forEach((tdoll) => {
 				tempArray.push(
 					<Grid key={tdoll.selected.name} size={{ xs: 4, sm: 4, md: 2 }}>
@@ -310,7 +291,7 @@ export default function TDoll_Index() {
 										}
 										placement="right"
 									>
-											<CardActionArea>
+										<CardActionArea>
 											<CardMedia component="img" sx={styles.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
 											{/* Rarity and type used to live only in a hover tooltip, which a touch screen cannot open. */}
 											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, px: 0.75, py: 0.5 }}>
@@ -324,7 +305,7 @@ export default function TDoll_Index() {
 						</Fade>
 					</Grid>
 				);
-	
+
 				// Stagger timeout will never be more than 1 second.
 				stagger += 50;
 				if (stagger >= 1000) {
@@ -338,29 +319,28 @@ export default function TDoll_Index() {
 
 	// Calculates the minimum and maximum number of filtered results for UX purposes.
 	const calculateRemainingResults = () => {
-		var tempPageSelected = pageSelected
-		var minResult = 0
-		var maxResult = 0
+		var tempPageSelected = pageSelected;
+		var minResult = 0;
+		var maxResult = 0;
 
-		if(tempPageSelected === 1){
-			minResult = 1
-		}
-		else{
-			minResult += 30
-			minResult *= (pageSelected - 1)
-		}
-
-		while(tempPageSelected > 0){
-			maxResult += 30
-			tempPageSelected -= 1
+		if (tempPageSelected === 1) {
+			minResult = 1;
+		} else {
+			minResult += 30;
+			minResult *= pageSelected - 1;
 		}
 
-		if(maxResult > totalSearchResults){
-			maxResult = totalSearchResults
+		while (tempPageSelected > 0) {
+			maxResult += 30;
+			tempPageSelected -= 1;
 		}
 
-		return `${minResult}-${maxResult}`
-	}
+		if (maxResult > totalSearchResults) {
+			maxResult = totalSearchResults;
+		}
+
+		return `${minResult}-${maxResult}`;
+	};
 
 	return (
 		<Box component="main" sx={styles.root}>
