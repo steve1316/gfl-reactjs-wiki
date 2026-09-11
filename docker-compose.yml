@@ -1,0 +1,6 @@
+services:
+  wiki:
+    build: .
+    ports:
+      - "8088:80"
+    restart: unless-stopped
