@@ -92,6 +92,11 @@ const styles = {
 	link: { textDecoration: "none", color: "text.primary" }
 } satisfies Record<string, SxProps<Theme>>;
 
+/**
+ * The top bar: drawer trigger, title and search.
+ *
+ * @returns The application bar and its navigation drawer.
+ */
 export default function Navbar() {
 	const navigate = useNavigate();
 
@@ -188,7 +193,9 @@ export default function Navbar() {
 								groupBy={(option) => option.firstLetter}
 								getOptionLabel={(option) => option.name}
 								size="small"
-								style={{ minWidth: 300, width: "auto" }}
+								// A fixed 300px floor pushed everything to its right off a phone screen. Collapsing the
+								// search into an icon is app-shell work, but it has to at least shrink to fit until then.
+								sx={{ minWidth: { xs: 0, sm: 300 }, width: "auto" }}
 								inputValue={searchValue}
 								onInputChange={(_event, newInputValue) => {
 									setSearchValue(newInputValue);

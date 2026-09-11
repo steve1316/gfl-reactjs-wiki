@@ -33,3 +33,6 @@ __pycache__/
 
 # playwright mcp scratch output
 .playwright-mcp/
+
+# superpowers brainstorming session files
+.superpowers/

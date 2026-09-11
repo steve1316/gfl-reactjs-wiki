@@ -2,6 +2,8 @@
 Source: https://github.com/codegeous/react-component-depot/blob/master/src/components/ScrollIndicator/index.js
 */
 import { useEffect, useState } from "react";
+import { Fab, Zoom } from "@mui/material";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 /** Scroll distance in pixels before the button appears. */
 const REVEAL_AFTER_PX = 600;
@@ -25,13 +27,17 @@ export default function ScrollToTop() {
 		return () => window.removeEventListener("scroll", onScroll);
 	}, []);
 
-	if (!visible) {
-		return null;
-	}
-
 	return (
-		<div className="scroll-to-top cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-			<i className="icon fas fa-chevron-up"></i>
-		</div>
+		<Zoom in={visible}>
+			<Fab
+				size="small"
+				color="primary"
+				aria-label="scroll back to top"
+				onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+				sx={{ position: "fixed", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar - 1 }}
+			>
+				<KeyboardArrowUpIcon />
+			</Fab>
+		</Zoom>
 	);
 }

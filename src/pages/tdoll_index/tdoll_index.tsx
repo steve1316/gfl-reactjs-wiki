@@ -42,16 +42,17 @@ interface IndexEntry extends TDoll {
 	selected: TDollForm;
 }
 
-/** A pale tooltip with room for a couple of lines, used for the T-Doll cards. */
-const HtmlTooltip = styled(Tooltip)(({ theme }) => ({
+/**
+ * A tooltip with room for a couple of lines, used on the T-Doll cards.
+ *
+ * Colour and border now come from the theme's own `MuiTooltip` defaults, so only the width is left
+ * to say here. It used to hardcode a pale background that stayed light in every mode.
+ */
+const HtmlTooltip = styled(Tooltip)({
 	[`& .${tooltipClasses.tooltip}`]: {
-		backgroundColor: "#f5f5f9",
-		color: "rgba(0, 0, 0, 0.87)",
-		maxWidth: 220,
-		fontSize: theme.typography.pxToRem(12),
-		border: "1px solid #dadde9"
+		maxWidth: 220
 	}
-}));
+});
 
 const styles = {
 	root: {

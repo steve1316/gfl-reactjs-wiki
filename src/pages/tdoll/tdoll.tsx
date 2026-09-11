@@ -43,13 +43,13 @@ import StarIcon from "@mui/icons-material/Star";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 
-import "./styles.css";
 
 import { uiUrl } from "../../lib/assets";
 import { loadDoll, spineFor } from "../../lib/data";
 import { spineImageBase, spineUrl } from "../../lib/assets";
 import { animationTabs } from "../../lib/spine";
 import SpineAnimation from "../../components/SpineAnimation";
+import { INGREDIENT_COLOURS } from "../../theme";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
 const mod_button = uiUrl("mod.png");
@@ -76,37 +76,34 @@ const styles = {
 		height: 512,
 		marginBottom: "10px"
 	},
-	cardForSkill: {
+	cardForSkill: (theme: Theme) => ({
 		minWidth: 256,
-		backgroundColor: "grey.700"
-	},
-	cardForTileSet: {
+		backgroundColor: theme.palette.raised
+	}),
+	cardForTileSet: (theme: Theme) => ({
 		minWidth: 256,
-		backgroundColor: "grey.700"
-	},
-	cardForCombatAnimations: {
+		backgroundColor: theme.palette.raised
+	}),
+	cardForCombatAnimations: (theme: Theme) => ({
 		display: "flex",
 		justifyContent: "center",
 		width: 256,
 		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
-		backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
+		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
 		backgroundSize: "5.66px 5.66px",
 		cursor: "pointer",
-		backgroundColor: "grey.700"
-	},
-	cardForDormAnimations: {
+		backgroundColor: theme.palette.raised
+	}),
+	cardForDormAnimations: (theme: Theme) => ({
 		display: "flex",
 		justifyContent: "center",
 		width: 256,
 		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
-		backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
+		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
 		backgroundSize: "5.66px 5.66px",
-		// backgroundImage:
-		// 	"linear-gradient(45deg, #000000 5.56%, #292929 5.56%, #292929 33.33%, #424242 33.33%, #424242 50%, #000000 50%, #000000 55.56%, #292929 55.56%, #292929 83.33%, #424242 83.33%, #424242 100%)",
-		// backgroundSize: "12.73px 12.73px",
 		cursor: "pointer",
-		backgroundColor: "grey.700"
-	},
+		backgroundColor: theme.palette.raised
+	}),
 	rarityStars: {
 		listStyleType: "none",
 		display: "inline",
@@ -121,56 +118,56 @@ const styles = {
 	tableContainer: {
 		minWidth: 256
 	},
-	table: {
+	table: (theme: Theme) => ({
 		width: "100%",
-		backgroundColor: "grey.700"
-	},
+		backgroundColor: theme.palette.raised
+	}),
 	title: {
 		fontSize: 14
 	},
 	cooldownText: {
 		paddingTop: "12px"
 	},
-	tabs: {
+	tabs: (theme: Theme) => ({
 		width: 256,
-		backgroundColor: "grey.900"
-	},
+		backgroundColor: theme.palette.background.paper
+	}),
 	tabForSkin: {
 		width: 100
 	},
-	tabsForSkills: {
+	tabsForSkills: (theme: Theme) => ({
 		minWidth: 256,
-		backgroundColor: "grey.900"
-	},
-	tableTileSet: {
+		backgroundColor: theme.palette.background.paper
+	}),
+	tableTileSet: (theme: Theme) => ({
 		width: 100,
 		height: 100,
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderSpacing: 0,
 		borderWidth: 2
-	},
-	blackTile: {
-		backgroundColor: "grey.800",
+	}),
+	blackTile: (theme: Theme) => ({
+		backgroundColor: theme.palette.raised,
 		width: "33%",
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderWidth: 1
-	},
-	cyanTile: {
-		backgroundColor: "cyan",
+	}),
+	cyanTile: (theme: Theme) => ({
+		backgroundColor: theme.palette.tile.buff,
 		width: "33%",
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderWidth: 1
-	},
-	whiteTile: {
-		backgroundColor: "white",
+	}),
+	whiteTile: (theme: Theme) => ({
+		backgroundColor: theme.palette.tile.self,
 		width: "33%",
 		borderStyle: "solid",
-		borderColor: "black",
+		borderColor: theme.palette.divider,
 		borderWidth: 1
-	},
+	}),
 	tileSetDiv: {
 		display: "flex"
 	},
@@ -213,7 +210,7 @@ const styles = {
 	},
 	backdrop: (theme: Theme) => ({
 		zIndex: theme.zIndex.drawer + 1,
-		color: "#fff"
+		color: theme.palette.common.white
 	}),
 	fullImage: {
 		height: "100%",
@@ -587,12 +584,11 @@ function TDollContent({ doll }: TDollContentProps) {
 
 			// Deal with Jill's special skill description menu.
 			if (tdoll.selected.id === 1017) {
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Adelhyde", '<span style="color: #db3d3d;">■Adelhyde</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Flanergide", '<span style="color: #70ad47;">■Flanergide</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Karmotrine", '<span style="color: #91c1f0;">■Karmotrine</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Bronson Ext", '<span style="color: #ffb400;">■Bronson Ext</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("■Pwd Delta", '<span style="color: #3a94e8;">■Pwd Delta</span>');
-				tempSkillDescription1 = tempSkillDescription1.replaceAll("❈❈❈", '<span style="color: #db3d3d;">❈❈❈</span>');
+				// The ingredient colours come from the palette rather than being written out five times.
+				for (const [ingredient, colour] of Object.entries(INGREDIENT_COLOURS)) {
+					tempSkillDescription1 = tempSkillDescription1.replaceAll(`■${ingredient}`, `<span style="color: ${colour};">■${ingredient}</span>`);
+				}
+				tempSkillDescription1 = tempSkillDescription1.replaceAll("❈❈❈", `<span style="color: ${INGREDIENT_COLOURS.Adelhyde};">❈❈❈</span>`);
 
 				tempSkillDescription1 = tempSkillDescription1.replace("Big Beer", '<span style="font-size: 120%;"><ins>Big Beer</ins></span>');
 				tempSkillDescription1 = tempSkillDescription1.replace("Brandtini", '<span style="font-size: 120%;"><ins>Brandtini</ins></span>');
@@ -1112,7 +1108,7 @@ function TDollContent({ doll }: TDollContentProps) {
 		const stars = array.map((i) => {
 			return (
 				<Box component="li" sx={styles.rarityStar} key={i}>
-					<StarIcon style={{ color: "yellow" }} />
+					<StarIcon sx={{ color: (theme) => theme.palette.rarity[rarity as keyof typeof theme.palette.rarity] }} />
 					{/* <img src={rarity_star} alt="rarity star" /> */}
 				</Box>
 			);
@@ -1324,9 +1320,9 @@ function TDollContent({ doll }: TDollContentProps) {
 												<Typography sx={styles.cooldownText} color="textSecondary">
 													Cooldown:{" "}
 													{
-														<span style={{ color: "cyan" }}>
+														<Box component="span" sx={{ color: "secondary.main" }}>
 															<ins>{(tdoll.selected.skill.cooldown?.[skillLevel - 1] ?? "?")}s</ins>
-														</span>
+														</Box>
 													}
 												</Typography>
 											</>

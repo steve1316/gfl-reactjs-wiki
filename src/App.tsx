@@ -1,5 +1,4 @@
-import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
-import { deepOrange, orange } from "@mui/material/colors";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
@@ -12,19 +11,9 @@ import Home from "./pages/home/home";
 import TDoll from "./pages/tdoll/tdoll";
 import TDollIndex from "./pages/tdoll_index/tdoll_index";
 
-import "./styles.css";
+import { theme } from "./theme";
 
-const theme = createTheme({
-	palette: {
-		mode: "dark",
-		primary: {
-			main: orange[500]
-		},
-		secondary: {
-			main: deepOrange[900]
-		}
-	}
-});
+import "./styles.css";
 
 /**
  * The application shell: theme, navigation and routes.

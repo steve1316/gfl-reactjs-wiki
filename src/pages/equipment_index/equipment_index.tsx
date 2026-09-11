@@ -343,9 +343,9 @@ export default function EquipmentIndex() {
 											if(index === 0 && !equipment.exclusive){
 												return <span key={item}>Equippable by {item}</span>
 											}else if(index === 0 && equipment.exclusive){
-												return <span key={item}>Equippable by <span style={{color: "#ff9800"}}><ins>{item}</ins></span></span>
+												return <span key={item}>Equippable by <Box component="span" sx={{ color: "primary.main" }}><ins>{item}</ins></Box></span>
 											} else if(index !== 0 && equipment.exclusive){
-												return <span key={item}><span style={{color: "#ff9800"}}>, <ins>{item}</ins></span></span>
+												return <span key={item}><Box component="span" sx={{ color: "primary.main" }}>, <ins>{item}</ins></Box></span>
 											} else{
 												return <span key={item}>, {item}</span>
 											}
@@ -396,7 +396,7 @@ export default function EquipmentIndex() {
 
 													return(
 														<div key={statName}>
-															<p>{statName}: {improved ? <span style={{color: "#ff9800"}}>{atLevel}</span> : atLevel}</p>
+															<p>{statName}: {improved ? <Box component="span" sx={{ color: "primary.main" }}>{atLevel}</Box> : atLevel}</p>
 														</div>
 													)
 												})}

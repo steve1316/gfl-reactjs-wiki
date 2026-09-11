@@ -55,7 +55,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 				<main style={{ marginTop: "5rem" }}>
 					<h2 style={{ textAlign: "center" }}>
 						404 T-Doll Not Found! Please go to the{" "}
-						<Link to="/index" style={{ color: "cyan" }}>
+						<Link to="/index" style={{ color: "inherit" }}>
 							T-Doll Index
 						</Link>{" "}
 						Page and try again.
