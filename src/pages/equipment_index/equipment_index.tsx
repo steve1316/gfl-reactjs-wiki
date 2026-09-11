@@ -3,23 +3,23 @@ import type { ChangeEvent } from "react";
 
 // MaterialUI imports
 import {
-    Container,
-    Typography,
-    Divider,
-    Chip,
-    Grid,
-    Card,
-    Zoom,
-    Fade,
-    Box,
-    CardActionArea,
-    CardMedia,
-    CardContent,
-    CardHeader,
-    Slider,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
+	Container,
+	Typography,
+	Divider,
+	Chip,
+	Grid,
+	Card,
+	Zoom,
+	Fade,
+	Box,
+	CardActionArea,
+	CardMedia,
+	CardContent,
+	CardHeader,
+	Slider,
+	Accordion,
+	AccordionSummary,
+	AccordionDetails,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 import DoneIcon from "@mui/icons-material/Done";
@@ -31,43 +31,42 @@ import ScrollToTop from "../../components/ScrollToTop";
 import { loadEquipment } from "../../lib/data";
 import type { Equipment } from "../../types/equipment";
 
-// Declared outside the component so the stylesheet is created once rather than on every render.
-
+/** Styles for this page, as `sx` entries. Declared at module scope so they are created once rather than on every render. */
 const styles = {
 	root: {
 		marginTop: "5rem"
 	},
 	bottomDividerForCards: {
-		marginTop: 25,
-		marginBottom: 10
+		marginTop: "25px",
+		marginBottom: "10px"
 	},
-	cardGrid: (theme: Theme) => ({
-		paddingTop: theme.spacing(8),
-		paddingBottom: theme.spacing(8),
+	cardGrid: {
+		pt: 8,
+		pb: 8,
 		maxWidth: "90%"
-	}),
-	chip: (theme: Theme) => ({
-		margin: theme.spacing(0.5)
-	}),
-	chipList: (theme: Theme) => ({
+	},
+	chip: {
+		m: 0.5
+	},
+	chipList: {
 		display: "flex",
 		justifyContent: "center",
 		listStyle: "none",
 		flexWrap: "wrap",
 		"& > *": {
-			margin: theme.spacing(0.5)
-	}
-	}),
+			m: 0.5
+		}
+	},
 	dividerForChips: {
-		margin: 5
+		margin: "5px"
 	},
 	heading: (theme: Theme) => ({
 		fontSize: theme.typography.pxToRem(15),
-		fontWeight: theme.typography.fontWeightRegular as number,
+		fontWeight: theme.typography.fontWeightRegular as number
 	}),
 	topDividerForCards: {
-		marginTop: 10,
-		marginBottom: 25
+		marginTop: "10px",
+		marginBottom: "25px"
 	}
 } satisfies Record<string, SxProps<Theme>>;
 

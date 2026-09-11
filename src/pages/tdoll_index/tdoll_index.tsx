@@ -7,21 +7,21 @@ import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
 import {
-    Box,
-    Container,
-    Grid,
-    Chip,
-    Avatar,
-    Divider,
-    Card,
-    CardActionArea,
-    CardMedia,
-    Typography,
-    Tooltip,
-    tooltipClasses,
-    styled,
-    Fade,
-    Zoom,
+	Box,
+	Container,
+	Grid,
+	Chip,
+	Avatar,
+	Divider,
+	Card,
+	CardActionArea,
+	CardMedia,
+	Typography,
+	Tooltip,
+	tooltipClasses,
+	styled,
+	Fade,
+	Zoom,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
@@ -57,11 +57,11 @@ const styles = {
 	root: {
 		marginTop: "4rem"
 	},
-	cardGrid: (theme: Theme) => ({
-		paddingTop: theme.spacing(8),
-		paddingBottom: theme.spacing(8),
+	cardGrid: {
+		pt: 8,
+		pb: 8,
 		minWidth: "70%"
-	}),
+	},
 	card: {
 		display: "flex",
 		flexDirection: "column",
@@ -73,28 +73,28 @@ const styles = {
 		width: "100%",
 		objectFit: "contain" // Makes sure to keep the image contained inside the rendered Card.
 	},
-	chip: (theme: Theme) => ({
-		margin: theme.spacing(0.5)
-	}),
-	chipList: (theme: Theme) => ({
+	chip: {
+		m: 0.5
+	},
+	chipList: {
 		display: "flex",
 		justifyContent: "center",
 		listStyle: "none",
 		flexWrap: "wrap",
 		"& > *": {
-			margin: theme.spacing(0.5)
-	}
-	}),
+			m: 0.5
+		}
+	},
 	dividerForChips: {
-		margin: 5
+		margin: "5px"
 	},
 	topDividerForCards: {
-		marginTop: 10,
-		marginBottom: 25
+		marginTop: "10px",
+		marginBottom: "25px"
 	},
 	bottomDividerForCards: {
-		marginTop: 25,
-		marginBottom: 10
+		marginTop: "25px",
+		marginBottom: "10px"
 	}
 } satisfies Record<string, SxProps<Theme>>;
 

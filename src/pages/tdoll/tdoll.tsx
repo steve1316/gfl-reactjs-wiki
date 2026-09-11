@@ -8,33 +8,33 @@ import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
 import {
-    Box,
-    Container,
-    Grid,
-    Typography,
-    Card,
-    CardMedia,
-    CardActionArea,
-    CardContent,
-    TableContainer,
-    Paper,
-    Table,
-    TableHead,
-    TableBody,
-    TableRow,
-    TableCell,
-    CardHeader,
-    Avatar,
-    Select,
-    MenuItem,
-    InputLabel,
-    FormControl,
-    Tabs,
-    Tab,
-    Fab,
-    Backdrop,
-    //Grow
-    Divider,
+	Box,
+	Container,
+	Grid,
+	Typography,
+	Card,
+	CardMedia,
+	CardActionArea,
+	CardContent,
+	TableContainer,
+	Paper,
+	Table,
+	TableHead,
+	TableBody,
+	TableRow,
+	TableCell,
+	CardHeader,
+	Avatar,
+	Select,
+	MenuItem,
+	InputLabel,
+	FormControl,
+	Tabs,
+	Tab,
+	Fab,
+	Backdrop,
+	//Grow
+	Divider,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
@@ -63,10 +63,10 @@ interface DisplayTDoll extends TDollData {
 }
 
 const styles = {
-	cardGrid: (theme: Theme) => ({
-		paddingTop: theme.spacing(8),
-		paddingBottom: theme.spacing(8)
-	}),
+	cardGrid: {
+		pt: 8,
+		pb: 8
+	},
 	card: {
 		height: "100%",
 		width: "100%"
@@ -74,17 +74,17 @@ const styles = {
 	cardForImage: {
 		width: 256, // The dimensions of the images.
 		height: 512,
-		marginBottom: 10
+		marginBottom: "10px"
 	},
-	cardForSkill: (theme: Theme) => ({
+	cardForSkill: {
 		minWidth: 256,
-		backgroundColor: theme.palette.grey[700]
-	}),
-	cardForTileSet: (theme: Theme) => ({
+		backgroundColor: "grey.700"
+	},
+	cardForTileSet: {
 		minWidth: 256,
-		backgroundColor: theme.palette.grey[700]
-	}),
-	cardForCombatAnimations: (theme: Theme) => ({
+		backgroundColor: "grey.700"
+	},
+	cardForCombatAnimations: {
 		display: "flex",
 		justifyContent: "center",
 		width: 256,
@@ -92,9 +92,9 @@ const styles = {
 		backgroundImage: "linear-gradient(45deg, #000000 12.50%, #3d3d3d 12.50%, #3d3d3d 50%, #000000 50%, #000000 62.50%, #3d3d3d 62.50%, #3d3d3d 100%)",
 		backgroundSize: "5.66px 5.66px",
 		cursor: "pointer",
-		backgroundColor: theme.palette.grey[700]
-	}),
-	cardForDormAnimations: (theme: Theme) => ({
+		backgroundColor: "grey.700"
+	},
+	cardForDormAnimations: {
 		display: "flex",
 		justifyContent: "center",
 		width: 256,
@@ -105,10 +105,7 @@ const styles = {
 		// 	"linear-gradient(45deg, #000000 5.56%, #292929 5.56%, #292929 33.33%, #424242 33.33%, #424242 50%, #000000 50%, #000000 55.56%, #292929 55.56%, #292929 83.33%, #424242 83.33%, #424242 100%)",
 		// backgroundSize: "12.73px 12.73px",
 		cursor: "pointer",
-		backgroundColor: theme.palette.grey[700]
-	}),
-	cardMedia: {
-		paddingTop: "56.25%" // 16:9
+		backgroundColor: "grey.700"
 	},
 	rarityStars: {
 		listStyleType: "none",
@@ -119,32 +116,32 @@ const styles = {
 	rarityStar: {
 		display: "inline-block",
 		transform: "translate(0px, 3px)", // This will set the rendered stars to be inline with the T-Doll's type text.
-		marginLeft: 3
+		marginLeft: "3px"
 	},
 	tableContainer: {
 		minWidth: 256
 	},
-	table: (theme: Theme) => ({
+	table: {
 		width: "100%",
-		backgroundColor: theme.palette.grey[700]
-	}),
+		backgroundColor: "grey.700"
+	},
 	title: {
 		fontSize: 14
 	},
 	cooldownText: {
-		paddingTop: 12
+		paddingTop: "12px"
 	},
-	tabs: (theme: Theme) => ({
+	tabs: {
 		width: 256,
-		backgroundColor: theme.palette.grey[900]
-	}),
+		backgroundColor: "grey.900"
+	},
 	tabForSkin: {
 		width: 100
 	},
-	tabsForSkills: (theme: Theme) => ({
+	tabsForSkills: {
 		minWidth: 256,
-		backgroundColor: theme.palette.grey[900]
-	}),
+		backgroundColor: "grey.900"
+	},
 	tableTileSet: {
 		width: 100,
 		height: 100,
@@ -153,13 +150,13 @@ const styles = {
 		borderSpacing: 0,
 		borderWidth: 2
 	},
-	blackTile: (theme: Theme) => ({
-		backgroundColor: theme.palette.grey[800],
+	blackTile: {
+		backgroundColor: "grey.800",
 		width: "33%",
 		borderStyle: "solid",
 		borderColor: "black",
 		borderWidth: 1
-	}),
+	},
 	cyanTile: {
 		backgroundColor: "cyan",
 		width: "33%",
@@ -187,13 +184,6 @@ const styles = {
 	fabExpand: {
 		display: "inline-flex",
 		transform: "translate(5px, -85px)",
-		height: 40,
-		width: 40,
-		opacity: "75%"
-	},
-	fabNoMod: {
-		display: "inline-flex",
-		transform: "translate(5px, -45px)",
 		height: 40,
 		width: 40,
 		opacity: "75%"
@@ -722,55 +712,55 @@ function TDollContent({ doll }: TDollContentProps) {
 			if (showSkin) {
 				// Skin animations for Combat.
 				return (
-                    <Tabs
-                        sx={styles.tabs}
-                        value={spineAnimationName}
-                        onChange={(_e, value) => switchAnimations(value)}
-                        indicatorColor="primary"
-                        textColor="primary"
-                        scrollButtons
-                        variant="scrollable"
-                        allowScrollButtonsMobile>
-                        {spineTabs.map((tab) => (
+					<Tabs
+						sx={styles.tabs}
+						value={spineAnimationName}
+						onChange={(_e, value) => switchAnimations(value)}
+						indicatorColor="primary"
+						textColor="primary"
+						scrollButtons
+						variant="scrollable"
+						allowScrollButtonsMobile>
+						{spineTabs.map((tab) => (
 							<Tab key={tab.value} label={tab.label} value={tab.value} />
 						))}
-                    </Tabs>
-                );
+					</Tabs>
+				);
 			} else {
 				// Normal Animations for Combat.
 				return (
-                    <Tabs
-                        sx={styles.tabs}
-                        value={spineAnimationName}
-                        onChange={(_e, value) => switchAnimations(value)}
-                        indicatorColor="primary"
-                        textColor="primary"
-                        scrollButtons
-                        variant="scrollable"
-                        allowScrollButtonsMobile>
-                        {spineTabs.map((tab) => (
+					<Tabs
+						sx={styles.tabs}
+						value={spineAnimationName}
+						onChange={(_e, value) => switchAnimations(value)}
+						indicatorColor="primary"
+						textColor="primary"
+						scrollButtons
+						variant="scrollable"
+						allowScrollButtonsMobile>
+						{spineTabs.map((tab) => (
 							<Tab key={tab.value} label={tab.label} value={tab.value} />
 						))}
-                    </Tabs>
-                );
+					</Tabs>
+				);
 			}
 		} else {
 			// Animations for Dorm.
 			return (
-                <Tabs
-                    sx={styles.tabs}
-                    value={spineAnimationName}
-                    onChange={(_e, value) => switchAnimations(value)}
-                    indicatorColor="primary"
-                    textColor="primary"
-                    scrollButtons
-                    variant="scrollable"
-                    allowScrollButtonsMobile>
-                    {spineTabs.map((tab) => (
+				<Tabs
+					sx={styles.tabs}
+					value={spineAnimationName}
+					onChange={(_e, value) => switchAnimations(value)}
+					indicatorColor="primary"
+					textColor="primary"
+					scrollButtons
+					variant="scrollable"
+					allowScrollButtonsMobile>
+					{spineTabs.map((tab) => (
 						<Tab key={tab.value} label={tab.label} value={tab.value} />
 					))}
-                </Tabs>
-            );
+				</Tabs>
+			);
 		}
 	};
 
@@ -1140,10 +1130,10 @@ function TDollContent({ doll }: TDollContentProps) {
 	};
 
 	return (
-        <main>
-            <ScrollToTop />
-            {/* <Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}> */}
-            <Container sx={styles.cardGrid} maxWidth="md">
+		<main>
+			<ScrollToTop />
+			{/* <Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}> */}
+			<Container sx={styles.cardGrid} maxWidth="md">
 				<br />
 
 				<Card sx={styles.card}>
@@ -1167,26 +1157,26 @@ function TDollContent({ doll }: TDollContentProps) {
 								{tdoll.skins !== null ? (
 									(tdoll.skins?.number_of_skins ?? 0) === 1 ? (
 										<Tabs
-                                            sx={styles.tabs}
-                                            value={showSkin ? skinSelected : false}
-                                            onChange={switchSkinSelected}
-                                            indicatorColor="primary"
-                                            textColor="primary"
-                                            variant="fullWidth"
-                                            scrollButtons
-                                            allowScrollButtonsMobile>
+											sx={styles.tabs}
+											value={showSkin ? skinSelected : false}
+											onChange={switchSkinSelected}
+											indicatorColor="primary"
+											textColor="primary"
+											variant="fullWidth"
+											scrollButtons
+											allowScrollButtonsMobile>
 											{renderSkinsTabs()}
 										</Tabs>
 									) : (
 										<Tabs
-                                            sx={styles.tabs}
-                                            value={showSkin ? skinSelected : false}
-                                            onChange={switchSkinSelected}
-                                            indicatorColor="primary"
-                                            textColor="primary"
-                                            variant="scrollable"
-                                            scrollButtons
-                                            allowScrollButtonsMobile>
+											sx={styles.tabs}
+											value={showSkin ? skinSelected : false}
+											onChange={switchSkinSelected}
+											indicatorColor="primary"
+											textColor="primary"
+											variant="scrollable"
+											scrollButtons
+											allowScrollButtonsMobile>
 											{renderSkinsTabs()}
 										</Tabs>
 									)
@@ -1432,7 +1422,7 @@ function TDollContent({ doll }: TDollContentProps) {
 					</CardContent>
 				</Card>
 			</Container>
-            {/* </Grow> */}
-        </main>
-    );
+			{/* </Grow> */}
+		</main>
+	);
 }

@@ -6,19 +6,20 @@ import ScrollToTop from "../../components/ScrollToTop";
 
 // MaterialUI imports
 import {
-    Container,
-    Button,
-    Grid,
-    Card,
-    CardMedia,
-    CardActionArea,
-    CardActions,
-    CardContent,
-    Typography,
-    Grow,
-    LinearProgress,
-    Box,
+	Container,
+	Button,
+	Grid,
+	Card,
+	CardMedia,
+	CardActionArea,
+	CardActions,
+	CardContent,
+	Typography,
+	Grow,
+	LinearProgress,
+	Box,
 } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
 
 
 import Skeleton from '@mui/material/Skeleton';
@@ -57,7 +58,7 @@ const styles = {
 	cardImageBox: { width: 130 },
 	heroCardContent: { flex: "1 0 auto" },
 	heroCardMedia: { height: 256, width: 128 }
-} as const;
+} satisfies Record<string, SxProps<Theme>>;
 
 /**
  * The landing page: a rotating random T-Doll and cards linking to each section.
@@ -217,11 +218,11 @@ export default function Home() {
 	}
 
 	return (
-        <Box component="main" sx={styles.root}>
-            <ScrollToTop />
+		<Box component="main" sx={styles.root}>
+			<ScrollToTop />
 
-            {/* Hero Unit */}
-            <Box sx={{ boxShadow: 1 }}>
+			{/* Hero Unit */}
+			<Box sx={{ boxShadow: 1 }}>
 				<Box component="div" sx={styles.heroContent}>
 					<Container maxWidth="sm">
 						<Box sx={{ boxShadow: 5 }}>
@@ -269,10 +270,10 @@ export default function Home() {
 					</Container>
 				</Box>
 			</Box>
-            {/* End of Hero Unit */}
+			{/* End of Hero Unit */}
 
-            {/* Cards Section for Navigation */}
-            <Container sx={styles.cardGrid} maxWidth="md">
+			{/* Cards Section for Navigation */}
+			<Container sx={styles.cardGrid} maxWidth="md">
 				<Grid container spacing={4}>
 					{cards.map((card) => {
 						stagger += 100;
@@ -303,7 +304,7 @@ export default function Home() {
 					})}
 				</Grid>
 			</Container>
-            {/* End of Cards Section */}
-        </Box>
-    );
+			{/* End of Cards Section */}
+		</Box>
+	);
 }

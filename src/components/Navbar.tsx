@@ -4,22 +4,22 @@ import { Link, useNavigate } from "react-router-dom";
 
 // MaterialUI imports
 import {
-    Box,
-    AppBar,
-    Toolbar,
-    IconButton,
-    Typography,
-    Drawer,
-    List,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    alpha,
-    Icon,
-    Divider,
-    TextField,
+	Box,
+	AppBar,
+	Toolbar,
+	IconButton,
+	Typography,
+	Drawer,
+	List,
+	ListItemButton,
+	ListItemIcon,
+	ListItemText,
+	alpha,
+	Icon,
+	Divider,
+	TextField,
 } from "@mui/material";
-import type { Theme } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
 
 // Autocomplete imports
 import Autocomplete from '@mui/material/Autocomplete';
@@ -90,7 +90,7 @@ const styles = {
 	}),
 	drawerPaper: { width: "inherit" },
 	link: { textDecoration: "none", color: "text.primary" }
-} as const;
+} satisfies Record<string, SxProps<Theme>>;
 
 export default function Navbar() {
 	const navigate = useNavigate();
@@ -164,16 +164,16 @@ export default function Navbar() {
 	];
 
 	return (
-        <Box component="div" sx={styles.root}>
-            <AppBar position="fixed">
+		<Box component="div" sx={styles.root}>
+			<AppBar position="fixed">
 				<Toolbar>
 					<IconButton
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        sx={styles.menuButton}
-                        color="inherit"
-                        aria-label="menu"
-                        size="large">
+						edge="start"
+						onClick={handleDrawerToggle}
+						sx={styles.menuButton}
+						color="inherit"
+						aria-label="menu"
+						size="large">
 						<MenuIcon />
 					</IconButton>
 					<Typography variant="h6" sx={styles.title} noWrap>
@@ -217,8 +217,8 @@ export default function Navbar() {
 				</Toolbar>
 			</AppBar>
 
-            {/* Drawer */}
-            <Drawer style={{ width: "200px" }} anchor="left" open={drawerOpen} onClose={handleDrawerToggle} variant="temporary" slotProps={{ paper: { sx: styles.drawerPaper } }}>
+			{/* Drawer */}
+			<Drawer style={{ width: "200px" }} anchor="left" open={drawerOpen} onClose={handleDrawerToggle} variant="temporary" slotProps={{ paper: { sx: styles.drawerPaper } }}>
 				<List>
 					{listItems.map((item) => {
 						return (
@@ -239,7 +239,7 @@ export default function Navbar() {
 					})}
 				</List>
 			</Drawer>
-            {/* End of Drawer */}
-        </Box>
-    );
+			{/* End of Drawer */}
+		</Box>
+	);
 }
