@@ -39,7 +39,6 @@ import {
 import type { SxProps, Theme } from "@mui/material";
 
 // MaterialUI icon imports
-import StarIcon from "@mui/icons-material/Star";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 
@@ -49,6 +48,7 @@ import { loadDoll, spineFor } from "../../lib/data";
 import { spineImageBase, spineUrl } from "../../lib/assets";
 import { animationTabs } from "../../lib/spine";
 import SpineAnimation from "../../components/SpineAnimation";
+import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import { INGREDIENT_COLOURS } from "../../theme";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
@@ -119,17 +119,6 @@ const styles = {
 		backgroundSize: "5.66px 5.66px",
 		cursor: "pointer"
 	}),
-	rarityStars: {
-		listStyleType: "none",
-		display: "inline",
-		margin: 0,
-		padding: 0
-	},
-	rarityStar: {
-		display: "inline-block",
-		transform: "translate(0px, 3px)", // This will set the rendered stars to be inline with the T-Doll's type text.
-		marginLeft: "3px"
-	},
 	tableContainer: {
 		width: "100%"
 	},
@@ -1111,27 +1100,6 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Misc Functions
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Render the amount of stars equal to the T-Doll's rarity next to its type text at the top of the Card.
-	const renderStars = (rarity: number) => {
-		const array: number[] = [];
-
-		// Populate the array with the keys to the length of the rarity.
-		for (var i = 0; i < rarity; i++) {
-			array.push(i);
-		}
-
-		const stars = array.map((i) => {
-			return (
-				<Box component="li" sx={styles.rarityStar} key={i}>
-					<StarIcon sx={{ color: (theme) => theme.palette.rarity[rarity as keyof typeof theme.palette.rarity] }} />
-					{/* <img src={rarity_star} alt="rarity star" /> */}
-				</Box>
-			);
-		});
-
-		return stars;
-	};
-
 	// The following 2 handle functions control the Backdrop component.
 	const handleToggle = () => {
 		setOpen(!open);
@@ -1150,10 +1118,10 @@ function TDollContent({ doll }: TDollContentProps) {
 				<Card sx={styles.card}>
 					<CardContent>
 						{/************** T-Doll's Name, Rarity in stars, type, and Index Number **************/}
-						<Typography sx={styles.rarityStars} color="textSecondary" gutterBottom>
-							{tdoll.selected.type}
-							{renderStars(tdoll.selected.rarity)}
-						</Typography>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+							<TypeBadge type={tdoll.selected.type} />
+							<RarityStars rarity={tdoll.selected.rarity} isMod={tdoll.selected === tdoll.mod} />
+						</Box>
 						<Typography variant="h3" component="h2">
 							{tdoll.selected.name}
 							<Typography component="span" sx={{ display: "inline" }} color="textSecondary">

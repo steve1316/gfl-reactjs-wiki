@@ -20,15 +20,26 @@ import type { PaletteOptions } from "@mui/material";
  * Star-rating colours, keyed by the `rarity` field in the doll data.
  *
  * The game numbers these oddly: 2 to 5 run General, Rare, Epochal and Legendary, while 1 means Extra,
- * a separate class rather than the lowest rank.
+ * a separate class rather than the lowest rank. Rarity 6 exists only on Mod dolls and is included so
+ * a lookup cannot miss, though `MOD_RARITY_COLOUR` covers those in practice.
  */
 export const RARITY_COLOURS = {
 	1: "#d79aec",
 	2: "#8a92a2",
 	3: "#5fd3a0",
 	4: "#7fb2f0",
-	5: "#ffc44d"
+	5: "#ffc44d",
+	6: "#ff5d7a"
 } as const;
+
+/**
+ * The colour a Mod doll's stars take, whatever its rarity.
+ *
+ * Mods run at rarity 4, 5 and 6, so without this they would be indistinguishable from an ordinary
+ * doll of the same rank. Deliberately far from every hue in `RARITY_COLOURS` and from the amber
+ * accent, since the point is that a Mod is recognised at a glance.
+ */
+export const MOD_RARITY_COLOUR = "#ff5d7a";
 
 /** Weapon-class colours, keyed by the `type` field in the doll data. */
 export const WEAPON_TYPE_COLOURS = {

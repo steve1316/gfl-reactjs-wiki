@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 import FilterChip from "../../components/FilterChip";
+import { RarityLabel, TypeBadge } from "../../components/DollBadges";
 
 // MaterialUI imports
 import {
@@ -311,8 +312,13 @@ export default function TDoll_Index() {
 										}
 										placement="right"
 									>
-										<CardActionArea>
+											<CardActionArea>
 											<CardMedia component="img" sx={styles.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
+											{/* Rarity and type used to live only in a hover tooltip, which a touch screen cannot open. */}
+											<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, px: 0.75, py: 0.5 }}>
+												<TypeBadge type={tdoll.selected.type} dense />
+												<RarityLabel rarity={tdoll.selected.rarity} isMod={tdoll.selected === tdoll.mod} />
+											</Box>
 										</CardActionArea>
 									</HtmlTooltip>
 								</Link>
