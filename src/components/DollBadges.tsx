@@ -47,6 +47,7 @@ export function TypeBadge({ type, dense = false }: TypeBadgeProps) {
 				const tint = theme.palette.weaponType[type as keyof typeof theme.palette.weaponType] ?? theme.palette.text.secondary;
 				return {
 					display: "inline-block",
+					// Raised from 0.62rem to clear the 11px floor for readability on mobile (was 9.92px).
 					fontSize: dense ? "0.7rem" : "0.75rem",
 					fontWeight: 700,
 					letterSpacing: "0.06em",
