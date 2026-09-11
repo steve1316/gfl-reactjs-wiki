@@ -379,11 +379,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		helperResetAnimationTabs();
 	};
 
-	// Switch back to Normal information if user already selected a skin.
-	const switchToNormalArt = () => {
-		switchModes();
-	};
-
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for Tab functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -707,11 +702,9 @@ function TDollContent({ doll }: TDollContentProps) {
 						{sectionTab === "overview" && (
 							<Box sx={styles.mediaColumn}>
 								<OverviewPanel
-									showSkin={showSkin}
 									tdollImage={tdollImage}
 									onCardImageClick={switchBetweenNormalDamagedCardImages}
 									dollName={tdoll.selected.name}
-									onSwitchToNormalArt={switchToNormalArt}
 									normalId={tdoll.normal.id}
 									stats={tdoll.selected}
 								/>
