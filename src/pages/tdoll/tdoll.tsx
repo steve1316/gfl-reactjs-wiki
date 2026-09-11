@@ -600,89 +600,15 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Functions for Tileset functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Switch the animation playing to the next one when you click on the GIF Player. This also influences the movement trhough the animation Tabs as well.
-	// If you encounter the bug that moving forward suddenly skips a few tabs, chances are that animationArray is missing some of your newly added animations.
+	// Switch the animation playing to the next one when the chibi is clicked. Walks the same spineTabs
+	// list the pills render, so clicking the stage and clicking a pill always agree on what comes next.
 	const playerSwitchAnimations = () => {
-		var currentAnimation = "";
-		var animationArray = [];
-		var tempSkinSelected = helperSkinSelected();
-
-		// Populate array with animations based on checks in sequential order.
-		if (animationMode === 0) {
-			// For Normal Animations
-			currentAnimation = animationTabSelected;
-
-			animationArray.push("wait");
-			if ((!showSkin && "hasWait2Animation" in tdoll.selected.animations) || (showSkin && "wait2" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
-				animationArray.push("wait2");
-			}
-			animationArray.push("move");
-			animationArray.push("attack");
-			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && "skill" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
-				animationArray.push("skill");
-			}
-			if (!showSkin && "skill2" in tdoll.selected.animations) {
-				animationArray.push("skill2");
-			}
-			if ((!showSkin && "crouch" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.crouch)) {
-				animationArray.push("crouch");
-			}
-			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && "attack2" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
-				animationArray.push("attack2");
-			}
-			if ((!showSkin && "action" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.action)) {
-				animationArray.push("action");
-			}
-			if ((!showSkin && "action2" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.action2)) {
-				animationArray.push("action2");
-			}
-			if (!showSkin && "spattack" in tdoll.selected.animations) {
-				animationArray.push("spattack");
-			}
-			if (!showSkin && "spattack2" in tdoll.selected.animations) {
-				animationArray.push("spattack2");
-			}
-			if (!showSkin && "landing" in tdoll.selected.animations) {
-				animationArray.push("landing");
-			}
-			if (tdoll.selected.type === "MG" || tdoll.selected.type === "SG") {
-				animationArray.push("reload");
-			}
-			animationArray.push("die");
-			animationArray.push("victory");
-			if ("victory2" in tdoll.selected.animations && !showSkin) {
-				animationArray.push("victory2");
-			}
-			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && "victoryloop" in (skinForm(tempSkinSelected)?.animations ?? {}))) {
-				animationArray.push("victoryloop");
-			}
-		} else {
-			// For Dorm Animations
-			currentAnimation = animationDormTabSelected;
-
-			animationArray.push("wait");
-			animationArray.push("move");
-			if ((tdoll.skins && showSkin && "action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) || "hasActionAnimation" in tdoll.selected.animations) {
-				animationArray.push("action");
-			}
-			animationArray.push("pick");
-			animationArray.push("sit");
-			if (tdoll.skins && showSkin && "sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) {
-				animationArray.push("sit2");
-			}
-			animationArray.push("lying");
+		const currentIndex = spineTabs.findIndex((tab) => tab.value === spineAnimationName);
+		const nextIndex = currentIndex === -1 || currentIndex + 1 >= spineTabs.length ? 0 : currentIndex + 1;
+		const next = spineTabs[nextIndex];
+		if (next) {
+			switchAnimations(next.value);
 		}
-
-		// Now determine the index of the current animation and set the new animation to the one after it. If current animation
-		// is already the last, set the new animation to the first animation in the array.
-		var tempIndex = animationArray.findIndex((animation) => animation === currentAnimation);
-		if (tempIndex + 1 > animationArray.length - 1) {
-			tempIndex = 0;
-		} else {
-			tempIndex += 1;
-		}
-
-		switchAnimations(animationArray[tempIndex] ?? "wait");
 	};
 
 	return (
