@@ -92,14 +92,21 @@ def index_doll(doll_dir):
         if skeleton and atlas_for(skeleton):
             entry[label] = {"skel": skeleton, "atlas": atlas_for(skeleton)}
 
+    # Skins carry their own combat and dorm rigs, the latter prefixed with R exactly like the base one.
     skins = {}
     for skeleton in skeletons:
         stem = skeleton.rpartition("/")[2]
         if skeleton in (combat, dorm) or stem.startswith("R") or "_" not in stem:
             continue
         atlas = atlas_for(skeleton)
-        if atlas:
-            skins[stem.split("_", 1)[1]] = {"skel": skeleton, "atlas": atlas}
+        if not atlas:
+            continue
+        skin_id = stem.split("_", 1)[1]
+        record = {"combat": {"skel": skeleton, "atlas": atlas}}
+        skin_dorm = dorm_of(skeleton)
+        if skin_dorm and atlas_for(skin_dorm):
+            record["dorm"] = {"skel": skin_dorm, "atlas": atlas_for(skin_dorm)}
+        skins[skin_id] = record
     if skins:
         entry["skins"] = skins
 

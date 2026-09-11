@@ -1,0 +1,116 @@
+- generic [ref=f26e2]:
+  - banner [ref=f26e3]:
+    - generic [ref=f26e4]:
+      - button "menu" [ref=f26e5] [cursor=pointer]
+      - heading "Girls' Frontline Database" [level=6] [ref=f26e9]
+      - combobox [ref=f26e12]:
+        - generic [ref=f26e13]:
+          - generic: Search...
+          - generic [ref=f26e14]:
+            - textbox "Search..." [ref=f26e15]
+            - button "Open" [ref=f26e17] [cursor=pointer]
+            - group [aria-hidden]
+  - main [ref=f26e22]:
+    - generic [ref=f26e25]:
+      - paragraph [ref=f26e26]:
+        - text: HG
+        - listitem [ref=f26e27]
+        - listitem [ref=f26e30]
+        - listitem [ref=f26e33]
+        - listitem [ref=f26e36]
+      - heading [level=2] [ref=f26e39]:
+        - text: SAA
+        - paragraph [ref=f26e40]: "#1"
+      - generic [ref=f26e41]:
+        - generic [ref=f26e42]:
+          - generic [ref=f26e43]:
+            - tablist [ref=f26e46]:
+              - tab "Wish Upon A Star" [ref=f26e47] [cursor=pointer]
+              - tab "Queen of Miracle" [ref=f26e49] [cursor=pointer]
+            - generic [ref=f26e51] [cursor=pointer]
+          - generic [ref=f26e54]:
+            - button [ref=f26e55] [cursor=pointer]:
+              - img "SAA" [ref=f26e56]
+            - button [ref=f26e57] [cursor=pointer]:
+              - img "Switch between Normal/Mod" [ref=f26e59]
+            - button [ref=f26e60] [cursor=pointer]
+          - button [ref=f26e64] [cursor=pointer]:
+            - img "Switch to Dorm Animations" [ref=f26e66]
+          - generic [ref=f26e67]:
+            - tablist [ref=f26e70]:
+              - tab "Wait" [selected] [ref=f26e71] [cursor=pointer]
+              - tab "Move" [ref=f26e73] [cursor=pointer]
+              - tab "Attack" [ref=f26e75] [cursor=pointer]
+              - tab "Die" [ref=f26e77] [cursor=pointer]
+              - tab "Victory" [ref=f26e79] [cursor=pointer]
+              - tab "Victory 2" [ref=f26e81] [cursor=pointer]
+              - tab "Victory Loop" [ref=f26e83] [cursor=pointer]
+            - generic [ref=f26e86] [cursor=pointer]
+          - generic [ref=f26e89] [cursor=pointer]: Loading animation...
+        - generic [ref=f26e94]:
+          - tablist [ref=f26e97]:
+            - tab "Skill 1" [selected] [ref=f26e98] [cursor=pointer]
+          - generic [ref=f26e102]:
+            - generic [ref=f26e103]:
+              - generic [ref=f26e107]:
+                - generic [ref=f26e108]: Fire Command
+                - generic [ref=f26e109]: "Initial CD: 6s"
+              - generic [ref=f26e111]:
+                - generic [ref=f26e112]: Level
+                - generic [ref=f26e113]:
+                  - button "10" [ref=f26e114] [cursor=pointer]
+                  - textbox [aria-hidden]: "10"
+            - separator [ref=f26e115]
+            - paragraph [ref=f26e116]:
+              - text: Increase all allies' damage by
+              - insertion [ref=f26e118]: 25%
+              - text: for
+              - insertion [ref=f26e120]: "8"
+              - text: seconds.
+            - separator [ref=f26e121]
+            - paragraph [ref=f26e122]:
+              - text: "Cooldown:"
+              - insertion [ref=f26e124]: 12s
+          - generic [ref=f26e126]:
+            - table [ref=f26e128]:
+              - rowgroup [ref=f26e129]:
+                - row [ref=f26e130]:
+                  - cell [ref=f26e131]
+                  - cell [ref=f26e132]
+                  - cell [ref=f26e133]
+                - row [ref=f26e134]:
+                  - cell [ref=f26e135]
+                  - cell [ref=f26e136]
+                  - cell [ref=f26e137]
+                - row [ref=f26e138]:
+                  - cell [ref=f26e139]
+                  - cell [ref=f26e140]
+                  - cell [ref=f26e141]
+            - generic [ref=f26e142]:
+              - paragraph [ref=f26e143]: Buffs All Types
+              - paragraph [ref=f26e144]:
+                - text: Damage by
+                - insertion [ref=f26e146]: 24%
+                - text: Accuracy by
+                - insertion [ref=f26e148]: 50%
+          - table [ref=f26e150]:
+            - rowgroup [ref=f26e151]:
+              - row [ref=f26e152]:
+                - columnheader "Stats" [ref=f26e153]
+                - columnheader "At Max Level" [ref=f26e154]
+            - rowgroup [ref=f26e155]:
+              - row [ref=f26e156]:
+                - cell "HP" [ref=f26e157]
+                - cell "80" [ref=f26e158]
+              - row [ref=f26e159]:
+                - cell "DMG" [ref=f26e160]
+                - cell "36" [ref=f26e161]
+              - row [ref=f26e162]:
+                - cell "ACC" [ref=f26e163]
+                - cell "49" [ref=f26e164]
+              - row [ref=f26e165]:
+                - cell "EVA" [ref=f26e166]
+                - cell "79" [ref=f26e167]
+              - row [ref=f26e168]:
+                - cell "ROF" [ref=f26e169]
+                - cell "47" [ref=f26e170]

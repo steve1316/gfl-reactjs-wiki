@@ -15,14 +15,27 @@ export interface SpineRig {
 	anims: string[];
 }
 
+/** A skin's rigs, mirroring the shape of the doll's own. */
+export interface SpineSkin {
+	/** The skin's combat rig. */
+	combat: SpineRig;
+	/** The skin's dorm rig, when one was published. */
+	dorm?: SpineRig;
+}
+
 /** Everything published for one doll. */
 export interface SpineDollEntry {
 	/** The combat rig: attack, move, victory and so on. */
 	combat?: SpineRig;
 	/** The dorm rig: sit, lying, pick and so on. */
 	dorm?: SpineRig;
-	/** Skin rigs, keyed by the skin id from the filename. */
-	skins?: Record<string, SpineRig>;
+	/**
+	 * Skin rigs in the same order the skin tabs render.
+	 *
+	 * Aligned by `tools/assets/map_skin_rigs.mjs`, which resolves each skin name through the game's
+	 * own skin table. Entries are `null` where a skin has no rig published, which is common.
+	 */
+	skinRigs?: (SpineSkin | null)[];
 }
 
 /** The whole index, keyed by stringified doll id. */

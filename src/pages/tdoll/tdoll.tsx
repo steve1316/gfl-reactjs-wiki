@@ -385,7 +385,14 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
 	const spineEntry = spineFor(tdoll.normal.id);
-	const spineRig = animationMode === 0 ? spineEntry?.combat : (spineEntry?.dorm ?? spineEntry?.combat);
+
+	// Skin tabs carry a doubled value, the same halving helperSkinSelected does. It is inlined because
+	// that helper is declared further down and would still be in the temporal dead zone here.
+	const selectedSkinRigs = showSkin ? (spineEntry?.skinRigs?.[skinSelected / 2] ?? null) : null;
+	const baseRig = animationMode === 0 ? spineEntry?.combat : (spineEntry?.dorm ?? spineEntry?.combat);
+	const skinRig = selectedSkinRigs ? (animationMode === 0 ? selectedSkinRigs.combat : (selectedSkinRigs.dorm ?? selectedSkinRigs.combat)) : null;
+	// Many skins have no rig of their own, so the doll's base rig stands in rather than showing nothing.
+	const spineRig = skinRig ?? baseRig;
 	const requestedAnimation = animationMode === 0 ? animationTabSelected : animationDormTabSelected;
 
 	// One tab per animation the skeleton defines. A fixed list, whether from the old GIF filenames or

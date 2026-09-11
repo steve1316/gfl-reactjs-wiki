@@ -63,10 +63,13 @@ function main() {
 			rig.anims.forEach((name) => vocabulary.add(name));
 			rigs++;
 		}
-		for (const rig of Object.values(entry.skins ?? {})) {
-			rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
-			rig.anims.forEach((name) => vocabulary.add(name));
-			rigs++;
+		// Each skin holds the same shape as the doll: a combat rig and, usually, a dorm one.
+		for (const skin of Object.values(entry.skins ?? {})) {
+			for (const rig of Object.values(skin)) {
+				rig.anims = animationNames(SkeletonBinary, path.join(spineDir, id, `${rig.skel}.skel`));
+				rig.anims.forEach((name) => vocabulary.add(name));
+				rigs++;
+			}
 		}
 	}
 
