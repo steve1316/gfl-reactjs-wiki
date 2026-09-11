@@ -48,11 +48,12 @@ export const heroArtSx: SxProps<Theme> = {
  *
  * A tall box crops horizontally, and these arts sit off-centre sideways: one spans 21% to 76% of the
  * width, another 30% to 82%. Without a per-doll measurement of where the drawing sits, `contain` is
- * honest where a guessed horizontal anchor would slice somebody down the middle.
+ * honest where a guessed horizontal anchor would slice somebody down the middle. Capped with `max*`
+ * rather than forced to `100%`, so a box bigger than the art's natural size does not upscale it.
  */
 export const containArtSx: SxProps<Theme> = {
-	width: "100%",
-	height: "100%",
+	maxWidth: "100%",
+	maxHeight: "100%",
 	objectFit: "contain",
 	display: "block"
 };

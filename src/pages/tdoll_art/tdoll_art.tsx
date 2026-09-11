@@ -8,6 +8,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
 import { useZoomPan } from "../../hooks/useZoomPan";
+import { containArtSx } from "../../lib/artLayout";
 import { loadDoll } from "../../lib/data";
 import type { TDoll } from "../../types/tdoll";
 
@@ -96,7 +97,7 @@ export default function TDollArt() {
 			</Box>
 
 			<Box ref={zoom.containerRef} sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
-				{source ? <Box component="img" src={source} alt="" sx={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} style={zoom.contentStyle} /> : null}
+				{source ? <Box component="img" src={source} alt="" sx={containArtSx} style={zoom.contentStyle} /> : null}
 			</Box>
 
 			<Box sx={{ display: "flex", gap: 1, p: 1, flexWrap: "wrap", justifyContent: "center" }}>
