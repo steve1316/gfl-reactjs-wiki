@@ -46,6 +46,7 @@ import "./styles.css";
 import { uiUrl } from "../../lib/assets";
 import { loadDoll, spineFor } from "../../lib/data";
 import { spineImageBase, spineUrl } from "../../lib/assets";
+import { resolveAnimation } from "../../lib/spine";
 import SpineAnimation from "../../components/SpineAnimation";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
@@ -387,6 +388,11 @@ function TDollContent({ doll }: TDollContentProps) {
 	const spineRig = animationMode === 0 ? spineEntry?.combat : spineEntry?.dorm;
 	const spineAnimationName = animationMode === 0 ? animationTabSelected : animationDormTabSelected;
 
+	// Tabs are offered based on what the skeleton actually defines. Deriving them from the old GIF
+	// filenames or the hand-maintained `has*Animation` flags produced tabs that did nothing when
+	// clicked, and hid animations the skeleton did have.
+	const hasAnim = (name: string) => resolveAnimation(spineRig?.anims ?? [], name) !== undefined;
+
 	/**
 	 * Look up a skin's resolved assets.
 	 *
@@ -624,21 +630,14 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Replace the T-Doll's card image with normal or damaged versions.
 	const switchBetweenNormalDamagedCardImages = () => {
 		if (showSkin) {
+			const skin = helperSkinSelected();
 			if (switchImage) {
 				// Normal Skin image
-				if (mode === 1) {
-					setTDollImage(skinForm(skinSelected, true)?.images.card);
-				} else {
-					setTDollImage(skinForm(skinSelected)?.images.card);
-				}
+				setTDollImage(skinForm(skin, mode === 1)?.images.card);
 				setSwitchImage(false);
 			} else {
 				// Damaged Skin image
-				if (mode === 1) {
-					setTDollImage(skinForm(skinSelected + 1, true)?.images.card);
-				} else {
-					setTDollImage(skinForm(skinSelected + 1)?.images.card);
-				}
+				setTDollImage(skinForm(skin, mode === 1)?.images.card_damaged);
 				setSwitchImage(true);
 			}
 		} else {
@@ -660,12 +659,8 @@ function TDollContent({ doll }: TDollContentProps) {
 		setShowSkin(true);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
-		// Switch to the modded Skin image cards when currently displaying Mod information.
-		if (mode === 1) {
-			setTDollImage(skinForm(newValue, true)?.images.card);
-		} else {
-			setTDollImage(skinForm(newValue)?.images.card);
-		}
+		// newValue is the doubled tab value, so it has to be halved the same way helperSkinSelected does.
+		setTDollImage(skinForm(newValue / 2, mode === 1)?.images.card);
 
 		// Switch animations based on the animation mode selected, Normal or Dorm.
 		var tempSkinSelected = helperSkinSelected();
@@ -683,10 +678,11 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Show full images for the Backdrop component depending on whether it is the skin or Normal/Mod selected.
 	const renderImage = () => {
 		if (showSkin) {
+			const skin = skinForm(helperSkinSelected(), mode === 1);
 			if (switchImage) {
-				return <img src={skinForm(skinSelected + 1)?.images.full} className={classes.fullImage} alt="Damaged Full Skin" />;
+				return <img src={skin?.images.full_damaged} className={classes.fullImage} alt="Damaged Full Skin" />;
 			} else {
-				return <img src={skinForm(skinSelected)?.images.full} className={classes.fullImage} alt="Normal Full Skin" />;
+				return <img src={skin?.images.full} className={classes.fullImage} alt="Normal Full Skin" />;
 			}
 		} else {
 			if (switchImage) {
@@ -708,7 +704,6 @@ function TDollContent({ doll }: TDollContentProps) {
 
 	// Render tabs for animation selection based on Normal or Dorm animation mode active.
 	const renderAnimationTabs = () => {
-		var tempSkinSelected = helperSkinSelected();
 		if (animationMode === 0) {
 			if (showSkin) {
 				// Skin animations for Combat.
@@ -722,20 +717,20 @@ function TDollContent({ doll }: TDollContentProps) {
 						scrollButtons="on"
 						variant="scrollable"
 					>
-						<Tab label="Wait" value="wait" />
-						{("wait2" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="Wait2" value="wait2" /> : ""}
-						<Tab label="Move" value="move" />
-						<Tab label="Attack" value="attack" />
-						{tdoll.selected.type === "SG" ? <Tab label="Reload" value="reload" /> : ""}
-						{("skill" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="Skill" value="skill" /> : ""}
-						{skinForm(tempSkinSelected)?.animations.crouch ? <Tab label="Crouch" value="crouch" /> : ""}
-						{("attack2" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="Attack2" value="attack2" /> : ""}
-						{skinForm(tempSkinSelected)?.animations.action ? <Tab label="Action" value="action" /> : ""}
-						{skinForm(tempSkinSelected)?.animations.action2 ? <Tab label="Action2" value="action2" /> : ""}
-						{tdoll.selected.type === "MG" ? <Tab label="Reload" value="reload" /> : ""}
-						<Tab label="Die" value="die" />
-						<Tab label="Victory" value="victory" />
-						{("victoryLoop" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
+						{hasAnim("wait") ? <Tab label="Wait" value="wait" /> : ""}
+						{hasAnim("wait2") ? <Tab label="Wait2" value="wait2" /> : ""}
+						{hasAnim("move") ? <Tab label="Move" value="move" /> : ""}
+						{hasAnim("attack") ? <Tab label="Attack" value="attack" /> : ""}
+						{hasAnim("reload") ? <Tab label="Reload" value="reload" /> : ""}
+						{hasAnim("skill") ? <Tab label="Skill" value="skill" /> : ""}
+						{hasAnim("crouch") ? <Tab label="Crouch" value="crouch" /> : ""}
+						{hasAnim("attack2") ? <Tab label="Attack2" value="attack2" /> : ""}
+						{hasAnim("action") ? <Tab label="Action" value="action" /> : ""}
+						{hasAnim("action2") ? <Tab label="Action2" value="action2" /> : ""}
+						{hasAnim("die") ? <Tab label="Die" value="die" /> : ""}
+						{hasAnim("victory") ? <Tab label="Victory" value="victory" /> : ""}
+						{hasAnim("victory2") ? <Tab label="Victory2" value="victory2" /> : ""}
+						{hasAnim("victoryloop") ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
 					</Tabs>
 				);
 			} else {
@@ -750,25 +745,24 @@ function TDollContent({ doll }: TDollContentProps) {
 						scrollButtons="on"
 						variant="scrollable"
 					>
-						<Tab label="Wait" value="wait" />
-						{"hasWait2Animation" in tdoll.normal.animations ? <Tab label="Wait2" value="wait2" /> : ""}
-						<Tab label="Move" value="move" />
-						<Tab label="Attack" value="attack" />
-						{tdoll.selected.type === "SG" ? <Tab label="Reload" value="reload" /> : ""}
-						{tdoll.selected.animations.hasSkillAnimation ? <Tab label="Skill" value="skill" /> : ""}
-						{"skill2" in tdoll.selected.animations ? <Tab label="Skill2" value="skill2" /> : ""}
-						{"crouch" in tdoll.selected.animations && tdoll.selected.animations.crouch ? <Tab label="Crouch" value="crouch" /> : ""}
-						{"hasAttack2Animation" in tdoll.selected.animations ? <Tab label="Attack2" value="attack2" /> : ""}
-						{"action" in tdoll.selected.animations && tdoll.selected.animations.action ? <Tab label="Action" value="action" /> : ""}
-						{"action2" in tdoll.selected.animations && tdoll.selected.animations.action2 ? <Tab label="Action2" value="action2" /> : ""}
-						{"spattack" in tdoll.selected.animations ? <Tab label="Special Attack" value="spattack" /> : ""}
-						{"spattack2" in tdoll.selected.animations ? <Tab label="Special Attack2" value="spattack2" /> : ""}
-						{"landing" in tdoll.selected.animations ? <Tab label="Landing" value="landing" /> : ""}
-						{tdoll.selected.type === "MG" ? <Tab label="Reload" value="reload" /> : ""}
-						<Tab label="Die" value="die" />
-						<Tab label="Victory" value="victory" />
-						{"victory2" in tdoll.selected.animations && !showSkin ? <Tab label="Victory2" value="victory2" /> : ""}
-						{tdoll.selected.animations.hasVictoryLoopAnimation ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
+						{hasAnim("wait") ? <Tab label="Wait" value="wait" /> : ""}
+						{hasAnim("wait2") ? <Tab label="Wait2" value="wait2" /> : ""}
+						{hasAnim("move") ? <Tab label="Move" value="move" /> : ""}
+						{hasAnim("attack") ? <Tab label="Attack" value="attack" /> : ""}
+						{hasAnim("reload") ? <Tab label="Reload" value="reload" /> : ""}
+						{hasAnim("skill") ? <Tab label="Skill" value="skill" /> : ""}
+						{hasAnim("skill2") ? <Tab label="Skill2" value="skill2" /> : ""}
+						{hasAnim("crouch") ? <Tab label="Crouch" value="crouch" /> : ""}
+						{hasAnim("attack2") ? <Tab label="Attack2" value="attack2" /> : ""}
+						{hasAnim("action") ? <Tab label="Action" value="action" /> : ""}
+						{hasAnim("action2") ? <Tab label="Action2" value="action2" /> : ""}
+						{hasAnim("spattack") ? <Tab label="Special Attack" value="spattack" /> : ""}
+						{hasAnim("spattack2") ? <Tab label="Special Attack2" value="spattack2" /> : ""}
+						{hasAnim("landing") ? <Tab label="Landing" value="landing" /> : ""}
+						{hasAnim("die") ? <Tab label="Die" value="die" /> : ""}
+						{hasAnim("victory") ? <Tab label="Victory" value="victory" /> : ""}
+						{hasAnim("victory2") ? <Tab label="Victory2" value="victory2" /> : ""}
+						{hasAnim("victoryloop") ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
 					</Tabs>
 				);
 			}
@@ -784,17 +778,13 @@ function TDollContent({ doll }: TDollContentProps) {
 					scrollButtons="on"
 					variant="scrollable"
 				>
-					<Tab label="Wait" value="wait" />
-					<Tab label="Move" value="move" />
-					{(tdoll.skins && showSkin && ("action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) || "hasActionAnimation" in tdoll.selected.animations ? (
-						<Tab label="Action" value="action" />
-					) : (
-						""
-					)}
-					<Tab label="Pick" value="pick" />
-					<Tab label="Sit" value="sit" />
-					{tdoll.skins && showSkin && ("sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) ? <Tab label="Sit2" value="sit2" /> : ""}
-					<Tab label="Lying" value="lying" />
+					{hasAnim("wait") ? <Tab label="Wait" value="wait" /> : ""}
+					{hasAnim("move") ? <Tab label="Move" value="move" /> : ""}
+					{hasAnim("action") ? <Tab label="Action" value="action" /> : ""}
+					{hasAnim("pick") ? <Tab label="Pick" value="pick" /> : ""}
+					{hasAnim("sit") ? <Tab label="Sit" value="sit" /> : ""}
+					{hasAnim("sit2") ? <Tab label="Sit2" value="sit2" /> : ""}
+					{hasAnim("lying") ? <Tab label="Lying" value="lying" /> : ""}
 				</Tabs>
 			);
 		}
@@ -1061,7 +1051,7 @@ function TDollContent({ doll }: TDollContentProps) {
 			if ("victory2" in tdoll.selected.animations && !showSkin) {
 				animationArray.push("victory2");
 			}
-			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && ("victoryLoop" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
+			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && ("victoryloop" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
 				animationArray.push("victoryloop");
 			}
 		} else {

@@ -6,6 +6,13 @@ export interface SpineRig {
 	skel: string;
 	/** Atlas basename. Often differs from `skel`, since dorm rigs share the combat atlas. */
 	atlas: string;
+	/**
+	 * Animation names this skeleton defines.
+	 *
+	 * Read from the skeleton itself rather than inferred from the old GIF filenames, which disagree:
+	 * most dolls call their skill animation `s`, and some skeletons carry animations no GIF existed for.
+	 */
+	anims: string[];
 }
 
 /** Everything published for one doll. */

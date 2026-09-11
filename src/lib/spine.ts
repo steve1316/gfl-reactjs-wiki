@@ -65,6 +65,43 @@ export function loadSpineRuntime(): Promise<void> {
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
+// Animation names
+
+/**
+ * Alternative names a skeleton may use for the same animation.
+ *
+ * The GIF filenames and the skeletons do not always agree. Sixty-eight dolls call their skill
+ * animation `s`, against three that spell it out, and a handful use the game's internal names for
+ * special attacks. Resolving through this table is what keeps a tab from doing nothing when clicked.
+ */
+const ANIMATION_ALIASES: Record<string, string[]> = {
+	skill: ["skill", "s"],
+	skill2: ["skill2", "s2"],
+	crouch: ["crouch", "squat"],
+	spattack: ["spattack", "spa", "sp1", "sp"],
+	spattack2: ["spattack2", "spc", "sp2"],
+	attack2: ["attack2", "attack1"],
+	reload: ["reload", "squatreload"]
+};
+
+/**
+ * Find the name a skeleton actually uses for a requested animation.
+ *
+ * @param available Animation names the skeleton defines.
+ * @param name The name the UI asked for.
+ * @returns The matching skeleton animation name, or undefined when it has none.
+ */
+export function resolveAnimation(available: readonly string[], name: string): string | undefined {
+	for (const candidate of ANIMATION_ALIASES[name] ?? [name]) {
+		if (available.includes(candidate)) {
+			return candidate;
+		}
+	}
+	return undefined;
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
 // Player
 
 /** A mounted Spine animation, and the handles needed to drive or dispose of it. */
@@ -139,10 +176,90 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	options.container.appendChild(app.view);
 
 	const spine = new PIXI.spine.Spine(skeletonData);
-	// Skeletons are authored with the origin at the feet, so the sprite is anchored near the bottom.
-	spine.x = size / 2;
-	spine.y = size * 0.92;
 	app.stage.addChild(spine);
+
+	// How far the drawn artwork extends past the bone positions, measured once from the setup pose.
+	// Bones sit inside the silhouette, so fitting to bones alone crops hair, weapons and coat tails.
+	let padLeft = 0;
+	let padRight = 0;
+	let padTop = 0;
+	let padBottom = 0;
+
+	{
+		const skeleton = spine.skeleton;
+		skeleton.setToSetupPose();
+		skeleton.updateWorldTransform();
+		let minX = Infinity;
+		let minY = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+		for (const bone of skeleton.bones) {
+			minX = Math.min(minX, bone.worldX);
+			maxX = Math.max(maxX, bone.worldX);
+			minY = Math.min(minY, bone.worldY);
+			maxY = Math.max(maxY, bone.worldY);
+		}
+		spine.x = 0;
+		spine.y = 0;
+		spine.scale.set(1);
+		app.renderer.render(app.stage);
+		const drawn = spine.getLocalBounds();
+		padLeft = Math.max(0, minX - drawn.x);
+		padRight = Math.max(0, drawn.x + drawn.width - maxX);
+		padTop = Math.max(0, minY - drawn.y);
+		padBottom = Math.max(0, drawn.y + drawn.height - maxY);
+	}
+
+	/**
+	 * Position and scale the skeleton so the whole animation stays in frame.
+	 *
+	 * Not every animation plays in place. Desert Eagle's `victoryloop` translates the rig far enough
+	 * left that a sprite pinned at a fixed spot leaves the canvas entirely and the animation looks
+	 * broken rather than merely off-centre. The extent is sampled across the whole duration, so the
+	 * framing is chosen once and does not drift while it plays.
+	 *
+	 * @param animation The animation about to play.
+	 */
+	const fitToAnimation = (animation: { duration: number; apply: (...args: unknown[]) => void }) => {
+		const skeleton = spine.skeleton;
+		const steps = 20;
+		let minX = Infinity;
+		let minY = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+
+		for (let step = 0; step <= steps; step++) {
+			const time = (animation.duration * step) / steps;
+			skeleton.setToSetupPose();
+			animation.apply(skeleton, time, time, false, []);
+			skeleton.updateWorldTransform();
+			for (const bone of skeleton.bones) {
+				minX = Math.min(minX, bone.worldX);
+				maxX = Math.max(maxX, bone.worldX);
+				minY = Math.min(minY, bone.worldY);
+				maxY = Math.max(maxY, bone.worldY);
+			}
+		}
+
+		if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
+			return;
+		}
+
+		// A little breathing room on top of the measured artwork so nothing grazes the edge.
+		const breathing = size * 0.04;
+		minX -= padLeft + breathing;
+		maxX += padRight + breathing;
+		minY -= padTop + breathing;
+		maxY += padBottom + breathing;
+
+		// Never enlarge, only shrink to fit. Scaling a chibi up looks worse than leaving it small.
+		const fit = Math.min(size / (maxX - minX), size / (maxY - minY), 1);
+		spine.scale.set(fit);
+		// pixi-spine already flips the Y axis, so these bone coordinates share Pixi's orientation and
+		// both axes centre the same way. Adding on Y instead pushes the skeleton off the top.
+		spine.x = size / 2 - ((minX + maxX) / 2) * fit;
+		spine.y = size / 2 - ((minY + maxY) / 2) * fit;
+	};
 
 	const animations: string[] = skeletonData.animations.map((animation: { name: string }) => animation.name);
 
@@ -154,8 +271,9 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	const play = (name: string) => {
 		// This runtime's setAnimation takes an Animation object, not a name. Passing a string fails at
 		// the first tick with "current.animation.apply is not a function".
-		const animation = skeletonData.findAnimation(name);
+		const animation = skeletonData.findAnimation(resolveAnimation(animations, name) ?? name);
 		if (animation) {
+			fitToAnimation(animation);
 			spine.state.setAnimation(0, animation, true);
 		}
 	};
