@@ -34,8 +34,9 @@ import zipfile
 
 BUNDLE_KEYS = ("BaseAssetBundles", "AddAssetBundles")
 
-# Spine bundles are named after the weapon codename from `gun.hjson`.
-BUNDLE_TEMPLATE = "character_{code}_spine"
+# Spine bundles are named after the weapon codename from `gun.hjson`. A few dolls, AA12 among them,
+# keep their skeleton in the plain `character_<code>` bundle with no suffix, so both are tried.
+BUNDLE_TEMPLATES = ("character_{code}_spine", "character_{code}")
 
 # Collaboration units carry no `code` in `gun.hjson`, so their bundles are named explicitly.
 CODE_OVERRIDES = {
@@ -166,8 +167,12 @@ def main():
     resolved, unresolved, failed = {}, [], []
     for doll_id in sorted(doll_ids):
         code = CODE_OVERRIDES.get(doll_id) or codes.get(doll_id, "")
-        name = BUNDLE_TEMPLATE.format(code=code.lower())
-        bundle = bundles.get(name)
+        name, bundle = None, None
+        for template in BUNDLE_TEMPLATES:
+            candidate = template.format(code=code.lower())
+            if candidate in bundles:
+                name, bundle = candidate, bundles[candidate]
+                break
         if not bundle:
             unresolved.append((doll_id, code))
             continue

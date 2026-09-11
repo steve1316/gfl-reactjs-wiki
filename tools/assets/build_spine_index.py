@@ -64,12 +64,28 @@ def index_doll(doll_dir):
             return lookup(base[1:])
         return None
 
-    # The shortest non-R skeleton is the base combat rig; everything else hangs off it.
-    plain = [s for s in skeletons if not s.rpartition("/")[2].startswith("R")]
-    combat = min(plain, key=len) if plain else skeletons[0]
-    combat_dir, _, combat_stem = combat.rpartition("/")
-    combat_prefix = f"{combat_dir}/" if combat_dir else ""
-    dorm = next((s for s in skeletons if s.lower() == f"{combat_prefix}R{combat_stem}".lower()), None)
+    # The dorm rig is named after the combat rig with an `R` in front, so the pair identifies itself.
+    # Guessing by "does it start with R" instead is wrong in both directions: RPD, RO635, R93, RPK16
+    # and RFB are real doll codes, while Ribeyrolles and RexZero1 pair with RRibeyrolles and
+    # RRexZero1. Where every skeleton began with R the old rule fell back to alphabetical order and
+    # picked the dorm rig as the default, which is what showed the wrong animations.
+    lookup = {s.lower(): s for s in skeletons}
+
+    def dorm_of(skeleton):
+        """Return the dorm counterpart of a skeleton, if one was published."""
+        directory, _, stem = skeleton.rpartition("/")
+        prefix = f"{directory}/" if directory else ""
+        return lookup.get(f"{prefix}R{stem}".lower())
+
+    paired = [s for s in skeletons if dorm_of(s)]
+    if paired:
+        combat = min(paired, key=len)
+    else:
+        # Nothing pairs up, so fall back to the shortest name that is not obviously a dorm rig.
+        unpaired = [s for s in skeletons if s.rpartition("/")[2].lower() not in
+                    {other.rpartition("/")[2].lower()[1:] for other in skeletons if len(other.rpartition("/")[2]) > 1}]
+        combat = min(unpaired or skeletons, key=len)
+    dorm = dorm_of(combat)
 
     entry = {}
     for label, skeleton in (("combat", combat), ("dorm", dorm)):

@@ -125,6 +125,20 @@ function main() {
 			// is exactly how four 404s reached the live site unnoticed.
 			atlasesToRead.push({ id, atlas: rig.atlas });
 
+			// The default rig must be the base one. A dorm rig (R + the combat name) or a skin rig
+			// (code + _<skin id>) standing in for it means the wrong animation set plays by default,
+			// which is what happened to General Liu.
+			if (kind === "combat") {
+				const stem = rig.skel.split("/").pop();
+				if (/_\d+$/.test(stem)) {
+					problems.push(`doll ${id}: default rig ${stem} is a skin, not the base rig`);
+				}
+				const dormStem = rigs.dorm?.skel.split("/").pop();
+				if (dormStem && dormStem.toLowerCase() === stem.toLowerCase()) {
+					problems.push(`doll ${id}: combat and dorm resolve to the same skeleton ${stem}`);
+				}
+			}
+
 			if (!rig.anims?.length) {
 				problems.push(`doll ${id} ${kind}: skeleton ${rig.skel} defines no animations`);
 				continue;
