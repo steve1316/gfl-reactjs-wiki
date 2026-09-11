@@ -31,6 +31,29 @@ import { loadEquipment } from "../../lib/data";
 import type { Equipment } from "../../types/equipment";
 
 /** Styles for this page, as `sx` entries. Declared at module scope so they are created once rather than on every render. */
+/**
+ * Display names for the stat keys in the equipment data.
+ *
+ * This was a thirteen-branch if/else chain rebuilt inside the render for every stat of every card.
+ * Anything missing from the map falls back to the raw key, which is at least visible rather than the
+ * empty string the chain produced.
+ */
+const STAT_NAMES: Record<string, string> = {
+	criticalHitRate: "Critical hit rate",
+	damage: "Damage",
+	accuracy: "Accuracy",
+	criticalDamage: "Critical damage",
+	rateOfFire: "Rate of fire",
+	evasion: "Evasion",
+	nightVision: "Night vision",
+	boostAbilityEffectiveness: "Boost ability effectiveness",
+	armorPiercing: "Armor piercing",
+	target: "Target",
+	clipSize: "Clip size",
+	movementSpeed: "Movement speed",
+	armor: "Armor"
+};
+
 const styles = {
 	root: {
 		marginTop: "5rem"
@@ -330,51 +353,36 @@ export default function EquipmentIndex() {
 										</CardActionArea>
 										
 										{/* Equipment Stats */}
-										<CardContent>
-											<Typography component="span" variant="body2" style={{maxHeight: 100, overflow: "auto"}}>
-												{Object.keys(equipment.stats).map((key) => {
-													var statName = ""
-													if(key === "criticalHitRate"){
-														statName = "Critical Hit Rate"
-													} else if(key === "damage"){
-														statName = "Damage"
-													} else if(key === "accuracy"){
-														statName = "Accuracy"
-													} else if(key === "criticalDamage"){
-														statName = "Critical Damage"
-													} else if(key === "rateOfFire"){
-														statName = "Rate of Fire"
-													} else if(key === "evasion"){
-														statName = "Evasion"
-													} else if(key === "nightVision"){
-														statName = "Night Vision"
-													} else if(key === "boostAbilityEffectiveness"){
-														statName = "Boost Ability Effectiveness"
-													} else if(key === "armorPiercing"){
-														statName = "Armor Piercing"
-													} else if(key === "target"){
-														statName = "Target"
-													} else if(key === "clipSize"){
-														statName = "Clip Size"
-													} else if(key === "movementSpeed"){
-														statName = "Movement Speed"
-													} else if(key === "armor"){
-														statName = "Armor"
-													}
+									<CardContent sx={{ maxHeight: 140, overflow: "auto", py: 0 }}>
+										{Object.keys(equipment.stats).map((key) => {
+											const values = equipment.stats[key] ?? [];
+											const atLevel = values[currentLevel - 1];
+											// Highlighted when levelling has actually moved this stat off its level-one value.
+											const improved = currentLevel !== 1 && atLevel !== values[0];
 
-													const values = equipment.stats[key] ?? []
-													const atLevel = values[currentLevel - 1]
-													const atLevelOne = values[0]
-													const improved = currentLevel !== 1 && atLevel !== atLevelOne
-
-													return(
-														<div key={statName}>
-															<p>{statName}: {improved ? <Box component="span" sx={{ color: "primary.main" }}>{atLevel}</Box> : atLevel}</p>
-														</div>
-													)
-												})}
-											</Typography>
-										</CardContent>
+											return (
+												<Box
+													key={key}
+													sx={{
+														display: "flex",
+														justifyContent: "space-between",
+														gap: 2,
+														py: 0.9,
+														borderBottom: 1,
+														borderColor: "divider",
+														"&:last-of-type": { borderBottom: 0 }
+													}}
+												>
+													<Typography variant="body2" color="text.secondary">
+														{STAT_NAMES[key] ?? key}
+													</Typography>
+													<Typography variant="body2" sx={{ fontWeight: 650, color: improved ? "primary.main" : "text.primary" }}>
+														{atLevel}
+													</Typography>
+												</Box>
+											);
+										})}
+									</CardContent>
 
 										{/* Equipment Description */}
 										<Accordion expanded={expanded === equipment.name + equipment.rarity} onChange={handleChange(equipment.name + equipment.rarity)}>

@@ -62,6 +62,20 @@ interface DisplayTDoll extends TDollData {
 	selected: TDollForm;
 }
 
+/**
+ * The stat rows on the doll page, in display order.
+ *
+ * These were five hand-written table rows differing only by label and field, which is how the header
+ * and the rows drifted apart in wording. Listing them keeps the order and the labels in one place.
+ */
+const STAT_ROWS = [
+	{ label: "HP", key: "max_hp" },
+	{ label: "Damage", key: "max_dmg" },
+	{ label: "Accuracy", key: "max_acc" },
+	{ label: "Evasion", key: "max_eva" },
+	{ label: "Rate of fire", key: "max_rof" }
+] as const;
+
 const styles = {
 	cardGrid: {
 		pt: 8,
@@ -1377,40 +1391,18 @@ function TDollContent({ doll }: TDollContentProps) {
 										<TableHead>
 											<TableRow>
 												<TableCell>Stats</TableCell>
-												<TableCell align="right">At Max Level</TableCell>
+												<TableCell align="right">At max level</TableCell>
 											</TableRow>
 										</TableHead>
 										<TableBody>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													HP
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_hp}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													DMG
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_dmg}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													ACC
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_acc}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													EVA
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_eva}</TableCell>
-											</TableRow>
-											<TableRow>
-												<TableCell component="th" scope="row">
-													ROF
-												</TableCell>
-												<TableCell align="right">{tdoll.selected.max_rof}</TableCell>
-											</TableRow>
+											{STAT_ROWS.map((stat) => (
+												<TableRow key={stat.key}>
+													<TableCell component="th" scope="row">
+														{stat.label}
+													</TableCell>
+													<TableCell align="right">{tdoll.selected[stat.key]}</TableCell>
+												</TableRow>
+											))}
 										</TableBody>
 									</Table>
 								</TableContainer>
