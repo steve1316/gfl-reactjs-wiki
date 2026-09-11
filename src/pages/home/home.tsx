@@ -44,7 +44,7 @@ const formation_logo = uiUrl("formation_logo.jpg");
  * render. `sx` needs no hook and the values sit at module scope with the rest of the configuration.
  */
 const styles = {
-	root: { marginTop: "4rem" },
+	root: { py: 3 },
 	heroContent: { backgroundColor: "background.paper", pt: 8, pb: 6 },
 	heroButtons: { mt: 4 },
 	cardGrid: { py: 8 },

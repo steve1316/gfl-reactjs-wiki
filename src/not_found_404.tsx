@@ -7,7 +7,7 @@ import { Box, Typography } from "@mui/material";
  */
 export default function NotFound404() {
 	return (
-		<Box component="main" sx={{ marginTop: "4rem" }}>
+		<Box component="main" sx={{ py: 3 }}>
 			<Typography component="h1" variant="h4" align="center">
 				404 Not Found
 			</Typography>

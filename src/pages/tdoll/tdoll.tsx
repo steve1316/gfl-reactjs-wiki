@@ -78,7 +78,7 @@ const STAT_ROWS = [
 
 const styles = {
 	cardGrid: {
-		pt: 8,
+		pt: 3,
 		pb: 8
 	},
 	card: {
@@ -253,11 +253,11 @@ export default function TDoll() {
 
 	if (doll === undefined) {
 		return (
-			<main style={{ marginTop: "5rem" }}>
+			<Box component="main" sx={{ py: 3 }}>
 				<Typography component="h1" variant="h5" align="center" color="textPrimary">
 					Loading T-Doll...
 				</Typography>
-			</main>
+			</Box>
 		);
 	}
 

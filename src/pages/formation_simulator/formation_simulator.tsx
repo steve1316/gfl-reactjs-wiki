@@ -9,7 +9,7 @@ import ScrollToTop from "../../components/ScrollToTop";
  */
 export default function FormationSimulator() {
 	return (
-		<Box component="main" sx={{ marginTop: "5rem" }}>
+		<Box component="main" sx={{ py: 3 }}>
 			<ScrollToTop />
 			<Container>
 				<Typography component="h1" variant="h5" align="center" color="textPrimary" gutterBottom>

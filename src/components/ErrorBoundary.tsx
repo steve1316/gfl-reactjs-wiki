@@ -52,7 +52,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 	render() {
 		if (this.state.hasError) {
 			return (
-				<main style={{ marginTop: "5rem" }}>
+				<main style={{ padding: "24px 0" }}>
 					<h2 style={{ textAlign: "center" }}>
 						404 T-Doll Not Found! Please go to the{" "}
 						<Link to="/index" style={{ color: "inherit" }}>

@@ -18,6 +18,8 @@ import {
 	Icon,
 	Divider,
 	TextField,
+	useMediaQuery,
+	useTheme,
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
@@ -28,6 +30,8 @@ import match from "autosuggest-highlight/match";
 
 // MaterialUI icon imports
 import MenuIcon from "@mui/icons-material/Menu";
+import SearchIcon from "@mui/icons-material/Search";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { uiUrl } from "../lib/assets";
 import { searchIndex } from "../lib/data";
@@ -72,7 +76,7 @@ const options: SearchOption[] = searchIndex
 const styles = {
 	root: { flexGrow: 1 },
 	menuButton: { mr: 2 },
-	title: { display: { xs: "none", sm: "block" }, flexGrow: 1 },
+	title: { flexGrow: 1 },
 	search: (theme: Theme) => ({
 		position: "relative",
 		borderRadius: theme.shape.borderRadius,
@@ -99,6 +103,11 @@ const styles = {
  */
 export default function Navbar() {
 	const navigate = useNavigate();
+	const theme = useTheme();
+	// The bar cannot hold a title and a search field at once on a phone, so below `sm` the field is
+	// folded behind an icon and takes the whole bar when opened.
+	const isNarrow = useMediaQuery(theme.breakpoints.down("sm"));
+	const [searchOpen, setSearchOpen] = useState(false);
 
 	const [drawerOpen, setDrawerOpen] = useState(false);
 	const [searchValue, setSearchValue] = useState("");
@@ -120,6 +129,8 @@ export default function Navbar() {
 			return;
 		}
 		setHasError(false);
+		// Collapse the field again, or the reader lands on the doll with the bar still in search mode.
+		setSearchOpen(false);
 		void navigate(`/tdoll/${selected.id}`);
 	};
 
@@ -168,61 +179,75 @@ export default function Navbar() {
 		}
 	];
 
+	const searchField = (
+				<form onSubmit={handleSubmit} style={{ width: "100%" }}>
+					<Autocomplete
+						options={options}
+						groupBy={(option) => option.firstLetter}
+						getOptionLabel={(option) => option.name}
+						size="small"
+						sx={{ width: "100%", minWidth: { xs: 0, sm: 300 } }}
+						inputValue={searchValue}
+						onInputChange={(_event, newInputValue) => {
+							setSearchValue(newInputValue);
+						}}
+						clearOnEscape
+						renderInput={(params) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} value={searchValue} variant="outlined" />}
+						renderOption={(optionProps, option, { inputValue }) => {
+							const matches = match(option.name, inputValue);
+							const parts = parse(option.name, matches);
+							const { key, ...rest } = optionProps;
+
+							return (
+								<li key={key} {...rest}>
+									{parts.map((part, index) => (
+										<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
+											{part.text}
+										</span>
+									))}
+								</li>
+							);
+						}}
+					/>
+				</form>
+	);
+
 	return (
 		<Box component="div" sx={styles.root}>
 			<AppBar position="fixed">
 				<Toolbar>
-					<IconButton
-						edge="start"
-						onClick={handleDrawerToggle}
-						sx={styles.menuButton}
-						color="inherit"
-						aria-label="menu"
-						size="large">
-						<MenuIcon />
-					</IconButton>
-					<Typography variant="h6" sx={styles.title} noWrap>
-						Girls' Frontline Database
-					</Typography>
-
-					{/* Search Bar with Autocomplete */}
-					<Box component="div" sx={styles.search}>
-						<form onSubmit={handleSubmit}>
-							<Autocomplete
-								options={options}
-								groupBy={(option) => option.firstLetter}
-								getOptionLabel={(option) => option.name}
-								size="small"
-								// A fixed 300px floor pushed everything to its right off a phone screen. Collapsing the
-								// search into an icon is app-shell work, but it has to at least shrink to fit until then.
-								sx={{ minWidth: { xs: 0, sm: 300 }, width: "auto" }}
-								inputValue={searchValue}
-								onInputChange={(_event, newInputValue) => {
-									setSearchValue(newInputValue);
-								}}
-								clearOnEscape
-								renderInput={(params) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} value={searchValue} variant="outlined" />}
-								renderOption={(optionProps, option, { inputValue }) => {
-									const matches = match(option.name, inputValue);
-									const parts = parse(option.name, matches);
-									const { key, ...rest } = optionProps;
-
-									return (
-										<li key={key} {...rest}>
-											{parts.map((part, index) => (
-												<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
-													{part.text}
-												</span>
-											))}
-										</li>
-									);
-								}}
-							/>
-						</form>
-					</Box>
-					{/* End of Search Bar with Autocomplete */}
+					{isNarrow && searchOpen ? (
+						<>
+							<IconButton edge="start" onClick={() => setSearchOpen(false)} color="inherit" aria-label="close search" size="large">
+								<ArrowBackIcon />
+							</IconButton>
+							{searchField}
+						</>
+					) : (
+						<>
+							<IconButton edge="start" onClick={handleDrawerToggle} sx={styles.menuButton} color="inherit" aria-label="menu" size="large">
+								<MenuIcon />
+							</IconButton>
+							<Typography variant="h6" sx={styles.title} noWrap>
+								Girls' Frontline Database
+							</Typography>
+							{isNarrow ? (
+								<IconButton onClick={() => setSearchOpen(true)} color="inherit" aria-label="search" size="large">
+									<SearchIcon />
+								</IconButton>
+							) : (
+								<Box component="div" sx={styles.search}>
+									{searchField}
+								</Box>
+							)}
+						</>
+					)}
 				</Toolbar>
 			</AppBar>
+
+			{/* Takes its height from the bar itself, so the eight pages that each guessed a top margin -
+			    four at 4rem and four at 5rem, against a bar that is 56, 64 or 48px - no longer have to. */}
+			<Toolbar />
 
 			{/* Drawer */}
 			<Drawer style={{ width: "200px" }} anchor="left" open={drawerOpen} onClose={handleDrawerToggle} variant="temporary" slotProps={{ paper: { sx: styles.drawerPaper } }}>
@@ -230,7 +255,7 @@ export default function Navbar() {
 					{listItems.map((item) => {
 						return (
 							<div key={item.title}>
-								<Box component={Link} to={item.link} sx={styles.link}>
+								<Box component={Link} to={item.link} sx={styles.link} onClick={() => setDrawerOpen(false)}>
 									<ListItemButton>
 										<ListItemIcon>
 											<Icon>

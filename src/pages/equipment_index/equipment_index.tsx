@@ -55,9 +55,7 @@ const STAT_NAMES: Record<string, string> = {
 };
 
 const styles = {
-	root: {
-		marginTop: "5rem"
-	},
+	root: { py: 3 },
 	bottomDividerForCards: {
 		marginTop: "25px",
 		marginBottom: "10px"

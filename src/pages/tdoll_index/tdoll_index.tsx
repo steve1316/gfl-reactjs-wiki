@@ -54,9 +54,7 @@ const HtmlTooltip = styled(Tooltip)({
 });
 
 const styles = {
-	root: {
-		marginTop: "4rem"
-	},
+	root: { py: 3 },
 	cardGrid: {
 		pt: 8,
 		pb: 8,
