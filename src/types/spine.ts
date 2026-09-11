@@ -30,7 +30,7 @@ export interface SpineDollEntry {
 	/** The dorm rig: sit, lying, pick and so on. */
 	dorm?: SpineRig;
 	/**
-	 * The Mod form's rigs, for the 39 dolls that have one.
+	 * The Mod form's rigs, present only for the dolls that have a Mod.
 	 *
 	 * A Mod doll is a different chibi with its own animation set, so it cannot share the base rig. Mod
 	 * skins do not exist, which is why this is a single pair rather than a list.

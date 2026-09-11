@@ -390,9 +390,10 @@ function TDollContent({ doll }: TDollContentProps) {
 	// that helper is declared further down and would still be in the temporal dead zone here.
 	const selectedSkinRigs = showSkin ? (spineEntry?.skinRigs?.[skinSelected / 2] ?? null) : null;
 	// A Mod doll is a different chibi with its own animations, so the base rig cannot stand in for it.
-	// A skin still wins, since Mod skins do not exist and the game shows the skin's own chibi either way.
-	// Many skins have no rig published, so the doll's own rigs stand in rather than showing nothing.
-	const rigs = selectedSkinRigs ?? (mode === 1 ? spineEntry?.mod : undefined) ?? spineEntry;
+	const modRigs = mode === 1 ? spineEntry?.mod : undefined;
+	// A skin wins over the Mod rigs, since Mod skins do not exist and the game shows the skin's own chibi
+	// either way. Many skins have no rig published, so the doll's own rigs stand in rather than showing nothing.
+	const rigs = selectedSkinRigs ?? modRigs ?? spineEntry;
 	const spineRig = animationMode === 0 ? rigs?.combat : (rigs?.dorm ?? rigs?.combat);
 	const requestedAnimation = animationMode === 0 ? animationTabSelected : animationDormTabSelected;
 

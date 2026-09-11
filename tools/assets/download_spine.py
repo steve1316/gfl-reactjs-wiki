@@ -103,10 +103,11 @@ def resolve_code(doll_id, codes, mod=False):
     Returns:
         The codename, or an empty string when the doll is not in `gun.hjson` at all.
     """
-    if mod:
-        base = codes.get(doll_id) or CODE_OVERRIDES.get(doll_id, "")
-        return codes.get(MOD_ID_OFFSET + doll_id) or (f"{base}Mod" if base else "")
-    return CODE_OVERRIDES.get(doll_id) or codes.get(doll_id, "")
+    base = CODE_OVERRIDES.get(doll_id) or codes.get(doll_id, "")
+    if not mod:
+        return base
+    # Without the guard an unknown doll would resolve to the bare string "Mod".
+    return codes.get(MOD_ID_OFFSET + doll_id) or (f"{base}Mod" if base else "")
 
 
 def index_bundles(resdata_zip, region):

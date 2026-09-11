@@ -112,10 +112,10 @@ def index_doll(doll_dir):
     def rig_pair(skeleton):
         """Describe a combat skeleton and its dorm counterpart, skipping either if it has no atlas."""
         pair = {}
-        atlas = atlas_for(skeleton) if skeleton else None
+        atlas = atlas_for(skeleton)
         if atlas:
             pair["combat"] = {"skel": skeleton, "atlas": atlas}
-        counterpart = dorm_of(skeleton) if skeleton else None
+        counterpart = dorm_of(skeleton)
         dorm_atlas = atlas_for(counterpart) if counterpart else None
         if dorm_atlas:
             pair["dorm"] = {"skel": counterpart, "atlas": dorm_atlas}
@@ -141,15 +141,10 @@ def index_doll(doll_dir):
         stem = split_skeleton(skeleton)[1]
         if skeleton in (combat, dorm) or is_dorm(skeleton) or "_" not in stem:
             continue
-        atlas = atlas_for(skeleton)
-        if not atlas:
+        record = rig_pair(skeleton)
+        if "combat" not in record:
             continue
         skin_id = stem.split("_", 1)[1]
-        record = {"combat": {"skel": skeleton, "atlas": atlas}}
-        skin_dorm = dorm_of(skeleton)
-        dorm_atlas = atlas_for(skin_dorm) if skin_dorm else None
-        if dorm_atlas:
-            record["dorm"] = {"skel": skin_dorm, "atlas": dorm_atlas}
         # Twenty dolls carry the same skin twice, once flat and once in a lowercased subdirectory,
         # because the CDN download landed alongside an earlier import. They are the same rig, so the
         # more complete copy is kept rather than whichever happened to be read last.
