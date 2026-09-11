@@ -289,7 +289,7 @@ export default function TDoll_Index() {
 				tempArray.push(
 					<Grid key={tdoll.selected.name} size={{ xs: 4, sm: 4, md: 2 }}>
 						<Fade in={true} timeout={stagger}>
-							<Card sx={styles.card} elevation={12}>
+							<Card sx={styles.card}>
 								<Link
 									to={{
 										pathname: "/tdoll",

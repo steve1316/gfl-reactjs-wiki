@@ -23,14 +23,17 @@ export const theme = createTheme({
 				})
 			}
 		},
-		// A card is a bordered surface rather than a floating one, since a shadow carries almost no
-		// information against a dark ground.
+		// A card lifts off the page rather than being outlined. On a dark ground a shadow alone reads
+		// weakly, so most of the lift comes from the lighter surface and the shadow only softens the
+		// edge. Pages used to pass `elevation={12}` at every call site, which stacked MUI's heaviest
+		// shadow on top of whatever the theme said.
 		MuiCard: {
 			defaultProps: { elevation: 0 },
 			styleOverrides: {
 				root: ({ theme }) => ({
-					border: `1px solid ${theme.palette.divider}`,
-					backgroundImage: "none"
+					backgroundColor: theme.palette.raised,
+					backgroundImage: "none",
+					boxShadow: "0 2px 5px rgba(0, 0, 0, 0.4), 0 8px 18px rgba(0, 0, 0, 0.3)"
 				})
 			}
 		},

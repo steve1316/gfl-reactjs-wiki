@@ -72,37 +72,38 @@ const styles = {
 		width: "100%"
 	},
 	cardForImage: {
-		width: 256, // The dimensions of the images.
-		height: 512,
+		// Capped at the artwork's own 256x512 rather than stretched, since upscaling a bitmap that is
+		// already undersampled at this pixel ratio only makes it softer. The ratio lets it shrink.
+		width: "100%",
+		maxWidth: 256,
+		aspectRatio: "1 / 2",
+		// Centred, so the cap reads as deliberate rather than as a card that failed to fill its column.
+		mx: "auto",
 		marginBottom: "10px"
 	},
-	cardForSkill: (theme: Theme) => ({
-		minWidth: 256,
-		backgroundColor: theme.palette.raised
-	}),
-	cardForTileSet: (theme: Theme) => ({
-		minWidth: 256,
-		backgroundColor: theme.palette.raised
-	}),
+	cardForSkill: {
+		width: "100%"
+	},
+	cardForTileSet: {
+		width: "100%"
+	},
 	cardForCombatAnimations: (theme: Theme) => ({
 		display: "flex",
 		justifyContent: "center",
-		width: 256,
+		width: "100%",
 		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
 		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
 		backgroundSize: "5.66px 5.66px",
-		cursor: "pointer",
-		backgroundColor: theme.palette.raised
+		cursor: "pointer"
 	}),
 	cardForDormAnimations: (theme: Theme) => ({
 		display: "flex",
 		justifyContent: "center",
-		width: 256,
+		width: "100%",
 		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
 		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
 		backgroundSize: "5.66px 5.66px",
-		cursor: "pointer",
-		backgroundColor: theme.palette.raised
+		cursor: "pointer"
 	}),
 	rarityStars: {
 		listStyleType: "none",
@@ -116,7 +117,7 @@ const styles = {
 		marginLeft: "3px"
 	},
 	tableContainer: {
-		minWidth: 256
+		width: "100%"
 	},
 	table: (theme: Theme) => ({
 		width: "100%",
@@ -129,14 +130,14 @@ const styles = {
 		paddingTop: "12px"
 	},
 	tabs: (theme: Theme) => ({
-		width: 256,
+		width: "100%",
 		backgroundColor: theme.palette.background.paper
 	}),
 	tabForSkin: {
 		width: 100
 	},
 	tabsForSkills: (theme: Theme) => ({
-		minWidth: 256,
+		width: "100%",
 		backgroundColor: theme.palette.background.paper
 	}),
 	tableTileSet: (theme: Theme) => ({
@@ -1182,7 +1183,7 @@ function TDollContent({ doll }: TDollContentProps) {
 									</Tabs>
 								)}
 
-								<Card sx={styles.cardForImage} elevation={12}>
+								<Card sx={styles.cardForImage}>
 									<CardActionArea onClick={switchBetweenNormalDamagedCardImages}>
 										<CardMedia component="img" sx={styles.cardForImage} image={tdollImage} title={tdoll.selected.name} />
 									</CardActionArea>
@@ -1218,7 +1219,7 @@ function TDollContent({ doll }: TDollContentProps) {
 								{renderAnimationTabs()}
 
 								{animationMode === 0 ? (
-									<Card sx={styles.cardForCombatAnimations} elevation={12}>
+									<Card sx={styles.cardForCombatAnimations}>
 										{spineRig ? (
 											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
 												<SpineAnimation
@@ -1233,7 +1234,7 @@ function TDollContent({ doll }: TDollContentProps) {
 										)}
 									</Card>
 								) : (
-									<Card sx={styles.cardForDormAnimations} elevation={12}>
+									<Card sx={styles.cardForDormAnimations}>
 										{spineRig ? (
 											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
 												<SpineAnimation
@@ -1263,7 +1264,7 @@ function TDollContent({ doll }: TDollContentProps) {
 									</Tabs>
 								)}
 
-								<Card sx={styles.cardForSkill} elevation={12}>
+								<Card sx={styles.cardForSkill}>
 									<CardContent>
 										<CardHeader
 											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.skillImages.skill2 : tdoll.skillImages.skill1} />}
@@ -1335,7 +1336,7 @@ function TDollContent({ doll }: TDollContentProps) {
 								<br />
 
 								{/************** T-Doll's tileset information **************/}
-								<Card sx={styles.cardForTileSet} elevation={12}>
+								<Card sx={styles.cardForTileSet}>
 									<Box component="div" sx={styles.tileSetDiv}>
 										<CardContent sx={styles.content}>
 											<Box component="table" sx={styles.tableTileSet} id="tdoll-tileset">
@@ -1371,7 +1372,7 @@ function TDollContent({ doll }: TDollContentProps) {
 								<br />
 
 								{/************** T-Doll's stats in table format **************/}
-								<TableContainer sx={styles.tableContainer} component={Paper} elevation={12}>
+								<TableContainer sx={styles.tableContainer} component={Paper}>
 									<Table sx={styles.table} size="small">
 										<TableHead>
 											<TableRow>

@@ -310,7 +310,7 @@ export default function EquipmentIndex() {
 						return(
 							<Grid key={equipment.name + equipment.rarity} size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 2 }}>
 								<Fade in={true} timeout={calculateTimeout(index)}>
-									<Card elevation={12}>
+									<Card>
 										{/* Equipment Name and what types of T-Dolls can use it */}
 										<CardHeader title={equipment.name} subheader={equipment.usable.map((item, index) => {
 											if(index === 0 && !equipment.exclusive){
