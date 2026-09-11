@@ -47,7 +47,7 @@ export function TypeBadge({ type, dense = false }: TypeBadgeProps) {
 				const tint = theme.palette.weaponType[type as keyof typeof theme.palette.weaponType] ?? theme.palette.text.secondary;
 				return {
 					display: "inline-block",
-					fontSize: dense ? "0.62rem" : "0.69rem",
+					fontSize: dense ? "0.7rem" : "0.75rem",
 					fontWeight: 700,
 					letterSpacing: "0.06em",
 					px: dense ? 0.6 : 1.1,
@@ -108,7 +108,7 @@ interface RarityLabelProps {
  */
 export function RarityLabel({ rarity, isMod }: RarityLabelProps) {
 	return (
-		<Box component="span" sx={(theme) => ({ fontSize: "0.62rem", fontWeight: 700, color: rarityColour(theme, rarity, isMod) })}>
+		<Box component="span" sx={(theme) => ({ fontSize: "0.7rem", fontWeight: 700, color: rarityColour(theme, rarity, isMod) })}>
 			{rarity}
 			{"★"}
 		</Box>
