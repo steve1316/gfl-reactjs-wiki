@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import type { JSX } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
-import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
+import { useLocation, useParams } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
-
-// Library imports
-import { cardArtSx } from "../../lib/artLayout";
+import ChibiPanel from "./ChibiPanel";
+import OverviewPanel from "./OverviewPanel";
+import SkillsPanel from "./SkillsPanel";
+import TilesPanel from "./TilesPanel";
 
 // MaterialUI imports
 import {
@@ -16,66 +15,22 @@ import {
 	Grid,
 	Typography,
 	Card,
-	CardMedia,
-	CardActionArea,
-	CardContent,
-	TableContainer,
-	Paper,
-	Table,
-	TableHead,
-	TableBody,
-	TableRow,
-	TableCell,
-	CardHeader,
-	Avatar,
-	Select,
-	MenuItem,
-	InputLabel,
-	FormControl,
-	Tabs,
-	Tab,
-	Fab,
+	CardContent
 	//Grow
-	Divider
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-// MaterialUI icon imports
-import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-
-import { uiUrl } from "../../lib/assets";
 import { loadDoll, spineFor } from "../../lib/data";
-import { spineImageBase, spineUrl } from "../../lib/assets";
 import { animationTabs } from "../../lib/spine";
-import SpineAnimation from "../../components/SpineAnimation";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import { INGREDIENT_COLOURS } from "../../theme";
 import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
-
-const mod_button = uiUrl("mod.png");
-const dorm_button = uiUrl("dorm_button.png");
-const combat_button = uiUrl("combat_button.png");
 
 /** A doll paired with the form currently being displayed. */
 interface DisplayTDoll extends TDollData {
 	/** The form on screen: the base form, the Mod, or a skin. */
 	selected: TDollForm;
 }
-
-/**
- * The stat rows on the doll page, in display order.
- *
- * These were five hand-written table rows differing only by label and field, which is how the header
- * and the rows drifted apart in wording. Listing them keeps the order and the labels in one place.
- */
-const STAT_ROWS = [
-	{ label: "HP", key: "max_hp" },
-	{ label: "Damage", key: "max_dmg" },
-	{ label: "Accuracy", key: "max_acc" },
-	{ label: "Evasion", key: "max_eva" },
-	{ label: "Rate of fire", key: "max_rof" }
-] as const;
 
 const styles = {
 	cardGrid: {
@@ -85,140 +40,6 @@ const styles = {
 	card: {
 		height: "100%",
 		width: "100%"
-	},
-	cardForImage: {
-		...cardArtSx,
-		// Capped at the artwork's own 256px rather than stretched, since upscaling a bitmap that is
-		// already undersampled at this pixel ratio only makes it softer.
-		maxWidth: 256,
-		mx: "auto",
-		marginBottom: "10px"
-	},
-	cardForSkill: {
-		width: "100%"
-	},
-	cardForTileSet: {
-		width: "100%"
-	},
-	cardForCombatAnimations: (theme: Theme) => ({
-		display: "flex",
-		justifyContent: "center",
-		width: "100%",
-		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
-		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
-		backgroundSize: "5.66px 5.66px",
-		cursor: "pointer"
-	}),
-	cardForDormAnimations: (theme: Theme) => ({
-		display: "flex",
-		justifyContent: "center",
-		width: "100%",
-		// Used https://stripesgenerator.com/ to generate the linear gradient stripes.
-		backgroundImage: `linear-gradient(45deg, ${theme.palette.stripe.dark} 12.50%, ${theme.palette.stripe.light} 12.50%, ${theme.palette.stripe.light} 50%, ${theme.palette.stripe.dark} 50%, ${theme.palette.stripe.dark} 62.50%, ${theme.palette.stripe.light} 62.50%, ${theme.palette.stripe.light} 100%)`,
-		backgroundSize: "5.66px 5.66px",
-		cursor: "pointer"
-	}),
-	tableContainer: {
-		width: "100%"
-	},
-	table: (theme: Theme) => ({
-		width: "100%",
-		backgroundColor: theme.palette.raised
-	}),
-	title: {
-		fontSize: 14
-	},
-	cooldownText: {
-		paddingTop: "12px"
-	},
-	tabs: (theme: Theme) => ({
-		width: "100%",
-		backgroundColor: theme.palette.background.paper
-	}),
-	tabForSkin: {
-		width: 100
-	},
-	tabsForSkills: (theme: Theme) => ({
-		width: "100%",
-		backgroundColor: theme.palette.background.paper
-	}),
-	tableTileSet: (theme: Theme) => ({
-		width: 100,
-		height: 100,
-		borderStyle: "solid",
-		borderColor: theme.palette.divider,
-		borderSpacing: 0,
-		borderWidth: 2
-	}),
-	blackTile: (theme: Theme) => ({
-		backgroundColor: theme.palette.raised,
-		width: "33%",
-		borderStyle: "solid",
-		borderColor: theme.palette.divider,
-		borderWidth: 1
-	}),
-	cyanTile: (theme: Theme) => ({
-		backgroundColor: theme.palette.tile.buff,
-		width: "33%",
-		borderStyle: "solid",
-		borderColor: theme.palette.divider,
-		borderWidth: 1
-	}),
-	whiteTile: (theme: Theme) => ({
-		backgroundColor: theme.palette.tile.self,
-		width: "33%",
-		borderStyle: "solid",
-		borderColor: theme.palette.divider,
-		borderWidth: 1
-	}),
-	tileSetDiv: {
-		display: "flex"
-	},
-	content: {
-		flex: "0 1 auto"
-	},
-	tileSetInformation: {
-		display: "flex",
-		flexDirection: "column"
-	},
-	fabExpand: {
-		display: "inline-flex",
-		transform: "translate(5px, -85px)",
-		height: 40,
-		width: 40,
-		opacity: "75%"
-	},
-	fab_mod: {
-		display: "block",
-		transform: "translate(5px, -505px)",
-		height: 40,
-		width: 40,
-		opacity: "85%"
-	},
-	fab_clickThrough: {
-		display: "block",
-		transform: "translate(5px, -505px)",
-		height: 40,
-		width: 40,
-		opacity: "0%",
-		pointerEvents: "none"
-	},
-	fab_dorm: {
-		display: "block",
-		transform: "translate(5px, 100px)",
-		height: 40,
-		width: 40,
-		opacity: "85%",
-		zIndex: 100
-	},
-	backdrop: (theme: Theme) => ({
-		zIndex: theme.zIndex.drawer + 1,
-		color: theme.palette.common.white
-	}),
-	fullImage: {
-		height: "100%",
-		width: "100%",
-		objectFit: "contain"
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -487,23 +308,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		}
 	};
 
-	// Function will render a floating button to go back to Normal art if a skin is selected. Assumes no Mod is available to T-Doll.
-	const renderNormalButton = () => {
-		if (showSkin) {
-			return (
-				<Fab color="primary" sx={styles.fab_mod} onClick={switchToNormalArt}>
-					<ExitToAppIcon titleAccess="Switch back to Normal" style={{ height: 40, width: 25 }} />
-				</Fab>
-			);
-		} else {
-			return (
-				<Fab color="primary" sx={styles.fab_clickThrough}>
-					<></>
-				</Fab>
-			);
-		}
-	};
-
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for skill descriptions
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -624,7 +428,7 @@ function TDollContent({ doll }: TDollContentProps) {
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////
-	// Functions for Card and Backdrop images
+	// Functions for Card images
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	// Replace the T-Doll's card image with normal or damaged versions.
@@ -683,83 +487,6 @@ function TDollContent({ doll }: TDollContentProps) {
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for Tab functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
-
-	// Render tabs for animation selection based on Normal or Dorm animation mode active.
-	const renderAnimationTabs = () => {
-		if (animationMode === 0) {
-			if (showSkin) {
-				// Skin animations for Combat.
-				return (
-					<Tabs
-						sx={styles.tabs}
-						value={spineAnimationName}
-						onChange={(_e, value) => switchAnimations(value)}
-						indicatorColor="primary"
-						textColor="primary"
-						scrollButtons
-						variant="scrollable"
-						allowScrollButtonsMobile
-					>
-						{spineTabs.map((tab) => (
-							<Tab key={tab.value} label={tab.label} value={tab.value} />
-						))}
-					</Tabs>
-				);
-			} else {
-				// Normal Animations for Combat.
-				return (
-					<Tabs
-						sx={styles.tabs}
-						value={spineAnimationName}
-						onChange={(_e, value) => switchAnimations(value)}
-						indicatorColor="primary"
-						textColor="primary"
-						scrollButtons
-						variant="scrollable"
-						allowScrollButtonsMobile
-					>
-						{spineTabs.map((tab) => (
-							<Tab key={tab.value} label={tab.label} value={tab.value} />
-						))}
-					</Tabs>
-				);
-			}
-		} else {
-			// Animations for Dorm.
-			return (
-				<Tabs
-					sx={styles.tabs}
-					value={spineAnimationName}
-					onChange={(_e, value) => switchAnimations(value)}
-					indicatorColor="primary"
-					textColor="primary"
-					scrollButtons
-					variant="scrollable"
-					allowScrollButtonsMobile
-				>
-					{spineTabs.map((tab) => (
-						<Tab key={tab.value} label={tab.label} value={tab.value} />
-					))}
-				</Tabs>
-			);
-		}
-	};
-
-	// Render tabs for skin selection.
-	const renderSkinsTabs = () => {
-		const tempTabs: JSX.Element[] = [];
-
-		if (tdoll.skins === null) {
-			return tempTabs;
-		}
-
-		(tdoll.skins?.skin_names ?? []).map((name, index) => {
-			// Index is doubled for the value such that the Damaged versions are not selected.
-			return tempTabs.push(<Tab sx={styles.tabForSkin} label={name} key={index} wrapped value={index * 2} />);
-		});
-
-		return tempTabs;
-	};
 
 	// Switch animations based on Tab selected.
 	const switchAnimations = (newValue: string) => {
@@ -1035,45 +762,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		switchAnimations(animationArray[tempIndex] ?? "wait");
 	};
 
-	// This function will return tiles depending on the tile set information in the JSON.
-	const createTileSetRow = (tile: number, index: number) => {
-		let temp: JSX.Element;
-		if (tile === 0) {
-			temp = <Box component="td" sx={styles.blackTile} key={index}></Box>;
-		} else if (tile === 1) {
-			temp = <Box component="td" sx={styles.cyanTile} key={index}></Box>;
-		} else {
-			temp = <Box component="td" sx={styles.whiteTile} key={index}></Box>;
-		}
-
-		return temp;
-	};
-
-	// This will create a string with HTML span tags inserted into them for visual clarity.
-	const renderTileSetInformation = () => {
-		var number_of_stats = tdoll.selected.tile_set.number_of_stats;
-		var tempStat = "";
-		switch (number_of_stats) {
-			case 1:
-				tempStat = tdoll.selected.tile_set.stat1[0] + '<span style="color: yellow;"><ins>' + tdoll.selected.tile_set.stat2[0] + "</ins></span>";
-				break;
-			case 2:
-				tempStat =
-					tdoll.selected.tile_set.stat1[0] +
-					'<span style="color: yellow;"><ins>' +
-					tdoll.selected.tile_set.stat2[0] +
-					"</ins></span> <br />" +
-					tdoll.selected.tile_set.stat1[1] +
-					'<span style="color: yellow;"><ins>' +
-					tdoll.selected.tile_set.stat2[1] +
-					"</ins></span>";
-				break;
-			default:
-		}
-
-		return tempStat;
-	};
-
 	return (
 		<main>
 			<ScrollToTop />
@@ -1099,246 +787,51 @@ function TDollContent({ doll }: TDollContentProps) {
 						{/************** T-Doll image and skin images (Card/Full) **************/}
 						<Grid container direction="row" spacing={2}>
 							<Grid key="T-Doll image" size={{ xs: 12, sm: 6 }}>
-								{tdoll.skins !== null ? (
-									(tdoll.skins?.number_of_skins ?? 0) === 1 ? (
-										<Tabs
-											sx={styles.tabs}
-											value={showSkin ? skinSelected : false}
-											onChange={switchSkinSelected}
-											indicatorColor="primary"
-											textColor="primary"
-											variant="fullWidth"
-											scrollButtons
-											allowScrollButtonsMobile
-										>
-											{renderSkinsTabs()}
-										</Tabs>
-									) : (
-										<Tabs
-											sx={styles.tabs}
-											value={showSkin ? skinSelected : false}
-											onChange={switchSkinSelected}
-											indicatorColor="primary"
-											textColor="primary"
-											variant="scrollable"
-											scrollButtons
-											allowScrollButtonsMobile
-										>
-											{renderSkinsTabs()}
-										</Tabs>
-									)
-								) : (
-									<Tabs sx={styles.tabs} value={false} indicatorColor="primary" textColor="primary" variant="fullWidth" scrollButtons="auto" centered>
-										<Tab label="No skins" />
-									</Tabs>
-								)}
+								<OverviewPanel
+									skins={tdoll.skins}
+									showSkin={showSkin}
+									skinSelected={skinSelected}
+									onSkinTabChange={switchSkinSelected}
+									tdollImage={tdollImage}
+									onCardImageClick={switchBetweenNormalDamagedCardImages}
+									dollName={tdoll.selected.name}
+									hasMod={hasMod}
+									onSwitchModes={switchModes}
+									onSwitchToNormalArt={switchToNormalArt}
+									normalId={tdoll.normal.id}
+								/>
 
-								<Card sx={styles.cardForImage}>
-									<CardActionArea onClick={switchBetweenNormalDamagedCardImages}>
-										<CardMedia component="img" sx={styles.cardForImage} image={tdollImage} title={tdoll.selected.name} />
-									</CardActionArea>
-									{/************** Floating Action Button overlayed over image at the top left **************/}
-									{hasMod ? (
-										<Fab color="primary" sx={styles.fab_mod} onClick={switchModes}>
-											<img src={mod_button} alt="Switch between Normal/Mod" style={{ height: 32, width: 32 }} />
-										</Fab>
-									) : (
-										renderNormalButton()
-									)}
-
-									{/************** Floating Action Button overlayed over image at the bottom left **************/}
-									<Fab color="primary" component={Link} to={`/tdoll/${tdoll.normal.id}/art`} sx={styles.fabExpand} aria-label="view full art">
-										<ZoomOutMapIcon />
-									</Fab>
-								</Card>
-
-								{/************** T-Doll's animations **************/}
-								<Fab color="primary" sx={styles.fab_dorm} onClick={switchAnimationMode}>
-									{animationMode === 0 ? (
-										<img src={combat_button} alt="Switch to Dorm Animations" style={{ height: 32, width: 32, paddingTop: 3 }} />
-									) : (
-										<img src={dorm_button} alt="Switch to Normal Animations" style={{ height: 29, width: 29, paddingTop: 3 }} />
-									)}
-								</Fab>
-
-								{renderAnimationTabs()}
-
-								{animationMode === 0 ? (
-									<Card sx={styles.cardForCombatAnimations}>
-										{spineRig ? (
-											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
-												<SpineAnimation
-													skelUrl={spineUrl(tdoll.normal.id, spineRig.skel, "skel")}
-													atlasUrl={spineUrl(tdoll.normal.id, spineRig.atlas, "atlas")}
-													imageBase={spineImageBase(tdoll.normal.id, spineRig.atlas)}
-													animation={spineAnimationName}
-												/>
-											</div>
-										) : (
-											<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
-										)}
-									</Card>
-								) : (
-									<Card sx={styles.cardForDormAnimations}>
-										{spineRig ? (
-											<div onClick={() => playerSwitchAnimations()} style={{ cursor: "pointer" }}>
-												<SpineAnimation
-													skelUrl={spineUrl(tdoll.normal.id, spineRig.skel, "skel")}
-													atlasUrl={spineUrl(tdoll.normal.id, spineRig.atlas, "atlas")}
-													imageBase={spineImageBase(tdoll.normal.id, spineRig.atlas)}
-													animation={spineAnimationName}
-												/>
-											</div>
-										) : (
-											<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
-										)}
-									</Card>
-								)}
+								<ChibiPanel
+									animationMode={animationMode}
+									showSkin={showSkin}
+									spineAnimationName={spineAnimationName}
+									spineTabs={spineTabs}
+									onSwitchAnimations={switchAnimations}
+									onSwitchAnimationMode={switchAnimationMode}
+									spineRig={spineRig}
+									normalId={tdoll.normal.id}
+									animation={animation}
+									onPlayerSwitchAnimations={playerSwitchAnimations}
+								/>
 							</Grid>
 
 							<Grid key="T-Doll stat table and skill card" size={{ xs: 12, sm: 6 }}>
-								{/************** T-Doll's skill information **************/}
-								{showModSkill ? (
-									<Tabs sx={styles.tabsForSkills} value={selectedSkill} onChange={handleChangeSkills} indicatorColor="primary" textColor="primary" scrollButtons="auto" centered>
-										<Tab label="Skill 1" />
-										<Tab label="Skill 2" />
-									</Tabs>
-								) : (
-									<Tabs sx={styles.tabsForSkills} value={0} indicatorColor="primary" textColor="primary" centered>
-										<Tab label="Skill 1" />
-									</Tabs>
-								)}
-
-								<Card sx={styles.cardForSkill}>
-									<CardContent>
-										<CardHeader
-											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.skillImages.skill2 : tdoll.skillImages.skill1} />}
-											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
-											subheader={
-												selectedSkill === 1 && tdoll.selected.skill2 !== undefined
-													? "Initial CD: " + tdoll.selected.skill2.initial_cooldown
-													: "Initial CD: " + tdoll.selected.skill.initial_cooldown
-											}
-											action={
-												<FormControl>
-													<InputLabel id="skill-level-select-label">Level</InputLabel>
-
-													<Select
-														id="skill-level-select"
-														value={skillLevel}
-														onChange={(e) => {
-															setSkillLevel(Number(e.target.value));
-														}}
-														// MenuProps will shift the drop down menu to the right.
-														MenuProps={{
-															anchorOrigin: {
-																vertical: "top",
-																horizontal: "right"
-															},
-															transformOrigin: {
-																vertical: "top",
-																horizontal: "left"
-															}
-														}}
-													>
-														<MenuItem value={1}>1</MenuItem>
-														<MenuItem value={2}>2</MenuItem>
-														<MenuItem value={3}>3</MenuItem>
-														<MenuItem value={4}>4</MenuItem>
-														<MenuItem value={5}>5</MenuItem>
-														<MenuItem value={6}>6</MenuItem>
-														<MenuItem value={7}>7</MenuItem>
-														<MenuItem value={8}>8</MenuItem>
-														<MenuItem value={9}>9</MenuItem>
-														<MenuItem value={10}>10</MenuItem>
-													</Select>
-												</FormControl>
-											}
-										/>
-
-										<Divider />
-
-										{/************** This will render the span tags inserted into the skill description and will color the numbers. **************/}
-										<Typography sx={styles.title} color="textSecondary" gutterBottom>
-											{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
-										</Typography>
-										{selectedSkill === 0 && tdoll.selected.skill.initial_cooldown !== "Passive" ? (
-											<>
-												<Divider />
-												<Typography sx={styles.cooldownText} color="textSecondary">
-													Cooldown:{" "}
-													{
-														<Box component="span" sx={{ color: "secondary.main" }}>
-															<ins>{tdoll.selected.skill.cooldown?.[skillLevel - 1] ?? "?"}s</ins>
-														</Box>
-													}
-												</Typography>
-											</>
-										) : (
-											""
-										)}
-									</CardContent>
-								</Card>
+								<SkillsPanel
+									showModSkill={showModSkill}
+									selectedSkill={selectedSkill}
+									onSelectedSkillChange={handleChangeSkills}
+									skill={tdoll.selected.skill}
+									skill2={tdoll.selected.skill2}
+									skillImages={tdoll.skillImages}
+									skillDescription1={skillDescription1}
+									skillDescription2={skillDescription2}
+									skillLevel={skillLevel}
+									onSkillLevelChange={setSkillLevel}
+								/>
 
 								<br />
 
-								{/************** T-Doll's tileset information **************/}
-								<Card sx={styles.cardForTileSet}>
-									<Box component="div" sx={styles.tileSetDiv}>
-										<CardContent sx={styles.content}>
-											<Box component="table" sx={styles.tableTileSet} id="tdoll-tileset">
-												<tbody>
-													<tr>
-														{tdoll.selected.tile_set.row1.map((tile, index) => {
-															return createTileSetRow(tile, index);
-														})}
-													</tr>
-													<tr>
-														{tdoll.selected.tile_set.row2.map((tile, index) => {
-															return createTileSetRow(tile, index);
-														})}
-													</tr>
-													<tr>
-														{tdoll.selected.tile_set.row3.map((tile, index) => {
-															return createTileSetRow(tile, index);
-														})}
-													</tr>
-												</tbody>
-											</Box>
-										</CardContent>
-
-										<CardContent sx={styles.tileSetInformation}>
-											<Typography sx={styles.title} color="textPrimary" gutterBottom>
-												{tdoll.selected.tile_set.targets}
-											</Typography>
-											<Typography color="textSecondary">{parse(renderTileSetInformation())}</Typography>
-										</CardContent>
-									</Box>
-								</Card>
-
-								<br />
-
-								{/************** T-Doll's stats in table format **************/}
-								<TableContainer sx={styles.tableContainer} component={Paper}>
-									<Table sx={styles.table} size="small">
-										<TableHead>
-											<TableRow>
-												<TableCell>Stats</TableCell>
-												<TableCell align="right">At max level</TableCell>
-											</TableRow>
-										</TableHead>
-										<TableBody>
-											{STAT_ROWS.map((stat) => (
-												<TableRow key={stat.key}>
-													<TableCell component="th" scope="row">
-														{stat.label}
-													</TableCell>
-													<TableCell align="right">{tdoll.selected[stat.key]}</TableCell>
-												</TableRow>
-											))}
-										</TableBody>
-									</Table>
-								</TableContainer>
+								<TilesPanel tileSet={tdoll.selected.tile_set} stats={tdoll.selected} />
 							</Grid>
 						</Grid>
 					</CardContent>
