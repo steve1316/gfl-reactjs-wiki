@@ -3,28 +3,11 @@ import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // MaterialUI imports
-import {
-	Box,
-	AppBar,
-	Toolbar,
-	IconButton,
-	Typography,
-	Drawer,
-	List,
-	ListItemButton,
-	ListItemIcon,
-	ListItemText,
-	alpha,
-	Icon,
-	Divider,
-	TextField,
-	useMediaQuery,
-	useTheme,
-} from "@mui/material";
+import { Box, AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, alpha, Icon, Divider, TextField, useMediaQuery, useTheme } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Autocomplete imports
-import Autocomplete from '@mui/material/Autocomplete';
+import Autocomplete from "@mui/material/Autocomplete";
 import parse from "autosuggest-highlight/parse";
 import match from "autosuggest-highlight/match";
 
@@ -79,14 +62,9 @@ const styles = {
 	title: { flexGrow: 1 },
 	search: (theme: Theme) => ({
 		position: "relative",
-		borderRadius: theme.shape.borderRadius,
-		backgroundColor: alpha(theme.palette.common.white, 0.15),
-		"&:hover": {
-			backgroundColor: alpha(theme.palette.common.white, 0.25)
-		},
-		marginRight: theme.spacing(2),
-		marginLeft: 0,
 		width: "100%",
+		marginLeft: 0,
+		marginRight: theme.spacing(2),
 		[theme.breakpoints.up("sm")]: {
 			marginLeft: theme.spacing(3),
 			width: "auto"
@@ -180,36 +158,56 @@ export default function Navbar() {
 	];
 
 	const searchField = (
-				<form onSubmit={handleSubmit} style={{ width: "100%" }}>
-					<Autocomplete
-						options={options}
-						groupBy={(option) => option.firstLetter}
-						getOptionLabel={(option) => option.name}
-						size="small"
-						sx={{ width: "100%", minWidth: { xs: 0, sm: 300 } }}
-						inputValue={searchValue}
-						onInputChange={(_event, newInputValue) => {
-							setSearchValue(newInputValue);
-						}}
-						clearOnEscape
-						renderInput={(params) => <TextField {...params} color="secondary" label={hasError ? "Does not match any T-Doll" : "Search..."} value={searchValue} variant="outlined" />}
-						renderOption={(optionProps, option, { inputValue }) => {
-							const matches = match(option.name, inputValue);
-							const parts = parse(option.name, matches);
-							const { key, ...rest } = optionProps;
-
-							return (
-								<li key={key} {...rest}>
-									{parts.map((part, index) => (
-										<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
-											{part.text}
-										</span>
-									))}
-								</li>
-							);
-						}}
+		<form onSubmit={handleSubmit} style={{ width: "100%" }}>
+			<Autocomplete
+				options={options}
+				groupBy={(option) => option.firstLetter}
+				getOptionLabel={(option) => option.name}
+				size="small"
+				sx={{ width: "100%", minWidth: { xs: 0, sm: 300 } }}
+				inputValue={searchValue}
+				onInputChange={(_event, newInputValue) => {
+					setSearchValue(newInputValue);
+				}}
+				clearOnEscape
+				renderInput={(params) => (
+					<TextField
+						{...params}
+						color="secondary"
+						label={hasError ? "Does not match any T-Doll" : "Search..."}
+						value={searchValue}
+						variant="outlined"
+						sx={(theme) => ({
+							// One shape, not two. The wrapper used to draw a 64px pill behind an 8px
+							// rectangle, so the pill's corners showed around a near-square box.
+							"& .MuiOutlinedInput-root": {
+								borderRadius: 999,
+								backgroundColor: alpha(theme.palette.common.white, 0.11),
+								"&:hover": { backgroundColor: alpha(theme.palette.common.white, 0.17) },
+								"& fieldset": { borderColor: "transparent" },
+								"&:hover fieldset": { borderColor: "transparent" },
+								"&.Mui-focused fieldset": { borderColor: theme.palette.secondary.main, borderWidth: 2 }
+							}
+						})}
 					/>
-				</form>
+				)}
+				renderOption={(optionProps, option, { inputValue }) => {
+					const matches = match(option.name, inputValue);
+					const parts = parse(option.name, matches);
+					const { key, ...rest } = optionProps;
+
+					return (
+						<li key={key} {...rest}>
+							{parts.map((part, index) => (
+								<span key={index} style={{ fontWeight: part.highlight ? 1000 : 400 }}>
+									{part.text}
+								</span>
+							))}
+						</li>
+					);
+				}}
+			/>
+		</form>
 	);
 
 	return (
