@@ -106,6 +106,27 @@ function matchSkin(name, position, catalogue, allNames) {
 	});
 	if (prefix) return { skin: prefix, how: "prefix" };
 
+	// Several names were retranslated between 2021 and now: "Fifty Days with G36" became "50 Days with
+	// Gr G36", "Every Child's Christmas Dream" became "Every Child's X'mas Dream". Word overlap catches
+	// those. The threshold is deliberately high, since a wrong match shows the wrong outfit and is worse
+	// than showing the doll's default rig.
+	const words = (value) => new Set(value.toLowerCase().split(/[^a-z0-9]+/i).filter((w) => w.length > 1));
+	const targetWords = words(name);
+	let best = null;
+	let bestScore = 0;
+	for (const candidate of catalogue) {
+		const other = words(candidate.name);
+		const shared = [...targetWords].filter((w) => other.has(w)).length;
+		const score = shared / new Set([...targetWords, ...other]).size;
+		if (score > bestScore) {
+			bestScore = score;
+			best = candidate;
+		}
+	}
+	if (best && bestScore >= 0.5) {
+		return { skin: best, how: "words" };
+	}
+
 	if (catalogue.length === allNames.length && catalogue[position]) {
 		return { skin: catalogue[position], how: "position" };
 	}

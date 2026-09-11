@@ -15,6 +15,7 @@ one. Getting that wrong shows up as an invisible doll, since the regions fail to
 import argparse
 import json
 import os
+import re
 import sys
 
 
@@ -77,14 +78,23 @@ def index_doll(doll_dir):
         prefix = f"{directory}/" if directory else ""
         return lookup.get(f"{prefix}R{stem}".lower())
 
-    paired = [s for s in skeletons if dorm_of(s)]
-    if paired:
-        combat = min(paired, key=len)
-    else:
-        # Nothing pairs up, so fall back to the shortest name that is not obviously a dorm rig.
-        unpaired = [s for s in skeletons if s.rpartition("/")[2].lower() not in
-                    {other.rpartition("/")[2].lower()[1:] for other in skeletons if len(other.rpartition("/")[2]) > 1}]
-        combat = min(unpaired or skeletons, key=len)
+    def is_dorm(skeleton):
+        """True when this skeleton is the R-prefixed counterpart of another one here."""
+        directory, _, stem = skeleton.rpartition("/")
+        prefix = f"{directory}/" if directory else ""
+        return stem[:1] in ("R", "r") and f"{prefix}{stem[1:]}".lower() in lookup
+
+    def is_skin(skeleton):
+        """True when the name carries a trailing skin id, as in `HK21_2701`."""
+        return re.search(r"_\d+$", skeleton.rpartition("/")[2]) is not None
+
+    # Prefer a rig that is neither a dorm counterpart nor a skin. Ranking by paired-ness first put
+    # `HK21_2701` ahead of `HK21`, which has no dorm rig of its own, and ranking by full path length
+    # put `Type62_2908` ahead of `type62/type62` because the subdirectory made the real one longer.
+    not_dorm = [s for s in skeletons if not is_dorm(s)]
+    base = [s for s in not_dorm if not is_skin(s)]
+    ranked = base or not_dorm or skeletons
+    combat = min(ranked, key=lambda s: (len(s.rpartition("/")[2]), s))
     dorm = dorm_of(combat)
 
     entry = {}

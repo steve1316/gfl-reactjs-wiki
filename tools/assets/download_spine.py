@@ -142,16 +142,71 @@ def unpack(ab_path, target_dir):
     return sorted(written)
 
 
+def fetch_skins(args, codes, bundles, res_url):
+    """Download and unpack the Spine rigs for individual skins.
+
+    Skins ship as `character_<code>_<skin id>_spine`. The files land in the doll's own directory
+    alongside the base rig, where the index picks them up by their `<code>_<skin id>` filenames.
+
+    Args:
+        args: Parsed command-line arguments.
+        codes: Doll id to weapon codename.
+        bundles: Asset bundles keyed by lowercased name.
+        res_url: CDN base URL.
+    """
+    with open(args.skin_pairs, encoding="utf-8") as handle:
+        pairs = json.load(handle)
+    os.makedirs(args.cache, exist_ok=True)
+
+    resolved, unresolved, failed = 0, [], []
+    for doll_id, skin_id in pairs:
+        code = CODE_OVERRIDES.get(doll_id) or codes.get(doll_id, "")
+        name = f"character_{code.lower()}_{skin_id}_spine"
+        bundle = bundles.get(name)
+        if not bundle:
+            unresolved.append((doll_id, skin_id))
+            continue
+
+        ab_path = os.path.join(args.cache, f"{name}.ab")
+        if not os.path.exists(ab_path):
+            try:
+                urllib.request.urlretrieve(f"{res_url}{bundle['resname']}.ab", ab_path)
+            except Exception as error:
+                failed.append((doll_id, skin_id, f"download: {error}"))
+                continue
+        try:
+            unpack(ab_path, os.path.join(args.out, "spine", str(doll_id)))
+        except Exception as error:
+            failed.append((doll_id, skin_id, f"unpack: {error}"))
+            continue
+        resolved += 1
+        if resolved % 100 == 0:
+            print(f"  {resolved}/{len(pairs)}")
+
+    print(f"\nskin rigs resolved : {resolved}")
+    print(f"unresolved         : {len(unresolved)}")
+    print(f"failed             : {len(failed)}")
+    for entry in failed[:5]:
+        print(f"   {entry}")
+
+
 def main():
     """Resolve, download and unpack the Spine bundles for the requested dolls."""
     parser = argparse.ArgumentParser(description="Download and unpack Spine chibi bundles from the CDN.")
     parser.add_argument("--guns", required=True, help="Path to gun.hjson from gf-data-us.")
     parser.add_argument("--resdata", required=True, help="Path to resdata.zip.")
     parser.add_argument("--region", default="us", help="Region whose manifest to read.")
-    parser.add_argument("--ids", required=True, help="JSON file holding a list of doll ids under a 'missing' key, or a comma-separated list.")
+    parser.add_argument("--ids", help="JSON file holding a list of doll ids under a 'missing' key, or a comma-separated list.")
+    parser.add_argument("--skin-pairs", help="JSON file of [doll_id, skin_id] pairs, for fetching skin rigs.")
     parser.add_argument("--out", required=True, help="Staging directory to write spine/<id>/ into.")
     parser.add_argument("--cache", required=True, help="Directory to keep downloaded .ab files in.")
     args = parser.parse_args()
+
+    if args.skin_pairs:
+        return fetch_skins(args, parse_guns(args.guns), *index_bundles(args.resdata, args.region))
+
+    if not args.ids:
+        sys.exit("pass --ids or --skin-pairs")
 
     if os.path.isfile(args.ids):
         with open(args.ids, encoding="utf-8") as handle:

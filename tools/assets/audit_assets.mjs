@@ -116,8 +116,16 @@ function main() {
 			continue;
 		}
 
-		for (const [kind, rig] of Object.entries(rigs)) {
-			if (kind === "skins") continue;
+		// Skin rigs live in an array under skinRigs and are checked separately below.
+		const rigEntries = [
+			["combat", rigs.combat],
+			["dorm", rigs.dorm],
+			...(rigs.skinRigs ?? []).flatMap((skin, position) =>
+				skin ? [[`skin${position}`, skin.combat], [`skin${position} dorm`, skin.dorm]] : []
+			)
+		].filter(([, rig]) => rig);
+
+		for (const [kind, rig] of rigEntries) {
 			urls.add(join(ASSET_BASE, `spine/${id}/${rig.skel}.skel`));
 			urls.add(join(ASSET_BASE, `spine/${id}/${rig.atlas}.atlas`));
 			// The page image is whatever the atlas names on its first line, which is not always the atlas's
