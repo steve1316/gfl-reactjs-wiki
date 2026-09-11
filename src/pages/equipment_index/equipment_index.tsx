@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { ChangeEvent } from "react";
 
 // MaterialUI imports
 import { makeStyles, Container, Typography, Divider, Chip, Grid, Card, Zoom, Fade, Box, CardActionArea, CardMedia, CardContent, CardHeader, Slider, Accordion, AccordionSummary, AccordionDetails} from "@material-ui/core";
@@ -8,11 +9,11 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
 
-// Equipment JSON import
-const equipment_array = require("../../data/equipments").default;
+import { loadEquipment } from "../../lib/data";
+import type { Equipment } from "../../types/equipment";
 
-export default function Equipment_Index() {
-	const useStyles = makeStyles((theme) => ({
+// Declared outside the component so the stylesheet is created once rather than on every render.
+const useStyles = makeStyles((theme) => ({
 		root: {
 			marginTop: "5rem"
 		},
@@ -42,15 +43,23 @@ export default function Equipment_Index() {
 		},
 		heading: {
 			fontSize: theme.typography.pxToRem(15),
-			fontWeight: theme.typography.fontWeightRegular,
+			fontWeight: theme.typography.fontWeightRegular as number,
 		},
 		topDividerForCards: {
 			marginTop: 10,
 			marginBottom: 25
 		},
-	}));
+}));
 
+/**
+ * The equipment index: filterable cards for every piece of equipment.
+ *
+ * @returns The equipment index page.
+ */
+export default function EquipmentIndex() {
 	const classes = useStyles();
+
+	const [equipmentByCategory, setEquipmentByCategory] = useState<Record<string, Equipment[]>>({});
 
 	const [typeFilter, setTypeFilter] = useState([
 		{ key: 0, label: "Optical Sight", selected: false, property: "opticalSight" },
@@ -77,7 +86,7 @@ export default function Equipment_Index() {
 	})
 
 	const [currentSearchResults, setCurrentSearchResults] = useState(0)
-	const [searchResults, setSearchResults] = useState([])
+	const [searchResults, setSearchResults] = useState<Equipment[]>([])
 	const [currentLevel, setCurrentLevel] = useState(1)
 	const [expanded, setExpanded] = useState("")
 
@@ -124,27 +133,32 @@ export default function Equipment_Index() {
 		},
 	];
 
-	const handleChange = (panel) => (e, name) => {
-		setExpanded(name ? panel : false)
-	}
+	const handleChange = (panel: string) => (_event: ChangeEvent<{}>, isExpanded: boolean) => {
+		setExpanded(isExpanded ? panel : "");
+	};
+
+	// Equipment is fetched once, on mount, rather than pulled in at module scope.
+	useEffect(() => {
+		void loadEquipment().then(setEquipmentByCategory);
+	}, []);
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
 		document.title = "Equipment Index"
-		document.querySelector('meta[name="description"]').setAttribute("content", "Index of sortable equipment");
+		document.querySelector('meta[name="description"]')?.setAttribute("content", "Index of sortable equipment");
 	}, [])
 
 	/* eslint-disable */
 	// Update the search results every time the filters and the page selected changes.
 	useEffect(() => {
 		setSearchResults(filterEquipment());
-	}, [typeFilter, exclusiveFilter]);
+	}, [typeFilter, exclusiveFilter, equipmentByCategory]);
 
 	const handleDelete = () => {
 		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
 	};
 
-	const handleOnClickType = (selectedType) => {
+	const handleOnClickType = (selectedType: { key: number; selected: boolean }) => {
 		const key = selectedType.key
 		const newSelected = !selectedType.selected
 
@@ -159,20 +173,16 @@ export default function Equipment_Index() {
 	}
 
 	// Return T-Doll equipments based on filters selected.
-	const filterEquipment = () => {
-		var tempArray = []
-		var typeSelected = 0
+	const filterEquipment = (): Equipment[] => {
+		const tempArray: Equipment[] = []
+		let typeSelected = 0
 		var exclusiveSelected = false
 		
 		// Grab the equipment categories as keys.
-		var keys = Object.keys(equipment_array)
+		const keys = Object.keys(equipmentByCategory)
 
 		// Check to see if filters are enabled and how many.
-		for(var i = 0; i < typeFilter.length; i++){
-			if(typeFilter[i].selected === true){
-				typeSelected += 1
-			}
-		}
+		typeSelected = typeFilter.filter((type) => type.selected).length
 
 		if(exclusiveFilter.selected === true){
 			exclusiveSelected = true
@@ -180,7 +190,7 @@ export default function Equipment_Index() {
 
 		if(typeSelected === 0){
 			for(var i = 0; i < keys.length; i++){
-				equipment_array[keys[i]].forEach((equipment) => {
+				(equipmentByCategory[keys[i] ?? ""] ?? []).forEach((equipment) => {
 					if(exclusiveSelected && equipment.exclusive){
 						tempArray.push(equipment)
 					}else if(!exclusiveSelected){
@@ -192,7 +202,7 @@ export default function Equipment_Index() {
 			for(var i = 0; i < keys.length; i++){
 				typeFilter.map((type) => {
 					if(type.selected && type.property === keys[i]){
-						equipment_array[keys[i]].forEach((equipment) => {
+						(equipmentByCategory[keys[i] ?? ""] ?? []).forEach((equipment) => {
 							if(exclusiveSelected && equipment.exclusive){
 								tempArray.push(equipment)
 							}else if(!exclusiveSelected){
@@ -210,15 +220,15 @@ export default function Equipment_Index() {
 		return tempArray
 	}
 
-	const valuetext = (value) => {
+	const valuetext = (value: number) => {
 		return `${value}`
 	}
 
-	const handleSlider = (e, newValue) => {
-		setCurrentLevel(newValue)
-	}
+	const handleSlider = (_event: ChangeEvent<{}>, newValue: number | number[]) => {
+		setCurrentLevel(Array.isArray(newValue) ? (newValue[0] ?? 1) : newValue);
+	};
 
-	const calculateTimeout = (index) => {
+	const calculateTimeout = (index: number) => {
 		var stagger = 0
 		
 		if(index === 0){
@@ -253,7 +263,7 @@ export default function Equipment_Index() {
 										color={type.selected ? "primary" : "secondary"}
 										label={type.label}
 										onClick={() => handleOnClickType(type)}
-										onDelete={type.selected ? handleDelete : null}
+										onDelete={type.selected ? handleDelete : undefined}
 										deleteIcon={
 											<>
 												<Divider orientation="vertical" flexItem />
@@ -277,7 +287,7 @@ export default function Equipment_Index() {
 							color={exclusiveFilter.selected ? "primary" : "secondary"}
 							label={exclusiveFilter.label}
 							onClick={() => handleOnClickExclusive()}
-							onDelete={exclusiveFilter.selected ? handleDelete : null}
+							onDelete={exclusiveFilter.selected ? handleDelete : undefined}
 							deleteIcon={
 								<>
 									<Divider orientation="vertical" flexItem />
@@ -309,7 +319,7 @@ export default function Equipment_Index() {
 						return(
 							<Grid item key={equipment.name + equipment.rarity} xs={12} sm={6} md={3} lg={3} xl={2}>
 								<Fade in={true} timeout={calculateTimeout(index)}>
-									<Card className={classes.card} elevation={12}>
+									<Card elevation={12}>
 										{/* Equipment Name and what types of T-Dolls can use it */}
 										<CardHeader title={equipment.name} subheader={equipment.usable.map((item, index) => {
 											if(index === 0 && !equipment.exclusive){
@@ -325,7 +335,7 @@ export default function Equipment_Index() {
 
 										{/* Equipment Image */}
 										<CardActionArea>
-											<CardMedia component="img" image={equipment.image.default} title={equipment.title}/>
+											<CardMedia component="img" image={equipment.image} title={equipment.name} />
 										</CardActionArea>
 										
 										{/* Equipment Stats */}
@@ -361,25 +371,16 @@ export default function Equipment_Index() {
 														statName = "Armor"
 													}
 
-													if(currentLevel === 1){
-														return(
-															<div key={statName}>
-																<p>{statName}: {equipment.stats[key][currentLevel - 1]}</p>
-															</div>
-														)
-													} else if(currentLevel !== 1 && equipment.stats[key][currentLevel - 1] !== equipment.stats[key][0]){
-														return(
-															<div key={statName}>
-																<p>{statName}: <span style={{color: "#ff9800"}}>{equipment.stats[key][currentLevel - 1]}</span></p>
-															</div>
-														)
-													} else{
-														return(
-															<div key={statName}>
-																<p>{statName}: {equipment.stats[key][currentLevel - 1]}</p>
-															</div>
-														)
-													}
+													const values = equipment.stats[key] ?? []
+													const atLevel = values[currentLevel - 1]
+													const atLevelOne = values[0]
+													const improved = currentLevel !== 1 && atLevel !== atLevelOne
+
+													return(
+														<div key={statName}>
+															<p>{statName}: {improved ? <span style={{color: "#ff9800"}}>{atLevel}</span> : atLevel}</p>
+														</div>
+													)
 												})}
 											</Typography>
 										</CardContent>

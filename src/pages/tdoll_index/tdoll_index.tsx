@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
@@ -12,17 +13,17 @@ import Pagination from "@material-ui/lab/Pagination";
 // MaterialUI icon imports
 import DoneIcon from "@material-ui/icons/Done";
 
-// Image imports
-import mod_button from "../../images/mod.png";
+import { uiUrl } from "../../lib/assets";
+import { loadAllDolls } from "../../lib/data";
+import type { TDoll, TDollForm } from "../../types/tdoll";
 
-// T-Dolls JSON import
-const tdolls_from_1_to_100 = require("../../data/tdolls_from_1_to_100").default;
-const tdolls_from_101_to_200 = require("../../data/tdolls_from_101_to_200").default;
-const tdolls_from_201_to_300 = require("../../data/tdolls_from_201_to_300").default;
-const tdolls_from_301_to_400 = require("../../data/tdolls_from_301_to_400").default;
-const tdolls_from_1000_to_1050 = require("../../data/tdolls_from_1000_to_1050").default;
+const mod_button = uiUrl("mod.png");
 
-const tdolls_array = tdolls_from_1_to_100.concat(tdolls_from_101_to_200).concat(tdolls_from_201_to_300).concat(tdolls_from_301_to_400).concat(tdolls_from_1000_to_1050);
+/** A doll paired with the form the current filters mean we should show. */
+interface IndexEntry extends TDoll {
+	/** Either the base form or the Mod, depending on the Mod filter. */
+	selected: TDollForm;
+}
 
 const HtmlTooltip = withStyles((theme) => ({
 	tooltip: {
@@ -83,8 +84,9 @@ export default function TDoll_Index() {
 	const classes = useStyles();
 
 	const [totalSearchResults, setTotalSearchResults] = useState(0);
-	const [searchResults, setSearchResults] = useState([]);
-	const [searchResultPages, setSearchResultPages] = useState([]);
+	const [allDolls, setAllDolls] = useState<TDoll[]>([]);
+	const [searchResults, setSearchResults] = useState<JSX.Element[]>([]);
+	const [searchResultPages, setSearchResultPages] = useState<IndexEntry[][]>([]);
 	const [pageSelected, setPageSelected] = useState(1);
 
 	const [rarityFilter, setRarityFilter] = useState([
@@ -114,16 +116,22 @@ export default function TDoll_Index() {
 		// It is blank as it needed to be set in order for the delete icon (the checkmark) to appear next to the chip.
 	};
 
+	// The index renders every doll, so it is the one route that legitimately loads all shards.
+	useEffect(() => {
+		void loadAllDolls().then(setAllDolls);
+	}, []);
+
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
 		document.title = "T-Doll Index"
-		document.querySelector('meta[name="description"]').setAttribute("content", "Index of filterable T-Dolls");
+		document.querySelector('meta[name="description"]')?.setAttribute("content", "Index of filterable T-Dolls");
 	}, [])
 
 	// Checks for filters in sessionStorage. Set the number of search results to the length of the T-Doll JSON. Runs once for now.
 	useEffect(() => {
-		if (sessionStorage.getItem("filters")) {
-			var temp = JSON.parse(sessionStorage.getItem("filters"));
+		const savedFilters = sessionStorage.getItem("filters");
+		if (savedFilters) {
+			const temp = JSON.parse(savedFilters);
 			setRarityFilter(temp.rarityFilter);
 			setTypeFilter(temp.typeFilter);
 			setModFilter(temp.modFilter);
@@ -147,11 +155,12 @@ export default function TDoll_Index() {
 		};
 
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-	}, [modFilter, rarityFilter, typeFilter, pageSelected]);
+		// allDolls is a dependency because the shards load asynchronously, so the first render has none.
+	}, [modFilter, rarityFilter, typeFilter, pageSelected, allDolls]);
 	/* eslint-disable */
 
 	// The following handler functions below are setting the filters selected as active.
-	const handleOnClickRarity = (rarityToBeUpdated) => () => {
+	const handleOnClickRarity = (rarityToBeUpdated: { key: number; selected: boolean }) => () => {
 		const key = rarityToBeUpdated.key;
 		const newSelected = !rarityToBeUpdated.selected;
 
@@ -159,7 +168,7 @@ export default function TDoll_Index() {
 		setRarityFilter((rarities) => rarities.map((rarity) => (rarity.key === key ? { ...rarity, selected: newSelected } : rarity)));
 	};
 
-	const handleOnClickType = (typeToBeUpdated) => () => {
+	const handleOnClickType = (typeToBeUpdated: { key: number; selected: boolean }) => () => {
 		const key = typeToBeUpdated.key;
 		const newSelected = !typeToBeUpdated.selected;
 		setTypeFilter((type) => type.map((type) => (type.key === key ? { ...type, selected: newSelected } : type)));
@@ -173,121 +182,62 @@ export default function TDoll_Index() {
 	};
 
 	// This will update the page selected via the Pagination component.
-	const handlePageChange = (event, value) => {
+	const handlePageChange = (_event: ChangeEvent<unknown>, value: number) => {
 		setPageSelected(value);
 	};
 
 	// Create and return an array of T-Dolls that match filters.
-	const createSearchResults = () => {
-		var tempArray = [];
+	const createSearchResults = (): IndexEntry[][] => {
+		const typeSelected = typeFilter.filter((type) => type.selected).length
+		const raritySelected = rarityFilter.filter((rarity) => rarity.selected).length
+		const typeFilterCheck = typeSelected > 0
+		const rarityFilterCheck = raritySelected > 0
+		const modFilterCheck = modFilter.selected
 
-		tempArray = tdolls_array.filter((data) => {
-			var typeFilterCheck = false
-			var typeSelected = 0
-			var rarityFilterCheck = false
-			var raritySelected = 0
-			var modFilterCheck = false
-
-			// Check to see if filters are enabled and how many.
-			for(var i = 0; i < typeFilter.length; i++){
-				if(typeFilter[i].selected === true){
-					typeFilterCheck = true
-					typeSelected += 1
-				}
-			}
-			for(var j = 0; j < rarityFilter.length; j++){
-				if(rarityFilter[j].selected === true){
-					rarityFilterCheck = true
-					raritySelected += 1
-				}
-			}
-			if(modFilter.selected === true){
-				modFilterCheck = true
-			}
-			
-			// Check to see if any of the filters were selected.
-			if(typeFilterCheck || rarityFilterCheck || modFilterCheck){
-				// Filter if T-Dolls have Mod or not.
-				if (modFilter.selected) {
-					if (data.mod === null) {
-						return null;
-					}
-
-					data.selected = data.mod;
-
-					// If the only filter enabled is the Mod filter, return this T-Doll.
-					if(!typeFilterCheck && !rarityFilterCheck){
-						return data
-					}
-				} else {
-					data.selected = data.normal;
-				}
-
-				// Loop through all selected filters and only return the T-Doll that matches all selected filters.
-				if(typeSelected > 0 && raritySelected > 0){
-					for(var i = 0; i < typeFilter.length; i++){
-						if(typeFilter[i].selected && typeFilter[i].label === data.selected.type){
-							for(var j = 0; j < rarityFilter.length; j++){
-								if(!modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
-									return data
-								}
-
-								// If the Mod filter is active, return the T-Doll if its Mod rarity matches the selected rarity filter.
-								else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
-									return data
-								}
-
-								// Else if the Mod filter is active, return the T-Doll if its Mod rarity is at 6 stars and the selected rarity filter is 5 stars.
-								else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === 5 && data.selected.rarity === 6){
-									return data
-								}
-							}
-						}
-					}
-				}
-
-				// Otherwise if either type or rarity filter is unselected, filter using the opposite.
-				else if(typeSelected === 0 || raritySelected === 0){
-					if(typeSelected === 0){
-						for(var j = 0; j < rarityFilter.length; j++){
-							if(!modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
-								return data
-							}
-
-							// If the Mod filter is active, return the T-Doll if its Mod rarity matches the selected rarity filter.
-							else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === data.selected.rarity){
-								return data
-							}
-
-							// Else if the Mod filter is active, return the T-Doll if its Mod rarity is at 6 stars and the selected rarity filter is 5 stars.
-							else if(modFilterCheck && rarityFilter[j].selected && rarityFilter[j].rarity === 5 && data.selected.rarity === 6){
-								return data
-							}
-						}
-					}
-					else if(raritySelected === 0){
-						for(var i = 0; i < typeFilter.length; i++){
-							if(typeFilter[i].selected && typeFilter[i].label === data.selected.type){
-								return data
-							}
-						}
-					}
-				}
-
-				return null;
+		// Copies are returned rather than a `selected` property assigned onto the doll. The dolls come
+		// from a shared cache, so mutating them here would leak the current filter into every later read.
+		const tempArray: IndexEntry[] = allDolls.flatMap((data) => {
+			if (!typeFilterCheck && !rarityFilterCheck && !modFilterCheck) {
+				return [{ ...data, selected: data.normal }]
 			}
 
-			// Return the T-Doll if no filters at all were selected.
-			else{
-				data.selected = data.normal
-				return data
+			// Filter if T-Dolls have Mod or not.
+			let selected: TDollForm
+			if (modFilter.selected) {
+				if (data.mod === null) {
+					return []
+				}
+				selected = data.mod
+
+				// If the only filter enabled is the Mod filter, return this T-Doll.
+				if (!typeFilterCheck && !rarityFilterCheck) {
+					return [{ ...data, selected }]
+				}
+			} else {
+				selected = data.normal
 			}
+
+			const entry: IndexEntry[] = [{ ...data, selected }]
+			const matchesType = typeFilter.some((type) => type.selected && type.label === selected.type)
+
+			// A Mod at 6 stars is shown under the 5 star filter, since that is the rarity it upgraded from.
+			const matchesRarity = rarityFilter.some(
+				(rarity) => rarity.selected && (rarity.rarity === selected.rarity || (modFilterCheck && rarity.rarity === 5 && selected.rarity === 6))
+			)
+
+			if (typeSelected > 0 && raritySelected > 0) {
+				return matchesType && matchesRarity ? entry : []
+			}
+			if (typeSelected === 0) {
+				return matchesRarity ? entry : []
+			}
+			return matchesType ? entry : []
 		});
 
 		// Partition search results by 30 at a time (static for now).
-		var tempSearchResultPages = [];
+		const tempSearchResultPages: IndexEntry[][] = [];
 		for (var i = 0, j = 0; i < tempArray.length; i += 30, j++) {
-			var temp = [];
+			let temp: IndexEntry[] = [];
 			if (i + 30 > tempArray.length) {
 				temp = tempArray.slice(i, tempArray.length);
 			} else {
@@ -310,8 +260,8 @@ export default function TDoll_Index() {
 	const renderTDolls = () => {
 		var tempArrayOfSearchResults = createSearchResults();
 
-		var tempArray = [];
-		var stagger = 0;
+		const tempArray: JSX.Element[] = [];
+		let stagger = 0;
 		var tempPageSelected = pageSelected;
 
 		// Makes sure to avoid the out of bounds error.
@@ -322,7 +272,7 @@ export default function TDoll_Index() {
 		// Go through the Search Results array from createSearchResults() and push 30 at a time until the remainder is left.
 		// This is expecting that tdoll.selected has been set back in createSearchResults(). Otherwise, it will only see [Object object] and will error.
 		if(tempArrayOfSearchResults.length > 0){
-			tempArrayOfSearchResults[tempPageSelected - 1].map((tdoll) => {
+			(tempArrayOfSearchResults[tempPageSelected - 1] ?? []).forEach((tdoll) => {
 				tempArray.push(
 					<Grid item key={tdoll.selected.name} xs={4} sm={4} md={2}>
 						<Fade in={true} timeout={stagger}>
@@ -332,7 +282,7 @@ export default function TDoll_Index() {
 										pathname: "/tdoll",
 										search: "?id=" + tdoll.normal.id
 									}}
-									onClick={() => sessionStorage.setItem(tdoll.normal.id, JSON.stringify(tdoll))}
+									onClick={() => sessionStorage.setItem(String(tdoll.normal.id), JSON.stringify(tdoll))}
 								>
 									<HtmlTooltip
 										title={
@@ -349,7 +299,7 @@ export default function TDoll_Index() {
 										placement="right"
 									>
 										<CardActionArea>
-											<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.images.card.default} title={tdoll.selected.name} />
+											<CardMedia component="img" className={classes.cardMedia} image={tdoll.selected.assets.images.card} title={tdoll.selected.name} />
 										</CardActionArea>
 									</HtmlTooltip>
 								</Link>
@@ -414,7 +364,7 @@ export default function TDoll_Index() {
 										color={rarity.selected ? "primary" : "secondary"}
 										label={rarity.label}
 										onClick={handleOnClickRarity(rarity)}
-										onDelete={rarity.selected ? handleDelete : null}
+										onDelete={rarity.selected ? handleDelete : undefined}
 										deleteIcon={
 											<>
 												<Divider orientation="vertical" flexItem />
@@ -442,7 +392,7 @@ export default function TDoll_Index() {
 										color={type.selected ? "primary" : "secondary"}
 										label={type.label}
 										onClick={handleOnClickType(type)}
-										onDelete={type.selected ? handleDelete : null}
+										onDelete={type.selected ? handleDelete : undefined}
 										deleteIcon={
 											<>
 												<Divider orientation="vertical" flexItem />
@@ -471,7 +421,7 @@ export default function TDoll_Index() {
 							color={modFilter.selected ? "primary" : "secondary"}
 							label={modFilter.label}
 							onClick={() => handleOnClickMod()}
-							onDelete={modFilter.selected ? handleDelete : null}
+							onDelete={modFilter.selected ? handleDelete : undefined}
 							deleteIcon={
 								<>
 									<Divider orientation="vertical" flexItem />
@@ -492,7 +442,7 @@ export default function TDoll_Index() {
 				</Typography>
 
 				{/* Pagination Component */}
-				<Pagination count={searchResultPages.length} color="primary" value={pageSelected} page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
+				<Pagination count={searchResultPages.length} color="primary" page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
 
 				<Divider className={classes.topDividerForCards} />
 
@@ -508,7 +458,7 @@ export default function TDoll_Index() {
 				</Typography>
 
 				{/* Pagination Component */}
-				<Pagination count={searchResultPages.length} color="primary" value={pageSelected} page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
+				<Pagination count={searchResultPages.length} color="primary" page={pageSelected} onChange={handlePageChange} showFirstButton showLastButton size="large" />
 
 				{/* End of Search Results */}
 			</Container>

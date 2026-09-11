@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { RouteComponentProps } from "react-router-dom";
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
 
 // Component imports
@@ -40,17 +41,76 @@ import StarIcon from "@material-ui/icons/Star";
 import ZoomOutMapIcon from "@material-ui/icons/ZoomOutMap";
 import ExitToAppIcon from "@material-ui/icons/ExitToApp";
 
-// GifPlayer import and CSS styling for it.
-import GifPlayer from "react-gif-player";
 import "./styles.css";
 
-// Image imports
-//import rarity_star from "../../images/rarity_star.png";
-import mod_button from "../../images/mod.png";
-import dorm_button from "../../images/dorm_button.png";
-import combat_button from "../../images/combat_button.png";
+import { uiUrl } from "../../lib/assets";
+import { loadDoll } from "../../lib/data";
+import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
 
-export default function TDoll(props) {
+const mod_button = uiUrl("mod.png");
+const dorm_button = uiUrl("dorm_button.png");
+const combat_button = uiUrl("combat_button.png");
+
+/** A doll paired with the form currently being displayed. */
+interface DisplayTDoll extends TDollData {
+	/** The form on screen: the base form, the Mod, or a skin. */
+	selected: TDollForm;
+}
+
+/**
+ * Route wrapper that loads the doll before rendering it.
+ *
+ * @param props Router props carrying the doll id.
+ * @returns A placeholder while loading, then the doll's page.
+ */
+export default function TDoll(props: RouteComponentProps<{ id?: string }>) {
+	// The id comes from the /tdoll/:id route, falling back to the older ?id= query string.
+	const id = Number(props.match.params.id ?? props.location.search.substring(4));
+	const [doll, setDoll] = useState<DisplayTDoll | undefined>(undefined);
+
+	// Only the shard holding this doll is fetched. A copy is stored rather than the cached object,
+	// because `selected` is assigned onto it below and the cache is shared with every other route.
+	useEffect(() => {
+		let active = true;
+		setDoll(undefined);
+		void loadDoll(id).then((found) => {
+			if (active) {
+				setDoll(found ? { ...found, selected: found.normal } : undefined);
+			}
+		});
+		return () => {
+			active = false;
+		};
+	}, [id]);
+
+	if (doll === undefined) {
+		return (
+			<main style={{ marginTop: "5rem" }}>
+				<Typography component="h1" variant="h5" align="center" color="textPrimary">
+					Loading T-Doll...
+				</Typography>
+			</main>
+		);
+	}
+
+	// Keyed by id so switching dolls remounts rather than reusing stale state.
+	return <TDollContent key={doll.normal.id} doll={doll} />;
+}
+
+/** Props for TDollContent. */
+interface TDollContentProps {
+	/** The doll to render, already loaded. */
+	doll: DisplayTDoll;
+}
+
+/**
+ * The doll page itself.
+ *
+ * @param props Component props.
+ * @returns The doll's stats, skills, tiles, art and animations.
+ */
+function TDollContent({ doll }: TDollContentProps) {
+	const tdoll = doll;
 	const useStyles = makeStyles((theme) => ({
 		cardGrid: {
 			paddingTop: theme.spacing(8),
@@ -227,49 +287,25 @@ export default function TDoll(props) {
 	// Initialization of States
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Grab the T-Doll's information from the JSONs.
-	const id = props.location.search.substring(4);
-	var tdolls = undefined;
-	if (id <= 100) {
-		tdolls = require("../../data/tdolls_from_1_to_100").default;
-	} else if (id > 100 && id <= 200) {
-		tdolls = require("../../data/tdolls_from_101_to_200").default;
-	} else if (id > 200 && id <= 300) {
-		tdolls = require("../../data/tdolls_from_201_to_300").default;
-	} else if (id > 300 && id <= 330) {
-		tdolls = require("../../data/tdolls_from_301_to_400").default;
-	} else if (id >= 1000 && id <= 1029) {
-		tdolls = require("../../data/tdolls_from_1000_to_1050").default;
-	}
-
-	const [tdoll, setTDoll] = useState(tdolls.find((element) => element.normal.id === parseInt(id)));
-
-	const [check, setCheck] = useState(true);
-	if (check) {
-		console.clear();
-		tdoll.selected = tdoll.normal;
-		setCheck(false);
-	}
-
 	// Set initial states for the Normal/Mod modes.
 	const [hasMod, setHasMod] = useState(false);
 	const [mode, setMode] = useState(0); // 0 for Normal, 1 for MOD.
 
 	// Set initial states for the images.
 	const [switchImage, setSwitchImage] = useState(false); // If true, show Damaged version.
-	const [tdollImage, setTDollImage] = useState(undefined);
+	const [tdollImage, setTDollImage] = useState<string | undefined>(undefined);
 	const [showSkin, setShowSkin] = useState(false);
 	const [skinSelected, setSkinSelected] = useState(0); // The value of this is dependent on how many skins a T-Doll has.
 
 	// Set initial states for the skills. Set Skill 2 to the description of Skill 1 in case T-Doll does not have a Neural Upgrade.
 	const [showModSkill, setShowModSkill] = useState(false);
 	const [skillLevel, setSkillLevel] = useState(10);
-	const [skillDescription1, setSkillDescription1] = useState(tdoll.normal.skill.description);
-	const [skillDescription2, setSkillDescription2] = useState(tdoll.normal.skill.description);
+	const [skillDescription1, setSkillDescription1] = useState("");
+	const [skillDescription2, setSkillDescription2] = useState("");
 	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Normal skill, 1 for MOD skill if it exists.
 
 	// Set initial states for animations.
-	const [animation, setAnimation] = useState(undefined);
+	const [animation, setAnimation] = useState<string | undefined>(undefined);
 	const [animationMode, setAnimationMode] = useState(0); // 0 for Normal animations, 1 for Dorm animations.
 	const [animationTabSelected, setAnimationTabSelected] = useState("wait");
 	const [animationDormTabSelected, setAnimationDormTabSelected] = useState("wait");
@@ -285,8 +321,8 @@ export default function TDoll(props) {
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
 		document.title = `#${tdoll.normal.id} - ${tdoll.normal.name}`
-		document.querySelector('meta[name="description"]').setAttribute("content", `#${tdoll.normal.id} - ${tdoll.normal.name}`);
-	}, [])
+		document.querySelector('meta[name="description"]')?.setAttribute("content", `#${tdoll.normal.id} - ${tdoll.normal.name}`);
+	}, [tdoll])
 	
 	// This will be used to initialize the functionality of the page.
 	useEffect(() => {
@@ -304,11 +340,13 @@ export default function TDoll(props) {
 		handleChangeSkillDescription();
 
 		// Set the initial image and animation to be displayed for the T-Doll.
-		setTDollImage(tdoll.selected.images.card.default);
-		setAnimation(tdoll.selected.animations.wait.default);
+		setTDollImage(tdoll.selected.assets.images.card);
+		setAnimation(tdoll.selected.assets.animations.wait);
 
 		console.log("Initial T-Doll state: ", tdoll);
-	}, []);
+		// Depends on tdoll: the shard loads after mount, so an empty dependency list would run this
+		// once while the doll is still undefined and never set the initial image or animation.
+	}, [tdoll]);
 	/* eslint-disable */
 
 	// This will update the animations when skins are switched.
@@ -316,9 +354,9 @@ export default function TDoll(props) {
 		var tempSkinSelected = helperSkinSelected();
 		if (showSkin) {
 			if (animationMode === 0) {
-				setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
+				setAnimation(skinForm(tempSkinSelected)?.animations.wait);
 			} else {
-				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
+				setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
 			}
 		}
 	}, [showSkin, skinSelected]);
@@ -326,7 +364,9 @@ export default function TDoll(props) {
 	// This will update the skill descriptions when different skills are selected or their skill levels change.
 	useEffect(() => {
 		handleChangeSkillDescription();
-	}, [skillLevel, mode]);
+	}, [skillLevel, mode, tdoll]);
+
+
 
 	// // Print out debugging information at each render.
 	// useEffect(() => {
@@ -338,6 +378,19 @@ export default function TDoll(props) {
 	// 	console.log("Skin selected before calc: ", tempSkinSelected);
 	// 	console.log("Skin selected after calc: ", tempSkinSelected);
 	// });
+
+	/**
+	 * Look up a skin's resolved assets.
+	 *
+	 * Skin assets used to hang off `skins.skin_images[n]` and similar arrays that the old processData
+	 * built. They now come from the manifest-derived form records, keyed `skin1`, `mod_skin1` and so on,
+	 * which is also why skins that exist only as a Mod variant are reachable at all.
+	 *
+	 * @param index Zero-based skin number.
+	 * @param withMod Whether to look up the Mod variant of the skin.
+	 * @returns The skin's assets, or undefined when that skin was never published.
+	 */
+	const skinForm = (index: number, withMod = false) => tdoll.forms[`${withMod ? "mod_" : ""}skin${index + 1}`];
 
 	// Helper function to determine the correct selected skin.
 	const helperSkinSelected = () => {
@@ -357,14 +410,14 @@ export default function TDoll(props) {
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	// Switch information/images/animations displayed between Normal or Mod. Will reset skin selected.
-	const switchModes = (event) => {
-		var tdoll_temp = tdoll;
+	const switchModes = () => {
+		const tdoll_temp = tdoll;
 
 		setShowSkin(false); // Prevent skin image to be rendered if it was selected.
 		setSkinSelected(0);
 
 		// Perform check to see if the information shown should be Mod or not.
-		if (mode === 0 && hasMod) {
+		if (mode === 0 && hasMod && tdoll.mod) {
 			// Switch to Mod information.
 			tdoll_temp.selected = tdoll.mod;
 			setShowModSkill(true);
@@ -377,18 +430,18 @@ export default function TDoll(props) {
 		}
 
 		// Set T-Doll image.
-		setTDollImage(tdoll_temp.selected.images.card.default);
+		setTDollImage(tdoll_temp.selected.assets.images.card);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
 		// Set animation.
 		if (animationMode === 1) {
-			setAnimation(tdoll_temp.selected.animations_dorm.wait.default);
+			setAnimation(tdoll_temp.selected.assets.dormAnimations.wait);
 		} else {
-			setAnimation(tdoll_temp.selected.animations.wait.default);
+			setAnimation(tdoll_temp.selected.assets.animations.wait);
 		}
 
-		// Finalize state updates.
-		setTDoll(tdoll_temp);
+		// Finalize state updates. `tdoll_temp` is the same object as `tdoll`, mutated in place, so the
+		// setSelectedSkill call below is what schedules the re-render that shows the change.
 		setSelectedSkill(0);
 		helperResetAnimationTabs();
 	};
@@ -401,18 +454,18 @@ export default function TDoll(props) {
 		if (animationMode === 0) {
 			// Switch to Dorm animations.
 			if (showSkin) {
-				setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
+				setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
 			} else {
-				setAnimation(tdoll.selected.animations_dorm.wait.default);
+				setAnimation(tdoll.selected.assets.dormAnimations.wait);
 			}
 
 			setAnimationMode(1);
 		} else {
 			// Switch to Normal animations.
 			if (showSkin) {
-				setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
+				setAnimation(skinForm(tempSkinSelected)?.animations.wait);
 			} else {
-				setAnimation(tdoll.selected.animations.wait.default);
+				setAnimation(tdoll.selected.assets.animations.wait);
 			}
 
 			setAnimationMode(0);
@@ -424,7 +477,7 @@ export default function TDoll(props) {
 		if (showSkin) {
 			return (
 				<Fab color="primary" className={classes.fab_mod} onClick={switchToNormalArt}>
-					<ExitToAppIcon alt="Switch back to Normal" style={{ height: 40, width: 25 }} />
+					<ExitToAppIcon titleAccess="Switch back to Normal" style={{ height: 40, width: 25 }} />
 				</Fab>
 			);
 		} else {
@@ -441,7 +494,7 @@ export default function TDoll(props) {
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	// Switch between Skills 1 and 2 if T-Doll has Mod.
-	const handleChangeSkills = (event, newValue) => {
+	const handleChangeSkills = (_event: unknown, newValue: number) => {
 		setSelectedSkill(newValue);
 	};
 
@@ -452,79 +505,34 @@ export default function TDoll(props) {
 	Note: The styling being inserted is using HTML styling and not using React styling.
 	*/
 	const handleChangeSkillDescription = () => {
-		var tdollTemp = tdoll;
+		const tdollTemp = tdoll;
 
 		// Reset the descriptions to have it include the delimiters again and set variables to be used.
 		tdollTemp.selected.skill.description = tdoll.normal.skill.description;
-		var tempSkillDescription1 = tdollTemp.selected.skill.description;
-		var numberOfStats1 = tdollTemp.selected.skill.number_of_stats;
+		let tempSkillDescription1 = tdollTemp.selected.skill.description;
+		const numberOfStats1 = tdollTemp.selected.skill.number_of_stats;
 
-		if ("skill2" in tdollTemp.selected) {
-			tdollTemp.selected.skill2.description = tdoll.mod.skill2.description;
-			var tempSkillDescription2 = tdollTemp.selected.skill2.description;
-			var numberOfStats2 = tdollTemp.selected.skill2.number_of_stats;
+		const skill2 = tdollTemp.selected.skill2;
+		let tempSkillDescription2 = "";
+		let numberOfStats2 = 0;
+		if (skill2) {
+			skill2.description = tdoll.mod?.skill2?.description ?? skill2.description;
+			tempSkillDescription2 = skill2.description;
+			numberOfStats2 = skill2.number_of_stats;
 		}
 
 		// If T-Doll has Mod, format both Skills 1 and 2. If not, only format Skill 1.
 		if (showModSkill) {
 			// Format Skill 1 first.
-			switch (numberOfStats1) {
-				case 1:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					break;
-				case 2:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					break;
-				case 3:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					break;
-				case 4:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
-					break;
-				case 5:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
-					break;
-				default:
+			for (let statIndex = 1; statIndex <= numberOfStats1; statIndex++) {
+				const values = tdollTemp.selected.skill[`stat${statIndex}`] ?? [];
+				tempSkillDescription1 = tempSkillDescription1.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
 			}
 
 			// Format Skill 2 next.
-			switch (numberOfStats2) {
-				case 1:
-					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
-					break;
-				case 2:
-					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat2[skillLevel - 1] + "</ins></span>");
-					break;
-				case 3:
-					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat3[skillLevel - 1] + "</ins></span>");
-					break;
-				case 4:
-					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat4[skillLevel - 1] + "</ins></span>");
-					break;
-				case 5:
-					tempSkillDescription2 = tempSkillDescription2.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat4[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription2 = tempSkillDescription2.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill2.stat5[skillLevel - 1] + "</ins></span>");
-					break;
-				default:
+			for (let statIndex = 1; statIndex <= numberOfStats2; statIndex++) {
+				const values = skill2?.[`stat${statIndex}`] ?? [];
+				tempSkillDescription2 = tempSkillDescription2.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
 			}
 
 			if ("passive_active_description" in tdollTemp.selected.skill) {
@@ -532,12 +540,12 @@ export default function TDoll(props) {
 				tempSkillDescription1 = tempSkillDescription1.replace("[Active]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
 			}
 
-			if ("passive_active_description" in tdollTemp.selected.skill2) {
+			if (skill2 && "passive_active_description" in skill2) {
 				tempSkillDescription2 = tempSkillDescription2.replace("[Passive]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
 				tempSkillDescription2 = tempSkillDescription2.replace("[Active]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
 			}
 
-			if ("passive_passive_description" in tdollTemp.selected.skill2) {
+			if (skill2 && "passive_passive_description" in skill2) {
 				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 1]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive 1]</ins></span>: ');
 				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 2]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Passive 2]</ins></span>: ');
 			}
@@ -546,69 +554,9 @@ export default function TDoll(props) {
 			setSkillDescription2(tempSkillDescription2);
 		} else {
 			// Only format Skill 1.
-			switch (numberOfStats1) {
-				case 1:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					break;
-				case 2:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					break;
-				case 3:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					break;
-				case 4:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
-					break;
-				case 5:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
-					break;
-				case 6:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#6", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat6[skillLevel - 1] + "</ins></span>");
-					break;
-				case 7:
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#6", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat6[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#7", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat7[skillLevel - 1] + "</ins></span>");
-					break;
-				case 17: // For T-Doll 1017 - Jill
-					tempSkillDescription1 = tempSkillDescription1.replace("#1", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat1[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#2", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat2[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#3", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat3[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#4", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat4[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#5", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat5[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#6", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat6[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#7", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat7[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#8", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat8[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#9", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat9[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#10", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat10[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#11", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat11[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#12", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat12[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#13", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat13[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#14", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat14[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#15", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat15[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#16", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat16[skillLevel - 1] + "</ins></span>");
-					tempSkillDescription1 = tempSkillDescription1.replace("#17", '<span style="color: cyan; font-size: 110%;"><ins>' + tdollTemp.selected.skill.stat17[skillLevel - 1] + "</ins></span>");
-					break;
-				default:
+			for (let statIndex = 1; statIndex <= numberOfStats1; statIndex++) {
+				const values = tdollTemp.selected.skill[`stat${statIndex}`] ?? [];
+				tempSkillDescription1 = tempSkillDescription1.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
 			}
 
 			if ("passive_active_description" in tdollTemp.selected.skill) {
@@ -671,53 +619,53 @@ export default function TDoll(props) {
 			if (switchImage) {
 				// Normal Skin image
 				if (mode === 1) {
-					setTDollImage(tdoll.skins.mod_skin_images[skinSelected].default);
+					setTDollImage(skinForm(skinSelected, true)?.images.card);
 				} else {
-					setTDollImage(tdoll.skins.skin_images[skinSelected].default);
+					setTDollImage(skinForm(skinSelected)?.images.card);
 				}
 				setSwitchImage(false);
 			} else {
 				// Damaged Skin image
 				if (mode === 1) {
-					setTDollImage(tdoll.skins.mod_skin_images[skinSelected + 1].default);
+					setTDollImage(skinForm(skinSelected + 1, true)?.images.card);
 				} else {
-					setTDollImage(tdoll.skins.skin_images[skinSelected + 1].default);
+					setTDollImage(skinForm(skinSelected + 1)?.images.card);
 				}
 				setSwitchImage(true);
 			}
 		} else {
 			if (switchImage) {
 				// Normal image
-				setTDollImage(tdoll.selected.images.card.default);
+				setTDollImage(tdoll.selected.assets.images.card);
 				setSwitchImage(false);
 			} else {
 				// Damaged image
-				setTDollImage(tdoll.selected.images.card_damaged.default);
+				setTDollImage(tdoll.selected.assets.images.card_damaged);
 				setSwitchImage(true);
 			}
 		}
 	};
 
 	// Replace Card image with the Normal version of the selected skin.
-	const switchSkinSelected = (event, newValue) => {
+	const switchSkinSelected = (_event: unknown, newValue: number) => {
 		setSkinSelected(newValue);
 		setShowSkin(true);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
 		// Switch to the modded Skin image cards when currently displaying Mod information.
 		if (mode === 1) {
-			setTDollImage(tdoll.skins.mod_skin_images[newValue].default);
+			setTDollImage(skinForm(newValue, true)?.images.card);
 		} else {
-			setTDollImage(tdoll.skins.skin_images[newValue].default);
+			setTDollImage(skinForm(newValue)?.images.card);
 		}
 
 		// Switch animations based on the animation mode selected, Normal or Dorm.
 		var tempSkinSelected = helperSkinSelected();
 
 		if (animationMode === 0) {
-			setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
+			setAnimation(skinForm(tempSkinSelected)?.animations.wait);
 		} else {
-			setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
+			setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
 		}
 
 		// Reset animation tab selected.
@@ -728,15 +676,15 @@ export default function TDoll(props) {
 	const renderImage = () => {
 		if (showSkin) {
 			if (switchImage) {
-				return <img src={tdoll.skins.skin_images_full[skinSelected + 1].default} className={classes.fullImage} alt="Damaged Full Skin" />;
+				return <img src={skinForm(skinSelected + 1)?.images.full} className={classes.fullImage} alt="Damaged Full Skin" />;
 			} else {
-				return <img src={tdoll.skins.skin_images_full[skinSelected].default} className={classes.fullImage} alt="Normal Full Skin" />;
+				return <img src={skinForm(skinSelected)?.images.full} className={classes.fullImage} alt="Normal Full Skin" />;
 			}
 		} else {
 			if (switchImage) {
-				return <img src={tdoll.selected.images.full_damaged.default} className={classes.fullImage} alt="Damaged Full" />;
+				return <img src={tdoll.selected.assets.images.full_damaged} className={classes.fullImage} alt="Damaged Full" />;
 			} else {
-				return <img src={tdoll.selected.images.full.default} className={classes.fullImage} alt="Normal Full" />;
+				return <img src={tdoll.selected.assets.images.full} className={classes.fullImage} alt="Normal Full" />;
 			}
 		}
 	};
@@ -760,26 +708,26 @@ export default function TDoll(props) {
 					<Tabs
 						className={classes.tabs}
 						value={animationTabSelected}
-						onChange={(e, value) => switchAnimations(value)}
+						onChange={(_e, value) => switchAnimations(value)}
 						indicatorColor="primary"
 						textColor="primary"
 						scrollButtons="on"
 						variant="scrollable"
 					>
 						<Tab label="Wait" value="wait" />
-						{"hasWait2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasWait2Animation[tempSkinSelected] ? <Tab label="Wait2" value="wait2" /> : ""}
+						{("wait2" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="Wait2" value="wait2" /> : ""}
 						<Tab label="Move" value="move" />
 						<Tab label="Attack" value="attack" />
 						{tdoll.selected.type === "SG" ? <Tab label="Reload" value="reload" /> : ""}
-						{tdoll.skins.animations.hasSkillAnimation[tempSkinSelected] ? <Tab label="Skill" value="skill" /> : ""}
-						{"crouch" in tdoll.skins.animations && tdoll.skins.animations.crouch[tempSkinSelected] ? <Tab label="Crouch" value="crouch" /> : ""}
-						{"hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[tempSkinSelected] ? <Tab label="Attack2" value="attack2" /> : ""}
-						{"action" in tdoll.skins.animations && tdoll.skins.animations.action[tempSkinSelected] ? <Tab label="Action" value="action" /> : ""}
-						{"action2" in tdoll.skins.animations && tdoll.skins.animations.action2[tempSkinSelected] ? <Tab label="Action2" value="action2" /> : ""}
+						{("skill" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="Skill" value="skill" /> : ""}
+						{skinForm(tempSkinSelected)?.animations.crouch ? <Tab label="Crouch" value="crouch" /> : ""}
+						{("attack2" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="Attack2" value="attack2" /> : ""}
+						{skinForm(tempSkinSelected)?.animations.action ? <Tab label="Action" value="action" /> : ""}
+						{skinForm(tempSkinSelected)?.animations.action2 ? <Tab label="Action2" value="action2" /> : ""}
 						{tdoll.selected.type === "MG" ? <Tab label="Reload" value="reload" /> : ""}
 						<Tab label="Die" value="die" />
 						<Tab label="Victory" value="victory" />
-						{tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected] ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
+						{("victoryLoop" in (skinForm(tempSkinSelected)?.animations ?? {})) ? <Tab label="VictoryLoop" value="victoryloop" /> : ""}
 					</Tabs>
 				);
 			} else {
@@ -788,7 +736,7 @@ export default function TDoll(props) {
 					<Tabs
 						className={classes.tabs}
 						value={animationTabSelected}
-						onChange={(e, value) => switchAnimations(value)}
+						onChange={(_e, value) => switchAnimations(value)}
 						indicatorColor="primary"
 						textColor="primary"
 						scrollButtons="on"
@@ -822,7 +770,7 @@ export default function TDoll(props) {
 				<Tabs
 					className={classes.tabs}
 					value={animationDormTabSelected}
-					onChange={(e, value) => switchAnimations(value)}
+					onChange={(_e, value) => switchAnimations(value)}
 					indicatorColor="primary"
 					textColor="primary"
 					scrollButtons="on"
@@ -830,14 +778,14 @@ export default function TDoll(props) {
 				>
 					<Tab label="Wait" value="wait" />
 					<Tab label="Move" value="move" />
-					{(tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected]) || "hasActionAnimation" in tdoll.selected.animations ? (
+					{(tdoll.skins && showSkin && ("action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) || "hasActionAnimation" in tdoll.selected.animations ? (
 						<Tab label="Action" value="action" />
 					) : (
 						""
 					)}
 					<Tab label="Pick" value="pick" />
 					<Tab label="Sit" value="sit" />
-					{tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasSit2Animation[tempSkinSelected] ? <Tab label="Sit2" value="sit2" /> : ""}
+					{tdoll.skins && showSkin && ("sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {})) ? <Tab label="Sit2" value="sit2" /> : ""}
 					<Tab label="Lying" value="lying" />
 				</Tabs>
 			);
@@ -846,13 +794,13 @@ export default function TDoll(props) {
 
 	// Render tabs for skin selection.
 	const renderSkinsTabs = () => {
-		var tempTabs = [];
+		const tempTabs: JSX.Element[] = [];
 
 		if (tdoll.skins === null) {
-			return tempTabs.push();
+			return tempTabs;
 		}
 
-		tdoll.skins.skin_names.map((name, index) => {
+		(tdoll.skins?.skin_names ?? []).map((name, index) => {
 			// Index is doubled for the value such that the Damaged versions are not selected.
 			return tempTabs.push(<Tab className={classes.tabForSkin} label={name} key={index} wrapped value={index * 2} />);
 		});
@@ -861,7 +809,7 @@ export default function TDoll(props) {
 	};
 
 	// Switch animations based on Tab selected.
-	const switchAnimations = (newValue) => {
+	const switchAnimations = (newValue: string) => {
 		var tempSkinSelected = helperSkinSelected();
 
 		if (animationMode === 0) {
@@ -871,116 +819,116 @@ export default function TDoll(props) {
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.wait[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.wait);
 					} else {
-						setAnimation(tdoll.selected.animations.wait.default);
+						setAnimation(tdoll.selected.assets.animations.wait);
 					}
 					break;
 				case "wait2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.wait2[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.wait2);
 					} else {
-						setAnimation(tdoll.selected.animations.wait2.default);
+						setAnimation(tdoll.selected.assets.animations.wait2);
 					}
 					break;
 				case "move":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.move[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.move);
 					} else {
-						setAnimation(tdoll.selected.animations.move.default);
+						setAnimation(tdoll.selected.assets.animations.move);
 					}
 					break;
 				case "attack":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.attack[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.attack);
 					} else {
-						setAnimation(tdoll.selected.animations.attack.default);
+						setAnimation(tdoll.selected.assets.animations.attack);
 					}
 					break;
 				case "crouch":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.crouch[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.crouch);
 					} else {
-						setAnimation(tdoll.selected.animations.crouch.default);
+						setAnimation(tdoll.selected.assets.animations.crouch);
 					}
 					break;
 				case "attack2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.attack2[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.attack2);
 					} else {
-						setAnimation(tdoll.selected.animations.attack2.default);
+						setAnimation(tdoll.selected.assets.animations.attack2);
 					}
 					break;
 				case "action":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.action[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.action);
 					} else {
-						setAnimation(tdoll.selected.animations.action.default);
+						setAnimation(tdoll.selected.assets.animations.action);
 					}
 					break;
 				case "action2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.action2[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.action2);
 					} else {
-						setAnimation(tdoll.selected.animations.action2.default);
+						setAnimation(tdoll.selected.assets.animations.action2);
 					}
 					break;
 				case "spattack":
-					setAnimation(tdoll.selected.animations.spattack.default);
+					setAnimation(tdoll.selected.assets.animations.spattack);
 
 					break;
 				case "spattack2":
-					setAnimation(tdoll.selected.animations.spattack2.default);
+					setAnimation(tdoll.selected.assets.animations.spattack2);
 
 					break;
 				case "reload":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.reload[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.reload);
 					} else {
-						setAnimation(tdoll.selected.animations.reload.default);
+						setAnimation(tdoll.selected.assets.animations.reload);
 					}
 					break;
 				case "landing":
-					setAnimation(tdoll.selected.animations.landing.default);
+					setAnimation(tdoll.selected.assets.animations.landing);
 
 					break;
 				case "die":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.die[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.die);
 					} else {
-						setAnimation(tdoll.selected.animations.die.default);
+						setAnimation(tdoll.selected.assets.animations.die);
 					}
 					break;
 				case "skill":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.skill[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.skill);
 					} else {
-						setAnimation(tdoll.selected.animations.skill.default);
+						setAnimation(tdoll.selected.assets.animations.skill);
 					}
 					break;
 				case "skill2":
-					setAnimation(tdoll.selected.animations.skill2.default);
+					setAnimation(tdoll.selected.assets.animations.skill2);
 
 					break;
 				case "victory":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victory[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.victory);
 					} else {
-						setAnimation(tdoll.selected.animations.victory.default);
+						setAnimation(tdoll.selected.assets.animations.victory);
 					}
 					break;
 				case "victory2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victory2[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.victory2);
 					} else {
-						setAnimation(tdoll.selected.animations.victory2.default);
+						setAnimation(tdoll.selected.assets.animations.victory2);
 					}
 					break;
 				case "victoryloop":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations.victoryloop[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.animations.victoryloop);
 					} else {
-						setAnimation(tdoll.selected.animations.victoryloop.default);
+						setAnimation(tdoll.selected.assets.animations.victoryloop);
 					}
 					break;
 				default:
@@ -992,52 +940,52 @@ export default function TDoll(props) {
 			switch (newValue) {
 				case "wait":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.wait[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.wait.default);
+						setAnimation(tdoll.selected.assets.dormAnimations.wait);
 					}
 
 					break;
 				case "move":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.move[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.move);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.move.default);
+						setAnimation(tdoll.selected.assets.dormAnimations.move);
 					}
 					break;
 				case "action":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.action[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.action);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.action.default);
+						setAnimation(tdoll.selected.assets.dormAnimations.action);
 					}
 					break;
 				case "pick":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.pick[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.pick);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.pick.default);
+						setAnimation(tdoll.selected.assets.dormAnimations.pick);
 					}
 					break;
 				case "sit":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.sit[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.sit);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.sit.default);
+						setAnimation(tdoll.selected.assets.dormAnimations.sit);
 					}
 					break;
 				case "sit2":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.sit2[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.sit2);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.sit2.default);
+						setAnimation(tdoll.selected.assets.dormAnimations.sit2);
 					}
 					break;
 				case "lying":
 					if (showSkin) {
-						setAnimation(tdoll.skins.animations_dorm.lying[tempSkinSelected].default);
+						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.lying);
 					} else {
-						setAnimation(tdoll.selected.animations_dorm.lying.default);
+						setAnimation(tdoll.selected.assets.dormAnimations.lying);
 					}
 					break;
 				default:
@@ -1064,28 +1012,28 @@ export default function TDoll(props) {
 			animationArray.push("wait");
 			if (
 				(!showSkin && "hasWait2Animation" in tdoll.selected.animations) ||
-				(showSkin && "hasWait2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasWait2Animation[tempSkinSelected])
+				(showSkin && ("wait2" in (skinForm(tempSkinSelected)?.animations ?? {})))
 			) {
 				animationArray.push("wait2");
 			}
 			animationArray.push("move");
 			animationArray.push("attack");
-			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && tdoll.skins.animations.hasSkillAnimation[tempSkinSelected])) {
+			if ((!showSkin && tdoll.selected.animations.hasSkillAnimation) || (showSkin && ("skill" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
 				animationArray.push("skill");
 			}
 			if (!showSkin && "skill2" in tdoll.selected.animations) {
 				animationArray.push("skill2");
 			}
-			if ((!showSkin && "crouch" in tdoll.selected.animations) || (showSkin && "crouch" in tdoll.skins.animations && tdoll.skins.animations.crouch[tempSkinSelected])) {
+			if ((!showSkin && "crouch" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.crouch)) {
 				animationArray.push("crouch");
 			}
-			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && "hasAttack2Animation" in tdoll.skins.animations && tdoll.skins.animations.hasAttack2Animation[tempSkinSelected])) {
+			if ((!showSkin && "hasAttack2Animation" in tdoll.selected.animations) || (showSkin && ("attack2" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
 				animationArray.push("attack2");
 			}
-			if ((!showSkin && "action" in tdoll.selected.animations) || (showSkin && "action" in tdoll.skins.animations && tdoll.skins.animations.action[tempSkinSelected])) {
+			if ((!showSkin && "action" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.action)) {
 				animationArray.push("action");
 			}
-			if ((!showSkin && "action2" in tdoll.selected.animations) || (showSkin && "action2" in tdoll.skins.animations && tdoll.skins.animations.action2[tempSkinSelected])) {
+			if ((!showSkin && "action2" in tdoll.selected.animations) || (showSkin && skinForm(tempSkinSelected)?.animations.action2)) {
 				animationArray.push("action2");
 			}
 			if (!showSkin && "spattack" in tdoll.selected.animations) {
@@ -1105,7 +1053,7 @@ export default function TDoll(props) {
 			if ("victory2" in tdoll.selected.animations && !showSkin) {
 				animationArray.push("victory2");
 			}
-			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && tdoll.skins.animations.hasVictoryLoopAnimation[tempSkinSelected])) {
+			if ((!showSkin && tdoll.selected.animations.hasVictoryLoopAnimation) || (showSkin && ("victoryLoop" in (skinForm(tempSkinSelected)?.animations ?? {})))) {
 				animationArray.push("victoryloop");
 			}
 		} else {
@@ -1114,12 +1062,12 @@ export default function TDoll(props) {
 
 			animationArray.push("wait");
 			animationArray.push("move");
-			if ((tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasActionAnimation[tempSkinSelected]) || "hasActionAnimation" in tdoll.selected.animations) {
+			if ((tdoll.skins && showSkin && ("action" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) || "hasActionAnimation" in tdoll.selected.animations) {
 				animationArray.push("action");
 			}
 			animationArray.push("pick");
 			animationArray.push("sit");
-			if (tdoll.skins && showSkin && tdoll.skins.animations_dorm.hasSit2Animation[tempSkinSelected]) {
+			if (tdoll.skins && showSkin && ("sit2" in (skinForm(tempSkinSelected)?.dormAnimations ?? {}))) {
 				animationArray.push("sit2");
 			}
 			animationArray.push("lying");
@@ -1134,12 +1082,12 @@ export default function TDoll(props) {
 			tempIndex += 1;
 		}
 
-		switchAnimations(animationArray[tempIndex]);
+		switchAnimations(animationArray[tempIndex] ?? "wait");
 	};
 
 	// This function will return tiles depending on the tile set information in the JSON.
-	const createTileSetRow = (tile, index) => {
-		var temp = "";
+	const createTileSetRow = (tile: number, index: number) => {
+		let temp: JSX.Element;
 		if (tile === 0) {
 			temp = <td className={classes.blackTile} key={index}></td>;
 		} else if (tile === 1) {
@@ -1181,8 +1129,8 @@ export default function TDoll(props) {
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	// Render the amount of stars equal to the T-Doll's rarity next to its type text at the top of the Card.
-	const renderStars = (rarity) => {
-		var array = [];
+	const renderStars = (rarity: number) => {
+		const array: number[] = [];
 
 		// Populate the array with the keys to the length of the rarity.
 		for (var i = 0; i < rarity; i++) {
@@ -1235,7 +1183,7 @@ export default function TDoll(props) {
 						<Grid container direction="row" spacing={2}>
 							<Grid item key="T-Doll image" xs={12} sm={6}>
 								{tdoll.skins !== null ? (
-									tdoll.skins.number_of_skins === 1 ? (
+									(tdoll.skins?.number_of_skins ?? 0) === 1 ? (
 										<Tabs
 											className={classes.tabs}
 											value={showSkin ? skinSelected : false}
@@ -1268,7 +1216,7 @@ export default function TDoll(props) {
 
 								<Card className={classes.cardForImage} elevation={12}>
 									<CardActionArea onClick={switchBetweenNormalDamagedCardImages}>
-										<CardMedia component="img" className={classes.cardMediaForImage} image={tdollImage} title={tdoll.selected.name} />
+										<CardMedia component="img" className={classes.cardForImage} image={tdollImage} title={tdoll.selected.name} />
 									</CardActionArea>
 									{/************** Floating Action Button overlayed over image at the top left **************/}
 									{hasMod ? (
@@ -1303,11 +1251,11 @@ export default function TDoll(props) {
 
 								{animationMode === 0 ? (
 									<Card className={classes.cardForCombatAnimations} elevation={12}>
-										<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
+										<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
 									</Card>
 								) : (
 									<Card className={classes.cardForDormAnimations} elevation={12}>
-										<GifPlayer gif={animation} style={{ height: 250, width: 250, zIndex: 0 }} autoplay={true} onClick={() => playerSwitchAnimations()} />
+										<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => playerSwitchAnimations()} />
 									</Card>
 								)}
 							</Grid>
@@ -1328,7 +1276,7 @@ export default function TDoll(props) {
 								<Card className={classes.cardForSkill} elevation={12}>
 									<CardContent>
 										<CardHeader
-											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.image_skill.default : tdoll.selected.skill.image_skill.default} />}
+											avatar={<Avatar variant="rounded" src={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.skillImages.skill2 : tdoll.skillImages.skill1} />}
 											title={selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? tdoll.selected.skill2.name : tdoll.selected.skill.name}
 											subheader={
 												selectedSkill === 1 && tdoll.selected.skill2 !== undefined ? "Initial CD: " + tdoll.selected.skill2.initial_cooldown : "Initial CD: " + tdoll.selected.skill.initial_cooldown
@@ -1339,10 +1287,9 @@ export default function TDoll(props) {
 
 													<Select
 														id="skill-level-select"
-														className={classes.skillLevel}
 														value={skillLevel}
 														onChange={(e) => {
-															setSkillLevel(e.target.value);
+															setSkillLevel(Number(e.target.value));
 														}}
 														// MenuProps will shift the drop down menu to the right.
 														MenuProps={{
@@ -1385,7 +1332,7 @@ export default function TDoll(props) {
 													Cooldown:{" "}
 													{
 														<span style={{ color: "cyan" }}>
-															<ins>{tdoll.selected.skill.cooldown[skillLevel - 1]}s</ins>
+															<ins>{(tdoll.selected.skill.cooldown?.[skillLevel - 1] ?? "?")}s</ins>
 														</span>
 													}
 												</Typography>

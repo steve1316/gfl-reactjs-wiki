@@ -26,3 +26,7 @@ yarn-error.log*
 # python
 __pycache__/
 *.pyc
+
+# vite
+/build
+.vite
