@@ -55,8 +55,6 @@ interface ChibiPanelProps {
 	spineRig: SpineRig | undefined;
 	/** The doll's base id, used to build the Spine asset URLs. */
 	normalId: number;
-	/** Fallback animation GIF URL, used only when no Spine rig is available. */
-	animation: string | undefined;
 	/** Called when the animation area is clicked, advancing to the next animation. */
 	onPlayerSwitchAnimations: () => void;
 }
@@ -67,17 +65,7 @@ interface ChibiPanelProps {
  * @param props Component props.
  * @returns The animation toggle, pill row and player.
  */
-export default function ChibiPanel({
-	animationMode,
-	spineAnimationName,
-	spineTabs,
-	onSwitchAnimations,
-	onSwitchAnimationMode,
-	spineRig,
-	normalId,
-	animation,
-	onPlayerSwitchAnimations
-}: ChibiPanelProps) {
+export default function ChibiPanel({ animationMode, spineAnimationName, spineTabs, onSwitchAnimations, onSwitchAnimationMode, spineRig, normalId, onPlayerSwitchAnimations }: ChibiPanelProps) {
 	return (
 		<>
 			{/* T-Doll's animations: the toggle sits in normal flow above the pills, so it never overlaps them */}
@@ -98,7 +86,7 @@ export default function ChibiPanel({
 			</Box>
 
 			<Card sx={styles.cardForAnimation}>
-				{spineRig ? (
+				{spineRig && (
 					<div onClick={() => onPlayerSwitchAnimations()} style={{ cursor: "pointer" }}>
 						<SpineAnimation
 							skelUrl={spineUrl(normalId, spineRig.skel, "skel")}
@@ -107,8 +95,6 @@ export default function ChibiPanel({
 							animation={spineAnimationName}
 						/>
 					</div>
-				) : (
-					<img src={animation} alt="T-Doll animation" style={{ height: 250, width: 250, zIndex: 0 }} onClick={() => onPlayerSwitchAnimations()} />
 				)}
 			</Card>
 		</>

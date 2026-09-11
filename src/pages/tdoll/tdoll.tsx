@@ -146,7 +146,6 @@ function TDollContent({ doll }: TDollContentProps) {
 	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Skill 1, 1 for Skill 2 if the doll has a Mod.
 
 	// Set initial states for animations.
-	const [animation, setAnimation] = useState<string | undefined>(undefined);
 	const [animationMode, setAnimationMode] = useState(0); // 0 for Normal animations, 1 for Dorm animations.
 	const [animationTabSelected, setAnimationTabSelected] = useState("wait");
 	const [animationDormTabSelected, setAnimationDormTabSelected] = useState("wait");
@@ -174,26 +173,13 @@ function TDollContent({ doll }: TDollContentProps) {
 			setHasMod(false);
 		}
 
-		// Set the initial image and animation to be displayed for the T-Doll.
+		// Set the initial image to be displayed for the T-Doll.
 		setTDollImage(tdoll.selected.assets.images.card);
-		setAnimation(tdoll.selected.assets.animations.wait);
 
 		// Depends on tdoll: the shard loads after mount, so an empty dependency list would run this
-		// once while the doll is still undefined and never set the initial image or animation.
+		// once while the doll is still undefined and never set the initial image.
 	}, [tdoll]);
 	/* eslint-disable */
-
-	// This will update the animations when skins are switched.
-	useEffect(() => {
-		var tempSkinSelected = helperSkinSelected();
-		if (showSkin) {
-			if (animationMode === 0) {
-				setAnimation(skinForm(tempSkinSelected)?.animations.wait);
-			} else {
-				setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
-			}
-		}
-	}, [showSkin, skinSelected]);
 
 	// // Print out debugging information at each render.
 	// useEffect(() => {
@@ -293,13 +279,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		setTDollImage(tdoll_temp.selected.assets.images.card);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
-		// Set animation.
-		if (animationMode === 1) {
-			setAnimation(tdoll_temp.selected.assets.dormAnimations.wait);
-		} else {
-			setAnimation(tdoll_temp.selected.assets.animations.wait);
-		}
-
 		// Reset back to Skill 1 whenever the Mod toggle flips, in either direction.
 		setSelectedSkill(0);
 		helperResetAnimationTabs();
@@ -308,27 +287,7 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Switch the animations between Normal and Dorm.
 	const switchAnimationMode = () => {
 		helperResetAnimationTabs();
-
-		var tempSkinSelected = helperSkinSelected();
-		if (animationMode === 0) {
-			// Switch to Dorm animations.
-			if (showSkin) {
-				setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
-			} else {
-				setAnimation(tdoll.selected.assets.dormAnimations.wait);
-			}
-
-			setAnimationMode(1);
-		} else {
-			// Switch to Normal animations.
-			if (showSkin) {
-				setAnimation(skinForm(tempSkinSelected)?.animations.wait);
-			} else {
-				setAnimation(tdoll.selected.assets.animations.wait);
-			}
-
-			setAnimationMode(0);
-		}
+		setAnimationMode(animationMode === 0 ? 1 : 0);
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -370,12 +329,6 @@ function TDollContent({ doll }: TDollContentProps) {
 
 		setTDollImage(tdoll.selected.assets.images.card);
 
-		if (animationMode === 0) {
-			setAnimation(tdoll.selected.assets.animations.wait);
-		} else {
-			setAnimation(tdoll.selected.assets.dormAnimations.wait);
-		}
-
 		helperResetAnimationTabs();
 	};
 
@@ -393,15 +346,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		// newValue is the doubled tab value, so it has to be halved the same way helperSkinSelected does.
 		setTDollImage(skinForm(newValue / 2, mode === 1)?.images.card);
 
-		// Switch animations based on the animation mode selected, Normal or Dorm.
-		var tempSkinSelected = helperSkinSelected();
-
-		if (animationMode === 0) {
-			setAnimation(skinForm(tempSkinSelected)?.animations.wait);
-		} else {
-			setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
-		}
-
 		// Reset animation tab selected.
 		helperResetAnimationTabs();
 	};
@@ -410,188 +354,14 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Functions for Tab functionality
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Switch animations based on Tab selected.
+	// Record which tab is selected for the current animation mode. This alone drives spineAnimationName
+	// above, since every doll resolves a Spine rig and the GIF-era per-animation lookups it used to also
+	// perform here never ran for anyone.
 	const switchAnimations = (newValue: string) => {
-		var tempSkinSelected = helperSkinSelected();
-
 		if (animationMode === 0) {
 			setAnimationTabSelected(newValue);
-
-			// This switch block is for Normal/Mod Animations.
-			switch (newValue) {
-				case "wait":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.wait);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.wait);
-					}
-					break;
-				case "wait2":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.wait2);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.wait2);
-					}
-					break;
-				case "move":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.move);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.move);
-					}
-					break;
-				case "attack":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.attack);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.attack);
-					}
-					break;
-				case "crouch":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.crouch);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.crouch);
-					}
-					break;
-				case "attack2":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.attack2);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.attack2);
-					}
-					break;
-				case "action":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.action);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.action);
-					}
-					break;
-				case "action2":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.action2);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.action2);
-					}
-					break;
-				case "spattack":
-					setAnimation(tdoll.selected.assets.animations.spattack);
-
-					break;
-				case "spattack2":
-					setAnimation(tdoll.selected.assets.animations.spattack2);
-
-					break;
-				case "reload":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.reload);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.reload);
-					}
-					break;
-				case "landing":
-					setAnimation(tdoll.selected.assets.animations.landing);
-
-					break;
-				case "die":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.die);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.die);
-					}
-					break;
-				case "skill":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.skill);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.skill);
-					}
-					break;
-				case "skill2":
-					setAnimation(tdoll.selected.assets.animations.skill2);
-
-					break;
-				case "victory":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.victory);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.victory);
-					}
-					break;
-				case "victory2":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.victory2);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.victory2);
-					}
-					break;
-				case "victoryloop":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.animations.victoryloop);
-					} else {
-						setAnimation(tdoll.selected.assets.animations.victoryloop);
-					}
-					break;
-				default:
-			}
 		} else {
 			setAnimationDormTabSelected(newValue);
-
-			// This switch block is for Dorm Animations.
-			switch (newValue) {
-				case "wait":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.wait);
-					} else {
-						setAnimation(tdoll.selected.assets.dormAnimations.wait);
-					}
-
-					break;
-				case "move":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.move);
-					} else {
-						setAnimation(tdoll.selected.assets.dormAnimations.move);
-					}
-					break;
-				case "action":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.action);
-					} else {
-						setAnimation(tdoll.selected.assets.dormAnimations.action);
-					}
-					break;
-				case "pick":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.pick);
-					} else {
-						setAnimation(tdoll.selected.assets.dormAnimations.pick);
-					}
-					break;
-				case "sit":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.sit);
-					} else {
-						setAnimation(tdoll.selected.assets.dormAnimations.sit);
-					}
-					break;
-				case "sit2":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.sit2);
-					} else {
-						setAnimation(tdoll.selected.assets.dormAnimations.sit2);
-					}
-					break;
-				case "lying":
-					if (showSkin) {
-						setAnimation(skinForm(tempSkinSelected)?.dormAnimations.lying);
-					} else {
-						setAnimation(tdoll.selected.assets.dormAnimations.lying);
-					}
-					break;
-				default:
-			}
 		}
 	};
 
@@ -698,7 +468,6 @@ function TDollContent({ doll }: TDollContentProps) {
 									onSwitchAnimationMode={switchAnimationMode}
 									spineRig={spineRig}
 									normalId={tdoll.normal.id}
-									animation={animation}
 									onPlayerSwitchAnimations={playerSwitchAnimations}
 								/>
 							</Box>
