@@ -10,8 +10,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import { cardArtSx, heroArtSx } from "../../lib/artLayout";
 import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
-import StatsPanel from "./StatsPanel";
-import type { RawForm, RawSkins } from "../../types/tdoll";
+import type { RawSkins } from "../../types/tdoll";
 
 const modIcon = uiUrl("mod.png");
 
@@ -21,7 +20,7 @@ const styles = {
 		width: "100%",
 		overflow: "hidden",
 		borderRadius: "12px",
-		mb: 3
+		mb: 2
 	},
 	// The same art as the portrait, blown up and blurred into a backdrop. Scaled past the edges because a
 	// blur of this radius leaves a soft, transparent border otherwise.
@@ -29,8 +28,8 @@ const styles = {
 		...heroArtSx,
 		position: "absolute",
 		inset: 0,
-		filter: "blur(28px) saturate(1.15)",
-		transform: "scale(1.15)",
+		filter: "blur(9px) saturate(1.2)",
+		transform: "scale(1.06)",
 		pointerEvents: "none"
 	},
 	// Without art there is nothing to blur, so the block falls back to a flat panel rather than a gap.
@@ -42,7 +41,7 @@ const styles = {
 	scrim: (theme: Theme) => ({
 		position: "absolute",
 		inset: 0,
-		backgroundColor: alpha(theme.palette.background.default, 0.72),
+		backgroundColor: alpha(theme.palette.background.default, 0.55),
 		pointerEvents: "none"
 	}),
 	content: {
@@ -57,7 +56,7 @@ const styles = {
 		...cardArtSx,
 		// Capped at the artwork's own 256px rather than stretched, since upscaling a bitmap that is
 		// already undersampled at this pixel ratio only makes it softer.
-		width: { xs: 176, sm: 208, md: 256 },
+		width: { xs: 176, sm: 208, md: 200 },
 		flexShrink: 0,
 		// Anchors fabExpand, which is clipped by this card's inherited overflow: hidden otherwise.
 		position: "relative",
@@ -108,16 +107,7 @@ const styles = {
 		height: 18,
 		width: 18
 	},
-	hint: {
-		fontSize: "0.72rem"
-	},
-	// The stats sit here rather than in a section of their own. On a desktop the portrait is 512px tall and
-	// the name and pills fill barely a quarter of that, so without them the right of the hero was dead blur.
-	stats: {
-		width: "100%",
-		maxWidth: 460,
-		pt: 1
-	},
+
 	pillRow: {
 		display: "flex",
 		flexWrap: "wrap",
@@ -151,8 +141,6 @@ interface DollHeroProps {
 	artUrl: string | undefined;
 	/** URL of the sharp card portrait on the left of the hero. */
 	cardImage: string | undefined;
-	/** The selected form's stats, shown beside the portrait. */
-	stats: Pick<RawForm, "max_hp" | "max_dmg" | "max_acc" | "max_eva" | "max_rof">;
 	/** Called when the portrait is clicked, which toggles between the normal and damaged art. */
 	onCardImageClick: () => void;
 	/** The doll's base id, used to link to its full art page. */
@@ -172,7 +160,7 @@ interface DollHeroProps {
 }
 
 /**
- * The doll page's hero: the portrait, the name and badges, the skin pills, the Mod toggle and the stats.
+ * The doll page's hero: the portrait, the name and badges, the skin pills and the Mod toggle.
  *
  * The full art is the backdrop rather than the subject. Shown flat it was a slab of cropped artwork with
  * text laid over it, and the page then repeated the same doll as a portrait immediately below. Blurring it
@@ -181,7 +169,7 @@ interface DollHeroProps {
  * @param props Component props.
  * @returns The hero block.
  */
-export default function DollHero({ name, id, type, rarity, isMod, artUrl, cardImage, stats, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+export default function DollHero({ name, id, type, rarity, isMod, artUrl, cardImage, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
 	const skinNames = skins?.skin_names ?? [];
 
 	return (
@@ -223,10 +211,6 @@ export default function DollHero({ name, id, type, rarity, isMod, artUrl, cardIm
 						</Typography>
 					</Typography>
 
-					<Typography sx={styles.hint} color="textSecondary">
-						Tap the portrait for its damaged art.
-					</Typography>
-
 					{skinNames.length > 0 ? (
 						<Box sx={styles.pillRow} role="group" aria-label="Skins">
 							<Chip
@@ -254,10 +238,6 @@ export default function DollHero({ name, id, type, rarity, isMod, artUrl, cardIm
 							})}
 						</Box>
 					) : null}
-
-					<Box sx={styles.stats}>
-						<StatsPanel stats={stats} />
-					</Box>
 				</Box>
 			</Box>
 		</Box>
