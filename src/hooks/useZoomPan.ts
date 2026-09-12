@@ -41,14 +41,8 @@ export interface UseZoomPanResult<T extends HTMLElement = HTMLElement> {
 	containerRef: RefObject<T | null>;
 	/** Spread onto the element that should receive gestures. */
 	handlers: {
-		/** Starts a drag, or the second finger of a pinch. */
+		/** Starts a drag, or adds the second finger of a pinch. The rest of the gesture is tracked on the window. */
 		onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
-		/** Drags or pinches. */
-		onPointerMove: (event: ReactPointerEvent<HTMLElement>) => void;
-		/** Ends a drag or pinch. */
-		onPointerUp: (event: ReactPointerEvent<HTMLElement>) => void;
-		/** Ends a drag or pinch that the browser cancelled. */
-		onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => void;
 		/** Toggles between fitted and `doubleScale`. A native double click, so this is a mouse event, not a pointer event. */
 		onDoubleClick: (event: ReactMouseEvent<HTMLElement>) => void;
 	};
@@ -89,6 +83,26 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 	const pinchStart = useRef<{ distance: number; scale: number } | null>(null);
 	const containerRef = useRef<T | null>(null);
 
+	// Where a one-pointer drag began and where the content sat at that moment. The drag is applied as an
+	// absolute offset from this, not as a sum of per-event deltas, so a gesture that loses intermediate
+	// move events still ends up exactly under the cursor. Per-event deltas moved the art a tenth of the
+	// way and left it behind the pointer.
+	const dragStart = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null);
+
+	// True only while at least one pointer is down. Drives the cursor, nothing else: the listeners below are
+	// attached by hand rather than by an effect keyed on this, because an effect only runs after the next
+	// render. A press-and-flick inside one frame would lose both its first moves and its pointerup, and the
+	// released pointer left in the map would then be read as the second finger of a pinch.
+	const [gesturing, setGesturing] = useState(false);
+
+	// The listeners currently attached to the window, so the same function objects can be removed again.
+	const attached = useRef<{ move: (event: PointerEvent) => void; end: (event: PointerEvent) => void } | null>(null);
+
+	// The handlers below run from window listeners, so they cannot close over `transform` without going
+	// stale between renders. This mirror is what they read instead.
+	const transformRef = useRef(transform);
+	transformRef.current = transform;
+
 	const clamp = useCallback((scale: number) => Math.min(maxScale, Math.max(minScale, scale)), [minScale, maxScale]);
 
 	const reset = useCallback(() => {
@@ -122,22 +136,26 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 		return () => element.removeEventListener("wheel", handleWheel);
 	}, [zoomBy]);
 
-	const onPointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
-		event.currentTarget.setPointerCapture(event.pointerId);
-		pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-	}, []);
-
-	const endPointer = useCallback((event: ReactPointerEvent<HTMLElement>) => {
-		pointers.current.delete(event.pointerId);
-		if (pointers.current.size < 2) {
-			pinchStart.current = null;
+	const detach = useCallback(() => {
+		if (!attached.current) {
+			return;
 		}
+		window.removeEventListener("pointermove", attached.current.move);
+		window.removeEventListener("pointerup", attached.current.end);
+		window.removeEventListener("pointercancel", attached.current.end);
+		attached.current = null;
 	}, []);
 
-	const onPointerMove = useCallback(
-		(event: ReactPointerEvent<HTMLElement>) => {
-			const previous = pointers.current.get(event.pointerId);
-			if (!previous) {
+	// Nothing here depends on render state, so one set of listeners serves the whole gesture. The window
+	// rather than the container: setPointerCapture was delivering only a fraction of the moves and no
+	// pointerup at all, which truncated the pan and left the gesture stuck open.
+	const attach = useCallback(() => {
+		if (attached.current) {
+			return;
+		}
+
+		const move = (event: PointerEvent) => {
+			if (!pointers.current.has(event.pointerId)) {
 				return;
 			}
 			pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -147,7 +165,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 				const [first, second] = active as [{ x: number; y: number }, { x: number; y: number }];
 				const distance = Math.hypot(first.x - second.x, first.y - second.y);
 				if (!pinchStart.current) {
-					pinchStart.current = { distance, scale: transform.scale };
+					pinchStart.current = { distance, scale: transformRef.current.scale };
 					return;
 				}
 				const ratio = distance / (pinchStart.current.distance || 1);
@@ -157,14 +175,48 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 			}
 
 			// One pointer is a drag, and dragging is only meaningful once there is overflow to move.
-			if (transform.scale <= minScale) {
+			const origin = dragStart.current;
+			if (!origin || transformRef.current.scale <= minScale) {
 				return;
 			}
-			const dx = event.clientX - previous.x;
-			const dy = event.clientY - previous.y;
-			setTransform((current) => ({ ...current, x: current.x + dx, y: current.y + dy }));
+			setTransform((current) => ({ ...current, x: origin.originX + (event.clientX - origin.x), y: origin.originY + (event.clientY - origin.y) }));
+		};
+
+		const end = (event: PointerEvent) => {
+			pointers.current.delete(event.pointerId);
+			if (pointers.current.size < 2) {
+				pinchStart.current = null;
+			}
+			if (pointers.current.size === 0) {
+				dragStart.current = null;
+				setGesturing(false);
+				detach();
+			}
+		};
+
+		attached.current = { move, end };
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", end);
+		window.addEventListener("pointercancel", end);
+	}, [clamp, minScale, detach]);
+
+	// A gesture still running when the component goes away would otherwise leave its listeners behind.
+	useEffect(() => detach, [detach]);
+
+	const onPointerDown = useCallback(
+		(event: ReactPointerEvent<HTMLElement>) => {
+			pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+			if (pointers.current.size === 1) {
+				const current = transformRef.current;
+				dragStart.current = { x: event.clientX, y: event.clientY, originX: current.x, originY: current.y };
+			} else {
+				// A second finger turns the gesture into a pinch, so the drag origin stops applying.
+				dragStart.current = null;
+			}
+			setGesturing(true);
+			attach();
 		},
-		[clamp, minScale, transform.scale]
+		[attach]
 	);
 
 	const onDoubleClick = useCallback(
@@ -180,9 +232,9 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 			// The browser must not claim the gesture for scrolling, or pinch never reaches these handlers. This has to sit
 			// on the container rather than the content, since that is the element the handlers are actually spread onto.
 			touchAction: "none",
-			cursor: transform.scale > minScale ? "grab" : "default"
+			cursor: transform.scale > minScale ? (gesturing ? "grabbing" : "grab") : "default"
 		}),
-		[transform.scale, minScale]
+		[transform.scale, minScale, gesturing]
 	);
 
 	const contentStyle = useMemo<CSSProperties>(
@@ -197,7 +249,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 	return {
 		transform,
 		containerRef,
-		handlers: { onPointerDown, onPointerMove, onPointerUp: endPointer, onPointerCancel: endPointer, onDoubleClick },
+		handlers: { onPointerDown, onDoubleClick },
 		containerStyle,
 		contentStyle,
 		zoomBy,
