@@ -6,6 +6,23 @@
  * the last FontAwesome glyph with it and let the CDN script go.
  */
 
+/*
+ * `.App` used to carry a flat `min-height: 100vh`. It sits below the fixed bar's spacer, so every page
+ * was a full viewport tall plus the bar, and even a page whose content fitted still scrolled by exactly
+ * the bar's height. Filling the leftover space with flex gets the same full-height background with no
+ * phantom scroll, and it does not need to know how tall the bar is at the current breakpoint.
+ */
+html,
+body,
+#root {
+	height: 100%;
+}
+
+#root {
+	display: flex;
+	flex-direction: column;
+}
+
 .App {
-	min-height: 100vh;
+	flex: 1 0 auto;
 }
