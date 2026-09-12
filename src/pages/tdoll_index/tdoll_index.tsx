@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
-import FilterSheet from "../../components/FilterSheet";
+import FilterPanel from "../../components/FilterPanel";
 import DollCard from "../../components/DollCard";
 
 // MaterialUI imports
 import { Box, Container, Grid, Chip, Divider, Typography, Button } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
-
-// MaterialUI icon imports
-import FilterListIcon from "@mui/icons-material/FilterList";
 
 import { loadAllDolls } from "../../lib/data";
 import type { TDoll, TDollForm } from "../../types/tdoll";
@@ -32,18 +29,13 @@ const styles = {
 		flexWrap: "wrap",
 		alignItems: "center",
 		justifyContent: "space-between",
-		gap: 1
-	},
-	summaryActions: {
-		display: "flex",
-		alignItems: "center",
-		gap: 1.5
+		gap: 1,
+		mt: 2
 	},
 	activeChipList: {
 		display: "flex",
 		flexWrap: "wrap",
-		gap: 0.5,
-		mt: 1
+		gap: 0.5
 	},
 	cardGrid: {
 		pt: 4,
@@ -88,12 +80,6 @@ export default function TDoll_Index() {
 
 	/** How many results are on screen. Raised by the load-more button rather than by paging. */
 	const [shown, setShown] = useState(PAGE_SIZE);
-
-	/** Whether the filter sheet is open. */
-	const [filterSheetOpen, setFilterSheetOpen] = useState(false);
-
-	/** The Filters button, so the filter sheet's popover anchors to it instead of a fixed position. */
-	const filterButtonRef = useRef<HTMLButtonElement>(null);
 
 	/**
 	 * The dolls matching the current filters.
@@ -216,47 +202,36 @@ export default function TDoll_Index() {
 		<Box component="main" sx={styles.root}>
 			<ScrollToTop />
 
-			{/* Summary bar */}
+			{/* Filters and summary bar */}
 			<Container maxWidth="lg" sx={styles.summaryContainer}>
+				<FilterPanel
+					rarityFilter={rarityFilter}
+					typeFilter={typeFilter}
+					modFilter={modFilter}
+					activeCount={activeFilters.length}
+					onToggleRarity={handleOnClickRarity}
+					onToggleType={handleOnClickType}
+					onToggleMod={handleOnClickMod}
+					onClear={handleClearAll}
+				/>
+
 				<Box sx={styles.summaryRow}>
 					<Typography variant="body1" color="textSecondary">
 						Showing {rangeLabel} of {matches.length}
 					</Typography>
 
-					<Box sx={styles.summaryActions}>
-						{activeFilters.length > 0 && (
-							<Typography variant="body2" color="textSecondary">
-								{activeFilters.length} filter{activeFilters.length === 1 ? "" : "s"} active
-							</Typography>
-						)}
-						<Button ref={filterButtonRef} variant="outlined" startIcon={<FilterListIcon />} onClick={() => setFilterSheetOpen(true)}>
-							Filters
-						</Button>
-					</Box>
+					{/* The active chips stay on screen even while the panel is collapsed on a phone, so a
+					    narrowed result set never looks like a bug. */}
+					{activeFilters.length > 0 && (
+						<Box sx={styles.activeChipList}>
+							{activeFilters.map((filter) => (
+								<Chip key={filter.id} label={filter.label} onDelete={filter.onDelete} size="small" />
+							))}
+						</Box>
+					)}
 				</Box>
-
-				{activeFilters.length > 0 && (
-					<Box sx={styles.activeChipList}>
-						{activeFilters.map((filter) => (
-							<Chip key={filter.id} label={filter.label} onDelete={filter.onDelete} size="small" />
-						))}
-					</Box>
-				)}
 			</Container>
-			{/* End of summary bar */}
-
-			<FilterSheet
-				open={filterSheetOpen}
-				onClose={() => setFilterSheetOpen(false)}
-				anchorEl={filterButtonRef.current}
-				rarityFilter={rarityFilter}
-				typeFilter={typeFilter}
-				modFilter={modFilter}
-				onToggleRarity={handleOnClickRarity}
-				onToggleType={handleOnClickType}
-				onToggleMod={handleOnClickMod}
-				onClear={handleClearAll}
-			/>
+			{/* End of filters and summary bar */}
 
 			{/* T-Dolls List */}
 			<Container sx={styles.cardGrid} maxWidth="lg">

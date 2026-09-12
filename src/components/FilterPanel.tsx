@@ -1,5 +1,10 @@
-import { Avatar, Box, Button, Divider, Drawer, Popover, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { useState } from "react";
+
+import { Avatar, Badge, Box, Button, Collapse, Divider, IconButton, Paper, Typography, useMediaQuery, useTheme } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
+
+// MaterialUI icon imports
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import FilterChip from "./FilterChip";
 import { uiUrl } from "../lib/assets";
@@ -7,27 +12,27 @@ import { uiUrl } from "../lib/assets";
 const mod_button = uiUrl("mod.png");
 
 const styles = {
-	drawerPaper: {
-		borderTopLeftRadius: "16px",
-		borderTopRightRadius: "16px",
-		maxHeight: "80vh"
-	},
-	popoverPaper: {
-		width: 420,
-		maxWidth: "90vw",
-		maxHeight: "80vh"
-	},
-	content: {
-		p: 2.5,
-		display: "flex",
-		flexDirection: "column",
-		gap: 1,
-		overflowY: "auto"
+	root: {
+		p: { xs: 1.5, sm: 2 },
+		mt: 2
 	},
 	header: {
 		display: "flex",
 		alignItems: "center",
-		justifyContent: "space-between"
+		justifyContent: "space-between",
+		gap: 1
+	},
+	headerLabel: {
+		display: "flex",
+		alignItems: "center",
+		gap: 1.5,
+		fontWeight: 700
+	},
+	rows: {
+		display: "flex",
+		flexDirection: "column",
+		gap: 1,
+		pt: 1
 	},
 	chipList: {
 		display: "flex",
@@ -39,11 +44,6 @@ const styles = {
 	},
 	divider: {
 		my: 0.5
-	},
-	footer: {
-		display: "flex",
-		justifyContent: "flex-end",
-		mt: 1
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -63,55 +63,47 @@ interface RarityFilterEntry extends SimpleFilterEntry {
 	rarity: number;
 }
 
-/** Props for FilterSheet. */
-interface FilterSheetProps {
-	/** Whether the sheet is currently open. */
-	open: boolean;
-	/** Called when the sheet should close: the Done button, a backdrop click, or Escape. */
-	onClose: () => void;
-	/** The Filters button to anchor the popover to on `sm` and up. Unused on the mobile drawer. */
-	anchorEl: HTMLElement | null;
+/** Props for FilterPanel. */
+interface FilterPanelProps {
 	/** The five rarity filter entries and their current selected state. */
 	rarityFilter: RarityFilterEntry[];
 	/** The six weapon-type filter entries and their current selected state. */
 	typeFilter: SimpleFilterEntry[];
 	/** The single Mod filter entry and its current selected state. */
 	modFilter: SimpleFilterEntry;
+	/** How many filters are currently active, shown on the collapsed header so nothing is hidden silently. */
+	activeCount: number;
 	/** Toggles one rarity entry; curried so it can be handed straight to a chip's onToggle. */
 	onToggleRarity: (entry: RarityFilterEntry) => () => void;
 	/** Toggles one weapon-type entry; curried so it can be handed straight to a chip's onToggle. */
 	onToggleType: (entry: SimpleFilterEntry) => () => void;
 	/** Toggles the Mod filter. */
 	onToggleMod: () => void;
-	/** Clears every filter in the sheet at once. */
+	/** Clears every filter at once. */
 	onClear: () => void;
 }
 
 /**
- * The filter picker: a bottom drawer on a phone, a popover from `sm` up.
+ * The index's filters, rendered in the page itself.
  *
- * The index used to render all three filter rows inline, ahead of every result, which is why a phone
- * had to scroll past 572px of chips before the first doll appeared. The three rows themselves are
- * unchanged here, just moved behind a Filters button so they only take screen space while open.
+ * These lived behind a Filters button that opened a drawer on a phone and a popover on a desktop. Putting
+ * them back in the page costs roughly 250px on a desktop and 330-370px on a phone, which is why the phone
+ * starts collapsed. Whatever is active stays on screen as chips in the summary bar either way, so collapsing
+ * never hides the fact that a filter is on.
  *
  * @param props Component props.
- * @returns The drawer or popover, whichever the current breakpoint calls for.
+ * @returns The filter rows, always open from `sm` up and collapsible below it.
  */
-export default function FilterSheet({ open, onClose, anchorEl, rarityFilter, typeFilter, modFilter, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterSheetProps) {
+export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activeCount, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterPanelProps) {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+	const [expanded, setExpanded] = useState(false);
 
-	const content = (
-		<Box sx={styles.content}>
-			<Box sx={styles.header}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-					Filters
-				</Typography>
-				<Button size="small" onClick={onClear}>
-					Clear all
-				</Button>
-			</Box>
+	// Only the phone collapses. On a wider screen the rows cost little enough to leave open.
+	const open = !isMobile || expanded;
 
+	const rows = (
+		<Box sx={styles.rows}>
 			<Box component="ul" sx={styles.chipList}>
 				{rarityFilter.map((rarity) => (
 					<li key={rarity.key}>
@@ -152,33 +144,37 @@ export default function FilterSheet({ open, onClose, anchorEl, rarityFilter, typ
 					/>
 				</li>
 			</Box>
-
-			<Box sx={styles.footer}>
-				<Button variant="contained" onClick={onClose} fullWidth={isMobile}>
-					Done
-				</Button>
-			</Box>
 		</Box>
 	);
 
-	if (isMobile) {
-		return (
-			<Drawer anchor="bottom" open={open} onClose={onClose} slotProps={{ paper: { sx: styles.drawerPaper } }}>
-				{content}
-			</Drawer>
-		);
-	}
-
 	return (
-		<Popover
-			open={open}
-			onClose={onClose}
-			anchorEl={anchorEl}
-			anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-			transformOrigin={{ vertical: "top", horizontal: "right" }}
-			slotProps={{ paper: { sx: styles.popoverPaper } }}
-		>
-			{content}
-		</Popover>
+		<Paper sx={styles.root} elevation={0} variant="outlined">
+			<Box sx={styles.header}>
+				<Typography variant="subtitle1" sx={styles.headerLabel} component="h2">
+					Filters
+					{activeCount > 0 && <Badge badgeContent={activeCount} color="primary" />}
+				</Typography>
+
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<Button size="small" onClick={onClear} disabled={activeCount === 0}>
+						Clear all
+					</Button>
+					{isMobile && (
+						<IconButton
+							onClick={() => setExpanded((current) => !current)}
+							aria-label={expanded ? "Hide filters" : "Show filters"}
+							aria-expanded={expanded}
+							size="small"
+							sx={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 200ms" }}
+						>
+							<ExpandMoreIcon />
+						</IconButton>
+					)}
+				</Box>
+			</Box>
+
+			{/* Mounted either way, so toggling the breakpoint never drops the rows entirely. */}
+			<Collapse in={open}>{rows}</Collapse>
+		</Paper>
 	);
 }
