@@ -5,21 +5,13 @@ import { useLocation, useParams } from "react-router-dom";
 import ScrollToTop from "../../components/ScrollToTop";
 import ChibiPanel from "./ChibiPanel";
 import DollHero from "./DollHero";
-import OverviewPanel from "./OverviewPanel";
+import LazySection from "./LazySection";
 import SkillsPanel from "./SkillsPanel";
+import StatsPanel from "./StatsPanel";
 import TilesPanel from "./TilesPanel";
 
 // MaterialUI imports
-import {
-	Box,
-	Container,
-	Typography,
-	Card,
-	CardContent,
-	Tab,
-	Tabs
-	//Grow
-} from "@mui/material";
+import { Box, Container, Grid, Paper, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { loadDoll, spineFor } from "../../lib/data";
@@ -32,33 +24,22 @@ interface DisplayTDoll extends TDollData {
 	selected: TDollForm;
 }
 
-/** Which of the doll page's four sections is currently shown. */
-type SectionTab = "overview" | "skills" | "tiles" | "chibi";
-
 const styles = {
-	cardGrid: {
+	page: {
 		pt: 3,
 		pb: 8
 	},
-	card: {
-		height: "100%",
-		width: "100%"
+	section: {
+		p: { xs: 2, md: 2.5 },
+		height: "100%"
 	},
-	sectionTabs: (theme: Theme) => ({
-		width: "100%",
-		backgroundColor: theme.palette.background.paper,
-		mb: 2
-	}),
-	// Overview and Chibi are image-centric, so they stay in a compact column even though the page
-	// itself is wide. Skills and Tiles are text and table heavy, so they get a wider reading column.
-	// Kept under SpineAnimation's 420px default stage cap so the chibi's size reflects this column
-	// rather than the clamp, which would report the same width whether this layout was right or not.
-	mediaColumn: {
-		maxWidth: 400,
-		mx: "auto"
+	sectionHeading: {
+		mb: 1.5
 	},
-	textColumn: {
-		maxWidth: 700,
+	// The Spine stage tracks its container, so this is what actually decides how large the chibi draws.
+	// A full-width section would leave it marooned at its 480px clamp in the middle of a 1150px row.
+	chibiColumn: {
+		maxWidth: 480,
 		mx: "auto"
 	}
 } satisfies Record<string, SxProps<Theme>>;
@@ -124,9 +105,6 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Initialization of States
 	///////////////////////////////////////////////////////////////////////////////////////////
 
-	// Which of the four section tabs (Overview/Skills/Tiles/Chibi) is currently shown.
-	const [sectionTab, setSectionTab] = useState<SectionTab>("overview");
-
 	// Set initial states for the Normal/Mod modes.
 	const [hasMod, setHasMod] = useState(false);
 	const [mode, setMode] = useState(0); // 0 for Normal, 1 for MOD.
@@ -140,8 +118,8 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Whether the doll's Mod is currently the form on screen, which SkillsPanel uses to show Skill 2.
 	const [showModSkill, setShowModSkill] = useState(false);
 
-	// Owned here rather than in SkillsPanel, since every section panel mounts only while its tab is
-	// active. Local state there would reset on every trip away from the Skills tab and back.
+	// Owned here rather than in SkillsPanel so the whole page's selection state sits in one place,
+	// alongside the Mod and skin state the hero drives.
 	const [skillLevel, setSkillLevel] = useState(10);
 	const [selectedSkill, setSelectedSkill] = useState(0); // 0 for Skill 1, 1 for Skill 2 if the doll has a Mod.
 
@@ -383,99 +361,91 @@ function TDollContent({ doll }: TDollContentProps) {
 	return (
 		<main>
 			<ScrollToTop />
-			{/* <Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={1000}> */}
-			<Container sx={styles.cardGrid} maxWidth="lg">
-				<br />
+			<Container sx={styles.page} maxWidth="lg">
+				{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
+				<DollHero
+					name={tdoll.selected.name}
+					id={tdoll.selected.id}
+					type={tdoll.selected.type}
+					rarity={tdoll.selected.rarity}
+					isMod={isModForm}
+					artUrl={heroArtUrl}
+					cardImage={tdollImage}
+					onCardImageClick={switchBetweenNormalDamagedCardImages}
+					normalId={tdoll.normal.id}
+					skins={tdoll.skins}
+					skinValue={showSkin ? skinSelected : false}
+					onSkinChange={switchSkinSelected}
+					hasMod={hasMod}
+					modOn={isModForm}
+					onToggleMod={switchModes}
+				/>
 
-				<Card sx={styles.card}>
-					<CardContent>
-						{/************** T-Doll's hero: full art, name, rarity, type, skin pills and Mod toggle **************/}
-						<DollHero
-							name={tdoll.selected.name}
-							id={tdoll.selected.id}
-							type={tdoll.selected.type}
-							rarity={tdoll.selected.rarity}
-							isMod={isModForm}
-							artUrl={heroArtUrl}
-							skins={tdoll.skins}
-							skinValue={showSkin ? skinSelected : false}
-							onSkinChange={switchSkinSelected}
-							hasMod={hasMod}
-							modOn={isModForm}
-							onToggleMod={switchModes}
-						/>
+				{/************** Every section on the page at once. These used to be four tabs, which hid the tile
+				                buffs and the animations behind a click and left a 135px panel occupying a whole screen. **************/}
+				<Grid container spacing={3}>
+					<Grid size={{ xs: 12, md: 6 }}>
+						<Paper sx={styles.section} variant="outlined">
+							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+								Stats
+							</Typography>
+							<StatsPanel stats={tdoll.selected} />
+						</Paper>
+					</Grid>
 
-						{/************** Section tabs: only the active panel mounts, so the chibi never sizes itself against a hidden ancestor **************/}
-						<Tabs
-							sx={styles.sectionTabs}
-							value={sectionTab}
-							onChange={(_e, value: SectionTab) => setSectionTab(value)}
-							indicatorColor="primary"
-							textColor="primary"
-							variant="scrollable"
-							scrollButtons
-							allowScrollButtonsMobile
-						>
-							<Tab label="Overview" value="overview" />
-							<Tab label="Skills" value="skills" />
-							<Tab label="Tiles" value="tiles" />
-							<Tab label="Chibi" value="chibi" />
-						</Tabs>
+					<Grid size={{ xs: 12, md: 6 }}>
+						<Paper sx={styles.section} variant="outlined">
+							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+								Tile buffs
+							</Typography>
+							<TilesPanel tileSet={tdoll.selected.tile_set} />
+						</Paper>
+					</Grid>
 
-						{sectionTab === "overview" && (
-							<Box sx={styles.mediaColumn}>
-								<OverviewPanel
-									tdollImage={tdollImage}
-									onCardImageClick={switchBetweenNormalDamagedCardImages}
-									dollName={tdoll.selected.name}
-									normalId={tdoll.normal.id}
-									stats={tdoll.selected}
-								/>
+					<Grid size={12}>
+						<Paper sx={styles.section} variant="outlined">
+							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+								Skills
+							</Typography>
+							<SkillsPanel
+								showModSkill={showModSkill}
+								selectedSkill={selectedSkill}
+								onSelectedSkillChange={setSelectedSkill}
+								skillLevel={skillLevel}
+								onSkillLevelChange={setSkillLevel}
+								skill={tdoll.selected.skill}
+								skill2={tdoll.selected.skill2}
+								normalSkillDescription={tdoll.normal.skill.description}
+								modSkill2Description={tdoll.mod?.skill2?.description}
+								dollId={tdoll.selected.id}
+								skillImages={tdoll.skillImages}
+							/>
+						</Paper>
+					</Grid>
+
+					<Grid size={12}>
+						<Paper sx={styles.section} variant="outlined">
+							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+								Animations
+							</Typography>
+							<Box sx={styles.chibiColumn}>
+								<LazySection minHeight={520}>
+									<ChibiPanel
+										animationMode={animationMode}
+										spineAnimationName={spineAnimationName}
+										spineTabs={spineTabs}
+										onSwitchAnimations={switchAnimations}
+										onSwitchAnimationMode={switchAnimationMode}
+										spineRig={spineRig}
+										normalId={tdoll.normal.id}
+										onPlayerSwitchAnimations={playerSwitchAnimations}
+									/>
+								</LazySection>
 							</Box>
-						)}
-
-						{sectionTab === "skills" && (
-							<Box sx={styles.textColumn}>
-								<SkillsPanel
-									showModSkill={showModSkill}
-									selectedSkill={selectedSkill}
-									onSelectedSkillChange={setSelectedSkill}
-									skillLevel={skillLevel}
-									onSkillLevelChange={setSkillLevel}
-									skill={tdoll.selected.skill}
-									skill2={tdoll.selected.skill2}
-									normalSkillDescription={tdoll.normal.skill.description}
-									modSkill2Description={tdoll.mod?.skill2?.description}
-									dollId={tdoll.selected.id}
-									skillImages={tdoll.skillImages}
-								/>
-							</Box>
-						)}
-
-						{sectionTab === "tiles" && (
-							<Box sx={styles.textColumn}>
-								<TilesPanel tileSet={tdoll.selected.tile_set} />
-							</Box>
-						)}
-
-						{sectionTab === "chibi" && (
-							<Box sx={styles.mediaColumn}>
-								<ChibiPanel
-									animationMode={animationMode}
-									spineAnimationName={spineAnimationName}
-									spineTabs={spineTabs}
-									onSwitchAnimations={switchAnimations}
-									onSwitchAnimationMode={switchAnimationMode}
-									spineRig={spineRig}
-									normalId={tdoll.normal.id}
-									onPlayerSwitchAnimations={playerSwitchAnimations}
-								/>
-							</Box>
-						)}
-					</CardContent>
-				</Card>
+						</Paper>
+					</Grid>
+				</Grid>
 			</Container>
-			{/* </Grow> */}
 		</main>
 	);
 }

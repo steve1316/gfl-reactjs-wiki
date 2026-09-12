@@ -1,8 +1,13 @@
+import { Link } from "react-router-dom";
+
 // MaterialUI imports
-import { Box, Chip, ToggleButton, Typography, alpha } from "@mui/material";
+import { Box, Card, CardActionArea, CardMedia, Chip, Fab, ToggleButton, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import { heroArtSx } from "../../lib/artLayout";
+// MaterialUI icon imports
+import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
+
+import { cardArtSx, heroArtSx } from "../../lib/artLayout";
 import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import type { RawSkins } from "../../types/tdoll";
@@ -13,40 +18,76 @@ const styles = {
 	root: {
 		position: "relative",
 		width: "100%",
-		height: { xs: 180, sm: 240, md: 300 },
 		overflow: "hidden",
 		borderRadius: "12px",
-		mb: 2
+		mb: 3
 	},
+	// The same art as the portrait, blown up and blurred into a backdrop. Scaled past the edges because a
+	// blur of this radius leaves a soft, transparent border otherwise.
+	backdrop: {
+		...heroArtSx,
+		position: "absolute",
+		inset: 0,
+		filter: "blur(28px) saturate(1.15)",
+		transform: "scale(1.15)",
+		pointerEvents: "none"
+	},
+	// Without art there is nothing to blur, so the block falls back to a flat panel rather than a gap.
+	backdropFallback: (theme: Theme) => ({
+		position: "absolute",
+		inset: 0,
+		backgroundColor: theme.palette.raised
+	}),
 	scrim: (theme: Theme) => ({
 		position: "absolute",
 		inset: 0,
-		backgroundImage: `linear-gradient(to top, ${alpha(theme.palette.background.default, 0.95)} 0%, ${alpha(theme.palette.background.default, 0.55)} 40%, transparent 80%)`,
+		backgroundColor: alpha(theme.palette.background.default, 0.72),
 		pointerEvents: "none"
 	}),
-	info: {
+	content: {
+		position: "relative",
+		display: "flex",
+		flexDirection: { xs: "column", md: "row" },
+		alignItems: { xs: "center", md: "flex-start" },
+		gap: { xs: 2, md: 3 },
+		p: { xs: 2, md: 3 }
+	},
+	portrait: {
+		...cardArtSx,
+		// Capped at the artwork's own 256px rather than stretched, since upscaling a bitmap that is
+		// already undersampled at this pixel ratio only makes it softer.
+		width: { xs: 176, sm: 208, md: 256 },
+		flexShrink: 0,
+		// Anchors fabExpand, which is clipped by this card's inherited overflow: hidden otherwise.
+		position: "relative",
+		boxShadow: 8
+	},
+	fabExpand: {
 		position: "absolute",
-		left: 0,
-		right: 0,
-		bottom: 0,
+		right: 8,
+		bottom: 8,
+		height: 40,
+		width: 40,
+		opacity: 0.85
+	},
+	info: {
 		display: "flex",
 		flexDirection: "column",
-		gap: 0.5,
-		p: { xs: 1.5, sm: 2 }
+		gap: 1,
+		minWidth: 0,
+		width: "100%",
+		alignItems: { xs: "center", md: "flex-start" },
+		textAlign: { xs: "center", md: "left" }
 	},
 	topRow: {
 		display: "flex",
 		alignItems: "center",
-		justifyContent: "space-between",
-		gap: 1
-	},
-	badgeRow: {
-		display: "flex",
-		alignItems: "center",
+		flexWrap: "wrap",
 		gap: 1
 	},
 	name: {
-		lineHeight: 1.1
+		lineHeight: 1.1,
+		wordBreak: "break-word"
 	},
 	modToggle: (theme: Theme) => ({
 		display: "flex",
@@ -66,11 +107,15 @@ const styles = {
 		height: 18,
 		width: 18
 	},
+	hint: {
+		fontSize: "0.72rem"
+	},
 	pillRow: {
 		display: "flex",
+		flexWrap: "wrap",
+		justifyContent: { xs: "center", md: "flex-start" },
 		gap: 0.75,
-		overflowX: "auto",
-		pb: 0.25
+		pt: 0.5
 	},
 	pill: (theme: Theme) => ({
 		backgroundColor: alpha(theme.palette.background.default, 0.6),
@@ -94,8 +139,14 @@ interface DollHeroProps {
 	rarity: number;
 	/** Whether the form currently on screen is the Mod, which recolours the rarity stars. */
 	isMod: boolean;
-	/** URL of the full art to show, or undefined when the doll has published none at all. */
+	/** URL of the full art, used blurred as the backdrop, or undefined when the doll has published none. */
 	artUrl: string | undefined;
+	/** URL of the sharp card portrait on the left of the hero. */
+	cardImage: string | undefined;
+	/** Called when the portrait is clicked, which toggles between the normal and damaged art. */
+	onCardImageClick: () => void;
+	/** The doll's base id, used to link to its full art page. */
+	normalId: number;
 	/** The doll's skins, or null when it has none. */
 	skins: RawSkins | null;
 	/** The doubled index of the selected skin pill, or false when no skin is selected. */
@@ -111,72 +162,89 @@ interface DollHeroProps {
 }
 
 /**
- * The doll page's hero: the full art, the name and badges, the skin pills and the Mod toggle.
+ * The doll page's hero: the portrait, the name and badges, the skin pills and the Mod toggle.
  *
- * This replaces the old pattern of hiding the full art behind an "expand" button. The art itself is
- * cropped with `heroArtSx`, which anchors to the top of the canvas so the crop keeps the face.
+ * The full art is the backdrop rather than the subject. Shown flat it was a slab of cropped artwork with
+ * text laid over it, and the page then repeated the same doll as a portrait immediately below. Blurring it
+ * behind the sharp portrait keeps its colour without spending the whole band on a second copy of the art.
  *
  * @param props Component props.
- * @returns The hero band.
+ * @returns The hero block.
  */
-export default function DollHero({ name, id, type, rarity, isMod, artUrl, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+export default function DollHero({ name, id, type, rarity, isMod, artUrl, cardImage, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
 	const skinNames = skins?.skin_names ?? [];
 
 	return (
 		<Box data-testid="doll-hero" sx={styles.root}>
-			{artUrl ? <Box component="img" src={artUrl} alt={name} sx={heroArtSx} /> : null}
+			{artUrl ? <Box component="img" src={artUrl} alt="" aria-hidden sx={styles.backdrop} /> : <Box sx={styles.backdropFallback} />}
 			<Box sx={styles.scrim} />
 
-			<Box sx={styles.info}>
-				<Box sx={styles.topRow}>
-					<Box sx={styles.badgeRow}>
+			<Box sx={styles.content}>
+				<Card sx={styles.portrait}>
+					<CardActionArea onClick={onCardImageClick}>
+						<CardMedia component="img" sx={cardArtSx} image={cardImage} title={name} />
+					</CardActionArea>
+
+					{/* Sibling of the action area rather than a child, or opening the full art would also flip
+					    the portrait to its damaged version on the way out. */}
+					<Fab color="primary" component={Link} to={`/tdoll/${normalId}/art`} sx={styles.fabExpand} aria-label="view full art">
+						<ZoomOutMapIcon />
+					</Fab>
+				</Card>
+
+				<Box sx={styles.info}>
+					<Box sx={styles.topRow}>
 						<TypeBadge type={type} />
 						<RarityStars rarity={rarity} isMod={isMod} />
+
+						{hasMod ? (
+							<ToggleButton value="mod" selected={modOn} onChange={() => onToggleMod()} size="small" sx={styles.modToggle} aria-label="toggle Mod form">
+								<Box component="img" src={modIcon} alt="" sx={styles.modIcon} />
+								MOD
+							</ToggleButton>
+						) : null}
 					</Box>
 
-					{hasMod ? (
-						<ToggleButton value="mod" selected={modOn} onChange={() => onToggleMod()} size="small" sx={styles.modToggle} aria-label="toggle Mod form">
-							<Box component="img" src={modIcon} alt="" sx={styles.modIcon} />
-							MOD
-						</ToggleButton>
+					<Typography variant="h4" component="h1" sx={styles.name}>
+						{name}
+						<Typography component="span" sx={{ display: "inline" }} color="textSecondary">
+							{" "}
+							#{id}
+						</Typography>
+					</Typography>
+
+					<Typography sx={styles.hint} color="textSecondary">
+						Tap the portrait for its damaged art.
+					</Typography>
+
+					{skinNames.length > 0 ? (
+						<Box sx={styles.pillRow} role="group" aria-label="Skins">
+							<Chip
+								label="Base"
+								size="small"
+								clickable
+								onClick={(event) => onSkinChange(event, false)}
+								aria-pressed={skinValue === false}
+								sx={skinValue === false ? styles.pillSelected : styles.pill}
+							/>
+							{skinNames.map((skinName, index) => {
+								const value = index * 2;
+								const selected = skinValue === value;
+								return (
+									<Chip
+										key={value}
+										label={skinName}
+										size="small"
+										clickable
+										onClick={(event) => onSkinChange(event, value)}
+										aria-pressed={selected}
+										sx={selected ? styles.pillSelected : styles.pill}
+									/>
+								);
+							})}
+						</Box>
 					) : null}
 				</Box>
-
-				<Typography variant="h3" component="h2" sx={styles.name}>
-					{name}
-					<Typography component="span" sx={{ display: "inline" }} color="textSecondary">
-						{" "}
-						#{id}
-					</Typography>
-				</Typography>
-
-				{skinNames.length > 0 ? (
-					<Box sx={styles.pillRow} role="group" aria-label="Skins">
-						<Chip
-							label="Base"
-							size="small"
-							clickable
-							onClick={(event) => onSkinChange(event, false)}
-							aria-pressed={skinValue === false}
-							sx={skinValue === false ? styles.pillSelected : styles.pill}
-						/>
-						{skinNames.map((skinName, index) => {
-							const value = index * 2;
-							const selected = skinValue === value;
-							return (
-								<Chip
-									key={value}
-									label={skinName}
-									size="small"
-									clickable
-									onClick={(event) => onSkinChange(event, value)}
-									aria-pressed={selected}
-									sx={selected ? styles.pillSelected : styles.pill}
-								/>
-							);
-						})}
-					</Box>
-				) : null}
 			</Box>
 		</Box>
 	);

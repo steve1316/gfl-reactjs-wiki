@@ -93,6 +93,7 @@ export default function ChibiPanel({ animationMode, spineAnimationName, spineTab
 							atlasUrl={spineUrl(normalId, spineRig.atlas, "atlas")}
 							imageBase={spineImageBase(normalId, spineRig.atlas)}
 							animation={spineAnimationName}
+							maxSize={480}
 						/>
 					</div>
 				)}
