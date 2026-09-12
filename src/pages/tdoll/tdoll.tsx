@@ -7,6 +7,7 @@ import ChibiPanel from "./ChibiPanel";
 import DollHero from "./DollHero";
 import LazySection from "./LazySection";
 import SkillsPanel from "./SkillsPanel";
+import StatsPanel from "./StatsPanel";
 import TilesPanel from "./TilesPanel";
 
 // MaterialUI imports
@@ -25,8 +26,12 @@ interface DisplayTDoll extends TDollData {
 
 const styles = {
 	page: {
-		pt: 3,
-		pb: 8
+		pt: 2,
+		pb: 3,
+		// Wider than the xl breakpoint so a 1920 screen actually gets four usable columns, but still capped
+		// so the sections do not stretch into a letterbox on an ultrawide.
+		maxWidth: 1800,
+		mx: "auto"
 	},
 	section: {
 		p: { xs: 2, md: 2.5 }
@@ -35,9 +40,8 @@ const styles = {
 		mb: 1.5
 	},
 	// The Spine stage tracks its container, so this is what actually decides how large the chibi draws.
-	// A full-width section would leave it marooned at its 480px clamp in the middle of a 1150px row.
 	chibiColumn: {
-		maxWidth: 480,
+		maxWidth: { xs: 480, lg: 340 },
 		mx: "auto"
 	}
 } satisfies Record<string, SxProps<Theme>>;
@@ -359,7 +363,7 @@ function TDollContent({ doll }: TDollContentProps) {
 	return (
 		<main>
 			<ScrollToTop />
-			<Container sx={styles.page} maxWidth="lg">
+			<Container sx={styles.page} maxWidth={false}>
 				{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
 				<DollHero
 					name={tdoll.selected.name}
@@ -369,7 +373,6 @@ function TDollContent({ doll }: TDollContentProps) {
 					isMod={isModForm}
 					artUrl={heroArtUrl}
 					cardImage={tdollImage}
-					stats={tdoll.selected}
 					onCardImageClick={switchBetweenNormalDamagedCardImages}
 					normalId={tdoll.normal.id}
 					skins={tdoll.skins}
@@ -382,8 +385,28 @@ function TDollContent({ doll }: TDollContentProps) {
 
 				{/************** Every section on the page at once. These used to be four tabs, which hid the tile
 				                buffs and the animations behind a click and left a 135px panel occupying a whole screen. **************/}
-				<Grid container spacing={3} sx={{ alignItems: "flex-start" }}>
-					<Grid size={12}>
+				{/************** Every section on the page at once, four across on a wide screen. These used to be
+				                four tabs, which hid the tile buffs and the animations behind a click. **************/}
+				<Grid container spacing={2} sx={{ alignItems: "flex-start" }}>
+					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+						<Paper sx={styles.section} variant="outlined">
+							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+								Stats
+							</Typography>
+							<StatsPanel stats={tdoll.selected} />
+						</Paper>
+					</Grid>
+
+					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+						<Paper sx={styles.section} variant="outlined">
+							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+								Tile buffs
+							</Typography>
+							<TilesPanel tileSet={tdoll.selected.tile_set} />
+						</Paper>
+					</Grid>
+
+					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Skills
@@ -404,22 +427,13 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, md: 6 }}>
-						<Paper sx={styles.section} variant="outlined">
-							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								Tile buffs
-							</Typography>
-							<TilesPanel tileSet={tdoll.selected.tile_set} />
-						</Paper>
-					</Grid>
-
-					<Grid size={{ xs: 12, md: 6 }}>
+					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Animations
 							</Typography>
 							<Box sx={styles.chibiColumn}>
-								<LazySection minHeight={520}>
+								<LazySection minHeight={320}>
 									<ChibiPanel
 										animationMode={animationMode}
 										spineAnimationName={spineAnimationName}
