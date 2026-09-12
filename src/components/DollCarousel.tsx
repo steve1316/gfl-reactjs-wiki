@@ -22,8 +22,8 @@ const SWIPE_THRESHOLD = 40;
 /** Width of the centre card in CSS pixels, per breakpoint. Everything else is scaled down from this. */
 const CARD_WIDTH = { narrow: 180, medium: 190, wide: 200 };
 
-/** Room under the 1:2 art for the name, the badges and the id. */
-const CARD_TEXT_HEIGHT = 64;
+/** Room under the 1:2 art for the name, the badges and the id. Measured at 83px, rounded up so nothing clips. */
+const CARD_TEXT_HEIGHT = 84;
 
 /** Horizontal distance between neighbouring cards, as a fraction of the card width. Below 1 they overlap. */
 const SLOT_RATIO = 0.74;
