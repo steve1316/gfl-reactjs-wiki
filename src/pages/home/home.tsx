@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
@@ -37,7 +37,10 @@ const styles = {
 	cardButton: { display: "flex", margin: "10px", justifyContent: "flex-end" }
 } satisfies Record<string, SxProps<Theme>>;
 
-/** Id ranges the T-Doll shards cover. Each range is equally likely to be picked, matching the shards' own weighting. */
+/** How many dolls the carousel holds. It shows five at a time, so the ring has to be comfortably larger than that. */
+const CAROUSEL_SIZE = 10;
+
+/** Id ranges the T-Doll shards cover. */
 const ID_RANGES: ReadonlyArray<{ min: number; max: number }> = [
 	{ min: 1, max: 100 },
 	{ min: 101, max: 200 },
@@ -49,22 +52,34 @@ const ID_RANGES: ReadonlyArray<{ min: number; max: number }> = [
 /** Ids with no doll behind them. MICA Team leaves gaps in the numbering, so these are skipped rather than shown as missing. */
 const NOT_VALID_IDS = new Set([0, 30, 45, 67, 76, 83, 219, 246, 1000, 1011, 1012, 1013, 1014, 1015, 1016]);
 
+/** Total ids across every range, so one draw can be spread evenly over all of them. */
+const ID_SPAN = ID_RANGES.reduce((total, range) => total + (range.max - range.min + 1), 0);
+
 /**
  * Pick a number of distinct, valid T-Doll ids at random.
+ *
+ * The draw is uniform across every id, not across the ranges. Picking a range first and then an id
+ * inside it made the 20-wide 301-320 range as likely as the 100-wide 1-100 one, so the collab dolls
+ * turned up five times more often than they should have.
  *
  * @param count How many distinct ids to return.
  * @returns Up to `count` distinct ids, each inside a real shard range and outside the invalid list.
  */
 function randomDollIds(count: number): number[] {
 	const ids = new Set<number>();
-	while (ids.size < count) {
-		const range = ID_RANGES[Math.floor(Math.random() * ID_RANGES.length)];
-		if (!range) {
-			break;
-		}
-		const id = Math.floor(Math.random() * (range.max - range.min + 1) + range.min);
-		if (!NOT_VALID_IDS.has(id)) {
-			ids.add(id);
+	// The invalid list can starve a draw, so the attempt cap stops this spinning if `count` is ever raised too far.
+	for (let attempts = 0; ids.size < count && attempts < count * 50; attempts += 1) {
+		let offset = Math.floor(Math.random() * ID_SPAN);
+		for (const range of ID_RANGES) {
+			const size = range.max - range.min + 1;
+			if (offset < size) {
+				const id = range.min + offset;
+				if (!NOT_VALID_IDS.has(id)) {
+					ids.add(id);
+				}
+				break;
+			}
+			offset -= size;
 		}
 	}
 	return [...ids];
@@ -87,8 +102,9 @@ export default function Home() {
 		{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo }
 	];
 
-	// Seven ids picked once per mount, so previous and next are real history rather than fresh rolls.
-	const carouselIds = useMemo(() => randomDollIds(7), []);
+	// Held in state rather than derived, so previous and next are real history rather than fresh rolls and
+	// the shuffle button can hand the carousel a whole new set.
+	const [carouselIds, setCarouselIds] = useState(() => randomDollIds(CAROUSEL_SIZE));
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
@@ -104,7 +120,7 @@ export default function Home() {
 			<Box sx={{ boxShadow: 1 }}>
 				<Box component="div" sx={styles.heroContent}>
 					<Container maxWidth="md">
-						<DollCarousel ids={carouselIds} />
+						<DollCarousel ids={carouselIds} onShuffle={() => setCarouselIds(randomDollIds(CAROUSEL_SIZE))} />
 					</Container>
 				</Box>
 			</Box>
