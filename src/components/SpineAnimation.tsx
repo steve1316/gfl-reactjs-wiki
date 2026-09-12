@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { IconButton } from "@mui/material";
-import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
+import { Fab } from "@mui/material";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 import { useZoomPan } from "../hooks/useZoomPan";
 import { createSpinePlayer } from "../lib/spine";
@@ -144,10 +144,23 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 					transform: `translateX(-50%) translate(${zoom.transform.x}px, ${zoom.transform.y}px) scale(${zoom.transform.scale})`
 				}}
 			/>
+			{/* Bottom right rather than top right: the chibi's head sits at the top of the stage, and this
+			    matches where the full-art button sits on the portrait card.
+
+			    onPointerDown is stopped here because the gesture container calls setPointerCapture on itself
+			    for every pointerdown that reaches it. With the pointer captured by the container, the matching
+			    pointerup never lands on this button, so no click is ever synthesised and the reset does nothing. */}
 			{zoom.isZoomed && (
-				<IconButton size="small" onClick={zoom.reset} aria-label="reset zoom" sx={{ position: "absolute", right: 4, top: 4, bgcolor: "background.paper" }}>
-					<ZoomOutMapIcon fontSize="small" />
-				</IconButton>
+				<Fab
+					size="small"
+					color="primary"
+					onPointerDown={(event) => event.stopPropagation()}
+					onClick={zoom.reset}
+					aria-label="reset view"
+					sx={{ position: "absolute", right: 8, bottom: 8, opacity: 0.9 }}
+				>
+					<RestartAltIcon />
+				</Fab>
 			)}
 			{status !== "ready" && (
 				<span
