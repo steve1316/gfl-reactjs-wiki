@@ -11,7 +11,7 @@
 		"typecheck": "tsc --noEmit",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"test:data": "node --test tools/data/test/"
+		"test:data": "node --test \"tools/data/test/*.test.mjs\""
 	},
 	"dependencies": {
 		"@emotion/react": "^11.14.0",

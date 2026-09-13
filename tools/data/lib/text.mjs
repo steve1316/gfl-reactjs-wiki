@@ -8,7 +8,7 @@
  */
 export function parseTextTable(source) {
 	const table = new Map();
-	for (const line of source.replace(/^﻿+/, "").split(/\r?\n/)) {
+	for (const line of source.replace(/^\uFEFF+/, "").split(/\r?\n/)) {
 		const comma = line.indexOf(",");
 		if (comma > 0) {
 			table.set(line.slice(0, comma), line.slice(comma + 1));
