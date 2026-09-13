@@ -256,10 +256,14 @@ function TDollContent({ doll }: TDollContentProps) {
 	// hero's Mod toggle, which stay in lockstep since they describe the same underlying state.
 	const isModForm = tdoll.selected === tdoll.mod;
 
-	// The hero's full art follows the same selection as the card portrait: the current skin when one is
-	// shown, otherwise the Normal/Mod form. mod_skin* forms only ever publish card art, so the base
-	// Normal form's full art stands in whenever the selected form has none of its own.
-	const heroArtUrl = (showSkin ? skinForm(helperSkinSelected(), mode === 1)?.images.full : tdoll.selected.assets.images.full) ?? tdoll.normal.assets.images.full;
+	// The backdrop's full art follows the same selection as the card portrait: the current skin when one is
+	// shown, otherwise the Normal/Mod form, and the damaged version whenever the portrait has been flipped to
+	// it. mod_skin* forms only ever publish card art, so the base Normal form stands in when the selected form
+	// has none of its own. A form missing only its damaged art keeps its own undamaged art rather than borrowing
+	// another outfit's.
+	const artKind = switchImage ? "full_damaged" : "full";
+	const artImages = showSkin ? skinForm(helperSkinSelected(), mode === 1)?.images : tdoll.selected.assets.images;
+	const heroArtUrl = artImages?.[artKind] ?? artImages?.full ?? tdoll.normal.assets.images[artKind] ?? tdoll.normal.assets.images.full;
 
 	// Helper function to reset selected animation tab back to the default tab.
 	const helperResetAnimationTabs = () => {
