@@ -213,7 +213,7 @@ export default memo(function SkillsPanel({
 			<Card sx={styles.cardForSkill}>
 				<CardContent>
 					<CardHeader
-						avatar={<Avatar variant="rounded" src={selectedSkill === 1 && skill2 !== undefined ? skillImages.skill2 : skillImages.skill1} />}
+						avatar={<Avatar variant="rounded" alt="" src={selectedSkill === 1 && skill2 !== undefined ? skillImages.skill2 : skillImages.skill1} />}
 						title={selectedSkill === 1 && skill2 !== undefined ? skill2.name : skill.name}
 						subheader={selectedSkill === 1 && skill2 !== undefined ? "Initial CD: " + skill2.initial_cooldown : "Initial CD: " + skill.initial_cooldown}
 						action={

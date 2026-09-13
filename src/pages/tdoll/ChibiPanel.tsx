@@ -95,7 +95,7 @@ export default memo(function ChibiPanel({ animationMode, spineAnimationName, spi
 					)}
 				</Fab>
 
-				<Box component="ul" sx={styles.pillList} role="group" aria-label="Animations">
+				<Box component="ul" sx={styles.pillList} aria-label="Animations">
 					{spineTabs.map((tab) => (
 						<li key={tab.value}>
 							<FilterChip label={tab.label} selected={tab.value === spineAnimationName} value={tab.value} onToggle={handleChipToggle} />
