@@ -29,3 +29,9 @@ for (const [id, level, [hp, dmg, acc, eva, rof, armor]] of CASES) {
 		assert.equal("max_armor" in stats, armor > 0);
 	});
 }
+
+test("a missing _basic parameter throws a named error", () => {
+	const params = new Map(config.params);
+	params.delete("power_basic");
+	assert.throws(() => computeStats(gun(65), { ...config, params }, 100), /missing game_config_info parameter power_basic/);
+});
