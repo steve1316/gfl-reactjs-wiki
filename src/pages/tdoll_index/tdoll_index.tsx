@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
@@ -186,44 +186,43 @@ export default function TDoll_Index() {
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
 	}, [modFilter, rarityFilter, typeFilter, nameQuery]);
 
-	// The following handler functions below are setting the filters selected as active.
-	const handleOnClickRarity = (rarityToBeUpdated: { key: number; selected: boolean }) => () => {
-		const key = rarityToBeUpdated.key;
-		const newSelected = !rarityToBeUpdated.selected;
+	// Every handler below is stable across renders and toggles from the current state rather than a captured copy,
+	// so the memoised FilterPanel, its chips and the result cards can all skip renders they have no part in.
+	const handleToggleRarity = useCallback((key?: string | number) => {
+		setRarityFilter((rarities) => rarities.map((rarity) => (rarity.key === key ? { ...rarity, selected: !rarity.selected } : rarity)));
+	}, []);
 
-		// Match the rarity's key with the given rarity's key and only set its selected boolean to the opposite of what it was.
-		setRarityFilter((rarities) => rarities.map((rarity) => (rarity.key === key ? { ...rarity, selected: newSelected } : rarity)));
-	};
+	const handleToggleType = useCallback((key?: string | number) => {
+		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: !type.selected } : type)));
+	}, []);
 
-	const handleOnClickType = (typeToBeUpdated: { key: number; selected: boolean }) => () => {
-		const key = typeToBeUpdated.key;
-		const newSelected = !typeToBeUpdated.selected;
-		setTypeFilter((type) => type.map((type) => (type.key === key ? { ...type, selected: newSelected } : type)));
-	};
+	const handleToggleMod = useCallback(() => {
+		setModFilter((mod) => ({ ...mod, selected: !mod.selected }));
+	}, []);
 
-	const handleOnClickMod = () => {
-		setModFilter({
-			...modFilter,
-			selected: !modFilter.selected
-		});
-	};
+	const handleClearName = useCallback(() => setNameQuery(""), []);
 
-	// Deselects every filter at once, for the sheet's Clear all button.
-	const handleClearAll = () => {
+	const handleLoadMore = useCallback(() => setShown((current) => current + PAGE_SIZE), []);
+
+	// Deselects every filter at once, for the panel's Clear all button.
+	const handleClearAll = useCallback(() => {
 		setRarityFilter((rarities) => rarities.map((rarity) => ({ ...rarity, selected: false })));
 		setTypeFilter((types) => types.map((type) => ({ ...type, selected: false })));
-		setModFilter({ ...modFilter, selected: false });
+		setModFilter((mod) => ({ ...mod, selected: false }));
 		setNameQuery("");
-	};
+	}, []);
 
 	// The currently active filters, flattened into one list the summary bar can render as removable chips.
-	// Each entry keeps a reference to its own toggle handler so its delete button clears just that filter.
-	const activeFilters = [
-		...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: handleOnClickRarity(rarity) })),
-		...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: handleOnClickType(type) })),
-		...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleOnClickMod }] : []),
-		...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: () => setNameQuery("") }] : [])
-	];
+	// Each entry keeps its own delete handler so it clears just that filter.
+	const activeFilters = useMemo(
+		() => [
+			...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: () => handleToggleRarity(rarity.key) })),
+			...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: () => handleToggleType(type.key) })),
+			...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleToggleMod }] : []),
+			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : [])
+		],
+		[rarityFilter, typeFilter, modFilter, nameQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName]
+	);
 
 	return (
 		<Box component="main" sx={styles.root}>
@@ -238,9 +237,9 @@ export default function TDoll_Index() {
 					activeCount={activeFilters.length}
 					nameQuery={nameQuery}
 					onNameQueryChange={setNameQuery}
-					onToggleRarity={handleOnClickRarity}
-					onToggleType={handleOnClickType}
-					onToggleMod={handleOnClickMod}
+					onToggleRarity={handleToggleRarity}
+					onToggleType={handleToggleType}
+					onToggleMod={handleToggleMod}
 					onClear={handleClearAll}
 				/>
 
@@ -285,7 +284,7 @@ export default function TDoll_Index() {
 
 				{visible.length < matches.length && (
 					<Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-						<Button variant="outlined" onClick={() => setShown((current) => current + PAGE_SIZE)}>
+						<Button variant="outlined" onClick={handleLoadMore}>
 							Load {Math.min(PAGE_SIZE, matches.length - visible.length)} more
 						</Button>
 					</Box>
