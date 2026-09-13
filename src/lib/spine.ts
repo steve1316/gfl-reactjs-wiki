@@ -302,7 +302,48 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	const spine = new PIXI.spine.Spine(skeletonData);
 	app.stage.addChild(spine);
 
-	// How far the drawn artwork extends past the bone positions, measured once from the setup pose.
+	/**
+	 * Widen a box to include every bone that is drawing something at the skeleton's current pose.
+	 *
+	 * Framing used to include every bone. Some rigs carry effect bones with nothing attached for most of an
+	 * animation: Agent 416's Defender of Manhattan skin parks `eff_slight01` at x=484 against a body about 75
+	 * wide, so the frame stretched to reach empty space and the chibi came out tiny and shoved to one side.
+	 * An effect that is actually showing still counts, because its slot then has an attachment.
+	 *
+	 * @param box The box to widen, as [minX, maxX, minY, maxY].
+	 * @param skeleton The posed skeleton.
+	 * @returns Whether any visible bone was found.
+	 */
+	const addVisibleBones = (box: number[], skeleton: any): boolean => {
+		let found = false;
+		for (const slot of skeleton.slots) {
+			if (slot.attachment && slot.a > 0) {
+				box[0] = Math.min(box[0] as number, slot.bone.worldX);
+				box[1] = Math.max(box[1] as number, slot.bone.worldX);
+				box[2] = Math.min(box[2] as number, slot.bone.worldY);
+				box[3] = Math.max(box[3] as number, slot.bone.worldY);
+				found = true;
+			}
+		}
+		return found;
+	};
+
+	/**
+	 * Widen a box to include every bone, the fallback for a pose that draws nothing at all.
+	 *
+	 * @param box The box to widen, as [minX, maxX, minY, maxY].
+	 * @param skeleton The posed skeleton.
+	 */
+	const addAllBones = (box: number[], skeleton: any) => {
+		for (const bone of skeleton.bones) {
+			box[0] = Math.min(box[0] as number, bone.worldX);
+			box[1] = Math.max(box[1] as number, bone.worldX);
+			box[2] = Math.min(box[2] as number, bone.worldY);
+			box[3] = Math.max(box[3] as number, bone.worldY);
+		}
+	};
+
+	// How far the drawn artwork extends past the visible bone positions, measured once from the setup pose.
 	// Bones sit inside the silhouette, so fitting to bones alone crops hair, weapons and coat tails.
 	let padLeft = 0;
 	let padRight = 0;
@@ -313,16 +354,11 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 		const skeleton = spine.skeleton;
 		skeleton.setToSetupPose();
 		skeleton.updateWorldTransform();
-		let minX = Infinity;
-		let minY = Infinity;
-		let maxX = -Infinity;
-		let maxY = -Infinity;
-		for (const bone of skeleton.bones) {
-			minX = Math.min(minX, bone.worldX);
-			maxX = Math.max(maxX, bone.worldX);
-			minY = Math.min(minY, bone.worldY);
-			maxY = Math.max(maxY, bone.worldY);
+		const box = [Infinity, -Infinity, Infinity, -Infinity];
+		if (!addVisibleBones(box, skeleton)) {
+			addAllBones(box, skeleton);
 		}
+		const [minX, maxX, minY, maxY] = box as [number, number, number, number];
 		spine.x = 0;
 		spine.y = 0;
 		spine.scale.set(1);
@@ -348,24 +384,19 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	const fitToAnimation = (animation: { duration: number; apply: (...args: unknown[]) => void }, targetSize: number) => {
 		const skeleton = spine.skeleton;
 		const steps = 20;
-		let minX = Infinity;
-		let minY = Infinity;
-		let maxX = -Infinity;
-		let maxY = -Infinity;
+		const visible = [Infinity, -Infinity, Infinity, -Infinity];
+		const all = [Infinity, -Infinity, Infinity, -Infinity];
 
 		for (let step = 0; step <= steps; step++) {
 			const time = (animation.duration * step) / steps;
 			skeleton.setToSetupPose();
 			animation.apply(skeleton, time, time, false, []);
 			skeleton.updateWorldTransform();
-			for (const bone of skeleton.bones) {
-				minX = Math.min(minX, bone.worldX);
-				maxX = Math.max(maxX, bone.worldX);
-				minY = Math.min(minY, bone.worldY);
-				maxY = Math.max(maxY, bone.worldY);
-			}
+			addVisibleBones(visible, skeleton);
+			addAllBones(all, skeleton);
 		}
 
+		let [minX, maxX, minY, maxY] = (Number.isFinite(visible[0]) ? visible : all) as [number, number, number, number];
 		if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
 			return;
 		}
