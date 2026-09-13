@@ -491,7 +491,8 @@ function TDollContent({ doll }: TDollContentProps) {
 							onToggleMod={switchModes}
 						/>
 					</Grid>
-					<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
+					{/* Stats shares its small-screen row with the Animations card, so it takes the full row when that card is absent. */}
+					<Grid size={{ xs: 12, sm: spineEntry ? 6 : 12, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
