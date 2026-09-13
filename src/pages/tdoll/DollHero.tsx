@@ -115,14 +115,14 @@ interface DollHeroProps {
 	rarity: number;
 	/** Whether the form currently on screen is the Mod, which recolours the rarity stars. */
 	isMod: boolean;
-	/** URL of the sharp card portrait on the left of the hero. */
+	/** URL of the sharp card portrait on the left of the hero, or undefined when the outfit on screen has no art and a notice shows. */
 	cardImage: string | undefined;
 	/** Called when the portrait is clicked, which toggles between the normal and damaged art. */
 	onCardImageClick: () => void;
 	/** Route of the full art viewer, already pointing at the form and damaged state on screen. */
 	artLink: string;
-	/** Whether the doll's art is hosted. Without it the portrait shows a notice and the art viewer link is hidden. */
-	hasArt: boolean;
+	/** Whether the outfit on screen has full art. Without it the art viewer link is hidden. */
+	hasFullArt: boolean;
 	/** The doll's skins, or null when it has none. */
 	skins: RawSkins | null;
 	/** The doubled index of the selected skin pill, or false when no skin is selected. */
@@ -146,7 +146,7 @@ interface DollHeroProps {
  * @param props Component props.
  * @returns The hero block.
  */
-export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, artLink, hasArt, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, artLink, hasFullArt, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
 	// Shared by every skin pill, which carries its doubled index in `data-skin`. A new arrow per pill per render
 	// would hand each Chip a fresh prop and re-render the whole row on any change to the page.
 	const handleSkinClick = useCallback((event: MouseEvent<HTMLElement>) => onSkinChange(event, Number(event.currentTarget.dataset.skin)), [onSkinChange]);
@@ -158,7 +158,7 @@ export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage
 		<Box data-testid="doll-hero" sx={styles.root}>
 			<Box sx={styles.content}>
 				<Card sx={styles.portrait}>
-					{hasArt ? (
+					{cardImage ? (
 						<>
 							<CardActionArea onClick={onCardImageClick}>
 								<CardMedia component="img" sx={cardArtSx} image={cardImage} title={name} />
@@ -166,9 +166,11 @@ export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage
 
 							{/* Sibling of the action area rather than a child, or opening the full art would also flip
 							    the portrait to its damaged version on the way out. */}
-							<Fab color="primary" component={Link} to={artLink} sx={styles.fabExpand} aria-label="view full art">
-								<ZoomOutMapIcon />
-							</Fab>
+							{hasFullArt ? (
+								<Fab color="primary" component={Link} to={artLink} sx={styles.fabExpand} aria-label="view full art">
+									<ZoomOutMapIcon />
+								</Fab>
+							) : null}
 						</>
 					) : (
 						<ArtPlaceholder name={name} />

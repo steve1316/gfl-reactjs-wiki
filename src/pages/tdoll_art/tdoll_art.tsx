@@ -7,6 +7,7 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
+import ArtPlaceholder from "../../components/ArtPlaceholder";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { containArtSx } from "../../lib/artLayout";
 import { loadDoll } from "../../lib/data";
@@ -142,6 +143,9 @@ export default function TDollArt() {
 
 	const current = forms.find((form) => form.key === formKey) ?? forms[0];
 	const source = damaged ? current?.images.full_damaged : current?.images.full;
+	// A loaded doll with no full art at all, such as one released before its art is hosted. The viewer then shows a notice
+	// with only the close button, rather than a black screen and controls that do nothing.
+	const noArt = doll !== undefined && forms.length === 0;
 
 	useEffect(() => {
 		if (doll) {
@@ -176,38 +180,52 @@ export default function TDollArt() {
 				<Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
 					{doll?.normal.name ?? "Loading..."}
 				</Typography>
-				<IconButton onClick={zoomOut} aria-label="zoom out" sx={{ color: "inherit" }}>
-					<RemoveIcon />
-				</IconButton>
-				<IconButton onClick={zoomIn} aria-label="zoom in" sx={{ color: "inherit" }}>
-					<AddIcon />
-				</IconButton>
-				<IconButton onClick={zoom.reset} aria-label="reset zoom" sx={{ color: "inherit" }}>
-					<ZoomOutMapIcon />
-				</IconButton>
+				{noArt ? null : (
+					<>
+						<IconButton onClick={zoomOut} aria-label="zoom out" sx={{ color: "inherit" }}>
+							<RemoveIcon />
+						</IconButton>
+						<IconButton onClick={zoomIn} aria-label="zoom in" sx={{ color: "inherit" }}>
+							<AddIcon />
+						</IconButton>
+						<IconButton onClick={zoom.reset} aria-label="reset zoom" sx={{ color: "inherit" }}>
+							<ZoomOutMapIcon />
+						</IconButton>
+					</>
+				)}
 			</Box>
 
-			<Box ref={zoom.containerRef} sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
-				{source ? <Box component="img" src={source} alt="" sx={containArtSx} style={zoom.contentStyle} /> : null}
-			</Box>
+			{noArt ? (
+				<Box sx={{ flexGrow: 1, display: "grid", placeItems: "center", p: 2 }}>
+					<Box sx={{ width: 256, maxWidth: "60vw" }}>
+						<ArtPlaceholder name={doll.normal.name} />
+					</Box>
+				</Box>
+			) : (
+				<Box ref={zoom.containerRef} sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
+					{source ? <Box component="img" src={source} alt="" sx={containArtSx} style={zoom.contentStyle} /> : null}
+				</Box>
+			)}
 
-			<Box sx={{ display: "flex", gap: 1, p: 1, flexWrap: "wrap", justifyContent: "center" }}>
-				<ToggleButtonGroup size="small" exclusive value={formKey} onChange={handleFormChange}>
-					{forms.map((form) => (
-						<ToggleButton key={form.key} value={form.key} sx={{ color: "common.white" }}>
-							{form.label}
+			{noArt ? null : (
+				<Box sx={{ display: "flex", gap: 1, p: 1, flexWrap: "wrap", justifyContent: "center" }}>
+					<ToggleButtonGroup size="small" exclusive value={formKey} onChange={handleFormChange}>
+						{forms.map((form) => (
+							<ToggleButton key={form.key} value={form.key} sx={{ color: "common.white" }}>
+								{form.label}
+							</ToggleButton>
+						))}
+					</ToggleButtonGroup>
+					<ToggleButtonGroup size="small" exclusive value={damaged} onChange={handleDamagedChange}>
+						<ToggleButton value={false} sx={{ color: "common.white" }}>
+							Normal
 						</ToggleButton>
-					))}
-				</ToggleButtonGroup>
-				<ToggleButtonGroup size="small" exclusive value={damaged} onChange={handleDamagedChange}>
-					<ToggleButton value={false} sx={{ color: "common.white" }}>
-						Normal
-					</ToggleButton>
-					<ToggleButton value={true} sx={{ color: "common.white" }}>
-						Damaged
-					</ToggleButton>
-				</ToggleButtonGroup>
-			</Box>
+						<ToggleButton value={true} sx={{ color: "common.white" }}>
+							Damaged
+						</ToggleButton>
+					</ToggleButtonGroup>
+				</Box>
+			)}
 		</Box>
 	);
 }
