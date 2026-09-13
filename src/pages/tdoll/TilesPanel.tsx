@@ -8,14 +8,20 @@ import TileGrid from "../../components/TileGrid";
 import type { RawTileSet } from "../../types/tdoll";
 
 const styles = {
+	// The card is stretched to match the Stats and Skills cards beside it on a wide screen, so its content is
+	// centred both ways rather than left parked in the top-left corner of the extra space.
 	cardForTileSet: {
-		width: "100%"
+		width: "100%",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center"
 	},
 	title: {
 		fontSize: 14
 	},
 	tileSetDiv: {
-		display: "flex"
+		display: "flex",
+		alignItems: "center"
 	},
 	content: {
 		flex: "0 1 auto"
