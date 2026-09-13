@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
+import type { MouseEvent } from "react";
 import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
 
 // MaterialUI imports
@@ -7,6 +8,12 @@ import type { SxProps, Theme } from "@mui/material";
 
 import { INGREDIENT_COLOURS } from "../../theme";
 import type { RawSkill } from "../../types/tdoll";
+
+/** Shifts the level drop-down to the right of its field. A module constant, so the Select is not handed a new object each render. */
+const LEVEL_MENU_PROPS = {
+	anchorOrigin: { vertical: "top", horizontal: "right" },
+	transformOrigin: { vertical: "top", horizontal: "left" }
+} as const;
 
 const styles = {
 	skillToggle: {
@@ -59,7 +66,7 @@ interface SkillsPanelProps {
  * @param props Component props.
  * @returns The skill toggle and the skill card.
  */
-export default function SkillsPanel({
+export default memo(function SkillsPanel({
 	showModSkill,
 	selectedSkill,
 	onSelectedSkillChange,
@@ -72,6 +79,17 @@ export default function SkillsPanel({
 	dollId,
 	skillImages
 }: SkillsPanelProps) {
+	const handleSkillToggle = useCallback(
+		(_event: MouseEvent<HTMLElement>, newValue: number | null) => {
+			if (newValue !== null) {
+				onSelectedSkillChange(newValue);
+			}
+		},
+		[onSelectedSkillChange]
+	);
+
+	const handleLevelChange = useCallback((event: { target: { value: unknown } }) => onSkillLevelChange(Number(event.target.value)), [onSkillLevelChange]);
+
 	const [skillDescription1, setSkillDescription1] = useState("");
 	const [skillDescription2, setSkillDescription2] = useState("");
 
@@ -186,17 +204,7 @@ export default function SkillsPanel({
 		<>
 			{/************** T-Doll's skill information **************/}
 			{showModSkill && (
-				<ToggleButtonGroup
-					value={selectedSkill}
-					exclusive
-					onChange={(_e, newValue: number | null) => {
-						if (newValue !== null) {
-							onSelectedSkillChange(newValue);
-						}
-					}}
-					sx={styles.skillToggle}
-					aria-label="skill selection"
-				>
+				<ToggleButtonGroup value={selectedSkill} exclusive onChange={handleSkillToggle} sx={styles.skillToggle} aria-label="skill selection">
 					<ToggleButton value={0}>Skill 1</ToggleButton>
 					<ToggleButton value={1}>Skill 2</ToggleButton>
 				</ToggleButtonGroup>
@@ -212,26 +220,7 @@ export default function SkillsPanel({
 							<FormControl>
 								<InputLabel id="skill-level-select-label">Level</InputLabel>
 
-								<Select
-									id="skill-level-select"
-									labelId="skill-level-select-label"
-									label="Level"
-									value={skillLevel}
-									onChange={(e) => {
-										onSkillLevelChange(Number(e.target.value));
-									}}
-									// MenuProps will shift the drop down menu to the right.
-									MenuProps={{
-										anchorOrigin: {
-											vertical: "top",
-											horizontal: "right"
-										},
-										transformOrigin: {
-											vertical: "top",
-											horizontal: "left"
-										}
-									}}
-								>
+								<Select id="skill-level-select" labelId="skill-level-select-label" label="Level" value={skillLevel} onChange={handleLevelChange} MenuProps={LEVEL_MENU_PROPS}>
 									<MenuItem value={1}>1</MenuItem>
 									<MenuItem value={2}>2</MenuItem>
 									<MenuItem value={3}>3</MenuItem>
@@ -272,4 +261,4 @@ export default function SkillsPanel({
 			</Card>
 		</>
 	);
-}
+});

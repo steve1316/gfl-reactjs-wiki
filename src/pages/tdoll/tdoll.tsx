@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 
 // Component imports
@@ -199,23 +199,11 @@ function TDollContent({ doll }: TDollContentProps) {
 	}, [tdoll]);
 	/* eslint-disable */
 
-	// // Print out debugging information at each render.
-	// useEffect(() => {
-	// 	console.log("Animation Mode: ", animationMode);
-	// 	console.log("Normal Animation Tab selected: ", animationTabSelected);
-	// 	console.log("Dorm Animation Tab selected: ", animationDormTabSelected);
-	// 	var tempSkinSelected = helperSkinSelected();
-	// 	console.log("Show skin? ", showSkin);
-	// 	console.log("Skin selected before calc: ", tempSkinSelected);
-	// 	console.log("Skin selected after calc: ", tempSkinSelected);
-	// });
-
 	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
 	const spineEntry = spineFor(tdoll.normal.id);
 
-	// Skin tabs carry a doubled value, the same halving helperSkinSelected does. It is inlined because
-	// that helper is declared further down and would still be in the temporal dead zone here.
+	// Skin pills carry a doubled value, halved here the same way `skinIndex` is below.
 	const selectedSkinRigs = showSkin ? (spineEntry?.skinRigs?.[skinSelected / 2] ?? null) : null;
 	// A Mod doll is a different chibi with its own animations, so the base rig cannot stand in for it.
 	const modRigs = mode === 1 ? spineEntry?.mod : undefined;
@@ -228,7 +216,8 @@ function TDollContent({ doll }: TDollContentProps) {
 	// One tab per animation the skeleton defines. A fixed list, whether from the old GIF filenames or
 	// the hand-maintained `has*Animation` flags, both offered tabs that did nothing when clicked and
 	// hid animations the skeleton did have, such as the rifles' `snipe` pose.
-	const spineTabs = animationTabs(spineRig?.anims ?? []);
+	// Memoised on the rig's animation list so ChibiPanel, which is memoised, is not handed a new array every render.
+	const spineTabs = useMemo(() => animationTabs(spineRig?.anims ?? []), [spineRig]);
 
 	// Tabs default to "wait", which most but not all skeletons define. Falling back to the first tab
 	// keeps the selection valid instead of leaving MUI with a value none of its children carry.
@@ -245,14 +234,10 @@ function TDollContent({ doll }: TDollContentProps) {
 	 * @param withMod Whether to look up the Mod variant of the skin.
 	 * @returns The skin's assets, or undefined when that skin was never published.
 	 */
-	const skinForm = (index: number, withMod = false) => tdoll.forms[`${withMod ? "mod_" : ""}skin${index + 1}`];
+	const skinForm = useCallback((index: number, withMod = false) => tdoll.forms[`${withMod ? "mod_" : ""}skin${index + 1}`], [tdoll]);
 
-	// Helper function to determine the correct selected skin.
-	const helperSkinSelected = () => {
-		var tempSkinSelected = skinSelected;
-
-		return tempSkinSelected / 2;
-	};
+	// The zero-based skin on screen. Pill values are doubled, so the stored value is halved back here.
+	const skinIndex = skinSelected / 2;
 
 	// Whether the form currently on screen is the Mod. Drives both the rarity star colour and the
 	// hero's Mod toggle, which stay in lockstep since they describe the same underlying state.
@@ -264,21 +249,24 @@ function TDollContent({ doll }: TDollContentProps) {
 	// has none of its own. A form missing only its damaged art keeps its own undamaged art rather than borrowing
 	// another outfit's.
 	const artKind = switchImage ? "full_damaged" : "full";
-	const artImages = showSkin ? skinForm(helperSkinSelected(), mode === 1)?.images : tdoll.selected.assets.images;
+	const artImages = showSkin ? skinForm(skinIndex, mode === 1)?.images : tdoll.selected.assets.images;
 	const heroArtUrl = artImages?.[artKind] ?? artImages?.full ?? tdoll.normal.assets.images[artKind] ?? tdoll.normal.assets.images.full;
 
+	// Every handler below is wrapped in useCallback. The panels they are passed to are memoised, and a handler
+	// recreated on each render would make every panel re-render on every change, whether or not it changed.
+
 	// Helper function to reset selected animation tab back to the default tab.
-	const helperResetAnimationTabs = () => {
+	const helperResetAnimationTabs = useCallback(() => {
 		setAnimationTabSelected("wait");
 		setAnimationDormTabSelected("wait");
-	};
+	}, []);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for switching between modes, like Mod or Dorm.
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	// Switch information/images/animations displayed between Normal or Mod. Will reset skin selected.
-	const switchModes = () => {
+	const switchModes = useCallback(() => {
 		const tdoll_temp = tdoll;
 
 		setShowSkin(false); // Prevent skin image to be rendered if it was selected.
@@ -304,22 +292,22 @@ function TDollContent({ doll }: TDollContentProps) {
 		// Reset back to Skill 1 whenever the Mod toggle flips, in either direction.
 		setSelectedSkill(0);
 		helperResetAnimationTabs();
-	};
+	}, [tdoll, mode, hasMod, helperResetAnimationTabs]);
 
 	// Switch the animations between Normal and Dorm.
-	const switchAnimationMode = () => {
+	const switchAnimationMode = useCallback(() => {
 		helperResetAnimationTabs();
-		setAnimationMode(animationMode === 0 ? 1 : 0);
-	};
+		setAnimationMode((current) => (current === 0 ? 1 : 0));
+	}, [helperResetAnimationTabs]);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for Card images
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	// Replace the T-Doll's card image with normal or damaged versions.
-	const switchBetweenNormalDamagedCardImages = () => {
+	const switchBetweenNormalDamagedCardImages = useCallback(() => {
 		if (showSkin) {
-			const skin = helperSkinSelected();
+			const skin = skinIndex;
 			if (switchImage) {
 				// Normal Skin image
 				setTDollImage(skinForm(skin, mode === 1)?.images.card);
@@ -340,11 +328,11 @@ function TDollContent({ doll }: TDollContentProps) {
 				setSwitchImage(true);
 			}
 		}
-	};
+	}, [showSkin, skinIndex, switchImage, skinForm, mode, tdoll]);
 
 	// Switch back to base art for the current mode, undoing a skin selection. Leaves Normal/Mod alone,
 	// since the Mod toggle already owns that axis. This only clears the skin one, the inverse of switchSkinSelected below.
-	const switchToBaseArt = () => {
+	const switchToBaseArt = useCallback(() => {
 		setShowSkin(false);
 		setSkinSelected(0);
 		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
@@ -352,25 +340,28 @@ function TDollContent({ doll }: TDollContentProps) {
 		setTDollImage(tdoll.selected.assets.images.card);
 
 		helperResetAnimationTabs();
-	};
+	}, [tdoll, helperResetAnimationTabs]);
 
 	// Replace Card image with the Normal version of the selected skin, or the Base pill's false to go back.
-	const switchSkinSelected = (_event: unknown, newValue: number | false) => {
-		if (newValue === false) {
-			switchToBaseArt();
-			return;
-		}
+	const switchSkinSelected = useCallback(
+		(_event: unknown, newValue: number | false) => {
+			if (newValue === false) {
+				switchToBaseArt();
+				return;
+			}
 
-		setSkinSelected(newValue);
-		setShowSkin(true);
-		setSwitchImage(false); // Prevents duplicate click bug on the Card component.
+			setSkinSelected(newValue);
+			setShowSkin(true);
+			setSwitchImage(false); // Prevents duplicate click bug on the Card component.
 
-		// newValue is the doubled tab value, so it has to be halved the same way helperSkinSelected does.
-		setTDollImage(skinForm(newValue / 2, mode === 1)?.images.card);
+			// newValue is the doubled tab value, so it has to be halved the same way skinIndex is.
+			setTDollImage(skinForm(newValue / 2, mode === 1)?.images.card);
 
-		// Reset animation tab selected.
-		helperResetAnimationTabs();
-	};
+			// Reset animation tab selected.
+			helperResetAnimationTabs();
+		},
+		[switchToBaseArt, skinForm, mode, helperResetAnimationTabs]
+	);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for Tab functionality
@@ -379,13 +370,16 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Record which tab is selected for the current animation mode. This alone drives spineAnimationName
 	// above, since every doll resolves a Spine rig and the GIF-era per-animation lookups it used to also
 	// perform here never ran for anyone.
-	const switchAnimations = (newValue: string) => {
-		if (animationMode === 0) {
-			setAnimationTabSelected(newValue);
-		} else {
-			setAnimationDormTabSelected(newValue);
-		}
-	};
+	const switchAnimations = useCallback(
+		(newValue: string) => {
+			if (animationMode === 0) {
+				setAnimationTabSelected(newValue);
+			} else {
+				setAnimationDormTabSelected(newValue);
+			}
+		},
+		[animationMode]
+	);
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Functions for Tileset functionality
@@ -393,14 +387,14 @@ function TDollContent({ doll }: TDollContentProps) {
 
 	// Switch the animation playing to the next one when the chibi is clicked. Walks the same spineTabs
 	// list the pills render, so clicking the stage and clicking a pill always agree on what comes next.
-	const playerSwitchAnimations = () => {
+	const playerSwitchAnimations = useCallback(() => {
 		const currentIndex = spineTabs.findIndex((tab) => tab.value === spineAnimationName);
 		const nextIndex = currentIndex === -1 || currentIndex + 1 >= spineTabs.length ? 0 : currentIndex + 1;
 		const next = spineTabs[nextIndex];
 		if (next) {
 			switchAnimations(next.value);
 		}
-	};
+	}, [spineTabs, spineAnimationName, switchAnimations]);
 
 	return (
 		<main>

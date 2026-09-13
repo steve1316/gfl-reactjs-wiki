@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 
 import { Fab } from "@mui/material";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -30,7 +31,7 @@ interface SpineAnimationProps {
  * @param props Component props.
  * @returns A canvas showing the animation, or a short status message.
  */
-export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation, maxSize = 420 }: SpineAnimationProps) {
+export default memo(function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation, maxSize = 420 }: SpineAnimationProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const playerRef = useRef<SpinePlayer | null>(null);
 	const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -109,6 +110,27 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 		}
 	}, [animation, status]);
 
+	// A drag ends in a click. Swallow only that one, so a pan does not also advance the animation. This used to
+	// swallow every click while zoomed, which left the animation stuck until the view was reset.
+	const handleStageClick = useCallback(
+		(event: MouseEvent<HTMLDivElement>) => {
+			if (zoom.wasDragged()) {
+				event.stopPropagation();
+			}
+		},
+		[zoom.wasDragged]
+	);
+
+	const stopPointerDown = useCallback((event: PointerEvent<HTMLButtonElement>) => event.stopPropagation(), []);
+
+	const handleResetClick = useCallback(
+		(event: MouseEvent<HTMLButtonElement>) => {
+			event.stopPropagation();
+			zoom.reset();
+		},
+		[zoom.reset]
+	);
+
 	return (
 		// The mount point below is deliberately taken out of flow (absolute) rather than a normal block: a
 		// fixed-pixel box sitting in flow would force this wrapper's own flex ancestor to grow to match it,
@@ -122,18 +144,7 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 		// No `overflow: hidden` here: this div's own CSS width resolves to 0 (the same shrink-wrap issue the
 		// comment above describes), so clipping to its own box would clip the mount point to nothing instead
 		// of just trimming the parts of a zoomed-in chibi that pan past the stage edge.
-		<div
-			ref={zoom.containerRef}
-			style={{ width: "100%", height: stageSize, position: "relative", ...zoom.containerStyle }}
-			{...zoom.handlers}
-			onClick={(event) => {
-				// A drag ends in a click. Swallow only that one, so a pan does not also advance the animation. This
-				// used to swallow every click while zoomed, which left the animation stuck until the view was reset.
-				if (zoom.wasDragged()) {
-					event.stopPropagation();
-				}
-			}}
-		>
+		<div ref={zoom.containerRef} style={{ width: "100%", height: stageSize, position: "relative", ...zoom.containerStyle }} {...zoom.handlers} onClick={handleStageClick}>
 			<div
 				ref={containerRef}
 				style={{
@@ -159,11 +170,8 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 				<Fab
 					size="small"
 					color="primary"
-					onPointerDown={(event) => event.stopPropagation()}
-					onClick={(event) => {
-						event.stopPropagation();
-						zoom.reset();
-					}}
+					onPointerDown={stopPointerDown}
+					onClick={handleResetClick}
 					aria-label="reset view"
 					sx={{ position: "absolute", left: `calc(50% + ${stageSize / 2 - 48}px)`, bottom: 8, opacity: 0.9 }}
 				>
@@ -191,4 +199,4 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 			)}
 		</div>
 	);
-}
+});
