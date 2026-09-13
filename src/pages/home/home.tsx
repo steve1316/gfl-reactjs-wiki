@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 // Component imports
@@ -37,6 +37,18 @@ const styles = {
 	cardContent: { flexGrow: 1 },
 	cardButton: { display: "flex", margin: "10px", justifyContent: "flex-end" }
 } satisfies Record<string, SxProps<Theme>>;
+
+/** The section cards under the carousel. Static, so declared once here instead of rebuilt on every render. The links match the routes in App.tsx. */
+const SECTION_CARDS = [
+	{ title: "T-Doll Index", description: "View Index of T-Dolls along with additional information like statistics and sprite animations.", link: "/index", image: tdoll_index_logo },
+	{ title: "Equipment Index", description: "View Index of Equipment available for T-Dolls.", link: "/equipment-index", image: equipment_index_logo },
+	{ title: "HOC Index", description: "View Index of HOCs available.", link: "/hoc-index", image: hoc_index_logo },
+	{ title: "Fairy Index", description: "View Index of Fairies available.", link: "/fairy-index", image: fairy_index_logo },
+	{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo }
+];
+
+/** Transform origin for each card's grow-in. A constant, since an inline object is a new prop every render. */
+const GROW_STYLE = { transformOrigin: "0 0 0" };
 
 /** How many dolls the carousel holds: four sets of three before it asks for a fresh pool. */
 const CAROUSEL_SIZE = 12;
@@ -92,20 +104,12 @@ function randomDollIds(count: number): number[] {
  * @returns The home page.
  */
 export default function Home() {
-	var stagger = 100; // Stagger timeout for this page's animations.
-
-	// This contains the information to be rendered into cards. The link attribute is tied to the Route in App.js.
-	const cards = [
-		{ title: "T-Doll Index", description: "View Index of T-Dolls along with additional information like statistics and sprite animations.", link: "/index", image: tdoll_index_logo },
-		{ title: "Equipment Index", description: "View Index of Equipment available for T-Dolls.", link: "/equipment-index", image: equipment_index_logo },
-		{ title: "HOC Index", description: "View Index of HOCs available.", link: "/hoc-index", image: hoc_index_logo },
-		{ title: "Fairy Index", description: "View Index of Fairies available.", link: "/fairy-index", image: fairy_index_logo },
-		{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo }
-	];
-
 	// Held in state rather than derived, so previous and next are real history rather than fresh rolls and
 	// the shuffle button can hand the carousel a whole new set.
 	const [carouselIds, setCarouselIds] = useState(() => randomDollIds(CAROUSEL_SIZE));
+
+	// Stable, so the memoised carousel does not re-render whenever the home page does.
+	const reshuffle = useCallback(() => setCarouselIds(randomDollIds(CAROUSEL_SIZE)), []);
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
@@ -121,7 +125,7 @@ export default function Home() {
 			<Box sx={{ boxShadow: 1 }}>
 				{/* No container here: the carousel spans the hero, since each side of it is a button. */}
 				<Box component="div" sx={styles.heroContent}>
-					<DollCarousel ids={carouselIds} onShuffle={() => setCarouselIds(randomDollIds(CAROUSEL_SIZE))} />
+					<DollCarousel ids={carouselIds} onShuffle={reshuffle} />
 				</Box>
 			</Box>
 			{/* End of Hero Unit */}
@@ -129,11 +133,11 @@ export default function Home() {
 			{/* Cards Section for Navigation */}
 			<Container sx={styles.cardGrid} maxWidth="md">
 				<Grid container spacing={4}>
-					{cards.map((card) => {
-						stagger += 100;
+					{SECTION_CARDS.map((card, index) => {
+						// Each card grows in 100ms after the one before it. This was a counter mutated during the map.
 						return (
 							<Grid key={card.title} size={{ xs: 12, sm: 6, md: 4 }}>
-								<Grow in={true} style={{ transformOrigin: "0 0 0" }} timeout={400 + stagger}>
+								<Grow in={true} style={GROW_STYLE} timeout={600 + index * 100}>
 									<Card sx={styles.card}>
 										<CardActionArea>
 											<CardMedia sx={styles.cardMedia} image={card.image} title={card.title} />
