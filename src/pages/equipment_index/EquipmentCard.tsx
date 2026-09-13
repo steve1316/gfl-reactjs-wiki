@@ -9,7 +9,7 @@ import type { SxProps, Theme } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { searchIndex } from "../../lib/data";
-import type { Equipment } from "../../types/equipment";
+import type { Equipment, EquipmentDoll } from "../../types/equipment";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,9 +38,6 @@ const STAT_NAMES: Record<string, string> = {
 	armor: "Armor"
 };
 
-/** Doll ids keyed by normalised name, built once for every card to share. */
-const DOLL_IDS_BY_NAME = new Map(searchIndex.map((entry) => [normaliseName(entry.name), entry.id]));
-
 const styles = {
 	heading: (theme: Theme) => ({
 		fontSize: theme.typography.pxToRem(15),
@@ -60,35 +57,19 @@ const styles = {
 		borderColor: "divider",
 		"&:last-of-type": { borderBottom: 0 }
 	},
+	iconPlaceholder: {
+		aspectRatio: "1 / 1",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		bgcolor: "action.hover"
+	},
 	dollLink: {
 		color: "primary.main",
 		textDecorationColor: "inherit",
 		"&:hover": { textDecorationThickness: 2 }
 	}
 } satisfies Record<string, SxProps<Theme>>;
-
-/**
- * Reduce a name to lowercase letters and digits, so "M4 SOPMOD II" and "m4sopmodii" compare equal.
- *
- * @param text The name to normalise.
- * @returns The text with everything but letters and digits removed.
- */
-function normaliseName(text: string): string {
-	return text.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-/**
- * Find the doll a "usable" entry names, if it names one.
- *
- * Entries are either a weapon class such as `AR`, which matches no doll, or a doll's name. Mod-only equipment
- * writes the name with a trailing ` Mod`, which has no page of its own and links to the doll.
- *
- * @param usable One entry from the equipment's `usable` list.
- * @returns The doll's id, or undefined when the entry is a weapon class or an unknown name.
- */
-function dollIdFor(usable: string): number | undefined {
-	return DOLL_IDS_BY_NAME.get(normaliseName(usable.replace(/ Mod$/, "")));
-}
 
 /** Props for EquipmentDescription. */
 interface EquipmentDescriptionProps {
@@ -123,45 +104,33 @@ const EquipmentDescription = memo(function EquipmentDescription({ description }:
 
 /** Props for EquippableBy. */
 interface EquippableByProps {
-	/** Weapon classes or doll names that can equip this. */
+	/** Weapon classes that can equip this. Empty for exclusive items. */
 	usable: string[];
-	/** Whether the equipment is restricted to specific dolls, which highlights the names. */
-	exclusive: boolean;
+	/** The dolls an exclusive item belongs to. Empty otherwise. */
+	dolls: EquipmentDoll[];
 }
 
 /**
- * The "Equippable by" line, with every doll it names linked to that doll's page.
+ * The "Equippable by" line: weapon classes for general equipment, or links to each doll for exclusive equipment.
  *
  * @param props Component props.
  * @returns The subheader content.
  */
-const EquippableBy = memo(function EquippableBy({ usable, exclusive }: EquippableByProps) {
+const EquippableBy = memo(function EquippableBy({ usable, dolls }: EquippableByProps) {
+	if (dolls.length === 0) {
+		return <>Equippable by {usable.join(", ")}</>;
+	}
 	return (
 		<>
 			Equippable by{" "}
-			{usable.map((item, index) => {
-				const id = dollIdFor(item);
-				const separator = index === 0 ? null : ", ";
-				if (id !== undefined) {
-					return (
-						<span key={item}>
-							{separator}
-							<Box component={Link} to={`/tdoll/${id}`} sx={styles.dollLink}>
-								{item}
-							</Box>
-						</span>
-					);
-				}
+			{dolls.map((doll, index) => {
+				const name = searchIndex.find((entry) => entry.id === doll.id)?.name ?? `#${doll.id}`;
 				return (
-					<span key={item}>
-						{separator}
-						{exclusive ? (
-							<Box component="span" sx={{ color: "primary.main" }}>
-								<ins>{item}</ins>
-							</Box>
-						) : (
-							item
-						)}
+					<span key={`${doll.id}-${doll.mod}`}>
+						{index === 0 ? null : ", "}
+						<Box component={Link} to={`/tdoll/${doll.id}`} sx={styles.dollLink}>
+							{doll.mod ? `${name} Mod` : name}
+						</Box>
 					</span>
 				);
 			})}
@@ -190,10 +159,18 @@ interface EquipmentCardProps {
 export default memo(function EquipmentCard({ equipment, level }: EquipmentCardProps) {
 	return (
 		<Card>
-			<CardHeader title={equipment.name} subheader={<EquippableBy usable={equipment.usable} exclusive={equipment.exclusive} />} />
+			<CardHeader title={equipment.name} subheader={<EquippableBy usable={equipment.usable} dolls={equipment.dolls} />} />
 
 			<CardActionArea>
-				<CardMedia component="img" image={equipment.image} title={equipment.name} loading="lazy" />
+				{equipment.image === null ? (
+					<Box sx={styles.iconPlaceholder}>
+						<Typography variant="body2" color="text.secondary">
+							Icon not available yet
+						</Typography>
+					</Box>
+				) : (
+					<CardMedia component="img" image={equipment.image} title={equipment.name} loading="lazy" />
+				)}
 			</CardActionArea>
 
 			<CardContent sx={styles.stats}>

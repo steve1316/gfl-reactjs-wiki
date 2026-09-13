@@ -10,7 +10,7 @@ import FilterChip from "../../components/FilterChip";
 import EquipmentCard from "./EquipmentCard";
 
 import { loadEquipment } from "../../lib/data";
-import type { Equipment } from "../../types/equipment";
+import type { Equipment, EquipmentType } from "../../types/equipment";
 
 /** Labels under the level slider: the ends spelled out, the steps between as bare numbers. Static, so built once here. */
 const SLIDER_MARKS = Array.from({ length: 10 }, (_value, index) => ({ value: index + 1, label: index === 0 ? "Lvl 1" : index === 9 ? "Lvl 10" : String(index + 1) }));
@@ -65,25 +65,10 @@ const styles = {
  * @returns The equipment index page.
  */
 export default function EquipmentIndex() {
-	const [equipmentByCategory, setEquipmentByCategory] = useState<Record<string, Equipment[]>>({});
+	const [equipment, setEquipment] = useState<{ types: EquipmentType[]; items: Record<string, Equipment[]> }>({ types: [], items: {} });
 
-	const [typeFilter, setTypeFilter] = useState([
-		{ key: 0, label: "Optical Sight", selected: false, property: "opticalSight" },
-		{ key: 1, label: "Holographic Sight", selected: false, property: "holographicSight" },
-		{ key: 2, label: "Red Dot Sight", selected: false, property: "redDotSight" },
-		{ key: 3, label: "Suppressor", selected: false, property: "suppressor" },
-		{ key: 4, label: "Night Battle Equipment", selected: false, property: "nightBattleEquipment" },
-		{ key: 5, label: "AP Ammo", selected: false, property: "armorPiercingAmmo" },
-		{ key: 6, label: "HP Ammo", selected: false, property: "hollowPointAmmo" },
-		{ key: 7, label: "HV Ammo", selected: false, property: "highVelocityAmmo" },
-		{ key: 8, label: "Shotgun Shells", selected: false, property: "shotgunShells" },
-		{ key: 9, label: "Exoskeleton", selected: false, property: "exoskeleton" },
-		{ key: 10, label: "Armor Plate", selected: false, property: "armorPlate" },
-		{ key: 11, label: "Ammo Box", selected: false, property: "ammunitionBox" },
-		{ key: 12, label: "Camouflage Cloak", selected: false, property: "camouflageCloak" },
-		{ key: 13, label: "Chip", selected: false, property: "chip" },
-		{ key: 14, label: "Special", selected: false, property: "special" }
-	]);
+	// Keys of the equipment types whose chips are on. None selected shows every type.
+	const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
 
 	const [exclusiveFilter, setExclusiveFilter] = useState({
 		key: 0,
@@ -99,7 +84,7 @@ export default function EquipmentIndex() {
 
 	// Equipment is fetched once, on mount, rather than pulled in at module scope.
 	useEffect(() => {
-		void loadEquipment().then(setEquipmentByCategory);
+		void loadEquipment().then(setEquipment);
 	}, []);
 
 	// Set HTML meta-data here using document API.
@@ -110,7 +95,16 @@ export default function EquipmentIndex() {
 
 	// Stable handlers that toggle from the current state, so the memoised chips only re-render when their own filter changes.
 	const handleOnClickType = useCallback((key?: string | number) => {
-		setTypeFilter((types) => types.map((type) => (type.key === key ? { ...type, selected: !type.selected } : type)));
+		setSelectedTypes((current) => {
+			const next = new Set(current);
+			const typeKey = String(key);
+			if (next.has(typeKey)) {
+				next.delete(typeKey);
+			} else {
+				next.add(typeKey);
+			}
+			return next;
+		});
 	}, []);
 
 	const handleOnClickExclusive = useCallback(() => {
@@ -120,48 +114,10 @@ export default function EquipmentIndex() {
 	// T-Doll equipment matching the filters. Derived rather than copied into state from an effect, which rendered
 	// the whole grid twice for every filter change.
 	const searchResults = useMemo((): Equipment[] => {
-		const tempArray: Equipment[] = [];
-		let typeSelected = 0;
-		var exclusiveSelected = false;
-
-		// Grab the equipment categories as keys.
-		const keys = Object.keys(equipmentByCategory);
-
-		// Check to see if filters are enabled and how many.
-		typeSelected = typeFilter.filter((type) => type.selected).length;
-
-		if (exclusiveFilter.selected === true) {
-			exclusiveSelected = true;
-		}
-
-		if (typeSelected === 0) {
-			for (var i = 0; i < keys.length; i++) {
-				(equipmentByCategory[keys[i] ?? ""] ?? []).forEach((equipment) => {
-					if (exclusiveSelected && equipment.exclusive) {
-						tempArray.push(equipment);
-					} else if (!exclusiveSelected) {
-						tempArray.push(equipment);
-					}
-				});
-			}
-		} else {
-			for (var i = 0; i < keys.length; i++) {
-				typeFilter.map((type) => {
-					if (type.selected && type.property === keys[i]) {
-						(equipmentByCategory[keys[i] ?? ""] ?? []).forEach((equipment) => {
-							if (exclusiveSelected && equipment.exclusive) {
-								tempArray.push(equipment);
-							} else if (!exclusiveSelected) {
-								tempArray.push(equipment);
-							}
-						});
-					}
-				});
-			}
-		}
-
-		return tempArray;
-	}, [typeFilter, exclusiveFilter, equipmentByCategory]);
+		const types = selectedTypes.size === 0 ? equipment.types : equipment.types.filter((type) => selectedTypes.has(type.key));
+		const items = types.flatMap((type) => equipment.items[type.key] ?? []);
+		return exclusiveFilter.selected ? items.filter((item) => item.exclusive) : items;
+	}, [selectedTypes, exclusiveFilter, equipment]);
 
 	const handleSlider = useCallback((_event: Event, newValue: number | number[]) => {
 		setCurrentLevel(Array.isArray(newValue) ? (newValue[0] ?? 1) : newValue);
@@ -175,12 +131,12 @@ export default function EquipmentIndex() {
 
 				{/* Filters List */}
 				<Box component="ul" sx={styles.chipList}>
-					{typeFilter.map((type) => {
+					{equipment.types.map((type) => {
 						return (
 							<li key={type.key}>
 								<Zoom in={true} timeout={400}>
 									<span>
-										<FilterChip label={type.label} selected={type.selected} value={type.key} onToggle={handleOnClickType} />
+										<FilterChip key={type.key} label={type.label} selected={selectedTypes.has(type.key)} value={type.key} onToggle={handleOnClickType} />
 									</span>
 								</Zoom>
 							</li>
@@ -229,9 +185,9 @@ export default function EquipmentIndex() {
 				{/* Filtered Equipment Results */}
 				<Grid container spacing={4}>
 					{/* No fade per card: they were staggered up to a second apart, so the page took that long to look loaded. */}
-					{searchResults.map((equipment) => (
-						<Grid key={equipment.name + equipment.rarity} size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 2 }}>
-							<EquipmentCard equipment={equipment} level={deferredLevel} />
+					{searchResults.map((item) => (
+						<Grid key={item.id} size={{ xs: 12, sm: 6, md: 3, lg: 3, xl: 2 }}>
+							<EquipmentCard equipment={item} level={deferredLevel} />
 						</Grid>
 					))}
 				</Grid>
