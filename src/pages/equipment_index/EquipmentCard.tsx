@@ -176,9 +176,10 @@ export default memo(function EquipmentCard({ equipment, level }: EquipmentCardPr
 			<CardContent sx={styles.stats}>
 				{Object.keys(equipment.stats).map((key) => {
 					const values = equipment.stats[key] ?? [];
-					const atLevel = values[level - 1];
+					// Values run from level 0 to 10, so the level is the index.
+					const atLevel = values[level];
 					// Highlighted when levelling has actually moved this stat off its level-one value.
-					const improved = level !== 1 && atLevel !== values[0];
+					const improved = level !== 1 && atLevel !== values[1];
 
 					return (
 						<Box key={key} sx={styles.statRow}>
