@@ -23,6 +23,13 @@ body,
 	flex-direction: column;
 }
 
-.App {
+/* Only `.App` takes the spare height. The navbar's wrapper still carries a `flexGrow: 1` from the old
+ * AppBar recipe, and left alone it shared the leftover space with `.App`, dropping short pages ~100px
+ * below the bar. The id selector outranks the sx class, so nothing else in the column can grow either. */
+#root > * {
+	flex: 0 0 auto;
+}
+
+#root > .App {
 	flex: 1 0 auto;
 }
