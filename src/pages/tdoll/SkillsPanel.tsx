@@ -34,6 +34,19 @@ const styles = {
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
+/**
+ * Highlight every `[Label]:` section heading in a skill description, separating each one after the first with a blank line.
+ *
+ * @param text The skill description with its placeholders already filled.
+ * @returns The description with each label wrapped in highlight tags.
+ */
+function highlightLabels(text: string): string {
+	return text.replace(
+		/\[([^\]]+)\]:\s*/g,
+		(_match, label: string, offset: number) => `${offset === 0 ? "" : "<br /><br />"}<span style="color: orange; font-size: 110%;"><ins>[${label}]</ins></span>: `
+	);
+}
+
 /** Props for SkillsPanel. */
 interface SkillsPanelProps {
 	/** Whether the doll has a Mod, which shows the Skill 1/2 toggle and Skill 2 itself. */
@@ -116,48 +129,32 @@ export default memo(function SkillsPanel({
 		// If the doll has a Mod, format both Skill 1 and Skill 2. If not, only format Skill 1.
 		if (showModSkill) {
 			// Format Skill 1 first.
-			for (let statIndex = 1; statIndex <= numberOfStats1; statIndex++) {
+			for (let statIndex = numberOfStats1; statIndex >= 1; statIndex--) {
 				const values = skill[`stat${statIndex}`] ?? [];
 				tempSkillDescription1 = tempSkillDescription1.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
 			}
 
 			// Format Skill 2 next.
-			for (let statIndex = 1; statIndex <= numberOfStats2; statIndex++) {
+			for (let statIndex = numberOfStats2; statIndex >= 1; statIndex--) {
 				const values = skill2?.[`stat${statIndex}`] ?? [];
 				tempSkillDescription2 = tempSkillDescription2.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
 			}
 
-			if ("passive_active_description" in skill) {
-				tempSkillDescription1 = tempSkillDescription1.replace("[Passive]:", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
-				tempSkillDescription1 = tempSkillDescription1.replace("[Active]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
-			}
-
-			if (skill2 && "passive_active_description" in skill2) {
-				tempSkillDescription2 = tempSkillDescription2.replace("[Passive]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
-				tempSkillDescription2 = tempSkillDescription2.replace("[Active]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
-			}
-
-			if (skill2 && "passive_passive_description" in skill2) {
-				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 1]: ", '<span style="color: orange; font-size: 110%;"><ins>[Passive 1]</ins></span>: ');
-				tempSkillDescription2 = tempSkillDescription2.replace("[Passive 2]: ", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Passive 2]</ins></span>: ');
-			}
+			// Highlight any "[Label]:" sections, then turn line breaks into HTML.
+			tempSkillDescription1 = highlightLabels(tempSkillDescription1).replaceAll("\n", "<br />");
+			tempSkillDescription2 = highlightLabels(tempSkillDescription2).replaceAll("\n", "<br />");
 
 			setSkillDescription1(tempSkillDescription1);
 			setSkillDescription2(tempSkillDescription2);
 		} else {
 			// Only format Skill 1.
-			for (let statIndex = 1; statIndex <= numberOfStats1; statIndex++) {
+			for (let statIndex = numberOfStats1; statIndex >= 1; statIndex--) {
 				const values = skill[`stat${statIndex}`] ?? [];
 				tempSkillDescription1 = tempSkillDescription1.replace(`#${statIndex}`, '<span style="color: cyan; font-size: 110%;"><ins>' + (values[skillLevel - 1] ?? "") + "</ins></span>");
 			}
 
-			if ("passive_active_description" in skill) {
-				tempSkillDescription1 = tempSkillDescription1.replace("[Passive]:", '<span style="color: orange; font-size: 110%;"><ins>[Passive]</ins></span>: ');
-				tempSkillDescription1 = tempSkillDescription1.replace("[Active]:", '<span style="color: orange; font-size: 110%;"><ins><br /><br />[Active]</ins></span>: ');
-			}
-
-			// Insert HTML <br /> tags whenever there is an occurrence of \n inside string.abs
-			tempSkillDescription1 = tempSkillDescription1.replaceAll("\n", "<br />");
+			// Highlight any "[Label]:" sections, then turn line breaks into HTML.
+			tempSkillDescription1 = highlightLabels(tempSkillDescription1).replaceAll("\n", "<br />");
 
 			// Deal with Jill's special skill description menu.
 			if (dollId === 1017) {
