@@ -62,8 +62,8 @@ const SHARDS: ReadonlyArray<{ max: number; load: () => Promise<{ default: RawTDo
 	{ max: 200, load: () => import("../data/dolls-101-200.json") as Promise<{ default: RawTDoll[] }> },
 	{ max: 300, load: () => import("../data/dolls-201-300.json") as Promise<{ default: RawTDoll[] }> },
 	{ max: 400, load: () => import("../data/dolls-301-400.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: 999, load: () => import("../data/dolls-401-500.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: Number.POSITIVE_INFINITY, load: () => import("../data/dolls-1000-1099.json") as Promise<{ default: RawTDoll[] }> }
+	{ max: 999, load: () => import("../data/dolls-401-999.json") as Promise<{ default: RawTDoll[] }> },
+	{ max: Number.POSITIVE_INFINITY, load: () => import("../data/dolls-1000-1999.json") as Promise<{ default: RawTDoll[] }> }
 ];
 
 /** Cache of in-flight and settled shard loads, so a shard is fetched and processed at most once. */
