@@ -7,7 +7,7 @@ import type { SxProps, Theme } from "@mui/material";
 // MaterialUI icon imports
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
-import { cardArtSx, heroArtSx } from "../../lib/artLayout";
+import { cardArtSx } from "../../lib/artLayout";
 import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import type { RawSkins } from "../../types/tdoll";
@@ -18,32 +18,8 @@ const styles = {
 	root: {
 		position: "relative",
 		width: "100%",
-		overflow: "hidden",
-		borderRadius: "12px",
 		mb: 2
 	},
-	// The same art as the portrait, blown up and blurred into a backdrop. Scaled past the edges because a
-	// blur of this radius leaves a soft, transparent border otherwise.
-	backdrop: {
-		...heroArtSx,
-		position: "absolute",
-		inset: 0,
-		filter: "blur(9px) saturate(1.2)",
-		transform: "scale(1.06)",
-		pointerEvents: "none"
-	},
-	// Without art there is nothing to blur, so the block falls back to a flat panel rather than a gap.
-	backdropFallback: (theme: Theme) => ({
-		position: "absolute",
-		inset: 0,
-		backgroundColor: theme.palette.raised
-	}),
-	scrim: (theme: Theme) => ({
-		position: "absolute",
-		inset: 0,
-		backgroundColor: alpha(theme.palette.background.default, 0.55),
-		pointerEvents: "none"
-	}),
 	content: {
 		position: "relative",
 		display: "flex",
@@ -137,8 +113,6 @@ interface DollHeroProps {
 	rarity: number;
 	/** Whether the form currently on screen is the Mod, which recolours the rarity stars. */
 	isMod: boolean;
-	/** URL of the full art, used blurred as the backdrop, or undefined when the doll has published none. */
-	artUrl: string | undefined;
 	/** URL of the sharp card portrait on the left of the hero. */
 	cardImage: string | undefined;
 	/** Called when the portrait is clicked, which toggles between the normal and damaged art. */
@@ -162,21 +136,17 @@ interface DollHeroProps {
 /**
  * The doll page's hero: the portrait, the name and badges, the skin pills and the Mod toggle.
  *
- * The full art is the backdrop rather than the subject. Shown flat it was a slab of cropped artwork with
- * text laid over it, and the page then repeated the same doll as a portrait immediately below. Blurring it
- * behind the sharp portrait keeps its colour without spending the whole band on a second copy of the art.
+ * The full art is not drawn here. It sits blurred behind the whole page in `PageBackdrop`, so the hero
+ * carries only the sharp portrait and the doll's details on top of it.
  *
  * @param props Component props.
  * @returns The hero block.
  */
-export default function DollHero({ name, id, type, rarity, isMod, artUrl, cardImage, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
+export default function DollHero({ name, id, type, rarity, isMod, cardImage, onCardImageClick, normalId, skins, skinValue, onSkinChange, hasMod, modOn, onToggleMod }: DollHeroProps) {
 	const skinNames = skins?.skin_names ?? [];
 
 	return (
 		<Box data-testid="doll-hero" sx={styles.root}>
-			{artUrl ? <Box component="img" src={artUrl} alt="" aria-hidden sx={styles.backdrop} /> : <Box sx={styles.backdropFallback} />}
-			<Box sx={styles.scrim} />
-
 			<Box sx={styles.content}>
 				<Card sx={styles.portrait}>
 					<CardActionArea onClick={onCardImageClick}>

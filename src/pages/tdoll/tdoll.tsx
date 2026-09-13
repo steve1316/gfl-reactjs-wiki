@@ -6,12 +6,13 @@ import ScrollToTop from "../../components/ScrollToTop";
 import ChibiPanel from "./ChibiPanel";
 import DollHero from "./DollHero";
 import LazySection from "./LazySection";
+import PageBackdrop from "./PageBackdrop";
 import SkillsPanel from "./SkillsPanel";
 import StatsPanel from "./StatsPanel";
 import TilesPanel from "./TilesPanel";
 
 // MaterialUI imports
-import { Box, Container, Grid, Paper, Typography } from "@mui/material";
+import { Box, Container, Grid, Paper, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { loadDoll, spineFor } from "../../lib/data";
@@ -31,11 +32,18 @@ const styles = {
 		// Wider than the xl breakpoint so a 1920 screen actually gets four usable columns, but still capped
 		// so the sections do not stretch into a letterbox on an ultrawide.
 		maxWidth: 1800,
-		mx: "auto"
+		mx: "auto",
+		// Lifts the content above the fixed backdrop, which would otherwise paint over it.
+		position: "relative",
+		zIndex: 1
 	},
-	section: {
-		p: { xs: 2, md: 2.5 }
-	},
+	// Translucent so the backdrop reads through the sections too, with a light blur behind the panel to keep
+	// the text legible over the busier parts of the art.
+	section: (theme: Theme) => ({
+		p: { xs: 2, md: 2.5 },
+		backgroundColor: alpha(theme.palette.background.paper, 0.7),
+		backdropFilter: "blur(6px)"
+	}),
 	sectionHeading: {
 		mb: 1.5
 	},
@@ -362,6 +370,7 @@ function TDollContent({ doll }: TDollContentProps) {
 
 	return (
 		<main>
+			<PageBackdrop artUrl={heroArtUrl} />
 			<ScrollToTop />
 			<Container sx={styles.page} maxWidth={false}>
 				{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
@@ -371,7 +380,6 @@ function TDollContent({ doll }: TDollContentProps) {
 					type={tdoll.selected.type}
 					rarity={tdoll.selected.rarity}
 					isMod={isModForm}
-					artUrl={heroArtUrl}
 					cardImage={tdollImage}
 					onCardImageClick={switchBetweenNormalDamagedCardImages}
 					normalId={tdoll.normal.id}
