@@ -3,7 +3,11 @@ import { stripMarkup } from "./text.mjs";
 /** A number, with a trailing `%` or `x` kept as part of the value when no letter follows it. */
 const NUMBER = /-?\d+(?:\.\d+)?(?:%|x(?![A-Za-z]))?/g;
 
-/** Words whose plural form changes with the number in front of them. Normalised only for comparing levels. */
+/**
+ * Words whose plural form changes with the number in front of them. Kept for reference: templating no longer
+ * requires the wording to match between levels (see `templateLevels`), only the count of numbers, so this no
+ * longer feeds a comparison. Left in place in case a future word-level check needs it again.
+ */
 const PLURALS = /\b(second|unit|time|stack|round|shot|target|enemy|enemie)s\b/g;
 
 /** The game runs skill timers at 30 frames per second. */
@@ -38,15 +42,17 @@ function tokenise(text) {
  * Turn ten per-level descriptions into one template and its per-level values.
  *
  * Numbers that differ between levels become `#1`, `#2` ... in order. Numbers that never change stay in the text.
+ * The wording around the numbers is allowed to drift between levels (upstream sometimes swaps a word, like
+ * "Throw" for "Launch", or has a typo on one level) - only the count of numbers per level has to agree, since that
+ * is what lines the per-level values up by position. The level 10 wording is used for the final text.
  *
  * @param {string[]} levels The description at levels 1 to 10.
- * @returns {{ description: string, stats: string[][] } | null} The template, or null when the levels differ in words.
+ * @returns {{ description: string, stats: string[][] } | null} The template, or null when the levels have a different count of numbers.
  */
 export function templateLevels(levels) {
 	const tokens = levels.map(tokenise);
-	const shape = (entry) => `${entry.numbers.length}|${entry.parts.join("#").replace(PLURALS, "$1")}`;
-	const first = shape(tokens[0]);
-	if (tokens.some((entry) => shape(entry) !== first)) {
+	const firstCount = tokens[0].numbers.length;
+	if (tokens.some((entry) => entry.numbers.length !== firstCount)) {
 		return null;
 	}
 	const last = tokens[tokens.length - 1];
@@ -99,7 +105,7 @@ export function buildSkill(upstream, groupId, warnings) {
 	const levels = rows.map((row) => stripMarkup(upstream.t(row.description)).trim());
 	const templated = templateLevels(levels);
 	if (templated === null) {
-		warnings.push(`skill ${groupId}: levels differ in wording, using level 10 text`);
+		warnings.push(`skill ${groupId}: levels have a different count of numbers, using level 10 text`);
 	}
 	const description = templated ? templated.description : levels[9];
 	const stats = templated ? templated.stats : [];
