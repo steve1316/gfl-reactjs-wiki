@@ -23,8 +23,6 @@ const STATS = ["max_hp", "max_dmg", "max_acc", "max_eva", "max_rof", "max_armor"
 
 /**
  * Compare every legacy hand-written doll against the generated doll and sort each difference into a bucket.
- *
- * @returns {void}
  */
 function main() {
 	const legacy = LEGACY_SHARDS.flatMap((shard) => new Function(fs.readFileSync(`src/data/${shard}.js`, "utf8").replace("export default tdolls;", "return tdolls;"))());

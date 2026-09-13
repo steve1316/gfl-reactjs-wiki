@@ -11,6 +11,9 @@ import fs from "node:fs";
 
 import { SHARDS } from "./lib/shards.mjs";
 
+/** Lines of combined stdout+stderr kept in the failure message when `pnpm build` fails. */
+const BUILD_FAILURE_LOG_LINES = 40;
+
 /** Pinned stats: [doll id, form, hp, dmg, acc, eva, rof, armor]. Verified against the game formulas and the old data. */
 const REFERENCE_STATS = [
 	[65, "normal", 121, 51, 46, 44, 76, 0],
@@ -36,20 +39,32 @@ const REFERENCE_GRIDS = [
 /**
  * Read the counts from the last committed upstream.json, if there is one.
  *
- * @returns {{ dolls: number, mods: number, equipment: number } | null} Previous counts.
+ * A missing file at HEAD means "first run" and returns null. Git being unavailable, HEAD not resolving, or a
+ * committed file that fails to parse are real failures, not a first run, and throw instead.
+ *
+ * @returns {{ dolls: number, mods: number, equipment: number } | null} Previous counts, or null on a first run.
  */
 function previousCounts() {
 	try {
-		return JSON.parse(execFileSync("git", ["show", "HEAD:src/data/upstream.json"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })).counts;
+		execFileSync("git", ["cat-file", "-e", "HEAD:src/data/upstream.json"], { stdio: "ignore" });
 	} catch {
+		try {
+			execFileSync("git", ["rev-parse", "--verify", "HEAD"], { stdio: "ignore" });
+		} catch {
+			throw new Error("git is unavailable or HEAD could not be resolved");
+		}
 		return null;
+	}
+	const text = execFileSync("git", ["show", "HEAD:src/data/upstream.json"], { encoding: "utf8" });
+	try {
+		return JSON.parse(text).counts;
+	} catch (error) {
+		throw new Error(`HEAD:src/data/upstream.json is committed but is not valid JSON: ${error.message}`);
 	}
 }
 
 /**
  * Run every check against the generated data and exit 1 with a failure list if any check fails.
- *
- * @returns {void}
  */
 function main() {
 	const failures = [];
@@ -60,7 +75,12 @@ function main() {
 	const upstream = JSON.parse(fs.readFileSync("src/data/upstream.json", "utf8"));
 	const skinAssets = JSON.parse(fs.readFileSync("tools/data/skin-assets.json", "utf8"));
 
-	const previous = previousCounts();
+	let previous = null;
+	try {
+		previous = previousCounts();
+	} catch (error) {
+		fail(error.message);
+	}
 	if (previous) {
 		for (const key of ["dolls", "mods", "equipment"]) {
 			if (upstream.counts[key] < previous[key]) {
@@ -89,6 +109,10 @@ function main() {
 				fail(`doll ${doll.normal.id} ${form.name || "(no name)"} is missing a required field`);
 			}
 			for (const skill of [form.skill, form.skill2].filter(Boolean)) {
+				if (!Number.isInteger(skill.number_of_stats) || skill.number_of_stats < 0) {
+					fail(`doll ${doll.normal.id} skill "${skill.name}" has an invalid number_of_stats: ${skill.number_of_stats}`);
+					continue;
+				}
 				for (let index = 1; index <= skill.number_of_stats; index++) {
 					if (!skill.description.includes(`#${index}`) || !Array.isArray(skill[`stat${index}`])) {
 						fail(`doll ${doll.normal.id} skill "${skill.name}" has no #${index} or stat${index}`);
@@ -117,9 +141,11 @@ function main() {
 
 	if (!process.argv.includes("--skip-build")) {
 		try {
-			execFileSync("pnpm", ["build"], { stdio: "ignore" });
-		} catch {
-			fail("pnpm build failed");
+			execFileSync("pnpm", ["build"], { stdio: ["ignore", "pipe", "pipe"], encoding: "utf8" });
+		} catch (error) {
+			const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+			const lastLines = output.split("\n").slice(-BUILD_FAILURE_LOG_LINES).join("\n");
+			fail(`pnpm build failed:\n${lastLines}`);
 		}
 	}
 
