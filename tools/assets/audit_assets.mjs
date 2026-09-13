@@ -25,11 +25,42 @@ const IMAGE_SUFFIX = { card: "card", card_damaged: "card_d", full: "full", full_
 
 /** Animation names src/lib/spine.ts can give a readable label. Anything else shows as its raw name. */
 const KNOWN_ANIMATION_NAMES = new Set([
-	"wait", "wait2", "move", "attack", "attack1", "attack2", "reload", "squatreload",
-	"s", "skill", "skill2", "crouch", "squat", "snipe", "action", "action1", "action2",
-	"spattack", "spattack2", "spa", "spc", "sp", "sp1", "sp2", "landing",
-	"die", "victory", "victory2", "victoryloop", "pick", "sit", "sit2", "lying",
-	"violin", "book", "therun2"
+	"wait",
+	"wait2",
+	"move",
+	"attack",
+	"attack1",
+	"attack2",
+	"reload",
+	"squatreload",
+	"s",
+	"skill",
+	"skill2",
+	"crouch",
+	"squat",
+	"snipe",
+	"action",
+	"action1",
+	"action2",
+	"spattack",
+	"spattack2",
+	"spa",
+	"spc",
+	"sp",
+	"sp1",
+	"sp2",
+	"landing",
+	"die",
+	"victory",
+	"victory2",
+	"victoryloop",
+	"pick",
+	"sit",
+	"sit2",
+	"lying",
+	"violin",
+	"book",
+	"therun2"
 ]);
 
 /**
@@ -129,7 +160,12 @@ function main() {
 			["mod", rigs.mod?.combat],
 			["mod dorm", rigs.mod?.dorm],
 			...(rigs.skinRigs ?? []).flatMap((skin, position) =>
-				skin ? [[`skin${position}`, skin.combat], [`skin${position} dorm`, skin.dorm]] : []
+				skin
+					? [
+							[`skin${position}`, skin.combat],
+							[`skin${position} dorm`, skin.dorm]
+						]
+					: []
 			)
 		].filter(([, rig]) => rig);
 

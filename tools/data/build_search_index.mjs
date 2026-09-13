@@ -13,13 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const SHARDS = [
-	"tdolls_from_1_to_100",
-	"tdolls_from_101_to_200",
-	"tdolls_from_201_to_300",
-	"tdolls_from_301_to_400",
-	"tdolls_from_1000_to_1050"
-];
+const SHARDS = ["tdolls_from_1_to_100", "tdolls_from_101_to_200", "tdolls_from_201_to_300", "tdolls_from_301_to_400", "tdolls_from_1000_to_1050"];
 
 /**
  * Read one data module without importing it.
