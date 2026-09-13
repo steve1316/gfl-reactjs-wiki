@@ -1,0 +1,315 @@
+import fs from "node:fs";
+import path from "node:path";
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Module constants
+
+/** IOPWiki's MediaWiki API endpoint. */
+const API_BASE = "https://iopwiki.com/api.php";
+
+/** Identifies this importer to IOPWiki, per its request for a descriptive User-Agent. */
+const USER_AGENT = "gfl-reactjs-wiki-importer/1.0 (https://github.com/steve1316/gfl-reactjs-wiki)";
+
+/** Minimum gap between sequential IOPWiki requests, so a 10-request bulk fetch stays polite. */
+const REQUEST_DELAY_MS = 1000;
+
+/** Where the fetched pages are cached. Git-ignored. */
+const CACHE_FILE = path.resolve("tools/data/.cache/iopwiki-pages.json");
+
+/** `{{name|arg}}` templates whose text is dropped entirely rather than shown, case-insensitive. */
+const DROPPED_TEMPLATES = new Set(["spoiler"]);
+
+/** HTML entities `plainText` knows how to decode. Anything else is left as-is. */
+const HTML_ENTITIES = {
+	"&amp;": "&",
+	"&nbsp;": " ",
+	"&quot;": '"',
+	"&#39;": "'",
+	"&lt;": "<",
+	"&gt;": ">"
+};
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Fetching
+
+/**
+ * Wait before the next polite, sequential request.
+ *
+ * @param {number} ms Milliseconds to wait.
+ * @returns {Promise<void>} Resolves after the delay.
+ */
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Fetch every IOPWiki page that embeds `Template:PlayableUnit`, which is every T-Doll page.
+ *
+ * Requests are sequential, at least a second apart, and follow the API's `continue` token until it
+ * disappears. Set `IOPWIKI_CACHE=reuse` to read `tools/data/.cache/iopwiki-pages.json` back instead of
+ * touching the network; otherwise this always refetches and overwrites that cache.
+ *
+ * @returns {Promise<{ title: string, wikitext: string }[]>} Every doll page's title and raw wikitext.
+ */
+export async function fetchIopwikiPages() {
+	if (process.env.IOPWIKI_CACHE === "reuse" && fs.existsSync(CACHE_FILE)) {
+		return JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
+	}
+	const pages = [];
+	const params = new URLSearchParams({
+		action: "query",
+		generator: "embeddedin",
+		geititle: "Template:PlayableUnit",
+		geinamespace: "0",
+		geilimit: "50",
+		prop: "revisions",
+		rvprop: "content",
+		rvslots: "main",
+		format: "json",
+		formatversion: "2"
+	});
+	let first = true;
+	for (;;) {
+		if (!first) {
+			await sleep(REQUEST_DELAY_MS);
+		}
+		first = false;
+		const response = await fetch(`${API_BASE}?${params.toString()}`, { headers: { "User-Agent": USER_AGENT } });
+		if (!response.ok) {
+			throw new Error(`IOPWiki API request failed: ${response.status} ${response.statusText}`);
+		}
+		const body = await response.json();
+		for (const page of body.query?.pages ?? []) {
+			const content = page.revisions?.[0]?.slots?.main?.content;
+			if (typeof content === "string") {
+				pages.push({ title: page.title, wikitext: content });
+			}
+		}
+		if (!body.continue) {
+			break;
+		}
+		for (const [key, value] of Object.entries(body.continue)) {
+			params.set(key, value);
+		}
+	}
+	fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true });
+	fs.writeFileSync(CACHE_FILE, JSON.stringify(pages));
+	return pages;
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Template parsing
+
+/**
+ * Split a template's inner content on its top-level `|` characters, without splitting inside a nested
+ * `[[...]]` link. Used once braces are already known absent (the content is a single, innermost template).
+ *
+ * @param {string} inner Template content between `{{` and `}}`.
+ * @returns {string[]} The template name followed by its arguments, in order.
+ */
+function splitTemplateArgs(inner) {
+	const parts = [];
+	let depth = 0;
+	let start = 0;
+	for (let i = 0; i < inner.length; i++) {
+		if (inner.startsWith("[[", i)) {
+			depth++;
+			i++;
+		} else if (inner.startsWith("]]", i)) {
+			depth = Math.max(0, depth - 1);
+			i++;
+		} else if (inner[i] === "|" && depth === 0) {
+			parts.push(inner.slice(start, i));
+			start = i + 1;
+		}
+	}
+	parts.push(inner.slice(start));
+	return parts;
+}
+
+/**
+ * Resolve one already-innermost `{{name|arg1|arg2}}` template body to its plain-text replacement.
+ *
+ * A `spoiler` template is always dropped. Any other template resolves to its last positional (unnamed,
+ * i.e. no `key=`) argument when that argument is itself free of wiki markup, and to an empty string
+ * otherwise.
+ *
+ * @param {string} inner The template body between `{{` and `}}`.
+ * @returns {string} The template's plain-text replacement.
+ */
+function resolveTemplate(inner) {
+	const parts = splitTemplateArgs(inner);
+	const name = (parts[0] ?? "").trim().toLowerCase();
+	if (DROPPED_TEMPLATES.has(name)) {
+		return "";
+	}
+	const positional = parts.slice(1).filter((part) => !part.includes("="));
+	const last = positional.at(-1);
+	if (last === undefined) {
+		return "";
+	}
+	const trimmed = last.trim();
+	return /[[\]{}<>]/.test(trimmed) ? "" : trimmed;
+}
+
+/**
+ * Extract the named parameters of the top-level `{{PlayableUnit ...}}` template from a page's wikitext.
+ *
+ * Nested `{{...}}` templates and `[[...]]` links are tracked by depth, so a `|` inside either never splits
+ * a parameter. Content after the template's matching `}}` (such as a trailing `[[Category:...]]`) is ignored.
+ *
+ * @param {string} wikitext Raw page wikitext.
+ * @returns {Record<string, string> | null} Parameter values keyed by trimmed, lowercased name, or null when
+ *   no `{{PlayableUnit` template is found.
+ */
+export function parsePlayableUnit(wikitext) {
+	const start = wikitext.search(/\{\{\s*PlayableUnit\b/i);
+	if (start === -1) {
+		return null;
+	}
+	let braceDepth = 0;
+	let contentStart = -1;
+	let contentEnd = -1;
+	for (let i = start; i < wikitext.length; i++) {
+		if (wikitext.startsWith("{{", i)) {
+			braceDepth++;
+			if (braceDepth === 1) {
+				contentStart = i + 2;
+			}
+			i++;
+		} else if (wikitext.startsWith("}}", i)) {
+			braceDepth--;
+			i++;
+			if (braceDepth === 0) {
+				contentEnd = i - 1;
+				break;
+			}
+		}
+	}
+	if (contentEnd === -1) {
+		return null;
+	}
+	const content = wikitext.slice(contentStart, contentEnd);
+	const segments = [];
+	let braces = 0;
+	let links = 0;
+	let segStart = 0;
+	for (let i = 0; i < content.length; i++) {
+		if (content.startsWith("{{", i)) {
+			braces++;
+			i++;
+		} else if (content.startsWith("}}", i)) {
+			braces = Math.max(0, braces - 1);
+			i++;
+		} else if (content.startsWith("[[", i)) {
+			links++;
+			i++;
+		} else if (content.startsWith("]]", i)) {
+			links = Math.max(0, links - 1);
+			i++;
+		} else if (content[i] === "|" && braces === 0 && links === 0) {
+			segments.push(content.slice(segStart, i));
+			segStart = i + 1;
+		}
+	}
+	segments.push(content.slice(segStart));
+	const fields = {};
+	// segments[0] is the template name itself ("PlayableUnit"), not a parameter.
+	for (const segment of segments.slice(1)) {
+		const eq = segment.indexOf("=");
+		if (eq === -1) {
+			continue;
+		}
+		const key = segment.slice(0, eq).trim().toLowerCase();
+		if (key) {
+			fields[key] = segment.slice(eq + 1).trim();
+		}
+	}
+	return fields;
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Plain text and field readers
+
+/**
+ * Reduce one raw `parsePlayableUnit` field value to plain display text.
+ *
+ * Order: `<ref>` tags (paired and self-closing) are removed, templates are resolved innermost-first (see
+ * `resolveTemplate`), `[[a|b]]` links resolve to `b` and `[[a]]` to `a`, `<br/>` becomes ", ", any other
+ * HTML tag is stripped, HTML entities are decoded, and finally whitespace is collapsed and trimmed.
+ *
+ * @param {string} value A raw field value from `parsePlayableUnit`.
+ * @returns {string} Plain text.
+ */
+export function plainText(value) {
+	let text = value;
+	text = text.replace(/<ref\b[^>]*\/>/gi, "");
+	text = text.replace(/<ref\b[^>]*>[\s\S]*?<\/ref>/gi, "");
+	while (/\{\{[^{}]*\}\}/.test(text)) {
+		text = text.replace(/\{\{([^{}]*)\}\}/g, (_match, inner) => resolveTemplate(inner));
+	}
+	while (/\[\[[^[\]]*\]\]/.test(text)) {
+		text = text.replace(/\[\[([^[\]]*)\]\]/g, (_match, inner) => {
+			const pipe = inner.indexOf("|");
+			return (pipe === -1 ? inner : inner.slice(pipe + 1)).trim();
+		});
+	}
+	text = text.replace(/<br\s*\/?>/gi, ", ");
+	text = text.replace(/<[^>]+>/g, "");
+	text = text.replace(/&[a-zA-Z#0-9]+;/g, (entity) => HTML_ENTITIES[entity.toLowerCase()] ?? entity);
+	return text.replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Find the doll's EN release year and month inside its raw `releasedon` field.
+ *
+ * @param {string} releasedon Raw `releasedon` field value, holding one `{{doll_server_alias|...}}` per server.
+ * @returns {{ year: number, month: number } | null} The EN year and month, or null when either is missing.
+ */
+export function parseEnRelease(releasedon) {
+	if (!releasedon) {
+		return null;
+	}
+	const templates = releasedon.match(/\{\{doll_server_alias\|[^}]*\}\}/g) ?? [];
+	for (const template of templates) {
+		if (!/\|\s*server\s*=\s*EN\b/i.test(template)) {
+			continue;
+		}
+		const year = template.match(/\|\s*year\s*=\s*(\d+)/);
+		const month = template.match(/\|\s*month\s*=\s*(\d+)/);
+		if (year && month) {
+			return { year: Number(year[1]), month: Number(month[1]) };
+		}
+	}
+	return null;
+}
+
+/**
+ * Find the doll's Wikipedia article title from a `[[wikipedia:Title]]` or `[[wikipedia:Title|text]]` link.
+ *
+ * Looks in `weaponinfo` first, then falls back to every other field, in insertion order.
+ *
+ * @param {Record<string, string>} fields Parsed `PlayableUnit` fields.
+ * @returns {string | null} The Wikipedia title, underscores normalised to spaces, or null when no field has one.
+ */
+export function wikipediaTitle(fields) {
+	const findIn = (text) => {
+		const match = typeof text === "string" ? text.match(/\[\[\s*wikipedia\s*:\s*([^|\]]+)/i) : null;
+		return match ? match[1].trim().replaceAll("_", " ") : null;
+	};
+	const fromWeaponInfo = findIn(fields.weaponinfo);
+	if (fromWeaponInfo) {
+		return fromWeaponInfo;
+	}
+	for (const value of Object.values(fields)) {
+		const found = findIn(value);
+		if (found) {
+			return found;
+		}
+	}
+	return null;
+}

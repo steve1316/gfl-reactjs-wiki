@@ -1,0 +1,162 @@
+{{PlayableUnit
+|index = 65
+|nationality = Germany
+|classification = AR
+|rarity = 5
+|faction= [[Squad 404]]
+|manufactureringame = [[I.O.P.]]
+|manufacturer = Heckler & Koch
+|artist = {{artist name|NIXOO}} (Original Artist);<br/>
+{{artist name|STAR影法师}} (Primrose-Flavored Foil Candy);<br/>
+{{artist name|--}} (Percussion Bolero);<br/>
+{{artist name|umo}} (White Negroni)
+|fullname = Heckler & Koch HK416
+|voiceactor = {{voice actor name|Nonaka Ai}}
+|releasedon = {{doll_server_alias|server=CN|alias=HK416|year=2016|month=5}}, {{doll_server_alias|server=TW|alias=HK416}}, {{doll_server_alias|server=KR|alias=HK416}}, {{doll_server_alias|server=EN|alias=416}}, {{doll_server_alias|server=JP|alias=416}}
+
+|PNC=Clukay
+|GFL2=Klukai
+
+|weaponinfo = 
+The Heckler & Koch HK416 is a collaboration project between the US Army Delta Force R&D department and the German firearms company Heckler & Koch, at the request of US Army combat veteran Larry Vickers. The goal was to make a M4 variant that has a shorter profile and lacks the AR-15's direct impingement system. The rifle was originally named the HKM4, but was later changed to HK416 after a law suit was filed by Colt Defense over the trademark for the M4 name. The project took inspiration from the HK50, XM8, and L85A2 endeavours of H&K. 
+
+Chambered in 5.56x45mm NATO, the HK416 is a short-stroke gas piston operated, rotating bolt, selective fire automatic carbine. Feeding from NATO STANAG magazines, the rifle has a rate of fire of 700-900 rounds per minute. The rifle's foldable iron sights provide accurate fire out to 300 meters. It features a proprietary short-stroke piston mechanism developed by H&K for the G36 as opposed to the direct gas impingement system used by most AR-15 derivatives. This piston system enhances the rifle's reliability once it is dipped in water or sand. It has an adjustable telescopic buttstock.
+
+The rifle features Picatinny rail placements along the top of the upper receiver, as well as on the top, bottom, and sides of the RIS handguard. The rails are compatible with various accessories such as optical sights, lasers, and flashlights. The handguard does not come in contact with the barrel, which is "free-floating" to improve the rifle's accuracy by reducing the impact of the handguard's movements on the barrel. The bottom rails can mount a fore-grip or a 40mm grenade launcher (typically the AG36 or M320 launchers).
+
+Military/Police units all over the world are adopting HK416 variants due to their reliability, performance, and modularity. Starting with the Norwegian army (HK416N), the United States special operation groups such as Delta Force and DEVGRU SEALs have followed suit and begun the process of phasing out their M4A1 carbines for HK416s. The French army is also planning on replacing their FAMAS F1 with the HK416F.<ref name = "416 wiki">[[wikipedia:Heckler & Koch HK416|Wikipedia entry on HK416]]</ref>.
+
+As of 2021, the HK416 A8 (G95A1) was chosen to replace the G36 as the main service rifle of Germany's Bundeswehr after the A5 failed to surpass the G36 in MOA and weight trials. Prior to this, the G38, a strictly semi-automatic variant of the HK416 A5, replaced the MP5 as standard emergency firearm for their police units as the only usage of the HK416 A5 in German service,<ref name = "416 firearmblog">[https://www.thefirearmblog.com/blog/2014/09/01/hk416a5-now-g38/ The Firearm Blog article on HK416/G38]</ref><ref>[https://www.thefirearmblog.com/blog/2019/05/14/hessian-police-select-hk416/ The Firearm Blog article on German police adoption of the G38]</ref> while the HK416 A7 was adopted by the German Special Commando Forces and the German Naval Special Commando Forces under the designation G95 in 2017.<ref>[https://www.thefirearmblog.com/blog/2017/10/12/hk416-a7-called-g95-german-special-forces/ The Firearm Blog article on HK416/G95]</ref>
+
+The US Marine Corps' M27 Infantry Automatic Rifle is a beefed up version of the HK416, designed to partially replace the M249 Squad Automatic Weapon light machine gun in a suppressive fire role. The M27 IAR emphasizes a more marksman approach over the belt-fed M249 SAW, and is more maneuverable in CQB scenarios. It is fitted with a bipod for stability.<ref name = "M27 IAR">[[wikipedia:M27 Infantry Automatic Rifle|Wikipedia entry on M27 IAR]]</ref>
+
+|design =
+HK416 uses a HK416D10RS upper with its distinctive handguard mated to a HK416 A5 lower. The HK416 A5 is a slightly updated version of the HK416D, mostly distinguishable visually by the M4 style magwell. Her accessories are Magpull MOE stock and vertical foregrip, a forward mounted Eotech ESP3, a PEQ-15, an AAC M4-2000 Suppressor, and a Surefire scout light. In her Starry Cocoon costume, she trades in the vertical foregrip for an angled foregrip and has a Trijicon ACOG with what appears to be a micro red dot mounted behind, possibly because NIXOO confused it for a magnifier. In HK416's Mod3 artwork, she swaps out the handguard for a modified Geiselle SMR with both a top and bottom rail. In addition to her EXPS3 which is now mounted farther back, she also has a G33 magnifier.
+
+Artist NIXOO commented on the design of HK416 in the Official ''Girls' Frontline'' Art Book<ref name = "artbook">{{cite|ab1|202}}</ref>:
+
+HK416 is an improved model of the AR-15 developed by Heckler & Koch for the US military market. As a result, she is somewhat related to the members of AR team. (HK416是hk公司针对美军市场的改良型AR，和AR小队有一定的渊源，）
+
+I incorporated various design elements from UmiNeko's AR team characters and added various German touches.（所以设计的时候在整体风格上参考了海猫的AR小队设计，并且添加了很多德国元素，）
+
+For example: the German special forces KSK's beret and beret badge, 'Kommando Spezialkräfte' being written on her chest, and the hair pin design being based on the German Iron Cross, while the high collar design was inspired by the Bundeswehr's combat uniform.（比如特种部队KSK的贝雷帽和帽徽，胸前写着Kommando Spezialkraefte<sup>[sic]</sup>，KSK名称的英文<sup>[sic]</sup>拼写，发卡也是由铁十字变形而来。衣领的样式则来自德国国防军作战服特色的高龄。）
+
+By the way, the teardrop on her face symbolizes vengeance~（顺便一提：脸上眼泪团代表复仇~）
+
+The 'blood tear' tattoo under HK416's left eye is likely in reference to HK's defeat in a lawsuit against Colt about copyright infringement over the name "HKM4".
+
+|mov= 10
+|min_dmg=19
+|max_dmg=51
+|min_eva=6
+|max_eva=44
+|min_acc=6
+|max_acc=46
+|min_rof=52
+|max_rof=76
+|min_hp=61
+|max_hp=121
+
+|moddable=1
+|mod1_max_hp=123
+|mod1_max_dmg=54
+|mod1_max_acc=50
+|mod1_max_eva=46
+|mod1_max_rof=78
+|mod2_max_hp=124
+|mod2_max_dmg=54
+|mod2_max_acc=51
+|mod2_max_eva=47
+|mod2_max_rof=79
+|mod3_max_hp=125
+|mod3_max_dmg=55
+|mod3_max_acc=51
+|mod3_max_eva=47
+|mod3_max_rof=79
+
+|craft=3:55:00
+|drop= 5-4E.
+
+|aura1= Affects submachine guns
+|aura2= Increases damage by 40%
+|mod1_aura2= Increases damage by 45%
+|tile6=1
+|tile5=0
+|mod1_tile9=1 
+
+|equipsetname=404 Custom 416
+|equipsetdesc=Squad's 404 custom set for 416 can greatly improves (sic) her combat performance.
+|equipset3=In this battle, deal 2x grenade damage to the enemy unit with the highest HP and enemies within a radius of 2.5 every 4 seconds. This damage comes with the effect of parasitic grenades.
+
+|costume1 = Starry Cocoon
+|costume2 = Black Cat's Gift
+|costume3 = [Neural Upgrade]
+|costume4 = Primrose-Flavored Foil Candy
+|costume5 = Fangs
+|costume6 = Percussion Bolero
+|costume7 = Midnight Evangelion
+|costume8 = White Negroni
+|costume9 = Transparent Blue
+|costume10 = Blushing Sakura
+
+|gallery=<gallery>
+File:HK416_S.png|Profile image
+File:HK416.png|Full artwork
+File:HK416_D.png|Full damaged artwork
+File:HK416 costume3_S.png|<div class="spoiler">Neural Upgrade Profile image</div>
+File:HK416 costume3.png|<div class="spoiler">Neural Upgrade Full artwork</div>
+File:HK416_costume3 D.png|<div class="spoiler">Neural Upgrade Full damaged artwork</div>
+File:HK416_costume1.png|"Starry Cocoon" full artwork
+File:HK416_costume1_D.png|"Starry Cocoon" full damaged artwork
+File:HK416_costume2.png|"Black Cat's Gift" full artwork (AKA "Black Kitty's Gift" from the Garden of Childhood Curios costume set)
+File:HK416_costume2_D.png|"Black Cat's Gift" full damaged artwork
+File:HK416_costume4.png|"Primrose-Flavored Foil Candy" full artwork
+File:HK416_costume4_D.png|"Primrose-Flavored Foil Candy" full damaged artwork
+File:HK416_costume5.png|"Fangs" full artwork
+File:HK416_costume5_D.png|"Fangs" full damaged artwork
+File:HK416_costume6.png|"Percussion Bolero" full artwork (AKA "Percussive Bolero" from the Auf der Jagd costume set)
+File:HK416_costume6_D.png|"Percussion Bolero" full damaged artwork
+File:HK416_costume7.png|"Midnight Evangelion" full artwork
+File:HK416_costume7_D.png|"Midnight Evangelion" full damaged artwork
+File:HK416_costume8.png|"White Negroni" full artwork
+File:HK416_costume8_D.png|"White Negroni" full damaged artwork
+File:HK416 costume9.png|"Transparent Blue" full artwork
+File:HK416_costume9 D.png|"Transparent Blue" full damaged artwork
+File:HK416 costume10.png|"Blushing Sakura" full artwork
+File:HK416_costume10 D.png|"Blushing Sakura" full damaged artwork
+</gallery>
+
+|galleryAlt=<gallery>
+File:CHARACTER SETTINGS HK416 (EN).jpg|Official EN character Introduction for HK416
+File:GFL JP graphic2.jpg|Promotional illustration.
+File:Girls Frontline Orchestra 2018 promotion poster.jpg|[[Girls' Frontline Concerts|Girls Frontline Orchestra 2018]] promotion poster, character art illustrated by Duoyuanjun
+File:Girls' Frontline Orchestra 2019.jpg|[[Girls' Frontline Concerts|Girls' Frontline Orchestra]] 2019 illustration.
+File:TW 7th Anniversary.jpg|Taiwan server 7th Anniversary artwork by Silver銀的無腦塗鴉 
+File:1st Anniversary Background (2017).jpg|1st Anniversary Login screen by [[Artist:音符]]
+File:Children's Garden Login Wallpaper.png|"Children's Garden" Login wallpaper illustrated by 薯子Imoko
+File:Task Force 404 Halloween Login Wallpaper.png|Task Force 404 Halloween Login wallpaper (JP) illustrated by ???
+File:Sleepwalking in Rabbit Wonderland Login Wallpaper.png|"Sleepwalking in Rabbit Wonderland" Login wallpaper illustrated by STAR影法师
+File:Girls and the Song of Steel Login Wallpaper.png|"Girls and the Song of Steel" Login wallpaper illustrated by ???
+File:A Cup of Life Login Wallpaper.jpg|"A Cup of Life" Login wallpaper
+File:2024 Wedding Login Wallpaper.png|"Enter My Embrace" Login wallpaper
+File:2nd Anniversary Background (2018).png
+File:DD PV still 3.png|In the PV for [[Deep Dive]].
+File:DD PV still 4.png
+File:Karasumaya 2025.jpg
+File:QF Intro Salute.jpg|[[Quantum Fluctuation]] PV.
+File:HK416 costume10 original.jpg|Original 2017 artwork by [[Artist:NIXOO]] used as base for the "Blushing Sakura" costume.
+File:GFL 10th Anniversary.jpg|10th Anniversary Festival.
+</gallery>
+
+|trivia =
+*The [[Project Neural Cloud]] character [[Clukay]] is suspiciously similar to HK416.
+*HK416 was the most [[Oath]]ed Doll during the first year of the game.<ref>[https://weibo.com/5611537367/F2LBOiAb9 First anniversary post on Weibo]</ref> She was eventually surpassed by {{doll name|M4A1|AR|4}}.
+*<div class="spoiler">On the older servers, HK416 was the first 5* T-Doll to receive a Neural Upgrade, as well as the first ever T-Doll to achieve 6* rarity. This was not the case on the EN server, as NTW-20 received her neural upgrade first.</div>
+*HK416 is the second T-Doll introduced who reloads her weapon as her victory sprite animation; the first one was {{doll name|Vector|SMG|5}}.
+*The typical grenade launcher supplied to HK416 users is the AG36 (or M320). In the official manga, it is implied that HK416 stores her grenade launcher in the bag that she carries around with her.
+**<div class="spoiler">Her modification stage 3 artwork has a M320 launcher depicted, and the chibi also uses said launcher to shoot grenades when she activates her skill.</div>
+*HK416 was the rifle used to shoot and kill Osama Bin Laden. The SEAL Team operators used 5.56mm NATO 77-grain OTM (open-tip match) rounds made by Black Hills Ammunition.
+**The code name "Geronimo" has been used in relation with the operation. The same name can be found in katakana (ジェロニモ) on 416's White Negroni costume, and is also referenced in Clukay's story event [[PNC Story/Divergent Shadows Nodes|Divergent Shadows]] in Project Neural Cloud.
+*The collab exclusive costumes for {{doll name|HK416|AR|5|costume=costume5}}, {{doll name|Vector|SMG|5|costume=costume3}}, {{doll name|Agent 416|AR|EXTRA|costume=costume1}}, {{doll name|Agent Vector|SMG|EXTRA|costume=costume1}} can only be obtained via an in-game purchases using real money. Each costume can be found in Kalina's shop for 158 yuan.
+*416 was one of the Dolls to be featured in the canceled game [[Girls' Frontline: Glitch Land]].
+}}
