@@ -373,30 +373,30 @@ function TDollContent({ doll }: TDollContentProps) {
 			<PageBackdrop artUrl={heroArtUrl} />
 			<ScrollToTop />
 			<Container sx={styles.page} maxWidth={false}>
-				{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
-				<DollHero
-					name={tdoll.selected.name}
-					id={tdoll.selected.id}
-					type={tdoll.selected.type}
-					rarity={tdoll.selected.rarity}
-					isMod={isModForm}
-					cardImage={tdollImage}
-					onCardImageClick={switchBetweenNormalDamagedCardImages}
-					normalId={tdoll.normal.id}
-					skins={tdoll.skins}
-					skinValue={showSkin ? skinSelected : false}
-					onSkinChange={switchSkinSelected}
-					hasMod={hasMod}
-					modOn={isModForm}
-					onToggleMod={switchModes}
-				/>
-
-				{/************** Every section on the page at once. These used to be four tabs, which hid the tile
-				                buffs and the animations behind a click and left a 135px panel occupying a whole screen. **************/}
-				{/************** Every section on the page at once, four across on a wide screen. These used to be
-				                four tabs, which hid the tile buffs and the animations behind a click. **************/}
+				{/************** Every section on the page at once. On a wide screen the animations share the hero's row
+				                and the rest sit three across below it, so the whole page fits one 1920x1080 screen. On a
+				                phone everything stacks, with the animations last since they are the heaviest to load. **************/}
 				<Grid container spacing={2} sx={{ alignItems: "flex-start" }}>
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
+					<Grid size={{ xs: 12, lg: 8, xl: 9 }} sx={{ order: 0 }}>
+						<DollHero
+							name={tdoll.selected.name}
+							id={tdoll.selected.id}
+							type={tdoll.selected.type}
+							rarity={tdoll.selected.rarity}
+							isMod={isModForm}
+							cardImage={tdollImage}
+							onCardImageClick={switchBetweenNormalDamagedCardImages}
+							normalId={tdoll.normal.id}
+							skins={tdoll.skins}
+							skinValue={showSkin ? skinSelected : false}
+							onSkinChange={switchSkinSelected}
+							hasMod={hasMod}
+							modOn={isModForm}
+							onToggleMod={switchModes}
+						/>
+					</Grid>
+					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 1, lg: 2 } }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
@@ -405,7 +405,7 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 2, lg: 3 } }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Tile buffs
@@ -414,7 +414,7 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 3, lg: 4 } }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Skills
@@ -435,7 +435,7 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+					<Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }} sx={{ order: { xs: 4, lg: 1 } }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Animations

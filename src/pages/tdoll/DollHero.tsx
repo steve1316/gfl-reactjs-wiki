@@ -17,8 +17,7 @@ const modIcon = uiUrl("mod.png");
 const styles = {
 	root: {
 		position: "relative",
-		width: "100%",
-		mb: 2
+		width: "100%"
 	},
 	content: {
 		position: "relative",
