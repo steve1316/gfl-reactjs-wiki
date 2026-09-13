@@ -44,14 +44,16 @@ const styles = {
 		backgroundColor: alpha(theme.palette.background.paper, 0.7),
 		backdropFilter: "blur(6px)"
 	}),
-	// The two sections under the hero share a row on a wide screen, so they fill it to the taller one.
+	// The two sections under the hero share a row from a medium screen up, so they fill it to the taller one.
 	// Narrower screens keep natural heights, where equalising would pair a card with the taller Animations one.
 	rowSection: {
-		height: { lg: "100%" },
-		// The panel inside grows with the card too, or it keeps a short inner box with empty space under it.
-		display: { lg: "flex" },
+		height: { md: "100%" },
+		// On a wide screen the panel inside grows with the card too, so the inner boxes end level. Between md and
+		// lg the Abilities card stacks and runs far taller than the stat table, and a grown table there was a
+		// large empty box, so the table keeps its own height and only the outer card matches.
+		display: { md: "flex" },
 		flexDirection: "column",
-		"& > :last-child": { flexGrow: 1 }
+		"& > :last-child": { flexGrow: { md: 0, lg: 1 } }
 	},
 	sectionHeading: {
 		mb: 1.5
@@ -405,12 +407,12 @@ function TDollContent({ doll }: TDollContentProps) {
 			<PageBackdrop artUrl={heroArtUrl} />
 			<ScrollToTop />
 			<Container sx={styles.page} maxWidth={false}>
-				{/************** Every section on the page at once. On a wide screen the animations share the hero's row
-				                and the rest sit three across below it, so the whole page fits one 1920x1080 screen. On a
-				                phone everything stacks, with the animations last since they are the heaviest to load. **************/}
+				{/************** Every section on the page at once. From a medium screen up the animations share the hero's
+				                row and Stats and Abilities sit below it, so a 1920x1080 screen shows the whole page. On a phone
+				                everything stacks, with the animations last since they are the heaviest to load. **************/}
 				<Grid container spacing={2}>
 					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
-					<Grid size={{ xs: 12, lg: 8, xl: 9 }} sx={{ order: 0 }}>
+					<Grid size={{ xs: 12, md: 7, lg: 8, xl: 9 }} sx={{ order: 0 }}>
 						<DollHero
 							name={tdoll.selected.name}
 							id={tdoll.selected.id}
@@ -428,7 +430,7 @@ function TDollContent({ doll }: TDollContentProps) {
 							onToggleMod={switchModes}
 						/>
 					</Grid>
-					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 1, lg: 2 } }}>
+					<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
@@ -439,7 +441,7 @@ function TDollContent({ doll }: TDollContentProps) {
 
 					{/************** Skill and tile buffs in one card. They are both what the doll does in a fight, and
 					                apart they left the tile buffs as a mostly empty card in a row of taller ones. **************/}
-					<Grid size={{ xs: 12, lg: 8 }} sx={{ order: { xs: 2, sm: 3, lg: 3 } }}>
+					<Grid size={{ xs: 12, md: 7, lg: 8 }} sx={{ order: { xs: 2, sm: 3 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Abilities
@@ -473,7 +475,7 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, lg: 1 } }}>
+					<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Animations
