@@ -82,6 +82,6 @@ export const darkPalette: PaletteOptions = {
 	rarity: RARITY_COLOURS,
 	weaponType: WEAPON_TYPE_COLOURS,
 	ingredient: INGREDIENT_COLOURS,
-	tile: { empty: "#22272f", self: "#e8ecf2", buff: "#2fd6d6" },
+	tile: { empty: "#2e3440", line: "#5a6373", self: "#e8ecf2", buff: "#2fd6d6" },
 	stripe: { dark: "#0d1015", light: "#14181f" }
 };

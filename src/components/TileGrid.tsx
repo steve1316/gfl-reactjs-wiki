@@ -23,8 +23,10 @@ export default function TileGrid({ rows }: TileGridProps) {
 					<Box
 						key={`${rowIndex}-${columnIndex}`}
 						sx={(theme) => ({
-							backgroundColor: tile === 0 ? theme.palette.raised : tile === 1 ? theme.palette.tile.buff : theme.palette.tile.self,
-							border: `1px solid ${theme.palette.divider}`
+							// Empty squares used the card's own colour with a divider-coloured border, so on the card the
+							// grid lines were close to invisible. They now have their own lighter fill and a brighter line.
+							backgroundColor: tile === 0 ? theme.palette.tile.empty : tile === 1 ? theme.palette.tile.buff : theme.palette.tile.self,
+							border: `1px solid ${theme.palette.tile.line}`
 						})}
 					/>
 				))
