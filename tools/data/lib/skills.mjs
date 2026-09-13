@@ -1,0 +1,120 @@
+import { stripMarkup } from "./text.mjs";
+
+/** A number, with a trailing `%` or `x` kept as part of the value when no letter follows it. */
+const NUMBER = /-?\d+(?:\.\d+)?(?:%|x(?![A-Za-z]))?/g;
+
+/** Words whose plural form changes with the number in front of them. Normalised only for comparing levels. */
+const PLURALS = /\b(second|unit|time|stack|round|shot|target|enemy|enemie)s\b/g;
+
+/** The game runs skill timers at 30 frames per second. */
+const FRAMES_PER_SECOND = 30;
+
+/** Skill rows by id, built once per upstream. The table is 41 MB, so it is indexed a single time. */
+const INDEXES = new WeakMap();
+
+/**
+ * Format seconds without a trailing `.0`.
+ *
+ * @param {number} seconds Seconds, rounded to one decimal.
+ * @returns {number} The rounded value.
+ */
+function roundSeconds(seconds) {
+	return Math.round(seconds * 10) / 10;
+}
+
+/**
+ * Split text into the parts between numbers and the numbers themselves.
+ *
+ * @param {string} text One level's description.
+ * @returns {{ parts: string[], numbers: string[] }} `parts` has one more entry than `numbers`.
+ */
+function tokenise(text) {
+	const numbers = text.match(NUMBER) ?? [];
+	const parts = text.split(NUMBER);
+	return { parts, numbers };
+}
+
+/**
+ * Turn ten per-level descriptions into one template and its per-level values.
+ *
+ * Numbers that differ between levels become `#1`, `#2` ... in order. Numbers that never change stay in the text.
+ *
+ * @param {string[]} levels The description at levels 1 to 10.
+ * @returns {{ description: string, stats: string[][] } | null} The template, or null when the levels differ in words.
+ */
+export function templateLevels(levels) {
+	const tokens = levels.map(tokenise);
+	const shape = (entry) => `${entry.numbers.length}|${entry.parts.join("#").replace(PLURALS, "$1")}`;
+	const first = shape(tokens[0]);
+	if (tokens.some((entry) => shape(entry) !== first)) {
+		return null;
+	}
+	const last = tokens[tokens.length - 1];
+	const stats = [];
+	let description = last.parts[0];
+	last.numbers.forEach((number, index) => {
+		const values = tokens.map((entry) => entry.numbers[index]);
+		if (values.every((value) => value === values[0])) {
+			description += number;
+		} else {
+			stats.push(values);
+			description += `#${stats.length}`;
+		}
+		description += last.parts[index + 1];
+	});
+	return { description, stats };
+}
+
+/**
+ * Index `battle_skill_config` rows by id.
+ *
+ * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
+ * @returns {Map<number, object>} Rows keyed by id.
+ */
+function skillRows(upstream) {
+	let index = INDEXES.get(upstream);
+	if (!index) {
+		index = new Map(upstream.stc("battle_skill_config").map((row) => [row.id, row]));
+		INDEXES.set(upstream, index);
+	}
+	return index;
+}
+
+/**
+ * Build one skill from its ten level rows.
+ *
+ * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
+ * @param {number} groupId The skill id from `gun.skill1` or `gun.skill2`.
+ * @param {string[]} warnings Collects a message for each skill that falls back to level-10 text.
+ * @returns {object} The skill in the site's raw shape.
+ */
+export function buildSkill(upstream, groupId, warnings) {
+	const byId = skillRows(upstream);
+	const rows = Array.from({ length: 10 }, (_v, index) => byId.get(groupId * 100 + index + 1));
+	if (rows.some((row) => row === undefined)) {
+		throw new Error(`skill ${groupId} is missing level rows`);
+	}
+	const top = rows[9];
+	const passive = top.type !== 1;
+	const levels = rows.map((row) => stripMarkup(upstream.t(row.description)).trim());
+	const templated = templateLevels(levels);
+	if (templated === null) {
+		warnings.push(`skill ${groupId}: levels differ in wording, using level 10 text`);
+	}
+	const description = templated ? templated.description : levels[9];
+	const stats = templated ? templated.stats : [];
+
+	const skill = {
+		name: upstream.t(top.name).trim(),
+		initial_cooldown: passive ? "Passive" : `${roundSeconds(top.start_cd_time / FRAMES_PER_SECOND)}s`
+	};
+	if (!passive) {
+		skill.cooldown = rows.map((row) => roundSeconds(row.cd_time / FRAMES_PER_SECOND));
+	}
+	skill.description = description;
+	skill.number_of_stats = stats.length;
+	stats.forEach((values, index) => {
+		skill[`stat${index + 1}`] = values;
+	});
+	return skill;
+}
