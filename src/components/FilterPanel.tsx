@@ -1,10 +1,12 @@
 import { useState } from "react";
 
-import { Avatar, Badge, Box, Button, Collapse, Divider, IconButton, Paper, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Avatar, Badge, Box, Button, Collapse, Divider, IconButton, InputAdornment, Paper, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // MaterialUI icon imports
+import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SearchIcon from "@mui/icons-material/Search";
 
 import FilterChip from "./FilterChip";
 import { uiUrl } from "../lib/assets";
@@ -27,6 +29,9 @@ const styles = {
 		alignItems: "center",
 		gap: 1.5,
 		fontWeight: 700
+	},
+	search: {
+		mt: 1.5
 	},
 	rows: {
 		display: "flex",
@@ -73,6 +78,10 @@ interface FilterPanelProps {
 	modFilter: SimpleFilterEntry;
 	/** How many filters are currently active, shown on the collapsed header so nothing is hidden silently. */
 	activeCount: number;
+	/** The text in the name search. */
+	nameQuery: string;
+	/** Called with the new text on every keystroke, so the list filters as the reader types. */
+	onNameQueryChange: (query: string) => void;
 	/** Toggles one rarity entry; curried so it can be handed straight to a chip's onToggle. */
 	onToggleRarity: (entry: RarityFilterEntry) => () => void;
 	/** Toggles one weapon-type entry; curried so it can be handed straight to a chip's onToggle. */
@@ -94,7 +103,7 @@ interface FilterPanelProps {
  * @param props Component props.
  * @returns The filter rows, always open from `sm` up and collapsible below it.
  */
-export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activeCount, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterPanelProps) {
+export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activeCount, nameQuery, onNameQueryChange, onToggleRarity, onToggleType, onToggleMod, onClear }: FilterPanelProps) {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 	const [expanded, setExpanded] = useState(false);
@@ -172,6 +181,33 @@ export default function FilterPanel({ rarityFilter, typeFilter, modFilter, activ
 					)}
 				</Box>
 			</Box>
+
+			{/* Outside the collapsing rows, so a phone can search without opening the chips first. */}
+			<TextField
+				value={nameQuery}
+				onChange={(event) => onNameQueryChange(event.target.value)}
+				placeholder="Search by name"
+				size="small"
+				fullWidth
+				sx={styles.search}
+				slotProps={{
+					htmlInput: { "aria-label": "Search T-Dolls by name" },
+					input: {
+						startAdornment: (
+							<InputAdornment position="start">
+								<SearchIcon fontSize="small" />
+							</InputAdornment>
+						),
+						endAdornment: nameQuery ? (
+							<InputAdornment position="end">
+								<IconButton size="small" onClick={() => onNameQueryChange("")} aria-label="clear name search" edge="end">
+									<ClearIcon fontSize="small" />
+								</IconButton>
+							</InputAdornment>
+						) : null
+					}
+				}}
+			/>
 
 			{/* Mounted either way, so toggling the breakpoint never drops the rows entirely. */}
 			<Collapse in={open}>{rows}</Collapse>

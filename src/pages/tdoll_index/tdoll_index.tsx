@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
@@ -14,6 +14,16 @@ import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
 const PAGE_SIZE = 30;
+
+/**
+ * Reduce a name to lowercase letters and digits, so a search ignores case, spaces and punctuation.
+ *
+ * @param text The name or query to normalise.
+ * @returns The text with everything but letters and digits removed.
+ */
+function normaliseName(text: string): string {
+	return text.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
 
 /** A doll paired with the form the current filters mean we should show. */
 interface IndexEntry extends TDoll {
@@ -87,12 +97,24 @@ export default function TDoll_Index() {
 	 * This used to be built inside an effect that stored rendered JSX elements in state, so every filter
 	 * change re-rendered the whole list twice and the element array was a second copy of the data.
 	 */
+	/** What the reader has typed into the name search. */
+	const [nameQuery, setNameQuery] = useState("");
+
+	// The list re-filters from a deferred copy, so typing stays responsive while a few hundred cards re-render.
+	const deferredQuery = useDeferredValue(nameQuery);
+
 	const matches = useMemo(() => {
 		const typeOn = typeFilter.some((entry) => entry.selected);
 		const rarityOn = rarityFilter.some((entry) => entry.selected);
 		const modOn = modFilter.selected;
+		const query = normaliseName(deferredQuery);
 
 		return allDolls.flatMap<IndexEntry>((data) => {
+			// The name search narrows every other filter. Both forms' names count, so "m4sopmod" finds the doll
+			// whichever form the Mod filter is showing.
+			if (query && !normaliseName(data.normal.name).includes(query) && !(data.mod && normaliseName(data.mod.name).includes(query))) {
+				return [];
+			}
 			if (!typeOn && !rarityOn && !modOn) {
 				return [{ ...data, selected: data.normal }];
 			}
@@ -117,7 +139,7 @@ export default function TDoll_Index() {
 			}
 			return (typeOn ? matchesType : matchesRarity) ? entry : [];
 		});
-	}, [allDolls, typeFilter, rarityFilter, modFilter]);
+	}, [allDolls, typeFilter, rarityFilter, modFilter, deferredQuery]);
 
 	// The slice of matches actually rendered, grown by PAGE_SIZE each time the load-more button is clicked.
 	const visible = useMemo(() => matches.slice(0, shown), [matches, shown]);
@@ -145,6 +167,8 @@ export default function TDoll_Index() {
 			setRarityFilter(temp.rarityFilter);
 			setTypeFilter(temp.typeFilter);
 			setModFilter(temp.modFilter);
+			// Absent from filters saved before the name search existed.
+			setNameQuery(typeof temp.nameQuery === "string" ? temp.nameQuery : "");
 		}
 	}, []);
 
@@ -156,10 +180,11 @@ export default function TDoll_Index() {
 		const tempFilters = {
 			rarityFilter: rarityFilter,
 			typeFilter: typeFilter,
-			modFilter: modFilter
+			modFilter: modFilter,
+			nameQuery: nameQuery
 		};
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-	}, [modFilter, rarityFilter, typeFilter]);
+	}, [modFilter, rarityFilter, typeFilter, nameQuery]);
 
 	// The following handler functions below are setting the filters selected as active.
 	const handleOnClickRarity = (rarityToBeUpdated: { key: number; selected: boolean }) => () => {
@@ -188,6 +213,7 @@ export default function TDoll_Index() {
 		setRarityFilter((rarities) => rarities.map((rarity) => ({ ...rarity, selected: false })));
 		setTypeFilter((types) => types.map((type) => ({ ...type, selected: false })));
 		setModFilter({ ...modFilter, selected: false });
+		setNameQuery("");
 	};
 
 	// The currently active filters, flattened into one list the summary bar can render as removable chips.
@@ -195,7 +221,8 @@ export default function TDoll_Index() {
 	const activeFilters = [
 		...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: handleOnClickRarity(rarity) })),
 		...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: handleOnClickType(type) })),
-		...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleOnClickMod }] : [])
+		...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleOnClickMod }] : []),
+		...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: () => setNameQuery("") }] : [])
 	];
 
 	return (
@@ -209,6 +236,8 @@ export default function TDoll_Index() {
 					typeFilter={typeFilter}
 					modFilter={modFilter}
 					activeCount={activeFilters.length}
+					nameQuery={nameQuery}
+					onNameQueryChange={setNameQuery}
 					onToggleRarity={handleOnClickRarity}
 					onToggleType={handleOnClickType}
 					onToggleMod={handleOnClickMod}
