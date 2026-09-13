@@ -35,15 +35,48 @@ const styles = {
 } satisfies Record<string, SxProps<Theme>>;
 
 /**
- * Highlight every `[Label]:` section heading in a skill description, separating each one after the first with a blank line.
+ * Section headings that open a line in generated skill text, such as `Passive:` or `Burst Mode:`.
+ *
+ * Found by scanning every line-start `Label:` in the doll shards. Sentence openings such as `Upon defeating the Giant:` are left out.
+ */
+const SKILL_LABEL_PATTERN = new RegExp(
+	`(^|\\n)(${[
+		"Passive",
+		"Active",
+		"Favorite Drink",
+		"Normal attack",
+		"RPG",
+		"Machine Gun",
+		"Erosion effect",
+		"Fragility",
+		"Arc Shadow",
+		"Special Bullets",
+		"Joint Effect",
+		"In Mystic Mode",
+		"In Focused Mode",
+		"Revision Mode",
+		"Full Marks Mode",
+		"Burst Mode",
+		"Accuracy Mode",
+		"Weak Point Mode",
+		"Upright Shooting Mode",
+		"Hip Shooting Mode",
+		"Prone Shooting Mode",
+		"Ability Upgrade I{1,3}"
+	].join("|")})( \\d+)?:\\s*`,
+	"g"
+);
+
+/**
+ * Highlight the section headings that open a line in a skill description. The line break before a heading already becomes `<br />`.
  *
  * @param text The skill description with its placeholders already filled.
- * @returns The description with each label wrapped in highlight tags.
+ * @returns The description with each heading wrapped in highlight tags.
  */
 function highlightLabels(text: string): string {
 	return text.replace(
-		/\[([^\]]+)\]:\s*/g,
-		(_match, label: string, offset: number) => `${offset === 0 ? "" : "<br /><br />"}<span style="color: orange; font-size: 110%;"><ins>[${label}]</ins></span>: `
+		SKILL_LABEL_PATTERN,
+		(_match, start: string, label: string, number: string | undefined) => `${start}<span style="color: orange; font-size: 110%;"><ins>${label}${number ?? ""}</ins></span>: `
 	);
 }
 
