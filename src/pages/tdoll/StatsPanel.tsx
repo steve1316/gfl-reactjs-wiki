@@ -33,7 +33,7 @@ const styles = {
 /** Props for StatsPanel. */
 interface StatsPanelProps {
 	/** The currently selected form's stats, shown in the stat table. */
-	stats: Pick<RawForm, "max_hp" | "max_dmg" | "max_acc" | "max_eva" | "max_rof">;
+	stats: Pick<RawForm, "max_hp" | "max_dmg" | "max_acc" | "max_eva" | "max_rof" | "max_armor">;
 }
 
 /**
@@ -64,6 +64,14 @@ export default memo(function StatsPanel({ stats }: StatsPanelProps) {
 							<TableCell align="right">{stats[stat.key]}</TableCell>
 						</TableRow>
 					))}
+					{stats.max_armor !== undefined && stats.max_armor > 0 ? (
+						<TableRow>
+							<TableCell component="th" scope="row">
+								Armor
+							</TableCell>
+							<TableCell align="right">{stats.max_armor}</TableCell>
+						</TableRow>
+					) : null}
 				</TableBody>
 			</Table>
 		</TableContainer>
