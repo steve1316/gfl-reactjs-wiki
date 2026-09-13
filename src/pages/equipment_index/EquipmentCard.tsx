@@ -108,7 +108,7 @@ interface EquipmentDescriptionProps {
 const EquipmentDescription = memo(function EquipmentDescription({ description }: EquipmentDescriptionProps) {
 	const [expanded, setExpanded] = useState(false);
 	return (
-		<Accordion expanded={expanded} onChange={(_event, isExpanded) => setExpanded(isExpanded)} slotProps={{ transition: { unmountOnExit: true } }}>
+		<Accordion expanded={expanded} onChange={(_event, isExpanded) => setExpanded(isExpanded)} slotProps={{ heading: { component: "h2" }, transition: { unmountOnExit: true } }}>
 			<AccordionSummary expandIcon={<ExpandMoreIcon />}>
 				<Typography sx={styles.heading}>Description</Typography>
 			</AccordionSummary>

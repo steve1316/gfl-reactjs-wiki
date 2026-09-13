@@ -191,17 +191,20 @@ export default function EquipmentIndex() {
 				<Divider sx={styles.dividerForChips} />
 
 				<Box component="ul" sx={styles.chipList}>
-					<Zoom in={true} timeout={600}>
-						<span>
-							<FilterChip label={exclusiveFilter.label} selected={exclusiveFilter.selected} onToggle={handleOnClickExclusive} />
-						</span>
-					</Zoom>
+					<li>
+						<Zoom in={true} timeout={600}>
+							<span>
+								<FilterChip label={exclusiveFilter.label} selected={exclusiveFilter.selected} onToggle={handleOnClickExclusive} />
+							</span>
+						</Zoom>
+					</li>
 				</Box>
 			</Container>
 
 			<Box sx={{ display: "flex", width: "80%", m: "auto", marginTop: 5 }}>
 				<Fade in={true} timeout={500}>
 					<Slider
+						aria-label="Equipment level"
 						step={1}
 						defaultValue={1}
 						value={currentLevel}
