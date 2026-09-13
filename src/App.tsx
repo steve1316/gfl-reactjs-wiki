@@ -1,5 +1,5 @@
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import NotFound404 from "./not_found_404";
@@ -38,8 +38,8 @@ export default function App() {
 					<Route path="/tdoll/:id" element={<TDoll />} />
 					<Route path="/tdoll" element={<TDoll />} />
 					<Route path="/404" element={<NotFound404 />} />
-					{/* Anything unmatched lands on the 404 page, which `Redirect` used to do in router v5. */}
-					<Route path="*" element={<Navigate to="/404" replace />} />
+					{/* Anything unmatched shows the 404 page in place, keeping the mistyped address visible. */}
+					<Route path="*" element={<NotFound404 />} />
 				</Routes>
 			</div>
 		</ThemeProvider>
