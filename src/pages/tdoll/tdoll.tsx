@@ -44,18 +44,36 @@ const styles = {
 		backgroundColor: alpha(theme.palette.background.paper, 0.7),
 		backdropFilter: "blur(6px)"
 	}),
-	// The three sections under the hero share a row on a wide screen, so they fill it to the tallest one
-	// rather than leaving Tile buffs as a short card between two tall ones. Narrower screens keep natural
-	// heights, where equalising would pair Skills with the much taller Animations card.
+	// The two sections under the hero share a row on a wide screen, so they fill it to the taller one.
+	// Narrower screens keep natural heights, where equalising would pair a card with the taller Animations one.
 	rowSection: {
 		height: { lg: "100%" },
-		// The panel inside grows with the card too, or Tile buffs keeps a short inner box with empty space under it.
+		// The panel inside grows with the card too, or it keeps a short inner box with empty space under it.
 		display: { lg: "flex" },
 		flexDirection: "column",
 		"& > :last-child": { flexGrow: 1 }
 	},
 	sectionHeading: {
 		mb: 1.5
+	},
+	// Skill and tile buffs side by side inside the Abilities card on a wide screen, stacked on a narrow one.
+	abilities: {
+		display: "flex",
+		flexDirection: { xs: "column", lg: "row" },
+		gap: 2
+	},
+	// Each half stretches to the card's height, and its panel fills the half, so the two inner boxes end level.
+	// Tile buffs is a fixed 300px on a wide screen, about what its grid and one line of text need, and the
+	// skill takes the rest, since its description is what wraps and makes the whole row taller.
+	abilityPart: {
+		display: "flex",
+		flexDirection: "column",
+		minWidth: 0,
+		"& > :last-child": { flexGrow: 1 }
+	},
+	abilityHeading: {
+		mb: 1,
+		fontWeight: 600
 	},
 	// The Spine stage tracks its container, so this is what actually decides how large the chibi draws.
 	chibiColumn: {
@@ -415,37 +433,43 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 2, lg: 3 } }}>
+					{/************** Skill and tile buffs in one card. They are both what the doll does in a fight, and
+					                apart they left the tile buffs as a mostly empty card in a row of taller ones. **************/}
+					<Grid size={{ xs: 12, lg: 8 }} sx={{ order: { xs: 2, sm: 3, lg: 3 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								Tile buffs
+								Abilities
 							</Typography>
-							<TilesPanel tileSet={tdoll.selected.tile_set} />
+							<Box sx={styles.abilities}>
+								<Box sx={[styles.abilityPart, { flex: { lg: "1 1 auto" } }]}>
+									<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.abilityHeading}>
+										Skill
+									</Typography>
+									<SkillsPanel
+										showModSkill={showModSkill}
+										selectedSkill={selectedSkill}
+										onSelectedSkillChange={setSelectedSkill}
+										skillLevel={skillLevel}
+										onSkillLevelChange={setSkillLevel}
+										skill={tdoll.selected.skill}
+										skill2={tdoll.selected.skill2}
+										normalSkillDescription={tdoll.normal.skill.description}
+										modSkill2Description={tdoll.mod?.skill2?.description}
+										dollId={tdoll.selected.id}
+										skillImages={tdoll.skillImages}
+									/>
+								</Box>
+								<Box sx={[styles.abilityPart, { flex: { lg: "0 0 300px" } }]}>
+									<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.abilityHeading}>
+										Tile buffs
+									</Typography>
+									<TilesPanel tileSet={tdoll.selected.tile_set} />
+								</Box>
+							</Box>
 						</Paper>
 					</Grid>
 
-					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 3, lg: 4 } }}>
-						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
-							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								Skills
-							</Typography>
-							<SkillsPanel
-								showModSkill={showModSkill}
-								selectedSkill={selectedSkill}
-								onSelectedSkillChange={setSelectedSkill}
-								skillLevel={skillLevel}
-								onSkillLevelChange={setSkillLevel}
-								skill={tdoll.selected.skill}
-								skill2={tdoll.selected.skill2}
-								normalSkillDescription={tdoll.normal.skill.description}
-								modSkill2Description={tdoll.mod?.skill2?.description}
-								dollId={tdoll.selected.id}
-								skillImages={tdoll.skillImages}
-							/>
-						</Paper>
-					</Grid>
-
-					<Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }} sx={{ order: { xs: 4, lg: 1 } }}>
+					<Grid size={{ xs: 12, sm: 6, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, lg: 1 } }}>
 						<Paper sx={styles.section} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Animations
