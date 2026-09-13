@@ -21,10 +21,16 @@ import { hasDollArt, processDoll, processDolls } from "./processData";
 
 /** One entry in the lightweight search index. */
 export interface SearchEntry {
+	/** Doll id, shared by the base form and its Mod. */
 	id: number;
+	/** The base form's current name. */
 	name: string;
+	/** Doll type, such as "AR" or "HG". */
 	type: string;
+	/** Base form rarity, with 1 meaning the collaboration "Extra" rarity. */
 	rarity: number;
+	/** Names the wiki used before the 2026-09-13 upstream import renamed the doll, kept searchable. Absent when the name did not change. */
+	aliases?: string[];
 }
 
 /**

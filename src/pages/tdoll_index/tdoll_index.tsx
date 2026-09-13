@@ -9,12 +9,15 @@ import DollCard from "../../components/DollCard";
 import { Box, Container, Grid, Chip, Divider, Typography, Button } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import { loadAllDolls } from "../../lib/data";
-import { normaliseName } from "../../lib/nameSearch";
+import { loadAllDolls, searchIndex } from "../../lib/data";
+import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
 const PAGE_SIZE = 30;
+
+/** Old wiki names by doll id, from the search index, so a doll stays findable by the name it had before upstream renamed it. */
+const ALIASES_BY_ID = new Map(searchIndex.map((entry) => [entry.id, entry.aliases ?? []]));
 
 /** A doll paired with the form the current filters mean we should show. */
 interface IndexEntry extends TDoll {
@@ -94,6 +97,12 @@ export default function TDoll_Index() {
 	// The list re-filters from a deferred copy, so typing stays responsive while a few hundred cards re-render.
 	const deferredQuery = useDeferredValue(nameQuery);
 
+	// Every doll's searchable names, normalised once per load rather than on every keystroke.
+	const searchKeys = useMemo(
+		() => new Map(allDolls.map((data) => [data.normal.id, [data.normal.name, data.mod?.name ?? "", ...(ALIASES_BY_ID.get(data.normal.id) ?? [])].filter(Boolean).map(normaliseName)])),
+		[allDolls]
+	);
+
 	const matches = useMemo(() => {
 		const typeOn = typeFilter.some((entry) => entry.selected);
 		const rarityOn = rarityFilter.some((entry) => entry.selected);
@@ -101,9 +110,9 @@ export default function TDoll_Index() {
 		const query = normaliseName(deferredQuery);
 
 		return allDolls.flatMap<IndexEntry>((data) => {
-			// The name search narrows every other filter. Both forms' names count, so "m4sopmod" finds the doll
-			// whichever form the Mod filter is showing.
-			if (query && !normaliseName(data.normal.name).includes(query) && !(data.mod && normaliseName(data.mod.name).includes(query))) {
+			// The name search narrows every other filter. Both forms' names and any old names count, so "m4sopmod" finds the doll
+			// whichever form the Mod filter is showing, and "hk416" still finds 416.
+			if (!matchesAnyName(searchKeys.get(data.normal.id) ?? [], query)) {
 				return [];
 			}
 			if (!typeOn && !rarityOn && !modOn) {
@@ -130,7 +139,7 @@ export default function TDoll_Index() {
 			}
 			return (typeOn ? matchesType : matchesRarity) ? entry : [];
 		});
-	}, [allDolls, typeFilter, rarityFilter, modFilter, deferredQuery]);
+	}, [allDolls, searchKeys, typeFilter, rarityFilter, modFilter, deferredQuery]);
 
 	// The slice of matches actually rendered, grown by PAGE_SIZE each time the load-more button is clicked.
 	const visible = useMemo(() => matches.slice(0, shown), [matches, shown]);
