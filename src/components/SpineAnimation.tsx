@@ -147,20 +147,25 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 					transform: `translateX(-50%) translate(${zoom.transform.x}px, ${zoom.transform.y}px) scale(${zoom.transform.scale})`
 				}}
 			/>
-			{/* Bottom right rather than top right: the chibi's head sits at the top of the stage, and this
-			    matches where the full-art button sits on the portrait card.
+			{/* Bottom right of the stage: the chibi's head sits at the top, and this matches where the full-art
+			    button sits on the portrait card.
 
-			    onPointerDown is stopped here because the gesture container calls setPointerCapture on itself
-			    for every pointerdown that reaches it. With the pointer captured by the container, the matching
-			    pointerup never lands on this button, so no click is ever synthesised and the reset does nothing. */}
+			    Positioned from the stage's own size rather than with `right`. This div's CSS width resolves to 0
+			    (see above), so `right: 8` measured from its centre and left the button near the middle of the stage.
+
+			    Both events are stopped. The pointerdown would otherwise start a gesture on the stage, and the click
+			    would bubble to the stage's own click handler and skip to the next animation as well as resetting. */}
 			{zoom.isZoomed && (
 				<Fab
 					size="small"
 					color="primary"
 					onPointerDown={(event) => event.stopPropagation()}
-					onClick={zoom.reset}
+					onClick={(event) => {
+						event.stopPropagation();
+						zoom.reset();
+					}}
 					aria-label="reset view"
-					sx={{ position: "absolute", right: 8, bottom: 8, opacity: 0.9 }}
+					sx={{ position: "absolute", left: `calc(50% + ${stageSize / 2 - 48}px)`, bottom: 8, opacity: 0.9 }}
 				>
 					<RestartAltIcon />
 				</Fab>
