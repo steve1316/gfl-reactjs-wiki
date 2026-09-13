@@ -81,7 +81,7 @@ export default memo(function DollCard({ id, name, type, rarity, isMod, image, to
 						<TypeBadge type={type} dense={dense} />
 						<RarityLabel rarity={rarity} isMod={isMod} />
 					</Box>
-					<Typography component="div" sx={{ fontSize: "0.62rem", color: "text.secondary", mt: 0.1 }}>
+					<Typography component="div" sx={{ fontSize: "0.6875rem", color: "text.secondary", mt: 0.1 }}>
 						#{id}
 					</Typography>
 				</Box>
