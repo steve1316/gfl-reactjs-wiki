@@ -36,6 +36,7 @@ function legacyDolls() {
 	return LEGACY_SHARDS.flatMap((shard) => new Function(fs.readFileSync(`src/data/${shard}.js`, "utf8").replace("export default tdolls;", "return tdolls;"))());
 }
 
+/** Drafts `skin-assets.json` from the spine rig names and upstream skin table, printing any slot left for manual review. */
 function main() {
 	const args = process.argv.slice(2);
 	const out = args.includes("--out") ? args[args.indexOf("--out") + 1] : "tools/data/skin-assets.json";
