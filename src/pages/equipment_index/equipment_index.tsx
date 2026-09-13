@@ -136,7 +136,7 @@ export default function EquipmentIndex() {
 							<li key={type.key}>
 								<Zoom in={true} timeout={400}>
 									<span>
-										<FilterChip key={type.key} label={type.label} selected={selectedTypes.has(type.key)} value={type.key} onToggle={handleOnClickType} />
+										<FilterChip label={type.label} selected={selectedTypes.has(type.key)} value={type.key} onToggle={handleOnClickType} />
 									</span>
 								</Zoom>
 							</li>

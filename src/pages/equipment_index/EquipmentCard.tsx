@@ -9,6 +9,7 @@ import type { SxProps, Theme } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { searchIndex } from "../../lib/data";
+import type { SearchEntry } from "../../lib/data";
 import type { Equipment, EquipmentDoll } from "../../types/equipment";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +39,9 @@ const STAT_NAMES: Record<string, string> = {
 	armor: "Armor"
 };
 
+/** Search index entries keyed by doll id, built once for every card to share. */
+const DOLLS_BY_ID = new Map<number, SearchEntry>(searchIndex.map((entry) => [entry.id, entry]));
+
 const styles = {
 	heading: (theme: Theme) => ({
 		fontSize: theme.typography.pxToRem(15),
@@ -58,7 +62,8 @@ const styles = {
 		"&:last-of-type": { borderBottom: 0 }
 	},
 	iconPlaceholder: {
-		aspectRatio: "1 / 1",
+		// Equipment icons are 256x196.
+		aspectRatio: "256 / 196",
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "center",
@@ -124,7 +129,7 @@ const EquippableBy = memo(function EquippableBy({ usable, dolls }: EquippableByP
 		<>
 			Equippable by{" "}
 			{dolls.map((doll, index) => {
-				const name = searchIndex.find((entry) => entry.id === doll.id)?.name ?? `#${doll.id}`;
+				const name = DOLLS_BY_ID.get(doll.id)?.name ?? `#${doll.id}`;
 				return (
 					<span key={`${doll.id}-${doll.mod}`}>
 						{index === 0 ? null : ", "}
