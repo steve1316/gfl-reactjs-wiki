@@ -10,6 +10,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { containArtSx } from "../../lib/artLayout";
 import { loadDoll } from "../../lib/data";
+import NotFound404 from "../../not_found_404";
 import type { TDoll } from "../../types/tdoll";
 
 /**
@@ -69,7 +70,8 @@ function formLabel(key: string, skinNames: string[]): string {
 export default function TDollArt() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const [doll, setDoll] = useState<TDoll | undefined>(undefined);
+	// Undefined while loading and null when no doll has this id.
+	const [doll, setDoll] = useState<TDoll | null | undefined>(undefined);
 	const [damaged, setDamaged] = useState(false);
 	const [formKey, setFormKey] = useState("normal");
 
@@ -79,7 +81,7 @@ export default function TDollArt() {
 		let active = true;
 		void loadDoll(Number(id)).then((found) => {
 			if (active) {
-				setDoll(found);
+				setDoll(found ?? null);
 			}
 		});
 		return () => {
@@ -137,6 +139,10 @@ export default function TDollArt() {
 			setDamaged(Boolean(value));
 		}
 	}, []);
+
+	if (doll === null) {
+		return <NotFound404 message={`There is no T-Doll with the id ${id ?? ""}.`} />;
+	}
 
 	return (
 		<Box sx={{ position: "fixed", inset: 0, bgcolor: "common.black", zIndex: (theme) => theme.zIndex.modal, display: "flex", flexDirection: "column" }}>

@@ -3,6 +3,7 @@ import { useLocation, useParams } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
+import NotFound404 from "../../not_found_404";
 import ChibiPanel from "./ChibiPanel";
 import DollHero from "./DollHero";
 import LazySection from "./LazySection";
@@ -95,7 +96,8 @@ export default function TDoll() {
 	const { search } = useLocation();
 	// The id comes from the /tdoll/:id route, falling back to the older ?id= query string.
 	const id = Number(routeId ?? search.substring(4));
-	const [doll, setDoll] = useState<DisplayTDoll | undefined>(undefined);
+	// Undefined while loading and null once the shard has loaded without this id, so a missing doll is not stuck on "Loading".
+	const [doll, setDoll] = useState<DisplayTDoll | null | undefined>(undefined);
 
 	// Only the shard holding this doll is fetched. A copy is stored rather than the cached object,
 	// because `selected` is assigned onto it below and the cache is shared with every other route.
@@ -104,13 +106,17 @@ export default function TDoll() {
 		setDoll(undefined);
 		void loadDoll(id).then((found) => {
 			if (active) {
-				setDoll(found ? { ...found, selected: found.normal } : undefined);
+				setDoll(found ? { ...found, selected: found.normal } : null);
 			}
 		});
 		return () => {
 			active = false;
 		};
 	}, [id]);
+
+	if (doll === null) {
+		return <NotFound404 message={`There is no T-Doll with the id ${routeId ?? search.substring(4)}.`} />;
+	}
 
 	if (doll === undefined) {
 		return (
