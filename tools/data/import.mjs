@@ -23,7 +23,8 @@ import { loadUpstream, readLock, resolveUpstreamDir } from "./lib/upstream.mjs";
 const OUT_DIR = "src/data";
 
 /**
- * Set a value at a dotted path such as `normal.skill.description`.
+ * Set a value at a dotted path such as `normal.skill.description`. The full path, including the last
+ * segment, must already exist, so a typo'd field name fails loudly instead of silently adding a new key.
  *
  * @param {object} target Object to change.
  * @param {string} path Dotted path.
@@ -33,7 +34,7 @@ function setPath(target, path, value) {
 	const keys = path.split(".");
 	const last = keys.pop();
 	const parent = keys.reduce((node, key) => node?.[key], target);
-	if (!parent || !last) {
+	if (!parent || !last || !Object.hasOwn(parent, last)) {
 		throw new Error(`override path ${path} does not exist`);
 	}
 	parent[last] = value;

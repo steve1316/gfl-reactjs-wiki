@@ -27,7 +27,7 @@ function git(dir, args) {
 /**
  * Read the pinned upstream commit.
  *
- * @returns {{ sha: string }} The lock file contents.
+ * @returns {{ repo: string, sha: string }} The lock file contents.
  */
 export function readLock() {
 	return JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
