@@ -139,7 +139,8 @@ export default function Home() {
 							<Grid key={card.title} size={{ xs: 12, sm: 6, md: 4 }}>
 								<Grow in={true} style={GROW_STYLE} timeout={600 + index * 100}>
 									<Card sx={styles.card}>
-										<CardActionArea>
+										{/* The artwork links to the section too. It was a button that did nothing and had no name. */}
+										<CardActionArea component={Link} to={card.link} aria-label={card.title}>
 											<CardMedia sx={styles.cardMedia} image={card.image} title={card.title} />
 										</CardActionArea>
 										<CardContent sx={styles.cardContent}>
@@ -149,11 +150,10 @@ export default function Home() {
 											<Typography color="textSecondary">{card.description}</Typography>
 										</CardContent>
 										<CardActions sx={styles.cardButton}>
-											<Link to={card.link}>
-												<Button size="small" variant="contained" color="primary">
-													<ArrowForwardIcon />
-												</Button>
-											</Link>
+											{/* One link styled as a button, rather than a button nested inside a link, with a name for screen readers. */}
+											<Button component={Link} to={card.link} size="small" variant="contained" color="primary" aria-label={`Open ${card.title}`}>
+												<ArrowForwardIcon />
+											</Button>
 										</CardActions>
 									</Card>
 								</Grow>
