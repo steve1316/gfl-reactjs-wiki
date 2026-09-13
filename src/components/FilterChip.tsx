@@ -1,5 +1,7 @@
-import { Chip } from "@mui/material";
+import { memo } from "react";
 import type { ReactElement } from "react";
+
+import { Chip } from "@mui/material";
 
 /** Props for FilterChip. */
 interface FilterChipProps {
@@ -7,8 +9,15 @@ interface FilterChipProps {
 	label: string;
 	/** Whether this filter is currently applied. */
 	selected: boolean;
-	/** Called when the chip is clicked. */
-	onToggle: () => void;
+	/**
+	 * Called with `value` when the chip is clicked.
+	 *
+	 * Taking the value back means a row of chips can share one stable handler. A fresh arrow per chip, the
+	 * usual way to say which chip was clicked, is a new prop on every render and defeats the memo below.
+	 */
+	onToggle: (value?: string | number) => void;
+	/** Identifies this chip to `onToggle`, such as a filter's key. */
+	value?: string | number;
 	/**
 	 * The colour this filter stands for, such as a rarity or a weapon class.
 	 *
@@ -37,13 +46,13 @@ interface FilterChipProps {
  * @param props Component props.
  * @returns The chip.
  */
-export default function FilterChip({ label, selected, onToggle, colour, avatar }: FilterChipProps) {
+export default memo(function FilterChip({ label, selected, onToggle, value, colour, avatar }: FilterChipProps) {
 	return (
 		<Chip
 			clickable
 			label={label}
 			avatar={avatar}
-			onClick={onToggle}
+			onClick={() => onToggle(value)}
 			variant={selected ? "filled" : "outlined"}
 			aria-pressed={selected}
 			sx={(theme) => {
@@ -67,4 +76,4 @@ export default function FilterChip({ label, selected, onToggle, colour, avatar }
 			}}
 		/>
 	);
-}
+});

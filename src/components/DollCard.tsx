@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { Card, CardActionArea, CardMedia, Box, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 
@@ -34,7 +36,7 @@ interface DollCardProps {
  * @param props Component props.
  * @returns The card.
  */
-export default function DollCard({ id, name, type, rarity, isMod, image, to, dense = false }: DollCardProps) {
+export default memo(function DollCard({ id, name, type, rarity, isMod, image, to, dense = false }: DollCardProps) {
 	return (
 		<Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
 			<CardActionArea component={Link} to={to} sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch" }}>
@@ -66,4 +68,4 @@ export default function DollCard({ id, name, type, rarity, isMod, image, to, den
 			</CardActionArea>
 		</Card>
 	);
-}
+});

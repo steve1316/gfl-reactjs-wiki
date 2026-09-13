@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { Box } from "@mui/material";
 import type { Theme } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
@@ -39,7 +41,7 @@ interface TypeBadgeProps {
  * @param props Component props.
  * @returns The badge.
  */
-export function TypeBadge({ type, dense = false }: TypeBadgeProps) {
+export const TypeBadge = memo(function TypeBadge({ type, dense = false }: TypeBadgeProps) {
 	return (
 		<Box
 			component="span"
@@ -62,7 +64,7 @@ export function TypeBadge({ type, dense = false }: TypeBadgeProps) {
 			{type}
 		</Box>
 	);
-}
+});
 
 /** Props for RarityStars. */
 interface RarityStarsProps {
@@ -81,7 +83,7 @@ interface RarityStarsProps {
  * @param props Component props.
  * @returns The stars.
  */
-export function RarityStars({ rarity, isMod }: RarityStarsProps) {
+export const RarityStars = memo(function RarityStars({ rarity, isMod }: RarityStarsProps) {
 	return (
 		<Box component="ul" sx={{ display: "inline-flex", alignItems: "center", gap: 0.25, listStyle: "none", m: 0, p: 0 }} aria-label={`${rarity} star${rarity === 1 ? "" : "s"}`}>
 			{Array.from({ length: rarity }, (_value, index) => (
@@ -91,7 +93,7 @@ export function RarityStars({ rarity, isMod }: RarityStarsProps) {
 			))}
 		</Box>
 	);
-}
+});
 
 /** Props for RarityLabel. */
 interface RarityLabelProps {
@@ -107,11 +109,11 @@ interface RarityLabelProps {
  * @param props Component props.
  * @returns The label.
  */
-export function RarityLabel({ rarity, isMod }: RarityLabelProps) {
+export const RarityLabel = memo(function RarityLabel({ rarity, isMod }: RarityLabelProps) {
 	return (
 		<Box component="span" sx={(theme) => ({ fontSize: "0.7rem", fontWeight: 700, color: rarityColour(theme, rarity, isMod) })}>
 			{rarity}
 			{"★"}
 		</Box>
 	);
-}
+});
