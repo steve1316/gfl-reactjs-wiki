@@ -1,4 +1,4 @@
-import { stripMarkup } from "./text.mjs";
+import { cleanName, stripMarkup } from "./text.mjs";
 import { TYPE_NAMES } from "./tiles.mjs";
 
 /** Upstream equipment type codes to stable keys. Existing keys match the old data's category names. */
@@ -78,7 +78,7 @@ export function buildEquipment(upstream, equipmentAssets) {
 	const items = {};
 	for (const row of upstream.stc("equip")) {
 		const type = typeByNumber.get(row.type);
-		const name = upstream.t(row.name).trim();
+		const name = cleanName(upstream.t(row.name));
 		if (row.is_show !== 1 || !type || name === "") {
 			continue;
 		}
@@ -118,6 +118,6 @@ export function buildEquipment(upstream, equipmentAssets) {
 		const key = TYPE_KEYS[type.code];
 		(items[key] ??= []).push(item);
 	}
-	const types = typeRows.filter((row) => items[TYPE_KEYS[row.code]]).map((row) => ({ key: TYPE_KEYS[row.code], label: upstream.t(row.name).trim() }));
+	const types = typeRows.filter((row) => items[TYPE_KEYS[row.code]]).map((row) => ({ key: TYPE_KEYS[row.code], label: cleanName(upstream.t(row.name)) }));
 	return { types, items };
 }

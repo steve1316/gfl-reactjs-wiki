@@ -18,13 +18,23 @@ export function parseTextTable(source) {
 }
 
 /**
- * Undo the text tables' escapes. `//c` is a comma and `//n` a newline, and no other escape occurs.
+ * Undo the text tables' escapes. `//c` is a comma and `//n` a newline. A leftover `// ` is an upstream typo for a comma, as in "damage// rate of fire".
  *
  * @param {string} value An escaped value.
  * @returns {string} The plain text.
  */
 export function unescapeText(value) {
-	return value.replaceAll("//c", ",").replaceAll("//n", "\n");
+	return value.replaceAll("//c", ",").replaceAll("//n", "\n").replaceAll("// ", ", ");
+}
+
+/**
+ * Tidy a display name. Upstream names can hold non-breaking spaces and newlines, which break search and wrapping.
+ *
+ * @param {string} value A name.
+ * @returns {string} The name with each whitespace run turned into one space, trimmed.
+ */
+export function cleanName(value) {
+	return value.replace(/\s+/g, " ").trim();
 }
 
 /**
