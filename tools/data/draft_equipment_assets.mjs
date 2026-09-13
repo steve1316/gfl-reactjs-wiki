@@ -5,6 +5,8 @@
  * Icons are stored by old category and old name, so upstream items are matched on loose name plus rarity against the
  * manifest's equipment entries and the old data. Unmatched old items are printed for review.
  *
+ * This ran once before the hand-written equipment data was deleted and now only works from a checkout before that commit.
+ *
  * Usage:
  *     node tools/data/draft_equipment_assets.mjs [--out tools/data/equipment-assets.json]
  */

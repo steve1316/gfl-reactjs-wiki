@@ -6,6 +6,8 @@
  * by name against the old hand-written skin names and printed for review. Anything still unknown is written as null.
  * Hosted skins with no upstream record (merch-only or China-only skins) are recorded by hand afterwards as `{ "name": ... }` entries.
  *
+ * This ran once before the hand-written doll shards were deleted and now only works from a checkout before that commit.
+ *
  * Usage:
  *     node tools/data/draft_skin_assets.mjs [--out tools/data/skin-assets.json]
  */
