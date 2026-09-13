@@ -258,6 +258,11 @@ function TDollContent({ doll }: TDollContentProps) {
 	const artImages = showSkin ? skinForm(skinIndex, mode === 1)?.images : tdoll.selected.assets.images;
 	const heroArtUrl = artImages?.[artKind] ?? artImages?.full ?? tdoll.normal.assets.images[artKind] ?? tdoll.normal.assets.images.full;
 
+	// The art viewer opens on the outfit on screen. A skin worn by the Mod has no full art of its own, so it opens on the
+	// same skin's base form, which is the same outfit.
+	const artForm = showSkin ? `skin${skinIndex + 1}` : isModForm ? "mod" : "normal";
+	const artLink = `/tdoll/${tdoll.normal.id}/art?form=${artForm}${switchImage ? "&damaged=1" : ""}`;
+
 	// Every handler below is wrapped in useCallback. The panels they are passed to are memoised, and a handler
 	// recreated on each render would make every panel re-render on every change, whether or not it changed.
 
@@ -421,7 +426,7 @@ function TDollContent({ doll }: TDollContentProps) {
 							isMod={isModForm}
 							cardImage={tdollImage}
 							onCardImageClick={switchBetweenNormalDamagedCardImages}
-							normalId={tdoll.normal.id}
+							artLink={artLink}
 							skins={tdoll.skins}
 							skinValue={showSkin ? skinSelected : false}
 							onSkinChange={switchSkinSelected}

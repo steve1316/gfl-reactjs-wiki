@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -72,8 +72,11 @@ export default function TDollArt() {
 	const navigate = useNavigate();
 	// Undefined while loading and null when no doll has this id.
 	const [doll, setDoll] = useState<TDoll | null | undefined>(undefined);
-	const [damaged, setDamaged] = useState(false);
-	const [formKey, setFormKey] = useState("normal");
+	// The doll page links here with the form and damaged state it was showing, so the viewer opens on the same art.
+	// A form without full art falls back to the first one below.
+	const [searchParams] = useSearchParams();
+	const [damaged, setDamaged] = useState(() => searchParams.get("damaged") === "1");
+	const [formKey, setFormKey] = useState(() => searchParams.get("form") ?? "normal");
 
 	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
 
