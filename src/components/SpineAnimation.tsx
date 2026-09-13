@@ -35,7 +35,9 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 	const playerRef = useRef<SpinePlayer | null>(null);
 	const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 	const [stageSize, setStageSize] = useState(maxSize);
-	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 4, doubleScale: 2 });
+	// No double-click zoom here: a click on the stage already advances the animation, so two quick clicks
+	// used to both skip ahead and zoom the chibi in. Wheel and pinch still zoom.
+	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 4, doubleClickZoom: false });
 
 	// The stage was pinned at 250px whatever the screen, so it was small on a desktop and still had to fit
 	// a phone. A square that tracks its container suits both.
@@ -125,8 +127,9 @@ export default function SpineAnimation({ skelUrl, atlasUrl, imageBase, animation
 			style={{ width: "100%", height: stageSize, position: "relative", ...zoom.containerStyle }}
 			{...zoom.handlers}
 			onClick={(event) => {
-				// A drag ends in a click. Swallow it while zoomed so a pan does not also advance the animation.
-				if (zoom.isZoomed) {
+				// A drag ends in a click. Swallow only that one, so a pan does not also advance the animation. This
+				// used to swallow every click while zoomed, which left the animation stuck until the view was reset.
+				if (zoom.wasDragged()) {
 					event.stopPropagation();
 				}
 			}}
