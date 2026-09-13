@@ -10,20 +10,11 @@ import { Box, Container, Grid, Chip, Divider, Typography, Button } from "@mui/ma
 import type { SxProps, Theme } from "@mui/material";
 
 import { loadAllDolls } from "../../lib/data";
+import { normaliseName } from "../../lib/nameSearch";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
 const PAGE_SIZE = 30;
-
-/**
- * Reduce a name to lowercase letters and digits, so a search ignores case, spaces and punctuation.
- *
- * @param text The name or query to normalise.
- * @returns The text with everything but letters and digits removed.
- */
-function normaliseName(text: string): string {
-	return text.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
 
 /** A doll paired with the form the current filters mean we should show. */
 interface IndexEntry extends TDoll {
@@ -277,6 +268,7 @@ export default function TDoll_Index() {
 								isMod={tdoll.selected === tdoll.mod}
 								image={tdoll.selected.assets.images.card ?? ""}
 								to={`/tdoll/${tdoll.normal.id}`}
+								highlight={deferredQuery}
 							/>
 						</Grid>
 					))}

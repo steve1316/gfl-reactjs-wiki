@@ -1,10 +1,14 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 import { Card, CardActionArea, CardMedia, Box, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
 
 import { cardArtSx } from "../lib/artLayout";
+import { findNameMatch } from "../lib/nameSearch";
 import { RarityLabel, TypeBadge } from "./DollBadges";
+
+/** Style for the part of a name that matches the search. */
+const matchSx = { fontWeight: 800, color: "text.primary" } as const;
 
 /** Props for DollCard. */
 interface DollCardProps {
@@ -24,6 +28,8 @@ interface DollCardProps {
 	to: string;
 	/** Tighter padding and type, for dense grids. */
 	dense?: boolean;
+	/** A name search query. The part of the name it matches is shown in bold. */
+	highlight?: string;
 }
 
 /**
@@ -36,7 +42,9 @@ interface DollCardProps {
  * @param props Component props.
  * @returns The card.
  */
-export default memo(function DollCard({ id, name, type, rarity, isMod, image, to, dense = false }: DollCardProps) {
+export default memo(function DollCard({ id, name, type, rarity, isMod, image, to, dense = false, highlight = "" }: DollCardProps) {
+	const match = useMemo(() => findNameMatch(name, highlight), [name, highlight]);
+
 	return (
 		<Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
 			<CardActionArea component={Link} to={to} sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch" }}>
@@ -47,7 +55,9 @@ export default memo(function DollCard({ id, name, type, rarity, isMod, image, to
 						sx={{
 							// Name must be readable on mobile (11+ px).
 							fontSize: dense ? "0.72rem" : "0.8rem",
-							fontWeight: 700,
+							// While a search matches, the rest of the name drops to regular weight so the matched part stands out.
+							fontWeight: match ? 400 : 700,
+							color: match ? "text.secondary" : undefined,
 							lineHeight: 1.25,
 							overflow: "hidden",
 							textOverflow: "ellipsis",
@@ -55,7 +65,17 @@ export default memo(function DollCard({ id, name, type, rarity, isMod, image, to
 						}}
 						title={name}
 					>
-						{name}
+						{match ? (
+							<>
+								{name.slice(0, match[0])}
+								<Box component="b" sx={matchSx}>
+									{name.slice(match[0], match[1])}
+								</Box>
+								{name.slice(match[1])}
+							</>
+						) : (
+							name
+						)}
 					</Typography>
 					<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, mt: 0.25 }}>
 						<TypeBadge type={type} dense={dense} />
