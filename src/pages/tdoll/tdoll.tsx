@@ -44,6 +44,16 @@ const styles = {
 		backgroundColor: alpha(theme.palette.background.paper, 0.7),
 		backdropFilter: "blur(6px)"
 	}),
+	// The three sections under the hero share a row on a wide screen, so they fill it to the tallest one
+	// rather than leaving Tile buffs as a short card between two tall ones. Narrower screens keep natural
+	// heights, where equalising would pair Skills with the much taller Animations card.
+	rowSection: {
+		height: { lg: "100%" },
+		// The panel inside grows with the card too, or Tile buffs keeps a short inner box with empty space under it.
+		display: { lg: "flex" },
+		flexDirection: "column",
+		"& > :last-child": { flexGrow: 1 }
+	},
 	sectionHeading: {
 		mb: 1.5
 	},
@@ -376,7 +386,7 @@ function TDollContent({ doll }: TDollContentProps) {
 				{/************** Every section on the page at once. On a wide screen the animations share the hero's row
 				                and the rest sit three across below it, so the whole page fits one 1920x1080 screen. On a
 				                phone everything stacks, with the animations last since they are the heaviest to load. **************/}
-				<Grid container spacing={2} sx={{ alignItems: "flex-start" }}>
+				<Grid container spacing={2}>
 					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills and Mod toggle **************/}
 					<Grid size={{ xs: 12, lg: 8, xl: 9 }} sx={{ order: 0 }}>
 						<DollHero
@@ -397,7 +407,7 @@ function TDollContent({ doll }: TDollContentProps) {
 						/>
 					</Grid>
 					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 1, lg: 2 } }}>
-						<Paper sx={styles.section} variant="outlined">
+						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
 							</Typography>
@@ -406,7 +416,7 @@ function TDollContent({ doll }: TDollContentProps) {
 					</Grid>
 
 					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 2, lg: 3 } }}>
-						<Paper sx={styles.section} variant="outlined">
+						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Tile buffs
 							</Typography>
@@ -415,7 +425,7 @@ function TDollContent({ doll }: TDollContentProps) {
 					</Grid>
 
 					<Grid size={{ xs: 12, sm: 6, lg: 4 }} sx={{ order: { xs: 3, lg: 4 } }}>
-						<Paper sx={styles.section} variant="outlined">
+						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Skills
 							</Typography>
