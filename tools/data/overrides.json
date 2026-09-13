@@ -1,0 +1,225 @@
+{
+	"addDolls": [
+		{
+			"normal": {
+				"id": 1003,
+				"name": "Kiana",
+				"type": "HG",
+				"rarity": 1,
+				"max_hp": 70,
+				"max_dmg": 31,
+				"max_acc": 53,
+				"max_eva": 76,
+				"max_rof": 64,
+				"skill": {
+					"name": "Asgard's Wrath",
+					"initial_cooldown": "10s",
+					"cooldown": [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+					"description": "Generate a bolt of lightning that deals critical damage to enemies within a radius of 1.5. Enemies hit will be paralyzed for #1 seconds (unable to move or attack) and become vulnerable (receive #2 more damage). (BOSS is immune to both effects)",
+					"number_of_stats": 2,
+					"stat1": [1.5, 1.7, 1.8, 2, 2.2, 2.3, 2.5, 2.7, 2.8, 3],
+					"stat2": ["25%", "27%", "28%", "30%", "32%", "33%", "35%", "37%", "38%", "40%"]
+				},
+				"tile_set": {
+					"row1": [0, 1, 1],
+					"row2": [0, 2, 0],
+					"row3": [0, 1, 1],
+					"targets": "Buffs All Types",
+					"number_of_stats": 2,
+					"stat1": ["Damage by ", "Evasion by "],
+					"stat2": ["20%", "30%"]
+				}
+			},
+			"mod": null,
+			"skins": {
+				"number_of_skins": 1,
+				"skin_names": ["Formal Dress"],
+				"skin_ids": [null]
+			},
+			"released": "2020-01-01"
+		},
+		{
+			"normal": {
+				"id": 1004,
+				"name": "Raiden Mei",
+				"type": "RF",
+				"rarity": 1,
+				"max_hp": 84,
+				"max_dmg": 146,
+				"max_acc": 70,
+				"max_eva": 32,
+				"max_rof": 34,
+				"skill": {
+					"name": "Electromagnetic Shot",
+					"initial_cooldown": "6s",
+					"cooldown": [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+					"description": "After aiming for 1.5 seconds, shoot the furthest target for #1 damage and paralyze it (unable to move or attack) for #2 seconds. (BOSS is immune to effect)",
+					"number_of_stats": 2,
+					"stat1": ["2.5x", "2.8x", "3.1x", "3.3x", "3.6x", "3.9x", "4.2x", "4.4x", "4.7x", "5x"],
+					"stat2": [1.5, 1.7, 1.8, 2, 2.2, 2.3, 2.5, 2.7, 2.8, 3]
+				},
+				"tile_set": {
+					"row1": [0, 1, 1],
+					"row2": [0, 2, 0],
+					"row3": [0, 0, 0],
+					"targets": "Buffs HG",
+					"number_of_stats": 1,
+					"stat1": ["Reduces Skill CD by "],
+					"stat2": ["18%"]
+				}
+			},
+			"mod": null,
+			"skins": null,
+			"released": "2020-01-01"
+		},
+		{
+			"normal": {
+				"id": 1005,
+				"name": "Bronya",
+				"type": "RF",
+				"rarity": 1,
+				"max_hp": 81,
+				"max_dmg": 132,
+				"max_acc": 77,
+				"max_eva": 33,
+				"max_rof": 37,
+				"skill": {
+					"name": "Black Hole Catalyst",
+					"initial_cooldown": "5s",
+					"cooldown": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+					"description": "Throw a grenade that will create a black hole. The black hole lasts for #1 seconds and will draw in enemies within a 2.5 units radius. Enemies within a 1.5 unit radius will receive #2 damage per second.",
+					"number_of_stats": 2,
+					"stat1": [2, 2.3, 2.7, 3, 3.3, 3.7, 4, 4.3, 4.7, 5],
+					"stat2": ["10%", "11%", "12%", "13%", "14%", "16%", "17%", "18%", "19%", "20%"]
+				},
+				"tile_set": {
+					"row1": [0, 0, 0],
+					"row2": [0, 2, 0],
+					"row3": [0, 1, 1],
+					"targets": "Buffs HG",
+					"number_of_stats": 1,
+					"stat1": ["Reduces Skill CD by "],
+					"stat2": ["18%"]
+				}
+			},
+			"mod": null,
+			"skins": {
+				"number_of_skins": 1,
+				"skin_names": ["Bronya's Armor"],
+				"skin_ids": [null]
+			},
+			"released": "2020-01-01"
+		},
+		{
+			"normal": {
+				"id": 1006,
+				"name": "Theresa",
+				"type": "HG",
+				"rarity": 1,
+				"max_hp": 83,
+				"max_dmg": 30,
+				"max_acc": 47,
+				"max_eva": 79,
+				"max_rof": 54,
+				"skill": {
+					"name": "Divine Punishment",
+					"initial_cooldown": "1s",
+					"cooldown": [15, 14.7, 14.3, 14, 13.7, 13.3, 13, 12.7, 12.4, 12],
+					"description": "Increase damage to enemies by #1 within a self radius of #2 for #3 seconds, and every attack has a #4 chance of immobilizing (unable to move) the target for #5 seconds. (BOSS is immune to effect)",
+					"number_of_stats": 5,
+					"stat1": ["60%", "64%", "69%", "73%", "78%", "82%", "87%", "91%", "96%", "100%"],
+					"stat2": [4, 4, 4, 4, 4, 4, 4, 5, 5, 5],
+					"stat3": [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+					"stat4": ["5%", "8%", "11%", "13%", "16%", "19%", "22%", "24%", "27%", "30%"],
+					"stat5": [1.5, 1.6, 1.6, 1.7, 1.7, 1.8, 1.8, 1.9, 1.9, 2]
+				},
+				"tile_set": {
+					"row1": [1, 1, 0],
+					"row2": [0, 2, 0],
+					"row3": [1, 1, 0],
+					"targets": "Buffs All Types",
+					"number_of_stats": 2,
+					"stat1": ["Rate of Fire by ", "Accuracy by "],
+					"stat2": ["30%", "50%"]
+				}
+			},
+			"mod": null,
+			"skins": null,
+			"released": "2020-01-01"
+		},
+		{
+			"normal": {
+				"id": 1007,
+				"name": "Murata Himeko",
+				"type": "AR",
+				"rarity": 1,
+				"max_hp": 121,
+				"max_dmg": 58,
+				"max_acc": 45,
+				"max_eva": 42,
+				"max_rof": 64,
+				"skill": {
+					"name": "Dread of the Night",
+					"initial_cooldown": "1s",
+					"cooldown": [20, 19.6, 19.1, 18.7, 18.2, 17.8, 17.3, 16.9, 16.4, 16],
+					"description": "For #1 seconds, charm (decrease damage by #2) and fear (decrease movement speed by #3) the nearest 3 enemies. At the same time, increase self damage against feared enemies by #4.",
+					"number_of_stats": 4,
+					"stat1": [3, 3.2, 3.4, 3.7, 3.9, 4.1, 4.3, 4.6, 4.8, 5],
+					"stat2": ["15%", "17%", "18%", "20%", "22%", "23%", "25%", "27%", "28%", "30%"],
+					"stat3": ["15%", "17%", "18%", "20%", "22%", "23%", "25%", "27%", "28%", "30%"],
+					"stat4": ["30%", "33%", "37%", "40%", "43%", "47%", "50%", "53%", "57%", "60%"]
+				},
+				"tile_set": {
+					"row1": [0, 0, 0],
+					"row2": [0, 2, 1],
+					"row3": [0, 0, 0],
+					"targets": "Buffs SMG",
+					"number_of_stats": 2,
+					"stat1": ["Damage by ", "Rate of Fire by "],
+					"stat2": ["20%", "20%"]
+				}
+			},
+			"mod": null,
+			"skins": null,
+			"released": "2020-01-01"
+		},
+		{
+			"normal": {
+				"id": 1008,
+				"name": "Seele",
+				"type": "SG",
+				"rarity": 1,
+				"max_hp": 247,
+				"max_dmg": 35,
+				"max_acc": 11,
+				"max_eva": 13,
+				"max_rof": 27,
+				"max_armor": 22,
+				"skill": {
+					"name": "Quantum Recall",
+					"initial_cooldown": "Passive",
+					"description": "The last shot before reload will deal #1 damage. Reloads instantly.",
+					"number_of_stats": 1,
+					"stat1": ["150%", "170%", "180%", "200%", "220%", "230%", "250%", "270%", "280%", "300%"]
+				},
+				"tile_set": {
+					"row1": [1, 0, 0],
+					"row2": [0, 0, 2],
+					"row3": [1, 0, 0],
+					"targets": "Buffs MG",
+					"number_of_stats": 2,
+					"stat1": ["Damage by ", "Accuracy by "],
+					"stat2": ["20%", "10%"]
+				}
+			},
+			"mod": null,
+			"skins": {
+				"number_of_skins": 1,
+				"skin_names": ["Festival"],
+				"skin_ids": [null]
+			},
+			"released": "2020-01-01"
+		}
+	],
+	"fields": []
+}
