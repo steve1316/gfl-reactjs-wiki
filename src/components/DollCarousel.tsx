@@ -15,7 +15,7 @@ import type { TDoll } from "../types/tdoll";
 // Configuration
 
 /** How long each set of dolls is shown before the carousel moves on, in ms. */
-const ADVANCE_MS = 6000;
+const ADVANCE_MS = 15000;
 
 /** Horizontal travel, in pixels, that counts as a swipe rather than a tap. */
 const SWIPE_THRESHOLD = 40;
@@ -138,7 +138,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
  * The countdown bar and the swap are one CSS animation. The bar used to be a progress value fed by an interval,
  * and MUI eases every value change, so each reset to 0 slid back down from full and every new set appeared to
  * start already filled. Advancing on `animationend` also means pausing the bar pauses the timer, with nothing
- * to keep in sync. The pool arrives shuffled, so a set is simply the next slice of it.
+ * to keep in sync. Only a finger held on the carousel pauses it, since hovering or focusing it should not stop the
+ * cycle. The pool arrives shuffled, so a set is simply the next slice of it.
  *
  * @param props Component props.
  * @returns The carousel.
@@ -192,9 +193,6 @@ export default memo(function DollCarousel({ ids, onShuffle }: DollCarouselProps)
 
 	/** Show the previous set. Does nothing on the first. */
 	const back = useCallback(() => setStart((current) => Math.max(0, current - perSet)), [perSet]);
-
-	const pause = useCallback(() => setPaused(true), []);
-	const resume = useCallback(() => setPaused(false), []);
 
 	const handleTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
 		setPaused(true);
@@ -254,16 +252,7 @@ export default memo(function DollCarousel({ ids, onShuffle }: DollCarouselProps)
 	const cycling = !reduceMotion && entries.length > perSet;
 
 	return (
-		<Box
-			sx={styles.root}
-			onMouseEnter={pause}
-			onMouseLeave={resume}
-			onFocusCapture={pause}
-			onBlurCapture={resume}
-			onTouchStart={handleTouchStart}
-			onTouchEnd={handleTouchEnd}
-			onTouchCancel={handleTouchCancel}
-		>
+		<Box sx={styles.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} onTouchCancel={handleTouchCancel}>
 			<ButtonBase onClick={back} disabled={loading || start === 0} aria-label="previous" sx={SIDE_LEFT_SX}>
 				<ChevronLeftIcon />
 			</ButtonBase>
