@@ -146,12 +146,11 @@ export function spineImageBase(id: number, atlasPath: string): string {
 /**
  * URL for an equipment icon.
  *
- * @param category Category directory, such as `chip`.
- * @param name Equipment name without the extension.
+ * @param path Asset path from the generated data, such as `equipment/opticalSight/16Lab 6-24X56.png`.
  * @returns An absolute URL.
  */
-export function equipmentUrl(category: string, name: string): string {
-	return join(ASSET_BASE, `equipment/${category}/${name}.png`);
+export function equipmentAssetUrl(path: string): string {
+	return join(ASSET_BASE, path);
 }
 
 /**

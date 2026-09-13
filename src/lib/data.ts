@@ -9,11 +9,11 @@
 
 import searchIndexJson from "../data/search-index.json";
 import spineIndexJson from "../data/spine-index.json";
-import type { Equipment, RawEquipment } from "../types/equipment";
+import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { SpineDollEntry, SpineIndex } from "../types/spine";
 import type { RawTDoll, TDoll } from "../types/tdoll";
-import { equipmentUrl } from "./assets";
-import { processDoll, processDolls } from "./processData";
+import { equipmentAssetUrl } from "./assets";
+import { hasDollArt, processDoll, processDolls } from "./processData";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,23 +53,24 @@ export function spineFor(id: number): SpineDollEntry | undefined {
 }
 
 /**
- * The data shards, in id order.
+ * The generated data shards, in id order. This table mirrors `tools/data/lib/shards.mjs`.
  *
- * `max` is the highest doll id the shard holds. The collaboration dolls sit in the 1000 range, so the
- * last shard catches everything above 400.
+ * `max` is the highest doll id the shard holds. The collaboration dolls sit in the 1000 range, so the last shard catches everything above 999.
  */
 const SHARDS: ReadonlyArray<{ max: number; load: () => Promise<{ default: RawTDoll[] }> }> = [
-	{ max: 100, load: () => import("../data/tdolls_from_1_to_100") },
-	{ max: 200, load: () => import("../data/tdolls_from_101_to_200") },
-	{ max: 300, load: () => import("../data/tdolls_from_201_to_300") },
-	{ max: 400, load: () => import("../data/tdolls_from_301_to_400") },
-	{ max: Number.POSITIVE_INFINITY, load: () => import("../data/tdolls_from_1000_to_1050") }
+	{ max: 100, load: () => import("../data/dolls-1-100.json") as Promise<{ default: RawTDoll[] }> },
+	{ max: 200, load: () => import("../data/dolls-101-200.json") as Promise<{ default: RawTDoll[] }> },
+	{ max: 300, load: () => import("../data/dolls-201-300.json") as Promise<{ default: RawTDoll[] }> },
+	{ max: 400, load: () => import("../data/dolls-301-400.json") as Promise<{ default: RawTDoll[] }> },
+	{ max: 999, load: () => import("../data/dolls-401-500.json") as Promise<{ default: RawTDoll[] }> },
+	{ max: Number.POSITIVE_INFINITY, load: () => import("../data/dolls-1000-1099.json") as Promise<{ default: RawTDoll[] }> }
 ];
 
 /** Cache of in-flight and settled shard loads, so a shard is fetched and processed at most once. */
 const shardCache = new Map<number, Promise<TDoll[]>>();
 
-let equipmentCache: Promise<Record<string, Equipment[]>> | undefined;
+/** Cache of the in-flight or settled equipment load. */
+let equipmentCache: Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }> | undefined;
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +133,15 @@ export async function loadAllDolls(): Promise<TDoll[]> {
 }
 
 /**
+ * Ids of dolls whose art is hosted, for places that should only show dolls with artwork.
+ *
+ * @returns Doll ids present in the asset manifest.
+ */
+export function dollIdsWithArt(): number[] {
+	return searchIndex.map((entry) => entry.id).filter((id) => hasDollArt(id));
+}
+
+/**
  * Process a raw doll without going through a shard.
  *
  * @param raw A raw doll record.
@@ -144,43 +154,19 @@ export { processDoll };
 // Equipment
 
 /**
- * Work out the image filename for a piece of equipment.
+ * Load all equipment and its types.
  *
- * The data uses a leading `.` or `#` to control sort order in the index, and those characters are not
- * part of the filename. One item also disambiguates two rarities by name. This logic used to sit
- * inline next to the dynamic `require()` in `equipments.js`.
- *
- * @param name Equipment name as written in the data.
- * @param rarity Equipment rarity, used only by the special case.
- * @returns The filename without its extension.
+ * @returns Equipment types in display order, and items keyed by type key with icon URLs resolved.
  */
-export function equipmentImageName(name: string, rarity: number): string {
-	if (name.startsWith(".") || name.startsWith("#")) {
-		return name.slice(1);
-	}
-	if (name === "ILM Hollow Point Ammo") {
-		return `${name} (${rarity})`;
-	}
-	return name;
-}
-
-/**
- * Load all equipment, keyed by category.
- *
- * @returns Equipment with icon URLs resolved.
- */
-export async function loadEquipment(): Promise<Record<string, Equipment[]>> {
+export async function loadEquipment(): Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }> {
 	if (!equipmentCache) {
-		equipmentCache = import("../data/equipments").then((module) => {
-			const source = module.default as Record<string, RawEquipment[]>;
-			const resolved: Record<string, Equipment[]> = {};
-			for (const [category, items] of Object.entries(source)) {
-				resolved[category] = items.map((item) => ({
-					...item,
-					image: equipmentUrl(category, equipmentImageName(item.name, item.rarity))
-				}));
+		equipmentCache = import("../data/equipment.json").then((module) => {
+			const source = module.default as unknown as { types: EquipmentType[]; items: Record<string, RawEquipment[]> };
+			const items: Record<string, Equipment[]> = {};
+			for (const [key, list] of Object.entries(source.items)) {
+				items[key] = list.map((item) => ({ ...item, image: item.image ? equipmentAssetUrl(item.image) : null }));
 			}
-			return resolved;
+			return { types: source.types, items };
 		});
 	}
 	return equipmentCache;

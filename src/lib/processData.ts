@@ -120,5 +120,15 @@ export function processDolls(raws: RawTDoll[]): TDoll[] {
 	return raws.map(processDoll);
 }
 
+/**
+ * Whether a doll has any hosted art.
+ *
+ * @param id Doll id.
+ * @returns True when the asset manifest has a record for the doll.
+ */
+export function hasDollArt(id: number): boolean {
+	return manifest.dolls[String(id)] !== undefined;
+}
+
 /** The portrait kinds, re-exported so pages do not need to import the manifest types directly. */
 export const imageKinds: ImageKind[] = manifest.imageKinds;
