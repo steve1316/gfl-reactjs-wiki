@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 // Component imports
 import ScrollToTop from "../../components/ScrollToTop";
@@ -85,6 +85,53 @@ const styles = {
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
+/** What the reader has chosen to look at, as kept in the page's query string. */
+interface DollSelection {
+	/** Whether the Mod is on screen. */
+	mod: boolean;
+	/** The 1-based skin on screen, or null for the base art. */
+	skin: number | null;
+	/** Whether the damaged art is on screen. */
+	damaged: boolean;
+}
+
+/**
+ * Read the selection from the query string, dropping anything the doll does not have.
+ *
+ * @param params The page's query string.
+ * @param doll The doll the selection applies to.
+ * @returns The selection to open the page on.
+ */
+function readSelection(params: URLSearchParams, doll: TDollData): DollSelection {
+	const skin = Number(params.get("skin"));
+	return {
+		mod: params.get("mod") === "1" && doll.mod !== null,
+		skin: Number.isInteger(skin) && skin >= 1 && skin <= (doll.skins?.number_of_skins ?? 0) ? skin : null,
+		damaged: params.get("damaged") === "1"
+	};
+}
+
+/**
+ * Write a selection into a query string, leaving any other parameters alone.
+ *
+ * @param params The query string to update in place.
+ * @param selection The selection to write. Defaults are removed rather than written.
+ */
+function writeSelection(params: URLSearchParams, selection: DollSelection) {
+	const entries: [string, string | null][] = [
+		["mod", selection.mod ? "1" : null],
+		["skin", selection.skin === null ? null : String(selection.skin)],
+		["damaged", selection.damaged ? "1" : null]
+	];
+	for (const [key, value] of entries) {
+		if (value === null) {
+			params.delete(key);
+		} else {
+			params.set(key, value);
+		}
+	}
+}
+
 /**
  * Route wrapper that loads the doll before rendering it.
  *
@@ -93,9 +140,10 @@ const styles = {
  */
 export default function TDoll() {
 	const { id: routeId } = useParams<{ id?: string }>();
-	const { search } = useLocation();
+	const [searchParams] = useSearchParams();
 	// The id comes from the /tdoll/:id route, falling back to the older ?id= query string.
-	const id = Number(routeId ?? search.substring(4));
+	const rawId = routeId ?? searchParams.get("id") ?? "";
+	const id = Number(rawId);
 	// Undefined while loading and null once the shard has loaded without this id, so a missing doll is not stuck on "Loading".
 	const [doll, setDoll] = useState<DisplayTDoll | null | undefined>(undefined);
 
@@ -115,7 +163,7 @@ export default function TDoll() {
 	}, [id]);
 
 	if (doll === null) {
-		return <NotFound404 message={`There is no T-Doll with the id ${routeId ?? search.substring(4)}.`} />;
+		return <NotFound404 message={`There is no T-Doll with the id ${rawId}.`} />;
 	}
 
 	if (doll === undefined) {
@@ -146,23 +194,34 @@ interface TDollContentProps {
  */
 function TDollContent({ doll }: TDollContentProps) {
 	const tdoll = doll;
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	// The skin, Mod and damaged art the page opens on, from the query string. That is how closing the art viewer or
+	// reloading comes back to the same art. The doll object is a per-mount copy, so setting its form here is safe.
+	const [initial] = useState(() => {
+		const selection = readSelection(searchParams, tdoll);
+		tdoll.selected = selection.mod && tdoll.mod ? tdoll.mod : tdoll.normal;
+		const images = selection.skin === null ? tdoll.selected.assets.images : tdoll.forms[`${selection.mod ? "mod_" : ""}skin${selection.skin}`]?.images;
+		return { ...selection, image: selection.damaged ? images?.card_damaged : images?.card };
+	});
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// Initialization of States
 	///////////////////////////////////////////////////////////////////////////////////////////
 
 	// Set initial states for the Normal/Mod modes.
-	const [hasMod, setHasMod] = useState(false);
-	const [mode, setMode] = useState(0); // 0 for Normal, 1 for MOD.
+	const [hasMod] = useState(tdoll.mod !== null);
+	const [mode, setMode] = useState(initial.mod ? 1 : 0); // 0 for Normal, 1 for MOD.
 
 	// Set initial states for the images.
-	const [switchImage, setSwitchImage] = useState(false); // If true, show Damaged version.
-	const [tdollImage, setTDollImage] = useState<string | undefined>(undefined);
-	const [showSkin, setShowSkin] = useState(false);
-	const [skinSelected, setSkinSelected] = useState(0); // The value of this is dependent on how many skins a T-Doll has.
+	const [switchImage, setSwitchImage] = useState(initial.damaged); // If true, show Damaged version.
+	const [tdollImage, setTDollImage] = useState<string | undefined>(initial.image);
+	const [showSkin, setShowSkin] = useState(initial.skin !== null);
+	// Skin pill values are doubled, so skin N is stored as (N - 1) * 2.
+	const [skinSelected, setSkinSelected] = useState(initial.skin === null ? 0 : (initial.skin - 1) * 2);
 
 	// Whether the doll's Mod is currently the form on screen, which SkillsPanel uses to show Skill 2.
-	const [showModSkill, setShowModSkill] = useState(false);
+	const [showModSkill, setShowModSkill] = useState(initial.mod);
 
 	// Owned here rather than in SkillsPanel so the whole page's selection state sits in one place,
 	// alongside the Mod and skin state the hero drives.
@@ -184,26 +243,6 @@ function TDollContent({ doll }: TDollContentProps) {
 		document.title = `#${tdoll.normal.id} - ${tdoll.normal.name}`;
 		document.querySelector('meta[name="description"]')?.setAttribute("content", `#${tdoll.normal.id} - ${tdoll.normal.name}`);
 	}, [tdoll]);
-
-	// This will be used to initialize the functionality of the page.
-	useEffect(() => {
-		// Set initial information displayed to Normal.
-		tdoll.selected = tdoll.normal;
-
-		// Check if T-Doll has Mod. If so, set state to true. If not, then false. This will impact various functions in this page.
-		if (tdoll.mod !== null) {
-			setHasMod(true);
-		} else {
-			setHasMod(false);
-		}
-
-		// Set the initial image to be displayed for the T-Doll.
-		setTDollImage(tdoll.selected.assets.images.card);
-
-		// Depends on tdoll: the shard loads after mount, so an empty dependency list would run this
-		// once while the doll is still undefined and never set the initial image.
-	}, [tdoll]);
-	/* eslint-disable */
 
 	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
@@ -244,6 +283,16 @@ function TDollContent({ doll }: TDollContentProps) {
 
 	// The zero-based skin on screen. Pill values are doubled, so the stored value is halved back here.
 	const skinIndex = skinSelected / 2;
+
+	// Keep the query string in step with the selection. Replacing rather than pushing means Back still leaves the page
+	// instead of stepping through every skin clicked.
+	useEffect(() => {
+		const next = new URLSearchParams(searchParams);
+		writeSelection(next, { mod: mode === 1, skin: showSkin ? skinIndex + 1 : null, damaged: switchImage });
+		if (next.toString() !== searchParams.toString()) {
+			setSearchParams(next, { replace: true });
+		}
+	}, [mode, showSkin, skinIndex, switchImage, searchParams, setSearchParams]);
 
 	// Whether the form currently on screen is the Mod. Drives both the rarity star colour and the
 	// hero's Mod toggle, which stay in lockstep since they describe the same underlying state.

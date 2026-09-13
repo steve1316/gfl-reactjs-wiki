@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -70,6 +70,7 @@ function formLabel(key: string, skinNames: string[]): string {
 export default function TDollArt() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
+	const location = useLocation();
 	// Undefined while loading and null when no doll has this id.
 	const [doll, setDoll] = useState<TDoll | null | undefined>(undefined);
 	// The doll page links here with the form and damaged state it was showing, so the viewer opens on the same art.
@@ -92,9 +93,28 @@ export default function TDollArt() {
 		};
 	}, [id]);
 
+	// Opened from the doll page, going back returns to it exactly as it was left, since that page keeps its skin, Mod and
+	// damaged choice in its address. Opened from a pasted link there is nothing to go back to, so the doll page opens on
+	// the art being viewed instead.
 	const close = useCallback(() => {
-		void navigate(`/tdoll/${id ?? ""}`);
-	}, [navigate, id]);
+		if (location.key !== "default") {
+			void navigate(-1);
+			return;
+		}
+		const back = new URLSearchParams();
+		const skin = /^skin(\d+)$/.exec(formKey);
+		if (formKey === "mod") {
+			back.set("mod", "1");
+		}
+		if (skin?.[1]) {
+			back.set("skin", skin[1]);
+		}
+		if (damaged) {
+			back.set("damaged", "1");
+		}
+		const query = back.toString();
+		void navigate(`/tdoll/${id ?? ""}${query ? `?${query}` : ""}`, { replace: true });
+	}, [location.key, navigate, id, formKey, damaged]);
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
