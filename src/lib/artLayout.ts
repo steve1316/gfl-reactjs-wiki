@@ -34,6 +34,9 @@ export const cardArtSx: SxProps<Theme> = {
 	display: "block"
 };
 
+/** A box in place of card art that is not hosted yet, at the card art's 1:2 shape. */
+export const PLACEHOLDER_SX: SxProps<Theme> = { ...cardArtSx, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "action.hover" };
+
 /** Full art filling a wide band, anchored so the face survives the crop. */
 export const heroArtSx: SxProps<Theme> = {
 	width: "100%",

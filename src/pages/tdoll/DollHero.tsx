@@ -12,7 +12,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import { cardArtSx } from "../../lib/artLayout";
 import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
-import { PLACEHOLDER_SX } from "../../components/DollCard";
+import ArtPlaceholder from "../../components/ArtPlaceholder";
 import type { RawSkins } from "../../types/tdoll";
 
 const modIcon = uiUrl("mod.png");
@@ -171,9 +171,7 @@ export default memo(function DollHero({ name, id, type, rarity, isMod, cardImage
 							</Fab>
 						</>
 					) : (
-						<Box sx={PLACEHOLDER_SX} role="img" aria-label={`${name} - art not available yet`}>
-							<Typography sx={{ fontSize: "0.75rem", color: "text.secondary", px: 1, textAlign: "center" }}>Art not available yet</Typography>
-						</Box>
+						<ArtPlaceholder name={name} />
 					)}
 				</Card>
 

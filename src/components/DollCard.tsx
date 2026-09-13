@@ -1,18 +1,15 @@
 import { memo, useMemo } from "react";
 
 import { Card, CardActionArea, CardMedia, Box, Typography } from "@mui/material";
-import type { SxProps, Theme } from "@mui/material";
 import { Link } from "react-router-dom";
 
 import { cardArtSx } from "../lib/artLayout";
 import { findNameMatch } from "../lib/nameSearch";
+import ArtPlaceholder from "./ArtPlaceholder";
 import { RarityLabel, TypeBadge } from "./DollBadges";
 
 /** Style for the part of a name that matches the search. */
 const matchSx = { fontWeight: 800, color: "text.primary" } as const;
-
-/** Style for the box that stands in for card art that is not hosted yet. It keeps the card art's 1:2 shape. */
-export const PLACEHOLDER_SX: SxProps<Theme> = { ...cardArtSx, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "action.hover" };
 
 /** Props for DollCard. */
 interface DollCardProps {
@@ -52,13 +49,7 @@ export default memo(function DollCard({ id, name, type, rarity, isMod, image, to
 	return (
 		<Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
 			<CardActionArea component={Link} to={to} sx={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch" }}>
-				{image === "" ? (
-					<Box sx={PLACEHOLDER_SX} role="img" aria-label={`${name} - art not available yet`}>
-						<Typography sx={{ fontSize: "0.75rem", color: "text.secondary", px: 1, textAlign: "center" }}>Art not available yet</Typography>
-					</Box>
-				) : (
-					<CardMedia component="img" sx={cardArtSx} image={image} alt={name} />
-				)}
+				{image === "" ? <ArtPlaceholder name={name} /> : <CardMedia component="img" sx={cardArtSx} image={image} alt={name} />}
 				<Box sx={{ px: dense ? 0.75 : 1, py: dense ? 0.5 : 0.75 }}>
 					<Typography
 						component="div"
