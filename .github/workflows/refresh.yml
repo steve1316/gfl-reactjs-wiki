@@ -1,0 +1,188 @@
+name: Refresh game data
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Do everything except pushing to the asset repos and master, and deploying
+        type: boolean
+        default: false
+
+# One refresh at a time. A second run queues behind the first rather than racing it to master.
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  US_REPO: https://github.com/gf-data-tools/gf-data-us.git
+  CN_REPO: https://github.com/gf-data-tools/gf-data-ch.git
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      work: ${{ steps.plan.outputs.work }}
+      us: ${{ steps.shas.outputs.us }}
+      cn: ${{ steps.shas.outputs.cn }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - id: shas
+        run: |
+          echo "us=$(git ls-remote "$US_REPO" HEAD | cut -f1)" >> "$GITHUB_OUTPUT"
+          echo "cn=$(git ls-remote "$CN_REPO" HEAD | cut -f1)" >> "$GITHUB_OUTPUT"
+
+      # Only the gun table and its names decide which dolls are released: about 2 MB of the 433 MB checkout.
+      - name: Fetch the gun table
+        env:
+          SHA: ${{ steps.shas.outputs.us }}
+        run: |
+          git init -q "$RUNNER_TEMP/gf-plan"
+          cd "$RUNNER_TEMP/gf-plan"
+          git remote add origin "$US_REPO"
+          git sparse-checkout set --no-cone /stc/gun.json /asset/table/gun.txt
+          git fetch -q --depth 1 --filter=blob:none origin "$SHA"
+          git checkout -q FETCH_HEAD
+
+      - id: plan
+        env:
+          SHA: ${{ steps.shas.outputs.us }}
+        run: node tools/data/plan.mjs --gf-data "$RUNNER_TEMP/gf-plan" --latest "$SHA"
+
+  refresh:
+    needs: plan
+    if: needs.plan.outputs.work == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      actions: write
+    env:
+      DRY_RUN: ${{ inputs.dry_run == true }}
+      US_SHA: ${{ needs.plan.outputs.us }}
+      CN_SHA: ${{ needs.plan.outputs.cn }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tools/assets/requirements.txt
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pip install -r tools/assets/requirements.txt
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Move the upstream pins
+        run: node tools/data/set_lock.mjs --us "$US_SHA" --cn "$CN_SHA"
+
+      - name: Import game data
+        run: node tools/data/import.mjs
+
+      - name: Resolve and download new assets
+        run: python3 tools/assets/game_bundles.py download --only-missing --gf-data tools/data/.cache/gf-data-us
+
+      - name: Extract new assets
+        run: python3 tools/assets/extract_game_assets.py add --staging "$RUNNER_TEMP/staging"
+
+      # The index builders and the animation reader run on the staging folder alone. The animation reader rewrites every entry of the index it
+      # is given, so it must never see the committed index without every rig on disk.
+      - name: Build partial indexes
+        run: |
+          S="$RUNNER_TEMP/staging"
+          node tools/assets/fix_atlas_pages.mjs --spine "$S/assets/spine"
+          python3 tools/assets/build_manifest.py --assets "$S/assets" --art "$S/art" --out "$S/manifest.partial.json"
+          python3 tools/assets/build_spine_index.py --spine "$S/assets/spine" --out "$S/spine-index.partial.json"
+          node tools/assets/add_spine_animations.mjs --spine "$S/assets/spine" --index "$S/spine-index.partial.json"
+
+      - name: Merge into the committed indexes
+        run: python3 tools/assets/merge_indexes.py --manifest-partial "$RUNNER_TEMP/staging/manifest.partial.json" --spine-partial "$RUNNER_TEMP/staging/spine-index.partial.json"
+
+      - name: Check the data
+        run: node tools/data/check.mjs
+
+      - name: Load the asset repo deploy keys
+        env:
+          ASSETS_KEY: ${{ secrets.ASSETS_DEPLOY_KEY }}
+          ART_KEY: ${{ secrets.ART_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$ASSETS_KEY" > ~/.ssh/assets_key
+          printf '%s\n' "$ART_KEY" > ~/.ssh/art_key
+          chmod 600 ~/.ssh/assets_key ~/.ssh/art_key
+          ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
+
+      - name: Publish to gfl-wiki-assets
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/assets_key -o IdentitiesOnly=yes
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          if [ "$DRY_RUN" = true ]; then flags+=(--dry-run); fi
+          python3 tools/assets/publish.py add --repo assets --staging "$RUNNER_TEMP/staging/assets" \
+            --remote git@github.com:steve1316/gfl-wiki-assets.git --list "$RUNNER_TEMP/assets-paths.json" "${flags[@]}"
+
+      - name: Publish to gfl-wiki-assets-art
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/art_key -o IdentitiesOnly=yes
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          if [ "$DRY_RUN" = true ]; then flags+=(--dry-run); fi
+          python3 tools/assets/publish.py add --repo art --staging "$RUNNER_TEMP/staging/art" \
+            --remote git@github.com:steve1316/gfl-wiki-assets-art.git --list "$RUNNER_TEMP/art-paths.json" "${flags[@]}"
+
+      - name: Wait for the new assets to go live
+        if: env.DRY_RUN != 'true'
+        run: |
+          python3 tools/assets/publish.py wait-live --base "$(grep '^VITE_ASSET_BASE_URL=' .env | cut -d= -f2-)" --list "$RUNNER_TEMP/assets-paths.json"
+          python3 tools/assets/publish.py wait-live --base "$(grep '^VITE_ART_BASE_URL=' .env | cut -d= -f2-)" --list "$RUNNER_TEMP/art-paths.json"
+
+      - name: Commit the refreshed data
+        id: commit
+        run: |
+          git add tools/data/upstream.lock.json src/data assets-manifest.json
+          if git diff --cached --quiet; then
+            echo "nothing changed"
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --cached --quiet -- src/data assets-manifest.json; then
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+          git commit -q -m "Refresh game data to gf-data-us ${US_SHA:0:8}"
+          git show --stat HEAD
+          if [ "$DRY_RUN" != true ]; then
+            git push -q origin HEAD:master
+          fi
+
+      # A push made with the workflow token does not start deploy.yml on its own, but dispatching it does.
+      - name: Deploy
+        if: steps.commit.outputs.deploy == 'true' && env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref master
