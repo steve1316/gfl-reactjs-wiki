@@ -265,3 +265,25 @@ test("plainText strips '' italic, ''' bold and ''''' bold italic markup but keep
 	assert.equal(plainText("''Italic'' and '''''both'''''"), "Italic and both");
 	assert.equal(plainText("Kitty's '''Colt''''s''' gun"), "Kitty's Colt's gun");
 });
+
+test("fetchIopwikiPages routes every IOPWiki request through FlareSolverr when given its URL", async () => {
+	const commands = [];
+	const original = globalThis.fetch;
+	globalThis.fetch = async (url, init) => {
+		assert.ok(String(url).startsWith("http://solver.test/"), `unexpected direct request to ${url}`);
+		const payload = JSON.parse(init.body);
+		commands.push(payload.cmd);
+		if (payload.cmd === "request.get") {
+			const body = { query: { pages: [{ title: "M887", revisions: [{ slots: { main: { content: "{{PlayableUnit|index=424}}" } } }] }] } };
+			return { json: async () => ({ status: "ok", solution: { status: 200, response: `<pre>${JSON.stringify(body).replaceAll("&", "&amp;")}</pre>` } }) };
+		}
+		return { json: async () => ({ status: "ok", session: "s1" }) };
+	};
+	try {
+		const pages = await fetchIopwikiPages({ cacheDir, wait: async () => {}, flareSolverrUrl: "http://solver.test" });
+		assert.deepEqual(pages, [{ title: "M887", wikitext: "{{PlayableUnit|index=424}}" }]);
+		assert.deepEqual(commands, ["sessions.create", "request.get", "sessions.destroy"]);
+	} finally {
+		globalThis.fetch = original;
+	}
+});
