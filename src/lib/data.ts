@@ -11,7 +11,7 @@ import searchIndexJson from "../data/search-index.json";
 import spineIndexJson from "../data/spine-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { SpineDollEntry, SpineIndex } from "../types/spine";
-import type { RawTDoll, TDoll } from "../types/tdoll";
+import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
 import { equipmentAssetUrl } from "./assets";
 import { hasDollArt, processDoll, processDolls } from "./processData";
 
@@ -31,6 +31,16 @@ export interface SearchEntry {
 	rarity: number;
 	/** Names the wiki used before the 2026-09-13 upstream import renamed the doll, kept searchable. Absent when the name did not change. */
 	aliases?: string[];
+}
+
+/** One generated shard: the doll records every doll list reads, and the profile side file only the doll page reads. */
+interface Shard {
+	/** Highest doll id the shard holds. */
+	max: number;
+	/** Loads the shard's doll records. */
+	load: () => Promise<{ default: RawTDoll[] }>;
+	/** Loads the shard's profiles and spec sheets, keyed by doll id. */
+	loadDetails: () => Promise<{ default: Record<string, DollDetails> }>;
 }
 
 /**
@@ -61,19 +71,46 @@ export function spineFor(id: number): SpineDollEntry | undefined {
 /**
  * The generated data shards, in id order. This table mirrors `tools/data/lib/shards.mjs`.
  *
- * `max` is the highest doll id the shard holds. The collaboration dolls sit in the 1000 range, so the last shard catches everything above 999.
+ * The collaboration dolls sit in the 1000 range, so the last shard catches everything above 999.
  */
-const SHARDS: ReadonlyArray<{ max: number; load: () => Promise<{ default: RawTDoll[] }> }> = [
-	{ max: 100, load: () => import("../data/dolls-1-100.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: 200, load: () => import("../data/dolls-101-200.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: 300, load: () => import("../data/dolls-201-300.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: 400, load: () => import("../data/dolls-301-400.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: 999, load: () => import("../data/dolls-401-999.json") as Promise<{ default: RawTDoll[] }> },
-	{ max: Number.POSITIVE_INFINITY, load: () => import("../data/dolls-1000-1999.json") as Promise<{ default: RawTDoll[] }> }
+const SHARDS: ReadonlyArray<Shard> = [
+	{
+		max: 100,
+		load: () => import("../data/dolls-1-100.json") as Promise<{ default: RawTDoll[] }>,
+		loadDetails: () => import("../data/profiles-1-100.json") as Promise<{ default: Record<string, DollDetails> }>
+	},
+	{
+		max: 200,
+		load: () => import("../data/dolls-101-200.json") as Promise<{ default: RawTDoll[] }>,
+		loadDetails: () => import("../data/profiles-101-200.json") as Promise<{ default: Record<string, DollDetails> }>
+	},
+	{
+		max: 300,
+		load: () => import("../data/dolls-201-300.json") as Promise<{ default: RawTDoll[] }>,
+		loadDetails: () => import("../data/profiles-201-300.json") as Promise<{ default: Record<string, DollDetails> }>
+	},
+	{
+		max: 400,
+		load: () => import("../data/dolls-301-400.json") as Promise<{ default: RawTDoll[] }>,
+		loadDetails: () => import("../data/profiles-301-400.json") as Promise<{ default: Record<string, DollDetails> }>
+	},
+	{
+		max: 999,
+		load: () => import("../data/dolls-401-999.json") as Promise<{ default: RawTDoll[] }>,
+		loadDetails: () => import("../data/profiles-401-999.json") as Promise<{ default: Record<string, DollDetails> }>
+	},
+	{
+		max: Number.POSITIVE_INFINITY,
+		load: () => import("../data/dolls-1000-1999.json") as Promise<{ default: RawTDoll[] }>,
+		loadDetails: () => import("../data/profiles-1000-1999.json") as Promise<{ default: Record<string, DollDetails> }>
+	}
 ];
 
 /** Cache of in-flight and settled shard loads, so a shard is fetched and processed at most once. */
 const shardCache = new Map<number, Promise<TDoll[]>>();
+
+/** Cache of in-flight and settled profile side file loads, so each is fetched at most once. */
+const detailsCache = new Map<number, Promise<Record<string, DollDetails>>>();
 
 /** Cache of the in-flight or settled equipment load. */
 let equipmentCache: Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }> | undefined;
@@ -103,6 +140,26 @@ function loadShard(index: number): Promise<TDoll[]> {
 }
 
 /**
+ * Load one shard's profiles and spec sheets, reusing an earlier load when there is one.
+ *
+ * @param index Position in `SHARDS`.
+ * @returns The shard's details, keyed by doll id.
+ */
+function loadShardDetails(index: number): Promise<Record<string, DollDetails>> {
+	const cached = detailsCache.get(index);
+	if (cached) {
+		return cached;
+	}
+	const shard = SHARDS[index];
+	if (!shard) {
+		return Promise.resolve({});
+	}
+	const pending = shard.loadDetails().then((module) => module.default);
+	detailsCache.set(index, pending);
+	return pending;
+}
+
+/**
  * Find which shard holds a doll.
  *
  * @param id Doll id.
@@ -114,7 +171,7 @@ function shardIndexFor(id: number): number {
 }
 
 /**
- * Load a single doll.
+ * Load a single doll without its profile or spec sheets, for places such as the home carousel and the art viewer.
  *
  * Only the shard containing it is fetched, so opening one doll's page does not pull the other 250.
  *
@@ -127,9 +184,32 @@ export async function loadDoll(id: number): Promise<TDoll | undefined> {
 }
 
 /**
+ * Load a single doll with its profile and spec sheets, for the doll page.
+ *
+ * The shard and its profile side file are fetched in parallel. Both are cached, so a later `loadDoll` or `loadAllDolls` reuses the shard.
+ *
+ * @param id Doll id.
+ * @returns The doll with its details attached, or `undefined` when no doll has that id.
+ * @throws When the doll exists but its side file has no entry for it, which `tools/data/check.mjs` guards against.
+ */
+export async function loadDollDetails(id: number): Promise<TDollWithDetails | undefined> {
+	const index = shardIndexFor(id);
+	const [dolls, details] = await Promise.all([loadShard(index), loadShardDetails(index)]);
+	const doll = dolls.find((entry) => entry.normal.id === id);
+	if (!doll) {
+		return undefined;
+	}
+	const entry = details[String(id)];
+	if (!entry) {
+		throw new Error(`doll ${id} has no profile entry`);
+	}
+	return { ...doll, ...entry };
+}
+
+/**
  * Load every doll.
  *
- * Used by the index page, which genuinely renders all of them. Other routes should not call this.
+ * Used by the index page, which genuinely renders all of them. Other routes should not call this. Profiles and spec sheets are left out.
  *
  * @returns Every doll, in shard order.
  */

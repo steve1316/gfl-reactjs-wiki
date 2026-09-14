@@ -107,7 +107,7 @@ export function processDoll(raw: RawTDoll): TDoll {
 		throw new Error(`doll ${id} has no normal form`);
 	}
 
-	return { normal, mod: attach(raw.mod, id, "mod", record), skins: raw.skins, profile: raw.profile, forms, skillImages, spine };
+	return { normal, mod: attach(raw.mod, id, "mod", record), skins: raw.skins, forms, skillImages, spine };
 }
 
 /**

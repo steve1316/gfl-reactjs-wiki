@@ -16,12 +16,12 @@ import TilesPanel from "./TilesPanel";
 import { Box, Container, Grid, Paper, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import { loadDoll, spineFor } from "../../lib/data";
+import { loadDollDetails, spineFor } from "../../lib/data";
 import { animationTabs } from "../../lib/spine";
-import type { TDoll as TDollData, TDollForm } from "../../types/tdoll";
+import type { TDoll as TDollData, TDollForm, TDollWithDetails } from "../../types/tdoll";
 
 /** A doll paired with the form currently being displayed. */
-interface DisplayTDoll extends TDollData {
+interface DisplayTDoll extends TDollWithDetails {
 	/** The form on screen: the base form, the Mod, or a skin. */
 	selected: TDollForm;
 }
@@ -147,12 +147,12 @@ export default function TDoll() {
 	// Undefined while loading and null once the shard has loaded without this id, so a missing doll is not stuck on "Loading".
 	const [doll, setDoll] = useState<DisplayTDoll | null | undefined>(undefined);
 
-	// Only the shard holding this doll is fetched. A copy is stored rather than the cached object,
+	// Only the shard holding this doll and its profile side file are fetched. A copy is stored rather than the cached object,
 	// because `selected` is assigned onto it below and the cache is shared with every other route.
 	useEffect(() => {
 		let active = true;
 		setDoll(undefined);
-		void loadDoll(id).then((found) => {
+		void loadDollDetails(id).then((found) => {
 			if (active) {
 				setDoll(found ? { ...found, selected: found.normal } : null);
 			}
@@ -298,6 +298,9 @@ function TDollContent({ doll }: TDollContentProps) {
 	// Whether the form currently on screen is the Mod. Drives both the rarity star colour and the
 	// hero's Mod toggle, which stay in lockstep since they describe the same underlying state.
 	const isModForm = tdoll.selected === tdoll.mod;
+
+	// The Mod's spec sheet is null when it matches the base form's, so the base sheet stands in.
+	const specs = (isModForm ? tdoll.specs.mod : null) ?? tdoll.specs.normal;
 
 	// The backdrop's full art follows the same selection as the card portrait: the current skin when one is
 	// shown, otherwise the Normal/Mod form, and the damaged version whenever the portrait has been flipped to
@@ -490,7 +493,7 @@ function TDollContent({ doll }: TDollContentProps) {
 							modOn={isModForm}
 							onToggleMod={switchModes}
 							profile={tdoll.profile}
-							specs={tdoll.selected.specs.length > 0 ? tdoll.selected.specs : tdoll.normal.specs}
+							specs={specs}
 						/>
 					</Grid>
 					{/* Stats shares its small-screen row with the Animations card, so it takes the full row when that card is absent. */}
