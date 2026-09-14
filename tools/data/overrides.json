@@ -249,6 +249,18 @@
 			"reason": "IOPWiki joins the two makers with \"or BSA\" in one phrase, which no separator splits."
 		},
 		{
+			"doll": 253,
+			"path": "profile.country",
+			"value": ["United States", "United Kingdom"],
+			"reason": "IOPWiki joins the two countries with \"and\", which the country split keeps whole so names like Bosnia and Herzegovina survive."
+		},
+		{
+			"doll": 326,
+			"path": "profile.country",
+			"value": ["Germany", "Italy"],
+			"reason": "IOPWiki joins the two countries with \"&\", which the country split keeps whole so names like Trinidad & Tobago survive."
+		},
+		{
 			"doll": 331,
 			"path": "profile.country",
 			"value": ["Austria-Hungary"],
