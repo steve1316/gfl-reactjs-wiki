@@ -341,6 +341,29 @@ class LegacySkinTests(unittest.TestCase):
         self.assertEqual([row["role"] for row in result["nonstandard"]], ["card"])
 
 
+class LegacySkillIconTests(unittest.TestCase):
+    """Skill icons of collaboration dolls, carried from the old asset repo."""
+
+    ITEM = {"key": "skill_icon:doll:1003:skill1", "tier": "skill_icon", "source": "legacy", "status": "legacy", "users": [[1003, "skill1"]]}
+
+    def test_paths_map_the_old_icon_to_the_skin_id_layout(self):
+        """`tdolls/<id>/<id>_skill1.png` becomes `tdolls/<id>/skill1.png`."""
+        self.assertEqual(extract.legacy_skill_paths(self.ITEM), [("tdolls/1003/1003_skill1.png", "tdolls/1003/skill1.png")])
+
+    def test_icons_are_written_as_png_and_a_missing_one_fails(self):
+        """A present icon is re-encoded as PNG under the skill icon tier, and a missing one is a missing entry under the item key."""
+        other = {**self.ITEM, "key": "skill_icon:doll:1004:skill1", "users": [[1004, "skill1"]]}
+        with tempfile.TemporaryDirectory() as tmp:
+            assets, staging = os.path.join(tmp, "assets"), os.path.join(tmp, "staging")
+            save_png(assets, "tdolls/1003/1003_skill1.png", (100, 100), "RGBA")
+            result = extract.extract_legacy_skill_icons([self.ITEM, other], assets, staging)
+            self.assertEqual([row[1:] for row in result["files"]], [["tdolls/1003/skill1.png", result["files"][0][2], "skill_icon"]])
+            with Image.open(os.path.join(staging, "assets/tdolls/1003/skill1.png")) as icon:
+                self.assertEqual((icon.format, icon.size, icon.mode), ("PNG", (100, 100), "RGBA"))
+        self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("skill_icon:doll:1004:skill1", "icon")])
+        self.assertEqual(result["nonstandard"], [])
+
+
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # Legacy snapshot
@@ -368,6 +391,7 @@ class LegacySnapshotTests(unittest.TestCase):
             {"key": "art:65", "tier": "art", "assets": {"card": {"bundle": "b", "path": "p"}}},
             {"key": "mod_art:65", "tier": "mod_art", "assets": {"card": {"bundle": "b", "path": "p"}}},
             {"key": "art:66", "tier": "art", "assets": {}},
+            {"key": "skill_icon:doll:1003:skill1", "tier": "skill_icon", "source": "legacy", "users": [[1003, "skill1"]]},
         ]
     }
     EXTRA = {"doll": 103, "key": "legacy-winter-journey", "source": "legacy", "legacySlot": 3}
@@ -386,6 +410,7 @@ class LegacySnapshotTests(unittest.TestCase):
         "tdolls/67/67_card.png",
         "tdolls/103/103_skin3_card.png",
         "tdolls/103/103_skin3_card_d.png",
+        "tdolls/1003/1003_skill1.png",
     ] + list(extract.PROOF_EQUIP_ICONS.values())
     ART = ["tdolls/103/103_skin3_full.png", "tdolls/103/103_skin3_full_d.png"]
 
@@ -395,7 +420,7 @@ class LegacySnapshotTests(unittest.TestCase):
         self.assertEqual([(rel, item["key"]) for rel, item, _role in targets], [("tdolls/65/65_card.png", "art:65"), ("tdolls/65/65_mod_card.png", "mod_art:65")])
 
     def test_wanted_files_cover_every_legacy_input(self):
-        """UI images, legacy skins, proof icons and sampled cards are wanted, and a missing required file is absent."""
+        """UI images, legacy skins, collaboration skill icons, proof icons and sampled cards are wanted, and a missing required file is absent."""
         wanted, absent = extract.legacy_wanted(self.INVENTORY, [self.EXTRA], self.ASSETS, self.ART[:1])
         self.assertEqual(absent, ["art/tdolls/103/103_skin3_full_d.png"])
         expected = {("assets", rel) for rel in self.ASSETS if rel not in ("README.md", "assets-manifest.json", "tdolls/65/65_skin1_card.png", "tdolls/65/65_skin1_card_d.png")}
@@ -421,8 +446,8 @@ class LegacySnapshotTests(unittest.TestCase):
             out = os.path.join(tmp, "legacy")
             manifest = extract.snapshot_legacy(self.INVENTORY, [self.EXTRA], clones, "main", out)
             self.assertEqual(manifest["sources"]["art"]["commit"], git(clones["art"], "rev-parse", "main"))
-            with open(os.path.join(out, "assets", "tdolls", "103", "103_skin3_card.png"), "rb") as handle:
-                self.assertEqual(handle.read(), f"assets:{self.ASSETS.index('tdolls/103/103_skin3_card.png')}".encode())
+            with open(os.path.join(out, "assets", "tdolls", "1003", "1003_skill1.png"), "rb") as handle:
+                self.assertEqual(handle.read(), f"assets:{self.ASSETS.index('tdolls/1003/1003_skill1.png')}".encode())
             self.assertEqual(extract.check_legacy_snapshot(out)[1], [])
             with open(os.path.join(out, "art", "tdolls", "103", "103_skin3_full.png"), "wb") as handle:
                 handle.write(b"changed")

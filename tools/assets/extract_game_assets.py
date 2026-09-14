@@ -11,9 +11,10 @@ Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and th
 - `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes per tree after the Spine pass.
 
 Skins listed as `legacy` in `tools/data/extra-skins.json` have no game bundle. Their cards and full art are converted from the old `skinN` PNGs of the
-old-layout asset and art repos into `skins/<key>/`. None of them has a Spine rig that clearly belongs to it, so no legacy rigs are copied.
+old-layout asset and art repos into `skins/<key>/`. None of them has a Spine rig that clearly belongs to it, so no legacy rigs are copied. The
+collaboration dolls 1003-1008 have no skill codename, so their skill icons are carried over from the old asset repo the same way.
 
-Every input from the old-layout repos (legacy skins, UI images, equipment proof icons and a sample of old cards for the
+Every input from the old-layout repos (legacy skins, collaboration skill icons, UI images, equipment proof icons and a sample of old cards for the
 card check) is read from a snapshot in the git-ignored `tools/assets/.cache/legacy/`, so the extractor still runs once the repos are rebuilt.
 `snapshot-legacy` writes it from the clones' `main` with `git cat-file`, and `snapshot.json` records the source commits, paths and blob hashes.
 
@@ -28,7 +29,7 @@ Subcommands:
 
 - `snapshot-legacy` copies the old-layout inputs from the clones' `main` into `tools/assets/.cache/legacy/`.
 - `run` checks 20 snapshot cards against the bundles (skip with `--skip-card-check`), then extracts every image tier with a process pool and
-  converts the legacy skins.
+  converts the legacy skins and skill icons.
 - `spine` extracts every Spine rig into `assets/spine/`, replacing what was there.
 - `verify-cards` runs only the card check.
 - `proof-equip` writes side-by-side comparisons of composited and hosted equipment icons.
@@ -130,6 +131,9 @@ LEGACY_FILES = (
 )
 LEGACY_TIERS = {role: tier for role, _clone, _template, _name, _required, tier in LEGACY_FILES}
 CARD_SIZE = (256, 512)
+
+# Old path of a collaboration doll's skill icon in the old asset repo. `{slot}` is `skill1` or `skill2`.
+LEGACY_SKILL_TEMPLATE = "tdolls/{id}/{id}_{slot}.png"
 
 HOSTED_CARD_RE = re.compile(r"^\d+_(?:(mod)_)?(?:skin(\d+)_)?card\.png$")
 CARD_CHECK_COUNT = 20
@@ -860,6 +864,47 @@ def legacy_outputs(extra, assets_root, art_root):
     return [(role, os.path.join(roots[tree], *rel.split("/")), tree, f"{folder}/{name}", required) for role, tree, rel, name, required in legacy_skin_paths(extra)]
 
 
+def legacy_skill_paths(item):
+    """List the old and new paths of a legacy skill icon item, one pair per doll slot using it.
+
+    Args:
+        item: A `skill_icon` inventory item with `source` of `legacy` and `users`.
+
+    Returns:
+        A list of `(old path, output path)`.
+    """
+    return [(LEGACY_SKILL_TEMPLATE.format(id=doll_id, slot=slot), f"tdolls/{doll_id}/{slot}.png") for doll_id, slot in item["users"]]
+
+
+def extract_legacy_skill_icons(items, assets_root, staging):
+    """Carry the skill icons of collaboration dolls over from the old asset repo, re-encoded as PNG like every other skill icon.
+
+    Args:
+        items: `skill_icon` inventory items with `source` of `legacy`.
+        assets_root: The old asset repo files, normally the `assets` folder of the legacy snapshot.
+        staging: The staging root.
+
+    Returns:
+        A worker result. A missing old icon is a `missing` entry under the item's key, which fails the run.
+    """
+    result = new_result()
+    for item in items:
+        for old, rel in legacy_skill_paths(item):
+            source = os.path.join(assets_root, *old.split("/"))
+            if not os.path.isfile(source):
+                result["missing"].append({"key": item["key"], "role": "icon", "reason": f"no old file {old}"})
+                continue
+            try:
+                with Image.open(source) as image:
+                    if image.size != SKILL_SIZE:
+                        result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(image.size), "expected": list(SKILL_SIZE)})
+                    data = encode_png(image)
+                write_file(staging, "assets", rel, data, "skill_icon", result)
+            except Exception as exc:
+                result["missing"].append({"key": item["key"], "role": "icon", "reason": f"convert failed: {exc!r}"})
+    return result
+
+
 def extract_legacy_skin(extra, assets_root, art_root, staging):
     """Convert one legacy skin's old PNGs: cards to WebP at `CARD_QUALITY`, full art to WebP at `FULL_QUALITY` at its native size.
 
@@ -1095,6 +1140,10 @@ def legacy_wanted(inventory, legacy_skins, assets_paths, art_paths):
     for extra in legacy_skins:
         for _role, tree, rel, _name, required in legacy_skin_paths(extra):
             want(tree, rel, required)
+    for item in inventory["items"]:
+        if item["tier"] == "skill_icon" and item.get("source") == "legacy":
+            for old, _rel in legacy_skill_paths(item):
+                want("assets", old)
     for rel in PROOF_EQUIP_ICONS.values():
         want("assets", rel)
     targets = hosted_card_targets(inventory, present["assets"])
@@ -1264,11 +1313,11 @@ def tier_counts(files):
 
 
 def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, staging, workers):
-    """Extract every image tier and the legacy skins into the staging trees and write the report.
+    """Extract every image tier, the legacy skins and the legacy skill icons into the staging trees and write the report.
 
     Args:
         inventory: The inventory dict.
-        legacy_dir: The legacy snapshot folder, holding the old UI images and cards under `assets/` and full art under `art/`.
+        legacy_dir: The legacy snapshot folder, holding the old UI images, cards and skill icons under `assets/` and full art under `art/`.
         legacy_skins: Legacy entries from `load_legacy_skins`.
         site_dir: Directory holding `equipment.json`.
         cache_dir: The bundle cache directory.
@@ -1285,10 +1334,13 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
     rarities = load_rarities(site_dir)
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
-    art_items, skill_items, equip_items = [], [], []
+    art_items, skill_items, equip_items, legacy_skill_items = [], [], [], []
     for item in inventory["items"]:
         wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon")
         if not wanted:
+            continue
+        if item["tier"] == "skill_icon" and item.get("source") == "legacy":
+            legacy_skill_items.append(item)
             continue
         if item["status"] != "resolved" and not item["assets"]:
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
@@ -1315,11 +1367,12 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
                 print(f"[{done}/{len(futures)}] {len(files)} files, {time.monotonic() - started:.0f}s", flush=True)
 
     legacy_results = [extract_legacy_skin(extra, legacy_assets, legacy_art, staging) for extra in legacy_skins]
+    legacy_results.append(extract_legacy_skill_icons(legacy_skill_items, legacy_assets, staging))
     for result in legacy_results:
         files.extend(result["files"])
         report["missing"].extend(result["missing"])
         report["nonstandard"].extend(result["nonstandard"])
-    print(f"legacy skins: {len(legacy_skins)}", flush=True)
+    print(f"legacy skins: {len(legacy_skins)}, legacy skill icons: {len(legacy_skill_items)}", flush=True)
 
     counts = tier_counts(files)
     counts["ui"] = {"tree": "assets", "files": len(ui_files), "bytes": sum(os.path.getsize(os.path.join(staging, "assets", name)) for name in ui_files)}

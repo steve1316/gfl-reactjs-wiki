@@ -23,6 +23,9 @@ Subcommands:
 `bundles/cache-index.json` records the `resname` each cached bundle was downloaded under, since the file name alone cannot tell an updated
 bundle of the same size from the old one. A cached bundle with no record is adopted without a download when its SHA-1 matches ResData's
 `fileHash`.
+
+Collaboration dolls have no `gun` row, so their skill slots have no codename. Those slots are marked `source: legacy`: the extractor carries
+their icons over from the old asset repo snapshot instead of counting them as gaps.
 """
 
 import argparse
@@ -379,11 +382,26 @@ def doll_items(index, doll, codes):
     return items
 
 
+def legacy_skill_item(doll_id, slot):
+    """Build the skill icon item of a collaboration doll slot, whose icon only the old asset repo hosts.
+
+    Args:
+        doll_id: The collaboration doll's id.
+        slot: `skill1` or `skill2`.
+
+    Returns:
+        An item with `status` and `source` of `legacy` and no bundles.
+    """
+    item = unresolved_item("skill_icon", f"skill_icon:doll:{doll_id}:{slot}", "collaboration doll with no gun row, icon carried from the old asset repo", users=[[doll_id, slot]])
+    item.update(status="legacy", source="legacy")
+    return item
+
+
 def skill_items(index, dolls, guns, skill_codes):
     """Resolve one skill icon item per distinct skill codename.
 
     Skill 1 comes from the doll's `gun.skill1`, and a Mod's skill 2 from `gun(20000 + id).skill2`. Icons are shared by codename, so each item
-    lists the doll slots that use it.
+    lists the doll slots that use it. A collaboration doll has no `gun` row, so its slots become legacy items read from the old asset repo.
 
     Args:
         index: The bundle index from `load_index`.
@@ -403,6 +421,9 @@ def skill_items(index, dolls, guns, skill_codes):
             slots.append(("skill2", MOD_ID_OFFSET + doll_id, "skill2"))
         for slot, gun_id, field in slots:
             code = skill_codes.get((guns.get(gun_id) or {}).get(field))
+            if not code and doll_id in CODE_OVERRIDES and gun_id not in guns:
+                items.append(legacy_skill_item(doll_id, slot))
+                continue
             if not code:
                 items.append(unresolved_item("skill_icon", f"skill_icon:doll:{doll_id}:{slot}", "no skill code", users=[[doll_id, slot]]))
                 continue
@@ -442,13 +463,9 @@ def is_expected_gap(item):
         item: An unresolved item dict.
 
     Returns:
-        True for the skill codes with no icon, and for skill slots of collaboration dolls that have no `gun` row.
+        True for the skill codes with no icon anywhere in the game.
     """
-    if item["tier"] != "skill_icon":
-        return False
-    if item.get("code", "").lower() in EXPECTED_MISSING_SKILL_CODES:
-        return True
-    return item.get("reason") == "no skill code" and all(doll_id in CODE_OVERRIDES for doll_id, _slot in item["users"])
+    return item["tier"] == "skill_icon" and item.get("code", "").lower() in EXPECTED_MISSING_SKILL_CODES
 
 
 def summarise(items, index):
@@ -461,8 +478,8 @@ def summarise(items, index):
     Returns:
         A `(summary, bundles)` pair. `bundles` maps each needed bundle name to its `resname`, `sizeOriginal` and, when known, `sha1`.
     """
-    tiers = {tier: {"items": 0, "resolved": 0, "partial": 0, "unresolved": 0} for tier in TIERS}
-    summary = {"tiers": tiers, "partial": [], "unresolved_expected": [], "unresolved_unexpected": []}
+    tiers = {tier: {"items": 0, "resolved": 0, "partial": 0, "unresolved": 0, "legacy": 0} for tier in TIERS}
+    summary = {"tiers": tiers, "partial": [], "legacy": [], "unresolved_expected": [], "unresolved_unexpected": []}
     names = {name for name in UI_BUNDLES if name in index}
     for item in items:
         tiers[item["tier"]]["items"] += 1
@@ -470,6 +487,8 @@ def summarise(items, index):
         names.update(item["bundles"])
         if item["status"] == "partial":
             summary["partial"].append({"key": item["key"], "missing": item["missing"]})
+        elif item["status"] == "legacy":
+            summary["legacy"].append({"key": item["key"], "reason": item["reason"]})
         elif item["status"] == "unresolved":
             entry = {"key": item["key"], "reason": item.get("reason", "no bundle holds the files")}
             summary["unresolved_expected" if is_expected_gap(item) else "unresolved_unexpected"].append(entry)
@@ -775,11 +794,11 @@ def print_summary(inventory):
     """
     summary = inventory["summary"]
     print(f"resVersion={inventory['resVersion']}  cdn={inventory['resUrl']}")
-    print(f"{'TIER':<12}{'ITEMS':>7}{'RESOLVED':>10}{'PARTIAL':>9}{'UNRESOLVED':>12}")
+    print(f"{'TIER':<12}{'ITEMS':>7}{'RESOLVED':>10}{'PARTIAL':>9}{'UNRESOLVED':>12}{'LEGACY':>8}")
     for tier, counts in summary["tiers"].items():
-        print(f"{tier:<12}{counts['items']:>7}{counts['resolved']:>10}{counts['partial']:>9}{counts['unresolved']:>12}")
+        print(f"{tier:<12}{counts['items']:>7}{counts['resolved']:>10}{counts['partial']:>9}{counts['unresolved']:>12}{counts['legacy']:>8}")
     print(f"bundles to download: {summary['bundle_count']} ({summary['download_mb']} MB)")
-    for label in ("unresolved_expected", "unresolved_unexpected", "partial"):
+    for label in ("legacy", "unresolved_expected", "unresolved_unexpected", "partial"):
         entries = summary[label]
         print(f"{label}: {len(entries)}")
         for entry in entries:

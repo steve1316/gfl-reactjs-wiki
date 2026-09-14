@@ -137,11 +137,18 @@ class ResolutionTests(unittest.TestCase):
         summary = self.inventory["summary"]
         expected = {entry["key"] for entry in summary["unresolved_expected"]}
         unexpected = {entry["key"] for entry in summary["unresolved_unexpected"]}
-        self.assertEqual(expected, {"skill_icon:ma", "skill_icon:doll:1003:skill1"})
+        self.assertEqual(expected, {"skill_icon:ma"})
         self.assertEqual(
             unexpected,
             {"art:999", "spine:999", "skill_icon:ghostSkill", "skin_art:1:302", "skin_spine:163:902", "skin_spine:233:2801", "equip_icon:3"},
         )
+
+    def test_collab_skill_slots_are_legacy_sourced(self):
+        """A collaboration doll's skill slot has no codename, so it is carried from the old repo rather than counted as a gap."""
+        item = self.items["skill_icon:doll:1003:skill1"]
+        self.assertEqual((item["status"], item["source"], item["users"], item["bundles"]), ("legacy", "legacy", [[1003, "skill1"]], []))
+        self.assertEqual([entry["key"] for entry in self.inventory["summary"]["legacy"]], ["skill_icon:doll:1003:skill1"])
+        self.assertEqual(self.inventory["summary"]["tiers"]["skill_icon"]["legacy"], 1)
 
     def test_file_hash_is_normalised(self):
         """ResData's dashed upper-case `fileHash` becomes a plain SHA-1 digest, and anything else is dropped."""
@@ -152,9 +159,9 @@ class ResolutionTests(unittest.TestCase):
     def test_summary_counts_and_bundle_totals(self):
         """Tier counts and the deduplicated download total match the fixture."""
         summary = self.inventory["summary"]
-        self.assertEqual(summary["tiers"]["art"], {"items": 5, "resolved": 4, "partial": 0, "unresolved": 1})
-        self.assertEqual(summary["tiers"]["skin_art"], {"items": 4, "resolved": 2, "partial": 1, "unresolved": 1})
-        self.assertEqual(summary["tiers"]["equip_icon"], {"items": 3, "resolved": 2, "partial": 0, "unresolved": 1})
+        self.assertEqual(summary["tiers"]["art"], {"items": 5, "resolved": 4, "partial": 0, "unresolved": 1, "legacy": 0})
+        self.assertEqual(summary["tiers"]["skin_art"], {"items": 4, "resolved": 2, "partial": 1, "unresolved": 1, "legacy": 0})
+        self.assertEqual(summary["tiers"]["equip_icon"], {"items": 3, "resolved": 2, "partial": 0, "unresolved": 1, "legacy": 0})
         self.assertEqual(summary["bundle_count"], 16)
         self.assertEqual(summary["download_bytes"], 18250)
         self.assertEqual(self.inventory["bundles"]["sprites_ui"], {"resname": "hashspritesui", "sizeOriginal": 5000})
