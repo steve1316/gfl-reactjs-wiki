@@ -4,6 +4,7 @@ Everything runs against the small fixture tree next to this file. No test touche
 """
 
 import hashlib
+import json
 import os
 import sys
 import tempfile
@@ -356,6 +357,108 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(game_bundles.verify_cache(self.bundles, self.cache), [{"name": "character_b", "check": "size", "expected": 20, "actual": 19}])
         self.write_cached("character_b", 20)
         self.assertEqual(game_bundles.verify_cache(self.bundles, self.cache), [{"name": "character_b", "check": "resname", "expected": "resB", "actual": None}])
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# New targets
+
+
+def site_doll(doll_id, mod=False, skin_ids=None):
+    """Build a minimal site doll record.
+
+    Args:
+        doll_id: The doll id.
+        mod: Whether the doll has a Mod.
+        skin_ids: Skin ids, or None for no skins.
+
+    Returns:
+        A doll dict shaped like the site shards.
+    """
+    return {"normal": {"id": doll_id}, "mod": {"id": doll_id} if mod else None, "skins": {"skin_ids": skin_ids} if skin_ids else None}
+
+
+class NewTargetTests(unittest.TestCase):
+    """Selecting only the dolls, Mods, skins and equipment the committed manifest does not list."""
+
+    def setUp(self):
+        self.manifest = {
+            "equipment": [1, 2],
+            "dolls": {
+                "65": {"normal": {"images": ["card"]}, "mod": {"images": ["card"]}, "skins": {"805": {"images": ["card"]}}, "skills": ["skill1", "skill2"]},
+                "95": {"normal": {"images": ["card"]}, "skins": {"1809": {"images": ["card"]}}, "skills": ["skill1"]},
+                "100": {"normal": {"images": ["card"]}, "skills": ["skill1"]},
+            },
+        }
+        dolls = [site_doll(65, mod=True, skin_ids=[805, 9001]), site_doll(95, skin_ids=[1809, "legacy-x", None]), site_doll(100, mod=True), site_doll(424)]
+        self.targets = game_bundles.new_targets(dolls, [1, 2, 3], self.manifest)
+
+    def test_targets(self):
+        """A missing doll, a missing Mod, a missing numeric skin and a missing equipment id are the targets."""
+        self.assertEqual(self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}})
+
+    def test_selects_forms_of_new_targets(self):
+        """Art and rigs follow their form, and hosted forms, known gaps and legacy items are never selected."""
+        items = [
+            {"key": "art:424", "tier": "art", "doll_id": 424},
+            {"key": "spine:424", "tier": "spine", "doll_id": 424},
+            {"key": "art:65", "tier": "art", "doll_id": 65},
+            {"key": "mod_art:100", "tier": "mod_art", "doll_id": 100},
+            {"key": "mod_spine:100", "tier": "mod_spine", "doll_id": 100},
+            {"key": "skin_art:65:9001", "tier": "skin_art", "doll_id": 65, "skin_id": 9001},
+            {"key": "skin_spine:95:1809", "tier": "skin_spine", "doll_id": 95, "skin_id": 1809},
+            {"key": "equip_icon:3", "tier": "equip_icon", "equip_id": 3},
+            {"key": "equip_icon:1", "tier": "equip_icon", "equip_id": 1},
+            {"key": "skill_icon:doll:1005:skill1", "tier": "skill_icon", "source": "legacy", "users": [[424, "skill1"]]},
+        ]
+        keys = [item["key"] for item in game_bundles.select_new_items(items, self.targets)]
+        self.assertEqual(keys, ["art:424", "spine:424", "mod_art:100", "mod_spine:100", "skin_art:65:9001", "equip_icon:3"])
+
+    def test_skill_icons_keep_only_new_slots(self):
+        """A shared skill icon keeps only the slots of new dolls and new Mods, so hosted icons are never rewritten."""
+        items = [
+            {"key": "skill_icon:ar", "tier": "skill_icon", "users": [[65, "skill1"], [424, "skill1"], [100, "skill2"], [100, "skill1"]]},
+            {"key": "skill_icon:mg4", "tier": "skill_icon", "users": [[95, "skill1"]]},
+        ]
+        selected = game_bundles.select_new_items(items, self.targets)
+        self.assertEqual(selected, [{"key": "skill_icon:ar", "tier": "skill_icon", "users": [[424, "skill1"], [100, "skill2"]]}])
+        self.assertEqual(items[0]["users"], [[65, "skill1"], [424, "skill1"], [100, "skill2"], [100, "skill1"]])
+
+    def test_only_missing_problems(self):
+        """Unexpected unresolved items and partial items stop an only-missing run, expected gaps do not."""
+        summary = {"unresolved_expected": [{"key": "skill_icon:mg4"}], "unresolved_unexpected": [{"key": "art:424", "reason": "no bundle holds the files"}], "partial": [{"key": "skin_art:65:9001", "missing": ["card"]}]}
+        problems = game_bundles.only_missing_problems({"summary": summary})
+        self.assertEqual(problems, ["art:424 is unresolved: no bundle holds the files", "skin_art:65:9001 is missing card"])
+
+    def test_ui_bundle_only_with_equipment(self):
+        """The equipment UI bundle is left out when asked, and kept by default."""
+        index = {"atlasclips_listequipment": {"resname": "x", "sizeOriginal": 5}}
+        _summary, bundles = game_bundles.summarise([], index, include_ui=False)
+        self.assertEqual(bundles, {})
+        _summary, bundles = game_bundles.summarise([], index)
+        self.assertEqual(list(bundles), ["atlasclips_listequipment"])
+
+    def test_fixture_inventory_with_manifest(self):
+        """With a manifest listing nothing, the fixture inventory is flagged and keeps its items, and a manifest listing everything empties it."""
+        with tempfile.TemporaryDirectory() as scratch:
+            empty = os.path.join(scratch, "empty.json")
+            with open(empty, "w", encoding="utf-8") as handle:
+                json.dump({"equipment": [], "dolls": {}}, handle)
+            inventory = game_bundles.inventory_from_paths(os.path.join(FIXTURES, "resdata_no_hash.json"), GF_DATA, SITE_DATA, empty)
+            self.assertTrue(inventory["onlyMissing"])
+            self.assertTrue(any(item["tier"] == "art" for item in inventory["items"]))
+
+            dolls, equipment_ids = game_bundles.load_site(SITE_DATA)
+            full = {"equipment": equipment_ids, "dolls": {}}
+            for doll in dolls:
+                skins = {str(skin_id): {"images": ["card"]} for skin_id in ((doll.get("skins") or {}).get("skin_ids") or []) if isinstance(skin_id, int)}
+                full["dolls"][str(doll["normal"]["id"])] = {"normal": {"images": ["card"]}, "mod": {"images": ["card"]}, "skins": skins, "skills": []}
+            listed = os.path.join(scratch, "full.json")
+            with open(listed, "w", encoding="utf-8") as handle:
+                json.dump(full, handle)
+            inventory = game_bundles.inventory_from_paths(os.path.join(FIXTURES, "resdata_no_hash.json"), GF_DATA, SITE_DATA, listed)
+            self.assertEqual(inventory["items"], [])
+            self.assertEqual(inventory["bundles"], {})
 
 
 if __name__ == "__main__":
