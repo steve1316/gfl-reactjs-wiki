@@ -69,7 +69,7 @@ export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
 		return JSON.parse(fs.readFileSync(cacheFile, "utf8"));
 	}
 	const pages = [];
-	const params = new URLSearchParams({
+	const baseParams = {
 		action: "query",
 		generator: "embeddedin",
 		geititle: "Template:PlayableUnit",
@@ -80,7 +80,9 @@ export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
 		rvslots: "main",
 		format: "json",
 		formatversion: "2"
-	});
+	};
+	// Each round sends the original request plus only the latest `continue` object, as MediaWiki asks, so stale keys never carry over.
+	let params = new URLSearchParams(baseParams);
 	let first = true;
 	for (;;) {
 		if (!first) {
@@ -107,9 +109,7 @@ export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
 		if (!body.continue) {
 			break;
 		}
-		for (const [key, value] of Object.entries(body.continue)) {
-			params.set(key, value);
-		}
+		params = new URLSearchParams({ ...baseParams, ...body.continue });
 	}
 	fs.mkdirSync(cacheDir, { recursive: true });
 	fs.writeFileSync(cacheFile, JSON.stringify(pages));

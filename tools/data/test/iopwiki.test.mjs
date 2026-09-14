@@ -200,6 +200,40 @@ test("fetchIopwikiPages writes its cache under the given cacheDir, not the real 
 	}
 });
 
+test("fetchIopwikiPages sends the original request plus only the latest continue object each round", async () => {
+	const page = (title) => ({ title, revisions: [{ slots: { main: { content: `{{PlayableUnit|index=${title.length}}}` } } }] });
+	const bodies = [
+		{ query: { pages: [page("A")] }, continue: { rvcontinue: "r1", continue: "||" } },
+		{ query: { pages: [page("BB")] }, continue: { geicontinue: "g2", continue: "gcontinue||" } },
+		{ query: { pages: [page("CCC")] } }
+	];
+	const urls = [];
+	const original = globalThis.fetch;
+	globalThis.fetch = async (url) => {
+		urls.push(new URL(url).searchParams);
+		return { ok: true, status: 200, json: async () => bodies[urls.length - 1] };
+	};
+	try {
+		const pages = await fetchIopwikiPages({ cacheDir });
+		assert.deepEqual(
+			pages.map((entry) => entry.title),
+			["A", "BB", "CCC"]
+		);
+		assert.equal(urls.length, 3);
+		assert.equal(urls[0].has("rvcontinue"), false);
+		assert.equal(urls[1].get("rvcontinue"), "r1");
+		assert.equal(urls[1].get("continue"), "||");
+		assert.equal(urls[2].get("geicontinue"), "g2");
+		assert.equal(urls[2].get("continue"), "gcontinue||");
+		assert.equal(urls[2].has("rvcontinue"), false, "the first round's rvcontinue must not carry over");
+		for (const params of urls) {
+			assert.equal(params.get("geititle"), "Template:PlayableUnit");
+		}
+	} finally {
+		globalThis.fetch = original;
+	}
+});
+
 test("plainText strips '' italic, ''' bold and ''''' bold italic markup but keeps a single apostrophe", () => {
 	assert.equal(plainText("Heckler & Koch '''M'''aschinen'''P'''istole 7"), "Heckler & Koch MaschinenPistole 7");
 	assert.equal(plainText("''Italic'' and '''''both'''''"), "Italic and both");
