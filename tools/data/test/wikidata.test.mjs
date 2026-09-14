@@ -1,15 +1,22 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import { fetchWikidataFacts } from "../lib/wikidata.mjs";
 
 const sample = JSON.parse(fs.readFileSync("tools/data/test/fixtures/wikidata-sample.json", "utf8"));
-const CACHE_FILE = path.resolve("tools/data/.cache/wikidata.json");
+
+// Every test gets its own throwaway cache directory, never the real tools/data/.cache the importer uses.
+let cacheDir;
 
 test.beforeEach(() => {
-	fs.rmSync(CACHE_FILE, { force: true });
+	cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "gfl-wikidata-test-"));
+});
+
+test.afterEach(() => {
+	fs.rmSync(cacheDir, { recursive: true, force: true });
 });
 
 /**
@@ -51,24 +58,24 @@ function stubFetchRaw(response) {
 test("resolves manufacturer and country labels for a found title, and skips a missing one", async () => {
 	const restore = stubFetch([sample.entitiesResponse, sample.labelsResponse]);
 	try {
-		const facts = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0 });
+		const facts = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0, cacheDir });
 		assert.deepEqual(facts.get("Test Rifle"), { manufacturer: ["Test Arms Co"], country: ["Testland"] });
 		assert.equal(facts.has("Unknown Weapon"), false);
+		assert.ok(fs.existsSync(path.join(cacheDir, "wikidata.json")));
 	} finally {
 		restore();
 	}
 });
 
 test("WIKIDATA_CACHE=reuse reads the cache file and never calls fetch", async () => {
-	fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true });
-	fs.writeFileSync(CACHE_FILE, JSON.stringify({ "Cached Rifle": { manufacturer: ["Cached Co"], country: ["Cacheland"] } }));
+	fs.writeFileSync(path.join(cacheDir, "wikidata.json"), JSON.stringify({ "Cached Rifle": { manufacturer: ["Cached Co"], country: ["Cacheland"] } }));
 	const original = globalThis.fetch;
 	globalThis.fetch = async () => {
 		throw new Error("network should not be called in reuse mode");
 	};
 	process.env.WIKIDATA_CACHE = "reuse";
 	try {
-		const facts = await fetchWikidataFacts(["Cached Rifle"]);
+		const facts = await fetchWikidataFacts(["Cached Rifle"], { cacheDir });
 		assert.deepEqual(facts.get("Cached Rifle"), { manufacturer: ["Cached Co"], country: ["Cacheland"] });
 	} finally {
 		delete process.env.WIKIDATA_CACHE;
@@ -79,7 +86,7 @@ test("WIKIDATA_CACHE=reuse reads the cache file and never calls fetch", async ()
 test("rejects with the API's error code when Wikidata answers 200 with an error body", async () => {
 	const restore = stubFetchRaw({ ok: true, status: 200, body: { error: { code: "no-such-entity", info: "Could not find such an entity" } } });
 	try {
-		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0 }), /no-such-entity/);
+		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0, cacheDir }), /no-such-entity/);
 	} finally {
 		restore();
 	}
@@ -88,7 +95,7 @@ test("rejects with the API's error code when Wikidata answers 200 with an error 
 test("rejects when Wikidata answers with an HTTP 500", async () => {
 	const restore = stubFetchRaw({ ok: false, status: 500, statusText: "Internal Server Error", body: {} });
 	try {
-		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0 }));
+		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0, cacheDir }));
 	} finally {
 		restore();
 	}
@@ -97,7 +104,7 @@ test("rejects when Wikidata answers with an HTTP 500", async () => {
 test("rejects when the response has no entities object", async () => {
 	const restore = stubFetchRaw({ ok: true, status: 200, body: { success: 1 } });
 	try {
-		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0 }), /entities/);
+		await assert.rejects(fetchWikidataFacts(["Anything"], { delayMs: 0, cacheDir }), /entities/);
 	} finally {
 		restore();
 	}
@@ -130,7 +137,7 @@ test("joins results back to the requested title across a case difference and a r
 	};
 	const restore = stubFetch([entitiesResponse, labelsResponse]);
 	try {
-		const facts = await fetchWikidataFacts(["walther p38", "Tommy gun"], { delayMs: 0 });
+		const facts = await fetchWikidataFacts(["walther p38", "Tommy gun"], { delayMs: 0, cacheDir });
 		assert.deepEqual(facts.get("walther p38"), { manufacturer: ["Carl Walther GmbH"], country: ["Germany"] });
 		assert.deepEqual(facts.get("Tommy gun"), { manufacturer: ["Auto-Ordnance Company"], country: [] });
 	} finally {

@@ -14,8 +14,11 @@ const USER_AGENT = "gfl-reactjs-wiki-importer/1.0 (https://github.com/steve1316/
 /** Minimum gap between sequential IOPWiki requests, so a 10-request bulk fetch stays polite. */
 const REQUEST_DELAY_MS = 1000;
 
-/** Where the fetched pages are cached. Git-ignored. */
-const CACHE_FILE = path.resolve("tools/data/.cache/iopwiki-pages.json");
+/** Where the fetched pages are cached by default. Git-ignored. Overridable per call via `options.cacheDir`. */
+const DEFAULT_CACHE_DIR = path.resolve("tools/data/.cache");
+
+/** Cache file name inside whichever cache directory is in effect. */
+const CACHE_FILENAME = "iopwiki-pages.json";
 
 /** `{{name|arg}}` templates whose text is dropped entirely rather than shown, case-insensitive. */
 const DROPPED_TEMPLATES = new Set(["spoiler"]);
@@ -48,14 +51,19 @@ function sleep(ms) {
  * Fetch every IOPWiki page that embeds `Template:PlayableUnit`, which is every T-Doll page.
  *
  * Requests are sequential, at least a second apart, and follow the API's `continue` token until it
- * disappears. Set `IOPWIKI_CACHE=reuse` to read `tools/data/.cache/iopwiki-pages.json` back instead of
- * touching the network; otherwise this always refetches and overwrites that cache.
+ * disappears. Set `IOPWIKI_CACHE=reuse` to read the cache file back instead of touching the network;
+ * otherwise this always refetches and overwrites that cache. The cache lives at
+ * `tools/data/.cache/iopwiki-pages.json` by default; pass `options.cacheDir` to use a different directory
+ * (tests must, so they never touch the real cache the importer relies on).
  *
+ * @param {object} [options] Options.
+ * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.
  * @returns {Promise<{ title: string, wikitext: string }[]>} Every doll page's title and raw wikitext.
  */
-export async function fetchIopwikiPages() {
-	if (process.env.IOPWIKI_CACHE === "reuse" && fs.existsSync(CACHE_FILE)) {
-		return JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
+export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
+	const cacheFile = path.join(cacheDir, CACHE_FILENAME);
+	if (process.env.IOPWIKI_CACHE === "reuse" && fs.existsSync(cacheFile)) {
+		return JSON.parse(fs.readFileSync(cacheFile, "utf8"));
 	}
 	const pages = [];
 	const params = new URLSearchParams({
@@ -100,8 +108,8 @@ export async function fetchIopwikiPages() {
 			params.set(key, value);
 		}
 	}
-	fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true });
-	fs.writeFileSync(CACHE_FILE, JSON.stringify(pages));
+	fs.mkdirSync(cacheDir, { recursive: true });
+	fs.writeFileSync(cacheFile, JSON.stringify(pages));
 	return pages;
 }
 

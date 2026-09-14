@@ -1,12 +1,26 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 import { fetchIopwikiPages, parseEnRelease, parsePlayableUnit, plainText, wikipediaTitle } from "../lib/iopwiki.mjs";
 
 const hk416 = fs.readFileSync("tools/data/test/fixtures/iopwiki-hk416.wikitext", "utf8");
 const beowulf = fs.readFileSync("tools/data/test/fixtures/iopwiki-beowulf.wikitext", "utf8");
 const dorothy = fs.readFileSync("tools/data/test/fixtures/iopwiki-dorothy.wikitext", "utf8");
+
+// Only the fetchIopwikiPages tests below touch a cache directory. Each gets its own throwaway one, never
+// the real tools/data/.cache the importer uses.
+let cacheDir;
+
+test.beforeEach(() => {
+	cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), "gfl-iopwiki-test-"));
+});
+
+test.afterEach(() => {
+	fs.rmSync(cacheDir, { recursive: true, force: true });
+});
 
 test("parses HK416's index, faction, manufacturer and nationality", () => {
 	const fields = parsePlayableUnit(hk416);
@@ -114,7 +128,7 @@ test("fetchIopwikiPages rejects with the API's error code when IOPWiki answers 2
 	const original = globalThis.fetch;
 	globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ error: { code: "badtitle", info: "Bad title" } }) });
 	try {
-		await assert.rejects(fetchIopwikiPages(), /badtitle/);
+		await assert.rejects(fetchIopwikiPages({ cacheDir }), /badtitle/);
 	} finally {
 		globalThis.fetch = original;
 	}
@@ -124,7 +138,7 @@ test("fetchIopwikiPages rejects when IOPWiki answers with an HTTP 500", async ()
 	const original = globalThis.fetch;
 	globalThis.fetch = async () => ({ ok: false, status: 500, statusText: "Internal Server Error", json: async () => ({}) });
 	try {
-		await assert.rejects(fetchIopwikiPages());
+		await assert.rejects(fetchIopwikiPages({ cacheDir }));
 	} finally {
 		globalThis.fetch = original;
 	}
@@ -134,7 +148,23 @@ test("fetchIopwikiPages rejects when the response has no query object", async ()
 	const original = globalThis.fetch;
 	globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ batchcomplete: true }) });
 	try {
-		await assert.rejects(fetchIopwikiPages(), /query/);
+		await assert.rejects(fetchIopwikiPages({ cacheDir }), /query/);
+	} finally {
+		globalThis.fetch = original;
+	}
+});
+
+test("fetchIopwikiPages writes its cache under the given cacheDir, not the real tools/data/.cache", async () => {
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => ({
+		ok: true,
+		status: 200,
+		json: async () => ({ query: { pages: [{ title: "Test", revisions: [{ slots: { main: { content: "{{PlayableUnit|index=1}}" } } }] }] } })
+	});
+	try {
+		const pages = await fetchIopwikiPages({ cacheDir });
+		assert.deepEqual(pages, [{ title: "Test", wikitext: "{{PlayableUnit|index=1}}" }]);
+		assert.ok(fs.existsSync(path.join(cacheDir, "iopwiki-pages.json")));
 	} finally {
 		globalThis.fetch = original;
 	}

@@ -23,8 +23,11 @@ const MANUFACTURER_PROPERTY = "P176";
 /** Country of origin property. */
 const COUNTRY_PROPERTY = "P495";
 
-/** Where resolved facts are cached, keyed by enwiki title. Git-ignored. */
-const CACHE_FILE = path.resolve("tools/data/.cache/wikidata.json");
+/** Where resolved facts are cached by default, keyed by enwiki title. Git-ignored. Overridable via `options.cacheDir`. */
+const DEFAULT_CACHE_DIR = path.resolve("tools/data/.cache");
+
+/** Cache file name inside whichever cache directory is in effect. */
+const CACHE_FILENAME = "wikidata.json";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,21 +185,24 @@ async function resolveLabels(ids) {
  *
  * Two rounds of batched `wbgetentities` calls: the first resolves each title to its P176 (manufacturer)
  * and P495 (country of origin) item ids, the second resolves those item ids to English labels. Requests are
- * sequential and at least a second apart. Results are cached to `tools/data/.cache/wikidata.json` keyed by
- * title. Set `WIKIDATA_CACHE=reuse` to read that cache back for the requested titles without touching the
- * network (titles missing from the cache are simply omitted); the default always refetches and rewrites the
- * cache, merged with whatever was already there.
+ * sequential and at least a second apart. Results are cached to `tools/data/.cache/wikidata.json` (or
+ * `options.cacheDir`) keyed by title. Set `WIKIDATA_CACHE=reuse` to read that cache back for the requested
+ * titles without touching the network (titles missing from the cache are simply omitted); the default
+ * always refetches and rewrites the cache, merged with whatever was already there.
  *
  * @param {string[]} titles Enwiki article titles to resolve.
  * @param {object} [options] Options.
  * @param {number} [options.delayMs] Milliseconds between requests, overriding `REQUEST_DELAY_MS`. Exists so
  *   tests can skip the real wait; real callers should leave this at its default.
+ * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.
+ *   Tests must set this, so they never touch the real cache the importer relies on.
  * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Manufacturer and country
  *   labels per title. A title with no Wikidata item, or no claims, is omitted.
  */
-export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS } = {}) {
+export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS, cacheDir = DEFAULT_CACHE_DIR } = {}) {
+	const cacheFile = path.join(cacheDir, CACHE_FILENAME);
 	const uniqueTitles = [...new Set(titles)];
-	const cached = fs.existsSync(CACHE_FILE) ? JSON.parse(fs.readFileSync(CACHE_FILE, "utf8")) : {};
+	const cached = fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, "utf8")) : {};
 	if (process.env.WIKIDATA_CACHE === "reuse") {
 		const facts = new Map();
 		for (const title of uniqueTitles) {
@@ -245,7 +251,7 @@ export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS } 
 		facts.set(title, { manufacturer, country });
 		cached[title] = { manufacturer, country };
 	}
-	fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true });
-	fs.writeFileSync(CACHE_FILE, JSON.stringify(cached));
+	fs.mkdirSync(cacheDir, { recursive: true });
+	fs.writeFileSync(cacheFile, JSON.stringify(cached));
 	return facts;
 }
