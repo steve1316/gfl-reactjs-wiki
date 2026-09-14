@@ -226,7 +226,8 @@ export default function TDollArt() {
 				</Box>
 			) : (
 				<Box ref={zoom.containerRef} sx={{ flexGrow: 1, position: "relative", overflow: "hidden" }} style={zoom.containerStyle} {...zoom.handlers}>
-					{source ? <Box component="img" src={source} alt="" sx={containArtSx} style={zoom.contentStyle} /> : null}
+					{/* Not draggable: a mouse drag on an image otherwise starts the browser's own image drag, which cancels the pan. */}
+					{source ? <Box component="img" src={source} alt="" draggable={false} sx={containArtSx} style={zoom.contentStyle} /> : null}
 				</Box>
 			)}
 
