@@ -9,10 +9,15 @@ It prints a push command leased to the origin commit it checked, plus the publis
 them. Pass `--replace-branch` to delete and recreate an existing local `rebuild` branch when re-running prepare; the default branch
 itself is never touched.
 
+`add` commits the files of an incremental staging tree onto the asset repo's branch through a shallow, blobless, sparse clone and pushes them
+normally. It is what the scheduled refresh runs. `wait-live` polls those files' Pages URLs until every one returns 200.
+
 Usage:
     python3 tools/assets/publish.py backup --clone <path> --out <dir>
     python3 tools/assets/publish.py prepare --repo assets|art --clone <path>
     python3 tools/assets/publish.py prepare --repo assets|art --clone <path> --replace-branch
+    python3 tools/assets/publish.py add --repo assets|art --staging <tree> --remote <url> --list <file> [--dry-run]
+    python3 tools/assets/publish.py wait-live --base <url> --list <file>
 """
 
 import argparse
@@ -24,6 +29,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -63,6 +72,17 @@ REPO_CONTENTS = {
     "assets": "Cards, skill icons, equipment icons, UI images and Spine chibis",
     "art": "Full art (normal and damaged) for every doll, Mod and skin",
 }
+
+# Owner of both asset repos, for the Git Trees API.
+OWNER = "steve1316"
+
+GITHUB_API = "https://api.github.com"
+
+USER_AGENT = "gfl-reactjs-wiki-refresh/1.0 (fan wiki asset pipeline; https://github.com/steve1316/gfl-reactjs-wiki)"
+
+# How long `wait-live` polls for new asset URLs, and how often.
+LIVE_TIMEOUT_SECONDS = 20 * 60
+LIVE_INTERVAL_SECONDS = 30
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -540,11 +560,252 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Incremental add
+
+
+def fetch_tree_sizes(repo_title, branch="main", token=None, opener=urllib.request.urlopen):
+    """Read every file size of a repo branch from the GitHub Git Trees API.
+
+    A blobless clone cannot report sizes without downloading every blob, so the hosted total comes from the API instead.
+
+    Args:
+        repo_title: The repo name, such as `gfl-wiki-assets`.
+        branch: The branch to list.
+        token: Optional GitHub token, which raises the API rate limit.
+        opener: Callable standing in for `urllib.request.urlopen` in tests.
+
+    Returns:
+        A dict of size in bytes by path, blobs only.
+
+    Raises:
+        SystemExit: When the API truncates the listing.
+    """
+    request = urllib.request.Request(
+        f"{GITHUB_API}/repos/{OWNER}/{repo_title}/git/trees/{branch}?recursive=1", headers={"Accept": "application/vnd.github+json", "User-Agent": USER_AGENT}
+    )
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    with opener(request, timeout=60) as response:
+        body = json.load(response)
+    if body.get("truncated"):
+        sys.exit(f"the Git Trees API truncated the listing of {repo_title}, so its size cannot be checked")
+    return {entry["path"]: entry["size"] for entry in body["tree"] if entry["type"] == "blob"}
+
+
+def planned_tree(existing, staged):
+    """Combine hosted file sizes with staged ones, a staged file replacing a hosted one at the same path.
+
+    Args:
+        existing: Size by path of the hosted tree.
+        staged: `(rel_path, size_bytes)` pairs of the staging tree.
+
+    Returns:
+        Sorted `(rel_path, size_bytes)` pairs for `check_sizes`.
+    """
+    sizes = dict(existing)
+    sizes.update(dict(staged))
+    return sorted(sizes.items())
+
+
+def join_numbers(label, values):
+    """Name a group of ids, such as `dolls 424, 425`.
+
+    Args:
+        label: Singular label, such as `doll`.
+        values: The ids as strings, already in order.
+
+    Returns:
+        The group text, pluralised with an `s` when there is more than one id and the label is not `equipment`.
+    """
+    plural = label if len(values) == 1 or label == "equipment" else f"{label}s"
+    return f"{plural} {', '.join(values)}"
+
+
+def commit_message(paths):
+    """Describe the dolls, skins and equipment an add commit holds.
+
+    Args:
+        paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel` or `equipment/301.png`.
+
+    Returns:
+        A subject line such as `Add art for dolls 424, 425, skin 65:9001 and equipment 301`.
+    """
+    dolls, skins, equipment = set(), set(), set()
+    for rel in paths:
+        parts = rel.split("/")
+        if parts[0] == "equipment" and len(parts) == 2 and parts[1][:-4].isdigit():
+            equipment.add(int(parts[1][:-4]))
+        elif parts[0] in ("tdolls", "spine") and len(parts) > 2 and parts[1].isdigit():
+            if parts[2] == "skins" and len(parts) > 4:
+                skins.add((int(parts[1]), parts[3]))
+            else:
+                dolls.add(int(parts[1]))
+    groups = []
+    if dolls:
+        groups.append(join_numbers("doll", [str(doll_id) for doll_id in sorted(dolls)]))
+    if skins:
+        ordered = sorted(skins, key=lambda pair: (pair[0], (0, int(pair[1]), "") if pair[1].isdigit() else (1, 0, pair[1])))
+        groups.append(join_numbers("skin", [f"{doll_id}:{skin_id}" for doll_id, skin_id in ordered]))
+    if equipment:
+        groups.append(join_numbers("equipment", [str(equip_id) for equip_id in sorted(equipment)]))
+    if not groups:
+        return "Add assets"
+    return f"Add art for {groups[0] if len(groups) == 1 else ', '.join(groups[:-1]) + ' and ' + groups[-1]}"
+
+
+def sparse_pattern(rel):
+    """Turn a path into a non-cone sparse-checkout pattern matching exactly that file.
+
+    Args:
+        rel: A relative path.
+
+    Returns:
+        The pattern, anchored at the root with glob characters escaped.
+    """
+    return "/" + re.sub(r"([*?\[\\])", r"\\\1", rel)
+
+
+def run_with_input(clone, args, text):
+    """Run a git command in a clone with text on standard input.
+
+    Args:
+        clone: The repository path.
+        args: Arguments after `git -C <clone>`.
+        text: The standard input.
+
+    Raises:
+        SystemExit: When the command fails.
+    """
+    result = subprocess.run(["git", "-C", clone, *args], input=text, capture_output=True, text=True, env={**os.environ, "GIT_LITERAL_PATHSPECS": "1"})
+    if result.returncode != 0:
+        sys.exit(f"git {' '.join(args)} failed in {clone}:\n{result.stderr.strip()}")
+
+
+def add(repo, staging_tree, remote, branch="main", dry_run=False, sizes=None, token=None):
+    """Commit an incremental staging tree onto an asset repo's branch and push it.
+
+    The clone is shallow, has no blobs and checks out only the staged paths, so nothing hosted is downloaded except an earlier failed run's
+    leftovers at those paths. A leftover is overwritten: the merge step already refused anything the manifest or Spine index lists, so a hosted
+    file at a staged path can only come from a run whose site commit never landed. Identical files make no commit.
+
+    Args:
+        repo: `assets` or `art`.
+        staging_tree: The staging tree for that repo, such as `<staging>/assets`.
+        remote: The repo URL to clone and push, such as `git@github.com:steve1316/gfl-wiki-assets.git`.
+        branch: The branch to commit onto.
+        dry_run: Commit in the throwaway clone and print it, but do not push.
+        sizes: Callable `(repo_title, branch)` returning hosted sizes by path. Defaults to the Git Trees API.
+        token: Optional GitHub token for the API.
+
+    Returns:
+        The staged relative paths, empty when nothing was staged.
+
+    Raises:
+        SystemExit: When the tree would break the Pages limits or a git command fails.
+    """
+    staged = list_tree(staging_tree) if os.path.isdir(staging_tree) else []
+    title = REPO_TITLES[repo]
+    if not staged:
+        print(f"{title}: nothing staged")
+        return []
+    hosted = (sizes or (lambda repo_title, ref: fetch_tree_sizes(repo_title, ref, token)))(title, branch)
+    limits = check_sizes(planned_tree(hosted, staged))
+    for warning in limits["warnings"]:
+        print(f"warning: {title} {warning}")
+    if limits["errors"]:
+        sys.exit(f"{title} cannot take these files:\n  " + "\n  ".join(limits["errors"]))
+
+    paths = [rel for rel, _size in staged]
+    with tempfile.TemporaryDirectory(prefix=f"{repo}-add-") as scratch:
+        clone = os.path.join(scratch, "clone")
+        result = subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--no-checkout", "--branch", branch, remote, clone], capture_output=True, text=True)
+        if result.returncode != 0:
+            sys.exit(f"cloning {remote} failed:\n{result.stderr.strip()}")
+        run_with_input(clone, ["sparse-checkout", "set", "--no-cone", "--stdin"], "".join(f"{sparse_pattern(rel)}\n" for rel in paths))
+        git(clone, "checkout", "-q", branch)
+        for rel in paths:
+            target = os.path.join(clone, *rel.split("/"))
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            shutil.copyfile(os.path.join(staging_tree, *rel.split("/")), target)
+        run_with_input(clone, ["add", "--sparse", "--pathspec-from-file=-"], "".join(f"{rel}\n" for rel in paths))
+        if not git(clone, "status", "--porcelain"):
+            print(f"{title}: every staged file is already hosted, nothing to commit")
+            return paths
+        message = commit_message(paths)
+        git(clone, "commit", "-q", "-m", message)
+        print(git(clone, "show", "--stat", "--format=%h %s", "HEAD"))
+        if dry_run:
+            print(f"{title}: dry run, not pushed")
+            return paths
+        git(clone, "push", "-q", "origin", branch)
+        print(f"{title}: pushed {message}")
+    return paths
+
+
+def url_for(base, rel):
+    """Build a Pages URL for a hosted path, encoding each segment.
+
+    Args:
+        base: The Pages base URL, with or without a trailing slash.
+        rel: The relative path.
+
+    Returns:
+        The absolute URL.
+    """
+    return base.rstrip("/") + "/" + "/".join(urllib.parse.quote(part) for part in rel.split("/"))
+
+
+def http_status(url):
+    """Fetch a URL's HTTP status with a HEAD request.
+
+    Args:
+        url: The URL.
+
+    Returns:
+        The status code, or None on a network failure.
+    """
+    request = urllib.request.Request(url, method="HEAD", headers={"User-Agent": USER_AGENT})
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return response.status
+    except urllib.error.HTTPError as error:
+        return error.code
+    except (urllib.error.URLError, TimeoutError):
+        return None
+
+
+def wait_live(base, paths, timeout=LIVE_TIMEOUT_SECONDS, interval=LIVE_INTERVAL_SECONDS, status=None, clock=time.monotonic, sleep=time.sleep):
+    """Poll new asset URLs until Pages serves every one, or the timeout passes.
+
+    Args:
+        base: The Pages base URL of the repo the paths were pushed to.
+        paths: The pushed relative paths.
+        timeout: Seconds to keep polling.
+        interval: Seconds between rounds.
+        status: Callable returning a URL's HTTP status. Defaults to a HEAD request.
+        clock: Monotonic clock, replaceable in tests.
+        sleep: Sleep function, replaceable in tests.
+
+    Returns:
+        The URLs that still did not return 200, empty when all are live.
+    """
+    probe = status or http_status
+    pending = [url_for(base, rel) for rel in paths]
+    deadline = clock() + timeout
+    while True:
+        pending = [url for url in pending if probe(url) != 200]
+        if not pending or clock() >= deadline:
+            return pending
+        sleep(interval)
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Entry point
 
 
 def main():
-    """Parse arguments and run `backup` or `prepare`."""
+    """Parse arguments and run `backup`, `prepare`, `add` or `wait-live`."""
     parser = argparse.ArgumentParser(description="Back up and prepare the GitHub Pages asset repos. Never pushes.")
     commands = parser.add_subparsers(dest="command", required=True)
 
@@ -561,7 +822,34 @@ def main():
     prepare_parser.add_argument("--spine-index", default="src/data/spine-index.json", help="The Spine index the audit checks.")
     prepare_parser.add_argument("--res-version", help="ResData version. Defaults to the one in tools/assets/.cache/inventory.json.")
     prepare_parser.add_argument("--replace-branch", action="store_true", help="Delete an existing rebuild branch first.")
+
+    add_parser = commands.add_parser("add", help="Commit an incremental staging tree onto an asset repo and push it.")
+    add_parser.add_argument("--repo", required=True, choices=("assets", "art"), help="Which asset repo the staging tree belongs to.")
+    add_parser.add_argument("--staging", required=True, help="The staging tree for that repo, such as <staging>/assets.")
+    add_parser.add_argument("--remote", required=True, help="The repo URL to clone and push.")
+    add_parser.add_argument("--branch", default="main", help="The branch to commit onto.")
+    add_parser.add_argument("--list", required=True, help="Where to write the staged paths as JSON, for wait-live.")
+    add_parser.add_argument("--dry-run", action="store_true", help="Commit in a throwaway clone but do not push.")
+
+    wait_parser = commands.add_parser("wait-live", help="Poll pushed asset URLs until Pages serves them.")
+    wait_parser.add_argument("--base", required=True, help="The Pages base URL of the repo.")
+    wait_parser.add_argument("--list", required=True, help="The JSON path list written by add.")
+    wait_parser.add_argument("--timeout", type=int, default=LIVE_TIMEOUT_SECONDS, help="Seconds to keep polling.")
     args = parser.parse_args()
+
+    if args.command == "add":
+        paths = add(args.repo, args.staging, args.remote, args.branch, args.dry_run, token=os.environ.get("GITHUB_TOKEN"))
+        with open(args.list, "w", encoding="utf-8") as handle:
+            json.dump(paths, handle)
+        return
+    if args.command == "wait-live":
+        with open(args.list, encoding="utf-8") as handle:
+            paths = json.load(handle)
+        pending = wait_live(args.base, paths, args.timeout)
+        if pending:
+            sys.exit(f"{len(pending)} of {len(paths)} assets are still not live after {args.timeout}s:\n  " + "\n  ".join(pending[:20]))
+        print(f"all {len(paths)} assets are live on {args.base}")
+        return
 
     if args.command == "backup":
         if not os.path.isdir(args.out):
