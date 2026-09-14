@@ -509,7 +509,7 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
 							</Typography>
-							{/* Keyed by doll so moving to another doll starts on the stat table rather than a tab it may not have. */}
+							{/* Keyed by doll so moving to another doll starts on the stat table rather than a view it may not have. */}
 							<StatsPanel key={tdoll.normal.id} stats={tdoll.selected} exclusiveEquipment={tdoll.exclusiveEquipment} />
 						</Paper>
 					</Grid>
