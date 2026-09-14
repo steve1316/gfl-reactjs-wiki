@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 
 // Component imports
+import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
 import ChibiPanel from "./ChibiPanel";
@@ -13,7 +14,7 @@ import StatsPanel from "./StatsPanel";
 import TilesPanel from "./TilesPanel";
 
 // MaterialUI imports
-import { Box, Button, Container, Grid, Paper, Typography, alpha } from "@mui/material";
+import { Box, Container, Grid, Paper, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { skinFormKey } from "../../lib/assets";
@@ -209,16 +210,8 @@ export default function TDoll() {
 
 	if (doll === "failed") {
 		return (
-			<Box component="main" sx={{ py: 3, px: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-				<Typography component="h1" variant="h5" align="center" color="textPrimary">
-					Could not load this T-Doll.
-				</Typography>
-				<Typography align="center" color="textSecondary">
-					Check your connection and try again.
-				</Typography>
-				<Button variant="outlined" onClick={retry}>
-					Try again
-				</Button>
+			<Box component="main">
+				<LoadError what="this T-Doll" onRetry={retry} titleComponent="h1" />
 			</Box>
 		);
 	}
