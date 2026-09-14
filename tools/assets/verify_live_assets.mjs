@@ -95,16 +95,29 @@ export function candidateUrls(manifest, spineIndex, assetsBase, artBase) {
 }
 
 /**
- * List the page image names an atlas refers to.
+ * List the page image names an atlas refers to. The Spine atlas format is block-aware: a page name is the first non-empty
+ * line of the file and the first non-empty line after each blank line, with the page's attribute lines and its regions'
+ * name/attribute lines following inside the same block. A region can be named anything, including something ending in
+ * `.png`, so only a block's first line is ever treated as a page name.
  *
  * @param {string} text Atlas file contents.
  * @returns {string[]} Page filenames, relative to the atlas's folder.
  */
 export function atlasPageNames(text) {
-	return text
-		.split("\n")
-		.map((line) => line.trim())
-		.filter((name) => name.toLowerCase().endsWith(".png"));
+	const pages = [];
+	let atBlockStart = true;
+	for (const rawLine of text.split("\n")) {
+		const line = rawLine.trim();
+		if (line === "") {
+			atBlockStart = true;
+			continue;
+		}
+		if (atBlockStart) {
+			pages.push(line);
+			atBlockStart = false;
+		}
+	}
+	return pages;
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 """Back up an asset repo clone and prepare its rebuilt tree for a force-push, without pushing.
 
-`backup` writes a `git bundle` of every ref in a clone and proves it restores. `prepare` regenerates the version 3 manifest from the
-staging trees, requires it to match the repo-root `assets-manifest.json` byte for byte, runs the v3 audit, checks the Pages size limits,
-and then commits the staging tree onto an orphan branch in the clone. It prints the push command for a person to run and never runs it.
+`backup` writes a `git bundle` of every ref in a clone and proves it restores. `prepare` resolves the repo's default branch straight
+from origin (never from local state), requires the clone's copy of that branch to be exactly in sync with origin, regenerates the
+version 3 manifest from the staging trees, requires it to match the repo-root `assets-manifest.json` byte for byte, runs the v3
+audit, checks the Pages size limits, and then commits the staging tree onto an orphan branch in the clone. It prints the push
+command for a person to run and never runs it. Pass `--replace-branch` to delete and recreate an existing local `rebuild` branch
+when re-running prepare; the default branch itself is never touched.
 
 Usage:
     python3 tools/assets/publish.py backup --clone <path> --out <dir>
     python3 tools/assets/publish.py prepare --repo assets|art --clone <path>
+    python3 tools/assets/publish.py prepare --repo assets|art --clone <path> --replace-branch
 """
 
 import argparse
 import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -102,6 +107,43 @@ def compare_manifests(regenerated, committed):
     return "the regenerated manifest differs from the committed one. Rebuild it with tools/assets/build_manifest.py and commit it first"
 
 
+def branch_sync_status(clone, branch, counts):
+    """Build a refusal message for a local branch that is not exactly in sync with its origin counterpart.
+
+    Args:
+        clone: The repository path, used in the message.
+        branch: The branch name, used in the message.
+        counts: Output of `git rev-list --left-right --count <branch>...origin/<branch>`, as "<ahead> <behind>".
+
+    Returns:
+        None when the branch matches `origin/<branch>`, otherwise a message saying whether it is behind, ahead, or diverged.
+    """
+    ahead, behind = (int(count) for count in counts.split())
+    if ahead == 0 and behind == 0:
+        return None
+    if behind == 0:
+        return f"{clone}'s {branch} is {ahead} commit(s) ahead of origin/{branch}"
+    if ahead == 0:
+        return f"{clone}'s {branch} is {behind} commit(s) behind origin/{branch}"
+    return f"{clone}'s {branch} has diverged from origin/{branch} ({ahead} ahead, {behind} behind)"
+
+
+def parse_symref_head(output):
+    """Parse the branch name out of `git ls-remote --symref origin HEAD` output.
+
+    Args:
+        output: The command's standard output, e.g. `ref: refs/heads/main\\tHEAD\\n<sha>\\tHEAD`.
+
+    Returns:
+        The branch name, or None when no `ref: refs/heads/<name> ... HEAD` line is present.
+    """
+    for line in output.splitlines():
+        match = re.match(r"^ref:\s+refs/heads/(\S+)\s+HEAD$", line.strip())
+        if match:
+            return match.group(1)
+    return None
+
+
 def readme_text(repo, res_version):
     """Build the README written into a rebuilt asset repo.
 
@@ -181,19 +223,44 @@ def git(clone, *args, check=True):
     return result.stdout.strip()
 
 
-def default_branch(clone):
-    """Find the branch the remote serves by default.
+def default_branch(clone, run=git):
+    """Find the branch the remote serves by default, resolved straight from the remote.
+
+    Never trusts local state: not the currently checked-out branch, not a possibly-stale or unset
+    `refs/remotes/origin/HEAD`. Both real clones in this repo have `origin/HEAD` unset, so this always asks the remote.
 
     Args:
         clone: The repository path.
+        run: The command runner, `run(clone, *args, check=...)` returning stdout. Defaults to `git`; tests inject a fake
+            to avoid needing a real remote.
 
     Returns:
-        The branch name, from `origin/HEAD` when known, else the currently checked-out branch.
+        The default branch name.
+
+    Raises:
+        SystemExit: When the remote's default branch cannot be resolved.
     """
-    ref = git(clone, "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD", check=False)
-    if ref:
-        return ref.rsplit("/", 1)[-1]
-    return git(clone, "symbolic-ref", "--quiet", "--short", "HEAD")
+    branch = parse_symref_head(run(clone, "ls-remote", "--symref", "origin", "HEAD"))
+    if not branch:
+        sys.exit(f"could not resolve origin's default branch for {clone} from `git ls-remote --symref origin HEAD`")
+    return branch
+
+
+def require_synced_with_origin(clone, branch):
+    """Fetch a branch from origin and refuse to continue unless the clone matches it exactly.
+
+    Args:
+        clone: The repository path.
+        branch: The local branch to check, normally the resolved default branch.
+
+    Raises:
+        SystemExit: When the fetch fails, or the local branch is behind, ahead of, or diverged from `origin/<branch>`.
+    """
+    git(clone, "fetch", "origin", branch)
+    counts = git(clone, "rev-list", "--left-right", "--count", f"{branch}...origin/{branch}")
+    problem = branch_sync_status(clone, branch, counts)
+    if problem:
+        sys.exit(f"{problem}. Fetch/push/pull to bring it in sync before preparing")
 
 
 def ref_map(lines):
@@ -354,7 +421,9 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
         replace_branch: Whether an existing `rebuild` branch may be deleted first.
 
     Raises:
-        SystemExit: When any check fails. Nothing in the clone changes before every check has passed.
+        SystemExit: When any check fails: a dirty tree, a clone whose default branch is not exactly in sync with origin, an
+            existing `rebuild` branch without `--replace-branch`, a manifest mismatch, an audit failure, or a size-limit
+            breach. Nothing in the clone changes before every check has passed.
     """
     clone = os.path.abspath(clone)
     staging = assets_root if repo == "assets" else art_root
@@ -363,6 +432,7 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
     base_branch = default_branch(clone)
     if base_branch == BRANCH:
         sys.exit(f"{clone} is on {BRANCH}. Check out the default branch first")
+    require_synced_with_origin(clone, base_branch)
     if git(clone, "rev-parse", "--verify", "--quiet", f"refs/heads/{BRANCH}", check=False) and not replace_branch:
         sys.exit(f"{clone} already has a {BRANCH} branch. Pass --replace-branch to rebuild it")
 

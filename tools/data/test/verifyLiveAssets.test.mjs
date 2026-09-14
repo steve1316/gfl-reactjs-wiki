@@ -38,8 +38,31 @@ test("join encodes each path segment like the site", () => {
 	assert.equal(join("https://x.test/", "spine/1/a b#.skel"), "https://x.test/spine/1/a%20b%23.skel");
 });
 
-test("atlas page names are read from the atlas text", () => {
-	assert.deepEqual(atlasPageNames("\nHK416.png\nsize: 512,512\nformat: RGBA8888\nhead\n  rotate: false\nHK416_2.PNG\n"), ["HK416.png", "HK416_2.PNG"]);
+test("atlas page names are block-aware and skip a region named foo.png", () => {
+	const atlas = [
+		"HK416.png",
+		"size: 2048,2048",
+		"format: RGBA8888",
+		"filter: Linear,Linear",
+		"repeat: none",
+		"foo.png",
+		"  rotate: false",
+		"  xy: 2, 2",
+		"  size: 512, 512",
+		"  orig: 512, 512",
+		"  offset: 0, 0",
+		"  index: -1",
+		"",
+		"HK416_2.PNG",
+		"size: 1024,1024",
+		"format: RGBA8888",
+		"filter: Linear,Linear",
+		"repeat: none",
+		"bar",
+		"  rotate: false",
+		""
+	].join("\n");
+	assert.deepEqual(atlasPageNames(atlas), ["HK416.png", "HK416_2.PNG"]);
 });
 
 test("the same seed gives the same sample and a different seed usually does not", () => {

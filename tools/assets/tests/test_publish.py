@@ -56,16 +56,33 @@ def run_git(repo, *args):
     return subprocess.run(["git", "-C", repo, *args], check=True, capture_output=True, text=True).stdout.strip()
 
 
+def git_verify(repo, ref):
+    """Check whether a ref exists in a test repo.
+
+    Args:
+        repo: The repository path.
+        ref: The ref to check, e.g. "refs/heads/rebuild".
+
+    Returns:
+        True when the ref exists.
+    """
+    return subprocess.run(["git", "-C", repo, "rev-parse", "--verify", "--quiet", ref], capture_output=True).returncode == 0
+
+
 def make_fixture(root):
-    """Build a tiny pair of staging trees, their manifest, a Spine index, and a clone of the old repo.
+    """Build a tiny pair of staging trees, their manifest, a Spine index, and a clone tracking a local origin.
+
+    The clone is built with `remote add` + `fetch`, the same way the real asset-repo clones came to be, rather than
+    `git clone` -- that leaves `refs/remotes/origin/HEAD` unset locally, reproducing the exact condition
+    `default_branch` must not depend on and that `prepare` must still resolve and sync-check correctly.
 
     Args:
         root: Temporary directory to build in.
 
     Returns:
-        A dict of the paths the tests pass to `prepare`.
+        A dict of the paths the tests pass to `prepare`, plus `origin`.
     """
-    assets, art, clone = (os.path.join(root, name) for name in ("assets", "art", "clone"))
+    assets, art, origin, clone = (os.path.join(root, name) for name in ("assets", "art", "origin", "clone"))
     write(assets, "tdolls/1/card.webp")
     write(assets, "tdolls/1/card_d.webp")
     write(assets, "tdolls/1/skill1.png")
@@ -85,14 +102,20 @@ def make_fixture(root):
     with open(spine_index, "w", encoding="utf-8") as handle:
         json.dump({"1": {"combat": {"skel": "A", "atlas": "A", "anims": ["wait"]}}}, handle)
 
+    os.makedirs(origin)
+    run_git(origin, "init", "--quiet", "--initial-branch", "main")
+    write(origin, "old/110_card.png", b"old")
+    write(origin, "CNAME", b"assets.example.com\n")
+    write(origin, ".nojekyll", b"")
+    run_git(origin, "add", "--all")
+    run_git(origin, "commit", "--quiet", "-m", "Old layout")
+
     os.makedirs(clone)
     run_git(clone, "init", "--quiet", "--initial-branch", "main")
-    write(clone, "old/110_card.png", b"old")
-    write(clone, "CNAME", b"assets.example.com\n")
-    write(clone, ".nojekyll", b"")
-    run_git(clone, "add", "--all")
-    run_git(clone, "commit", "--quiet", "-m", "Old layout")
-    return {"assets_root": assets, "art_root": art, "manifest_path": manifest, "spine_index_path": spine_index, "clone": clone}
+    run_git(clone, "remote", "add", "origin", origin)
+    run_git(clone, "fetch", "--quiet", "origin")
+    run_git(clone, "checkout", "--quiet", "-b", "main", "origin/main")
+    return {"assets_root": assets, "art_root": art, "manifest_path": manifest, "spine_index_path": spine_index, "clone": clone, "origin": origin}
 
 
 def quiet(function, *args, **kwargs):
@@ -220,7 +243,8 @@ class PrepareTests(unittest.TestCase):
         Returns:
             The captured output.
         """
-        args = dict(self.paths, repo=repo, res_version="2026082516", replace_branch=False)
+        args = {key: value for key, value in self.paths.items() if key != "origin"}
+        args.update(repo=repo, res_version="2026082516", replace_branch=False)
         args.update(overrides)
         return quiet(publish.prepare, **args)[1]
 
@@ -272,6 +296,113 @@ class PrepareTests(unittest.TestCase):
         self.prepare("art", replace_branch=True)
         self.assertEqual(run_git(self.paths["clone"], "rev-list", "--count", "rebuild"), "1")
 
+    def test_clone_behind_origin_stops_before_touching_the_clone(self):
+        """When origin has moved on and the clone has not, prepare refuses before any git change."""
+        origin = self.paths["origin"]
+        write(origin, "extra.txt", b"new upstream commit")
+        run_git(origin, "add", "--all")
+        run_git(origin, "commit", "--quiet", "-m", "Upstream moves on")
+        with self.assertRaises(SystemExit) as caught:
+            self.prepare("assets")
+        self.assertIn("behind", str(caught.exception.code))
+        self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
+        self.assertFalse(git_verify(self.paths["clone"], f"refs/heads/{publish.BRANCH}"))
+
+    def test_clone_ahead_of_origin_stops_before_touching_the_clone(self):
+        """A clone with a local commit origin has never seen refuses before any git change."""
+        write(self.paths["clone"], "local-only.txt", b"oops")
+        run_git(self.paths["clone"], "add", "--all")
+        run_git(self.paths["clone"], "commit", "--quiet", "-m", "Local-only commit")
+        with self.assertRaises(SystemExit) as caught:
+            self.prepare("assets")
+        self.assertIn("ahead", str(caught.exception.code))
+        self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
+        self.assertFalse(git_verify(self.paths["clone"], f"refs/heads/{publish.BRANCH}"))
+
+    def test_size_limit_stops_before_touching_the_clone(self):
+        """A planned tree over the size limit refuses before any git change, like the manifest and audit stops."""
+        with mock.patch.object(publish, "REFUSE_TOTAL_BYTES", 10):
+            with self.assertRaises(SystemExit) as caught:
+                self.prepare("assets")
+        self.assertIn("MB", str(caught.exception.code))
+        self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
+        self.assertFalse(git_verify(self.paths["clone"], f"refs/heads/{publish.BRANCH}"))
+
+
+class ParseSymrefHeadTests(unittest.TestCase):
+    """The pure `git ls-remote --symref origin HEAD` parser."""
+
+    def test_parses_the_default_branch(self):
+        """A normal ls-remote --symref response yields the branch name."""
+        output = "ref: refs/heads/main\tHEAD\n036ddf31e2c3ac827c2360ebb4bc3fd0c3b41811\tHEAD\n"
+        self.assertEqual(publish.parse_symref_head(output), "main")
+
+    def test_parses_a_non_main_default_branch(self):
+        """A repo defaulting to a differently named branch is read correctly."""
+        self.assertEqual(publish.parse_symref_head("ref: refs/heads/develop\tHEAD\nabc123\tHEAD\n"), "develop")
+
+    def test_no_symref_line_returns_none(self):
+        """Output without a `ref:` line for HEAD (e.g. a detached HEAD on the remote) yields None."""
+        self.assertIsNone(publish.parse_symref_head("036ddf31e2c3ac827c2360ebb4bc3fd0c3b41811\tHEAD\n"))
+
+    def test_empty_output_returns_none(self):
+        """No output at all yields None."""
+        self.assertIsNone(publish.parse_symref_head(""))
+
+
+class DefaultBranchTests(unittest.TestCase):
+    """`default_branch` resolves from the remote through an injected command runner, never from local state."""
+
+    def test_resolves_from_ls_remote_symref(self):
+        """The branch comes from `ls-remote --symref origin HEAD`, run through the injected runner."""
+        calls = []
+
+        def fake_run(clone, *args, **kwargs):
+            calls.append((clone, args))
+            return "ref: refs/heads/main\tHEAD\n036ddf3\tHEAD\n"
+
+        self.assertEqual(publish.default_branch("/some/clone", run=fake_run), "main")
+        self.assertEqual(calls, [("/some/clone", ("ls-remote", "--symref", "origin", "HEAD"))])
+
+    def test_unresolvable_default_branch_exits(self):
+        """When the remote gives no symref for HEAD, default_branch fails loudly instead of guessing from local state."""
+        with self.assertRaises(SystemExit) as caught:
+            publish.default_branch("/some/clone", run=lambda *a, **k: "")
+        self.assertIn("could not resolve", str(caught.exception.code))
+
+
+class BranchSyncStatusTests(unittest.TestCase):
+    """The ahead/behind/diverged comparison against origin, from injected `rev-list --left-right --count` output."""
+
+    def test_even_is_none(self):
+        """Matching counts mean no problem."""
+        self.assertIsNone(publish.branch_sync_status("/c", "main", "0\t0"))
+
+    def test_behind(self):
+        """Zero ahead, some behind: the local branch is behind."""
+        message = publish.branch_sync_status("/c", "main", "0\t3")
+        self.assertIn("behind", message)
+        self.assertIn("3", message)
+
+    def test_ahead(self):
+        """Some ahead, zero behind: the local branch is ahead."""
+        message = publish.branch_sync_status("/c", "main", "2\t0")
+        self.assertIn("ahead", message)
+        self.assertIn("2", message)
+
+    def test_diverged(self):
+        """Both ahead and behind: the branches have diverged."""
+        message = publish.branch_sync_status("/c", "main", "2\t3")
+        self.assertIn("diverged", message)
+        self.assertIn("2 ahead", message)
+        self.assertIn("3 behind", message)
+
+    def test_message_names_the_clone_and_branch(self):
+        """The message names the clone path and branch so the refusal is actionable."""
+        message = publish.branch_sync_status("/x/clone", "main", "0\t1")
+        self.assertIn("/x/clone", message)
+        self.assertIn("main", message)
+
 
 @mock.patch.dict(os.environ, GIT_IDENTITY)
 class BackupTests(unittest.TestCase):
@@ -283,8 +414,8 @@ class BackupTests(unittest.TestCase):
             clone = make_fixture(tmp)["clone"]
             run_git(clone, "branch", "side")
             bundle, output = quiet(publish.backup, clone, tmp)
-            self.assertTrue(os.path.basename(bundle).startswith("clone-"))
-            self.assertIn("all 2 refs match", output)
+            self.assertTrue(os.path.basename(bundle).startswith("origin-"))
+            self.assertIn("all 3 refs match", output)
             with self.assertRaises(SystemExit):
                 quiet(publish.backup, clone, tmp)
 
