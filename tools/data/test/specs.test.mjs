@@ -51,6 +51,11 @@ test("a line ending in a comma runs on into its continuation with a space, keepi
 	assert.deepEqual(parseSpecs(text), [{ label: "Cartridge", value: ".45 Colt, .44-40 WCF, .32-20 WCF" }]);
 });
 
+test("a line ending in a slash runs on into its continuation with a space (doll 25)", () => {
+	const text = sheetRow("Length", ["833 mm (32.8 in) stock extended /", "630 mm (24.8 in) stock folded"]);
+	assert.deepEqual(parseSpecs(text), [{ label: "Length", value: "833 mm (32.8 in) stock extended / 630 mm (24.8 in) stock folded" }]);
+});
+
 test("wrapped prose rejoins with spaces while list lines stay separated (doll 53)", () => {
 	const crew = sheetRow("Crew", [
 		"Two; rifle breaks down into two parts for ",

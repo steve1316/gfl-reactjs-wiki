@@ -73,7 +73,7 @@ function joinerFor(previous, next) {
 	if (next.endsWith(":")) {
 		return "; ";
 	}
-	if (/[,:.]$/.test(previous)) {
+	if (/[,:./]$/.test(previous)) {
 		return " ";
 	}
 	if (/[;)\]]$/.test(previous)) {
