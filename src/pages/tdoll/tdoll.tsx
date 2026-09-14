@@ -325,9 +325,9 @@ function TDollContent({ doll }: TDollContentProps) {
 	const heroArtUrl = artImages?.[artKind] ?? artImages?.full ?? tdoll.normal.assets.images[artKind] ?? tdoll.normal.assets.images.full;
 
 	// The art viewer opens on the outfit on screen. A skin worn by the Mod has no full art of its own, so it opens on the
-	// skin's full art, which is the same outfit.
+	// skin's full art, which is the same outfit, with `mod=1` so closing a pasted link comes back to the Mod.
 	const artForm = skinKey !== null ? skinFormKey(skinKey) : isModForm ? "mod" : "normal";
-	const artLink = `/tdoll/${tdoll.normal.id}/art?form=${artForm}${switchImage ? "&damaged=1" : ""}`;
+	const artLink = `/tdoll/${tdoll.normal.id}/art?form=${artForm}${isModForm && skinKey !== null ? "&mod=1" : ""}${switchImage ? "&damaged=1" : ""}`;
 	// New dolls and many upstream Mods arrive before their art is hosted. The viewer link is hidden when the outfit on screen has
 	// no full art, rather than opening onto a different outfit.
 	const hasFullArt = Boolean(tdoll.forms[artForm]?.images[artKind]);

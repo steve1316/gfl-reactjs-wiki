@@ -88,6 +88,8 @@ export default function TDollArt() {
 	const [searchParams] = useSearchParams();
 	const [damaged, setDamaged] = useState(() => searchParams.get("damaged") === "1");
 	const [formKey, setFormKey] = useState(() => searchParams.get("form") ?? "normal");
+	// The Mod wearing a skin has no full art of its own, so the doll page links to the skin with `mod=1`. Kept so closing returns to the Mod.
+	const [modSkin] = useState(() => searchParams.get("mod") === "1");
 
 	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
 
@@ -133,7 +135,7 @@ export default function TDollArt() {
 		const back = new URLSearchParams();
 		const key = current?.key ?? "normal";
 		const skinKey = skinKeyOf(key);
-		if (key === "mod") {
+		if (key === "mod" || (modSkin && skinKey !== null)) {
 			back.set("mod", "1");
 		}
 		if (skinKey !== null) {
@@ -144,7 +146,7 @@ export default function TDollArt() {
 		}
 		const query = back.toString();
 		void navigate(`/tdoll/${id ?? ""}${query ? `?${query}` : ""}`, { replace: true });
-	}, [location.key, navigate, id, current?.key, damaged]);
+	}, [location.key, navigate, id, current?.key, modSkin, damaged]);
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
