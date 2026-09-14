@@ -426,7 +426,11 @@ class NewTargetTests(unittest.TestCase):
 
     def test_only_missing_problems(self):
         """Unexpected unresolved items and partial items stop an only-missing run, expected gaps do not."""
-        summary = {"unresolved_expected": [{"key": "skill_icon:mg4"}], "unresolved_unexpected": [{"key": "art:424", "reason": "no bundle holds the files"}], "partial": [{"key": "skin_art:65:9001", "missing": ["card"]}]}
+        summary = {
+            "unresolved_expected": [{"key": "skill_icon:mg4"}],
+            "unresolved_unexpected": [{"key": "art:424", "reason": "no bundle holds the files"}],
+            "partial": [{"key": "skin_art:65:9001", "missing": ["card"]}],
+        }
         problems = game_bundles.only_missing_problems({"summary": summary})
         self.assertEqual(problems, ["art:424 is unresolved: no bundle holds the files", "skin_art:65:9001 is missing card"])
 
