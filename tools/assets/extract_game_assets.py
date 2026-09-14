@@ -10,6 +10,9 @@ Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and th
 - `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes per tree.
 - `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes per tree after the Spine pass.
 
+Skins listed as `legacy` in `tools/data/extra-skins.json` have no game bundle. Their cards and full art are converted from the old `skinN` PNGs in the
+current asset and art repo clones into `skins/<key>/`. None of them has a Spine rig that clearly belongs to it, so no legacy rigs are copied.
+
 Cards are the two halves of the game's 512x512 `pic_<Code>_N` atlas. Equipment icons are composited onto the game's own rarity pattern sprites
 from `atlasclips_listequipment`. The exclusive "ONLY" badge is already drawn into the game icon, so no badge sprite is added.
 
@@ -19,7 +22,7 @@ so the site's Spine 2.1 runtime reads them unchanged. Atlas page lines that diff
 
 Subcommands:
 
-- `run` checks 20 hosted cards against the bundles, then extracts every image tier with a process pool.
+- `run` checks 20 hosted cards against the bundles, then extracts every image tier with a process pool and converts the legacy skins.
 - `spine` extracts every Spine rig into `assets/spine/`, replacing what was there.
 - `verify-cards` runs only the hosted card check.
 - `proof-equip` writes side-by-side comparisons of composited and hosted equipment icons.
@@ -42,7 +45,7 @@ from PIL import Image
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, TOOLS_DIR)
 
-from game_bundles import BUNDLE_CACHE_DIR, BYTES_PER_MB, INVENTORY_PATH, SITE_DATA_DIR, read_json  # noqa: E402
+from game_bundles import BUNDLE_CACHE_DIR, BYTES_PER_MB, INVENTORY_PATH, REPO_ROOT, SITE_DATA_DIR, read_json  # noqa: E402
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,6 +53,7 @@ from game_bundles import BUNDLE_CACHE_DIR, BYTES_PER_MB, INVENTORY_PATH, SITE_DA
 # Constants
 
 STAGING_DIR = os.path.join(TOOLS_DIR, ".staging")
+EXTRA_SKINS_PATH = os.path.join(REPO_ROOT, "tools", "data", "extra-skins.json")
 TREES = ("assets", "art")
 
 CARD_QUALITY = 90
@@ -99,6 +103,18 @@ REPORT_TIERS = {
     ("skin_art", "full"): "skin_full",
     ("skin_art", "full_d"): "skin_full",
 }
+
+# Legacy skin files: `(role, clone, old file name template, output name, required, report tier)`. `{id}` is the doll id, `{slot}` the old slot.
+LEGACY_FILES = (
+    ("card", "assets", "{id}_skin{slot}_card.png", "card.webp", True, "skin_card"),
+    ("card_d", "assets", "{id}_skin{slot}_card_d.png", "card_d.webp", True, "skin_card"),
+    ("mod_card", "assets", "{id}_mod_skin{slot}_card.png", "mod_card.webp", False, "skin_mod_card"),
+    ("mod_card_d", "assets", "{id}_mod_skin{slot}_card_d.png", "mod_card_d.webp", False, "skin_mod_card"),
+    ("full", "art", "{id}_skin{slot}_full.png", "full.webp", True, "skin_full"),
+    ("full_d", "art", "{id}_skin{slot}_full_d.png", "full_d.webp", True, "skin_full"),
+)
+LEGACY_TIERS = {role: tier for role, _clone, _template, _name, _required, tier in LEGACY_FILES}
+CARD_SIZE = (256, 512)
 
 HOSTED_CARD_RE = re.compile(r"^\d+_(?:(mod)_)?(?:skin(\d+)_)?card\.png$")
 CARD_CHECK_COUNT = 20
@@ -783,6 +799,76 @@ def extract_spine_item(item, cache_dir, staging, loader=unity_load):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Legacy skins
+
+
+def load_legacy_skins(path=EXTRA_SKINS_PATH):
+    """Read the `legacy` entries of the extra skins file.
+
+    Args:
+        path: The extra skins file.
+
+    Returns:
+        The legacy entries in file order, each with `doll`, `key` and `legacySlot`.
+    """
+    return [extra for extra in read_json(path) if extra["source"] == "legacy"]
+
+
+def legacy_outputs(extra, assets_clone, art_clone):
+    """Map a legacy skin's old slot files to their outputs in the skin-id layout.
+
+    Args:
+        extra: A legacy entry with `doll`, `key` and `legacySlot`.
+        assets_clone: The local clone of the current asset repo, holding the old cards.
+        art_clone: The local clone of the current art repo, holding the old full art.
+
+    Returns:
+        A list of `(role, source path, tree, output path, required)`, in `LEGACY_FILES` order.
+    """
+    doll_id, clones = extra["doll"], {"assets": assets_clone, "art": art_clone}
+    folder = f"tdolls/{doll_id}/skins/{extra['key']}"
+    rows = []
+    for role, tree, template, name, required, _tier in LEGACY_FILES:
+        source = os.path.join(clones[tree], "tdolls", str(doll_id), template.format(id=doll_id, slot=extra["legacySlot"]))
+        rows.append((role, source, tree, f"{folder}/{name}", required))
+    return rows
+
+
+def extract_legacy_skin(extra, assets_clone, art_clone, staging):
+    """Convert one legacy skin's old PNGs: cards to WebP at `CARD_QUALITY`, full art to WebP at `FULL_QUALITY` at its native size.
+
+    Args:
+        extra: A legacy entry with `doll`, `key` and `legacySlot`.
+        assets_clone: The local clone of the current asset repo.
+        art_clone: The local clone of the current art repo.
+        staging: The staging root.
+
+    Returns:
+        A worker result. Missing required files are `missing` entries keyed `legacy_skin:<doll>:<key>`.
+    """
+    result = new_result()
+    key = f"legacy_skin:{extra['doll']}:{extra['key']}"
+    for role, source, tree, rel, required in legacy_outputs(extra, assets_clone, art_clone):
+        if not os.path.isfile(source):
+            if required:
+                result["missing"].append({"key": key, "role": role, "reason": f"no old file {source}"})
+            continue
+        try:
+            with Image.open(source) as image:
+                if tree == "assets":
+                    if image.size != CARD_SIZE:
+                        result["nonstandard"].append({"key": key, "role": role, "size": list(image.size), "expected": list(CARD_SIZE)})
+                    data = encode_webp(image.convert("RGB"), CARD_QUALITY)
+                else:
+                    data = encode_webp(image if image.mode in ("RGB", "RGBA") else image.convert("RGBA"), FULL_QUALITY)
+            write_file(staging, tree, rel, data, LEGACY_TIERS[role], result)
+        except Exception as exc:
+            result["missing"].append({"key": key, "role": role, "reason": f"convert failed: {exc!r}"})
+    return result
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Verification against the hosted assets
 
 
@@ -986,12 +1072,14 @@ def tier_counts(files):
     return counts
 
 
-def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
-    """Extract every image tier into the staging trees and write the report.
+def run_extraction(inventory, clone, art_clone, legacy_skins, site_dir, cache_dir, staging, workers):
+    """Extract every image tier and the legacy skins into the staging trees and write the report.
 
     Args:
         inventory: The inventory dict.
-        clone: The local clone of the current asset repo, for the UI images.
+        clone: The local clone of the current asset repo, for the UI images and legacy cards.
+        art_clone: The local clone of the current art repo, for legacy full art.
+        legacy_skins: Legacy entries from `load_legacy_skins`.
         site_dir: Directory holding `equipment.json`.
         cache_dir: The bundle cache directory.
         staging: The staging root.
@@ -1034,6 +1122,13 @@ def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
             done += 1
             if done % 100 == 0 or done == len(futures):
                 print(f"[{done}/{len(futures)}] {len(files)} files, {time.monotonic() - started:.0f}s", flush=True)
+
+    for extra in legacy_skins:
+        result = extract_legacy_skin(extra, clone, art_clone, staging)
+        files.extend(result["files"])
+        report["missing"].extend(result["missing"])
+        report["nonstandard"].extend(result["nonstandard"])
+    print(f"legacy skins: {len(legacy_skins)}", flush=True)
 
     counts = tier_counts(files)
     counts["ui"] = {"tree": "assets", "files": len(ui_files), "bytes": sum(os.path.getsize(os.path.join(staging, "assets", name)) for name in ui_files)}
@@ -1184,6 +1279,7 @@ def main():
     parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging trees.")
     parser.add_argument("command", choices=("run", "spine", "verify-cards", "proof-equip"))
     parser.add_argument("--reference-clone", help="Local clone of the current gfl-wiki-assets repo. Required by every command but `spine`.")
+    parser.add_argument("--art-clone", help="Local clone of the current gfl-wiki-assets-art repo, for legacy skin full art. Required by `run`.")
     parser.add_argument("--site-data", default=SITE_DATA_DIR, help="Directory holding the site's equipment.json.")
     parser.add_argument("--cache", default=BUNDLE_CACHE_DIR, help="Bundle cache directory.")
     parser.add_argument("--staging", default=STAGING_DIR, help="Staging root holding the assets and art trees.")
@@ -1203,6 +1299,8 @@ def main():
         return
     if not args.reference_clone:
         sys.exit(f"{args.command} needs --reference-clone")
+    if args.command == "run" and not args.art_clone:
+        sys.exit("run needs --art-clone")
 
     if args.command == "proof-equip":
         if not args.out_dir:
@@ -1216,7 +1314,7 @@ def main():
         return
 
     print(f"extracting with {args.workers} workers", flush=True)
-    report = run_extraction(inventory, args.reference_clone, args.site_data, args.cache, args.staging, args.workers)
+    report = run_extraction(inventory, args.reference_clone, args.art_clone, load_legacy_skins(), args.site_data, args.cache, args.staging, args.workers)
     print_report(report)
     reasons = failure_reasons(report)
     if reasons:

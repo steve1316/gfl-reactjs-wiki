@@ -89,6 +89,10 @@ class ResolutionTests(unittest.TestCase):
         """Skins without an id produce no item."""
         self.assertEqual(sorted(k for k in self.items if k.startswith("skin_art:163:")), ["skin_art:163:902"])
 
+    def test_legacy_skin_keys_are_skipped(self):
+        """`legacy-<slug>` keys have no game bundle, so they produce neither an art nor a Spine item."""
+        self.assertFalse([key for key in self.items if "legacy-" in key])
+
     def test_spine_naming_and_art_bundle_fallback(self):
         """Rigs come from `_spine`, or from the art bundle when that holds the skeleton."""
         self.assertEqual(self.items["spine:1"]["bundles"], ["character_m1873_spine"])

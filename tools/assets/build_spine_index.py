@@ -23,6 +23,8 @@ import os
 import re
 import sys
 
+from build_manifest import skin_dirs
+
 
 def split_skeleton(skeleton):
     """Split a skeleton name into the subdirectory prefix it sits under and its bare stem.
@@ -204,10 +206,10 @@ def build_v3(spine_root):
     """Index a v3 Spine tree by doll id, with Mod rigs and skin rigs keyed by skin id.
 
     Args:
-        spine_root: Directory holding `<id>/`, `<id>/mod/` and `<id>/skins/<skinId>/`.
+        spine_root: Directory holding `<id>/`, `<id>/mod/` and `<id>/skins/<skinId>/`, where a skin folder may also be a `legacy-<slug>` key.
 
     Returns:
-        The index dict, dolls and skins in numeric order.
+        The index dict, dolls in numeric order and skins in `build_manifest.skin_dirs` order.
     """
     index = {}
     for doll_id in sorted((name for name in os.listdir(spine_root) if name.isdigit()), key=int):
@@ -222,7 +224,7 @@ def build_v3(spine_root):
         skins_dir = os.path.join(doll_dir, "skins")
         skins = {}
         if os.path.isdir(skins_dir):
-            for skin_id in sorted((name for name in os.listdir(skins_dir) if name.isdigit()), key=int):
+            for skin_id in skin_dirs(skins_dir):
                 pair = index_rig_dir(os.path.join(skins_dir, skin_id), f"skins/{skin_id}/")
                 if pair:
                     skins[skin_id] = pair
