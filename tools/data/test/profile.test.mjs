@@ -71,7 +71,12 @@ test("country splits only on commas and slashes, keeping 'and', '&' and brackete
 
 test("a US date that differs from CN is a day-precision Global date", () => {
 	assert.deepEqual(releaseFor("2023-07-25 00:00:00", "2022-01-10 00:00:00", { year: 2024, month: 9 }), { date: "2023-07-25", precision: "day" });
-	assert.deepEqual(releaseFor("2019-08-06 00:00:00", undefined, null), { date: "2019-08-06", precision: "day" });
+});
+
+test("a doll missing from the CN table never gets day precision from its US date, falling through to the EN month, launch or unknown", () => {
+	assert.deepEqual(releaseFor("2019-08-06 00:00:00", undefined, { year: 2019, month: 8 }), { date: "2019-08", precision: "month" });
+	assert.deepEqual(releaseFor("1970-01-01 08:00:00", undefined, null), { date: "2018-05", precision: "launch" });
+	assert.deepEqual(releaseFor("2019-08-06 00:00:00", undefined, null), UNKNOWN);
 });
 
 test("a US date copied from CN falls back to the IOPWiki EN month, zero-padded", () => {

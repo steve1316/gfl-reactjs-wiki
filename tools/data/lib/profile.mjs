@@ -133,8 +133,9 @@ export function parseCountry(raw) {
 /**
  * Work out a doll's Global release date and how precise it is.
  *
- * gf-data-us copies some CN dates, so its date only counts when it differs from gf-data-ch. Otherwise IOPWiki's EN month is
- * used, then the Global launch month for the 1970 launch-roster placeholder.
+ * gf-data-us copies some CN dates, so its date only counts when gf-data-ch has the doll and gives a different date. A doll missing
+ * from the CN table cannot be cross-checked, so it falls through with the rest: IOPWiki's EN month, then the Global launch month for
+ * the 1970 launch-roster placeholder.
  *
  * @param {string | undefined} usLaunch gf-data-us `launch_time` for the base doll, or undefined when it has no row.
  * @param {string | undefined} cnLaunch gf-data-ch `launch_time` for the same id, or undefined when CN has no row.
@@ -142,7 +143,7 @@ export function parseCountry(raw) {
  * @returns {{ date: string | null, precision: "day" | "month" | "launch" | "unknown" }} The release date at its precision.
  */
 export function releaseFor(usLaunch, cnLaunch, enRelease) {
-	if (usLaunch && !PLACEHOLDER_LAUNCH.test(usLaunch) && usLaunch.slice(0, 10) !== cnLaunch?.slice(0, 10)) {
+	if (usLaunch && cnLaunch !== undefined && !PLACEHOLDER_LAUNCH.test(usLaunch) && usLaunch.slice(0, 10) !== cnLaunch.slice(0, 10)) {
 		return { date: usLaunch.slice(0, 10), precision: "day" };
 	}
 	if (enRelease) {
