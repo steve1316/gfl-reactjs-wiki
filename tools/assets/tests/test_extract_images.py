@@ -6,6 +6,7 @@ Every image here is a tiny synthetic one built in memory. No test reads a bundle
 import io
 import os
 import sys
+import tempfile
 import unittest
 
 from PIL import Image
@@ -86,7 +87,7 @@ class EquipFrameTests(unittest.TestCase):
 
     def test_background_name_by_rarity(self):
         """Rarity 2-5 map to the white, blue, green and yellow pattern sprites."""
-        self.assertEqual([extract.rarity_background(rarity) for rarity in (2, 3, 4, 5)], ["底纹_白", "底纹_蓝", "底纹_绿", "底纹_黄"])
+        self.assertEqual([extract.rarity_background(rarity) for rarity in (2, 3, 4, 5)], ["\u5e95\u7eb9_\u767d", "\u5e95\u7eb9_\u84dd", "\u5e95\u7eb9_\u7eff", "\u5e95\u7eb9_\u9ec4"])
 
     def test_unknown_rarity_is_an_error(self):
         """A rarity with no known background raises instead of guessing."""
@@ -215,6 +216,135 @@ class EncodingTests(unittest.TestCase):
         self.assertEqual(extract.tree_limit_status(899 * mb), "ok")
         self.assertEqual(extract.tree_limit_status(950 * mb), "warn")
         self.assertEqual(extract.tree_limit_status(1001 * mb), "over")
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Failure reporting
+
+
+class ExitDecisionTests(unittest.TestCase):
+    """Which missing entries fail the run."""
+
+    def test_known_gaps_do_not_fail(self):
+        """Missing entries for the inventory's expected gaps are accepted."""
+        missing = [{"key": "skill_icon:ma", "role": "*", "reason": "no bundle holds the files"}]
+        self.assertEqual(extract.unexpected_missing(missing, {"skill_icon:ma"}), [])
+
+    def test_decode_failures_and_worker_crashes_fail(self):
+        """A decode failure on a known item, or any entry outside the gap list, is unexpected."""
+        missing = [
+            {"key": "skill_icon:ma", "role": "*", "reason": "no bundle holds the files"},
+            {"key": "art:65", "role": "full", "reason": "decode failed"},
+            {"key": "worker:equip_icon", "role": "*", "reason": "crashed"},
+        ]
+        self.assertEqual([row["key"] for row in extract.unexpected_missing(missing, {"skill_icon:ma"})], ["art:65", "worker:equip_icon"])
+
+    def test_expected_gap_keys_come_from_the_inventory(self):
+        """The gap list is the inventory summary's expected unresolved keys."""
+        inventory = {"summary": {"unresolved_expected": [{"key": "skill_icon:ma"}], "unresolved_unexpected": [{"key": "art:1"}]}}
+        self.assertEqual(extract.expected_gap_keys(inventory), {"skill_icon:ma"})
+
+    def test_failure_reasons(self):
+        """A clean report passes, and unexpected gaps, oversized files or an over-limit tree each fail it."""
+        clean = {"trees": {"assets": {"status": "warn"}}, "oversized": [], "unexpected_missing": []}
+        self.assertEqual(extract.failure_reasons(clean), [])
+        self.assertEqual(len(extract.failure_reasons({**clean, "unexpected_missing": [{"key": "art:65"}]})), 1)
+        self.assertIn("assets/spine/1/X.png", extract.failure_reasons({**clean, "oversized": ["assets/spine/1/X.png"]})[0])
+        self.assertEqual(len(extract.failure_reasons({**clean, "trees": {"art": {"status": "over"}}})), 1)
+
+    def test_icon_worker_reports_bundle_load_failure_per_item(self):
+        """A bundle that fails to load marks every icon item missing instead of crashing the pool."""
+
+        def loader(_path):
+            raise OSError("truncated")
+
+        items = [{"key": "skill_icon:a", "bundles": ["sprites_ui"], "assets": {}, "users": []}, {"key": "skill_icon:b", "bundles": ["sprites_ui"], "assets": {}, "users": []}]
+        result = extract.extract_skill_icons(items, "/nonexistent", "/nonexistent", loader=loader)
+        self.assertEqual([row["key"] for row in result["missing"]], ["skill_icon:a", "skill_icon:b"])
+        self.assertTrue(all("bundle load failed" in row["reason"] for row in result["missing"]))
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Texture lookup
+
+
+class FakeObject:
+    """A stand-in for a UnityPy object reader."""
+
+    def __init__(self, kind, label):
+        """Build the fake.
+
+        Args:
+            kind: Unity type name such as `Texture2D`.
+            label: A value identifying which bundle the object came from.
+        """
+        self.type = type("Type", (), {"name": kind})()
+        self.label = label
+
+
+class FakeEnv:
+    """A stand-in for a loaded UnityPy environment."""
+
+    def __init__(self, container):
+        """Build the fake.
+
+        Args:
+            container: Map of container path to `FakeObject`.
+        """
+        self.container = container
+
+
+class TextureLookupTests(unittest.TestCase):
+    """Textures are looked up by the bundle the inventory resolved, not by path alone."""
+
+    def test_twin_bundles_with_the_same_path_do_not_shadow_each_other(self):
+        """Two bundles holding the same path each return their own texture."""
+        path = "Assets/Characters/X/pic_X.png"
+        envs = {"a.ab": FakeEnv({path.lower(): FakeObject("Texture2D", "a")}), "b.ab": FakeEnv({path.lower(): FakeObject("Texture2D", "b")})}
+        textures = extract.load_textures(["a", "b"], "", loader=lambda file: envs[os.path.basename(file)])
+        self.assertEqual(textures[("a", path.lower())].label, "a")
+        self.assertEqual(textures[("b", path.lower())].label, "b")
+        self.assertEqual(extract.texture_for(textures, {"bundle": "a", "path": path}).label, "a")
+        self.assertEqual(extract.texture_for(textures, {"bundle": "b", "path": path}).label, "b")
+
+    def test_missing_texture_raises(self):
+        """An asset whose bundle does not hold the path is a `KeyError`."""
+        with self.assertRaises(KeyError):
+            extract.texture_for({}, {"bundle": "a", "path": "x.png"})
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# File size limit
+
+
+class FileSizeTests(unittest.TestCase):
+    """The 50 MB per-file limit."""
+
+    def test_limit_names_the_offending_path(self):
+        """A file over 50 MB raises with its tree and path, one at the limit passes."""
+        extract.check_file_size("assets", "spine/1/X.png", 50 * 1048576)
+        with self.assertRaises(ValueError) as caught:
+            extract.check_file_size("art", "tdolls/1/full.webp", 50 * 1048576 + 1)
+        self.assertIn("art/tdolls/1/full.webp", str(caught.exception))
+
+    def test_write_file_refuses_oversized_data(self):
+        """`write_file` checks the size before writing anything."""
+        with tempfile.TemporaryDirectory() as staging:
+            with self.assertRaises(ValueError):
+                extract.write_file(staging, "assets", "big.bin", bytearray(50 * 1048576 + 1), "x", extract.new_result())
+            self.assertFalse(os.path.exists(os.path.join(staging, "assets", "big.bin")))
+
+    def test_oversized_files_scan(self):
+        """The tree scan lists files over the limit, with a lowered limit for the test."""
+        with tempfile.TemporaryDirectory() as root:
+            os.makedirs(os.path.join(root, "a"))
+            for name, size in (("a/small.bin", 3), ("a/large.bin", 9)):
+                with open(os.path.join(root, name), "wb") as handle:
+                    handle.write(b"x" * size)
+            self.assertEqual(extract.oversized_files(root, limit=5), ["a/large.bin"])
 
 
 if __name__ == "__main__":

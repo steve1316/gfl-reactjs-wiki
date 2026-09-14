@@ -55,6 +55,7 @@ EQUIP_SOURCE_SIZE = (256, 256)
 
 WARN_BYTES = 900 * BYTES_PER_MB
 LIMIT_BYTES = 1000 * BYTES_PER_MB
+MAX_FILE_BYTES = 50 * BYTES_PER_MB
 
 # Equipment frame. The game's list card is 128x98 with the 256px icon drawn at 123px, so the hosted 256x196 icons are that card at 2x.
 # Size and offset were fitted against the hosted icons (best match at 246px, offset (6, -24)).
@@ -63,7 +64,7 @@ EQUIP_SIZE = (256, 196)
 EQUIP_ICON_SIZE = 246
 EQUIP_ICON_OFFSET = (6, -24)
 # Rarity -> the game's own sprite name for the white, blue, green and yellow pattern.
-RARITY_BACKGROUNDS = {2: "底纹_白", 3: "底纹_蓝", 4: "底纹_绿", 5: "底纹_黄"}
+RARITY_BACKGROUNDS = {2: "\u5e95\u7eb9_\u767d", 3: "\u5e95\u7eb9_\u84dd", 4: "\u5e95\u7eb9_\u7eff", 5: "\u5e95\u7eb9_\u9ec4"}
 
 # Inventory role -> output tree and names. Cards split into a normal and damaged half, so they carry two names.
 ROLE_OUTPUTS = (
@@ -201,6 +202,49 @@ def encode_png(image):
     return buffer.getvalue()
 
 
+def check_file_size(tree, rel, size):
+    """Refuse a file over the Pages per-file limit.
+
+    Args:
+        tree: `assets` or `art`.
+        rel: Path inside the tree.
+        size: The file's size in bytes.
+
+    Raises:
+        ValueError: When the file is over 50 MB, naming the offending path.
+    """
+    if size > MAX_FILE_BYTES:
+        raise ValueError(f"{tree}/{rel} is {size / BYTES_PER_MB:.1f} MB, over the {MAX_FILE_BYTES // BYTES_PER_MB} MB per-file limit")
+
+
+def unexpected_missing(missing, expected_keys):
+    """Pick the missing entries that are not known, accepted gaps.
+
+    Only whole items the inventory already listed as expected gaps are accepted. Those items are never handed to a worker, so decode
+    failures, bundle load failures and worker crashes always count.
+
+    Args:
+        missing: Report `missing` entries with `key`, `role` and `reason`.
+        expected_keys: Item keys of the inventory's expected gaps.
+
+    Returns:
+        The entries that should fail the run.
+    """
+    return [row for row in missing if not (row["key"] in expected_keys and row["role"] == "*")]
+
+
+def expected_gap_keys(inventory):
+    """Collect the item keys of the inventory's expected gaps.
+
+    Args:
+        inventory: The inventory dict.
+
+    Returns:
+        A set of item keys.
+    """
+    return {row["key"] for row in inventory["summary"]["unresolved_expected"]}
+
+
 def tree_limit_status(total_bytes):
     """Classify a staging tree size against the Pages limits.
 
@@ -296,24 +340,39 @@ def parse_hosted_card(filename):
 # Bundle access
 
 
-def load_textures(bundle_names, cache_dir):
-    """Index the `Texture2D` objects of some bundles by lowercased container path.
+def unity_load(path):
+    """Open one bundle with UnityPy.
+
+    Args:
+        path: The `.ab` file.
+
+    Returns:
+        The UnityPy environment.
+    """
+    import UnityPy
+
+    return UnityPy.load(path)
+
+
+def load_textures(bundle_names, cache_dir, loader=unity_load):
+    """Index the `Texture2D` objects of some bundles by bundle name and lowercased container path.
+
+    Keying by bundle as well as path keeps twin bundles that hold the same path from shadowing each other.
 
     Args:
         bundle_names: Bundle names to open.
         cache_dir: The bundle cache directory.
+        loader: Callable opening one `.ab` file, replaceable in tests.
 
     Returns:
-        A dict of lowercased asset path to the UnityPy object reader.
+        A dict of `(bundle name, lowercased asset path)` to the UnityPy object reader.
     """
-    import UnityPy
-
     textures = {}
     for name in bundle_names:
-        env = UnityPy.load(os.path.join(cache_dir, f"{name}.ab"))
+        env = loader(os.path.join(cache_dir, f"{name}.ab"))
         for path, obj in env.container.items():
             if obj.type.name == "Texture2D":
-                textures[path.lower()] = obj
+                textures[(name, path.lower())] = obj
     return textures
 
 
@@ -339,12 +398,28 @@ def load_named_textures(bundle_name, cache_dir, kind):
     return images
 
 
+def texture_for(textures, asset):
+    """Find the texture of one inventory asset in the bundle it was resolved to.
+
+    Args:
+        textures: The index from `load_textures`.
+        asset: An inventory asset dict with `bundle` and `path`.
+
+    Raises:
+        KeyError: When that bundle holds no texture at that path.
+
+    Returns:
+        The UnityPy object reader.
+    """
+    return textures[(asset["bundle"], asset["path"].lower())]
+
+
 def decode(textures, asset):
     """Decode one inventory asset from a texture index.
 
     Args:
         textures: The index from `load_textures`.
-        asset: An inventory asset dict with `path`.
+        asset: An inventory asset dict with `bundle` and `path`.
 
     Raises:
         KeyError: When the bundle holds no texture at that path.
@@ -352,7 +427,7 @@ def decode(textures, asset):
     Returns:
         The decoded PIL image.
     """
-    return textures[asset["path"].lower()].read().image
+    return texture_for(textures, asset).read().image
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -379,7 +454,11 @@ def write_file(staging, tree, rel, data, tier, result):
         data: Encoded bytes.
         tier: Report tier the file counts under.
         result: The worker result to append to.
+
+    Raises:
+        ValueError: When the data is over the per-file limit. Nothing is written.
     """
+    check_file_size(tree, rel, len(data))
     path = os.path.join(staging, tree, rel)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as handle:
@@ -411,43 +490,63 @@ def extract_art_item(item, cache_dir, staging):
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": role, "reason": f"decode failed: {exc!r}"})
             continue
-        if tree == "assets":
-            if image.size != CARD_ATLAS_SIZE:
-                result["nonstandard"].append({"key": item["key"], "role": role, "size": list(image.size), "expected": list(CARD_ATLAS_SIZE)})
-            for rel, half in zip(paths, split_card_atlas(image.convert("RGB"))):
-                write_file(staging, tree, rel, encode_webp(half, CARD_QUALITY), tier, result)
-        else:
-            if image.size != FULL_SIZE:
-                result["nonstandard"].append({"key": item["key"], "role": role, "size": list(image.size), "expected": list(FULL_SIZE)})
-            full = image if image.mode in ("RGB", "RGBA") else image.convert("RGBA")
-            write_file(staging, tree, paths[0], encode_webp(full, FULL_QUALITY), tier, result)
+        expected = CARD_ATLAS_SIZE if tree == "assets" else FULL_SIZE
+        if image.size != expected:
+            result["nonstandard"].append({"key": item["key"], "role": role, "size": list(image.size), "expected": list(expected)})
+        try:
+            if tree == "assets":
+                for rel, half in zip(paths, split_card_atlas(image.convert("RGB"))):
+                    write_file(staging, tree, rel, encode_webp(half, CARD_QUALITY), tier, result)
+            else:
+                full = image if image.mode in ("RGB", "RGBA") else image.convert("RGBA")
+                write_file(staging, tree, paths[0], encode_webp(full, FULL_QUALITY), tier, result)
+        except Exception as exc:
+            result["missing"].append({"key": item["key"], "role": role, "reason": f"encode or write failed: {exc}"})
     return result
 
 
-def extract_skill_icons(items, cache_dir, staging):
+def load_failure(items, exc):
+    """Build a worker result that marks every item missing because its shared bundles failed to load.
+
+    Args:
+        items: The inventory items the worker was given.
+        exc: The load error.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    result["missing"].extend({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc!r}"} for item in items)
+    return result
+
+
+def extract_skill_icons(items, cache_dir, staging, loader=unity_load):
     """Extract every skill icon from the skill bundle.
 
     Args:
         items: Resolved `skill_icon` inventory items.
         cache_dir: The bundle cache directory.
         staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
 
     Returns:
         A worker result.
     """
+    try:
+        textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir, loader)
+    except Exception as exc:
+        return load_failure(items, exc)
     result = new_result()
-    textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir)
     for item in items:
         try:
             image = decode(textures, item["assets"]["icon"])
+            if image.size != SKILL_SIZE:
+                result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(image.size), "expected": list(SKILL_SIZE)})
+            data = encode_png(image)
+            for rel in skill_outputs(item):
+                write_file(staging, "assets", rel, data, "skill_icon", result)
         except Exception as exc:
-            result["missing"].append({"key": item["key"], "role": "icon", "reason": f"decode failed: {exc!r}"})
-            continue
-        if image.size != SKILL_SIZE:
-            result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(image.size), "expected": list(SKILL_SIZE)})
-        data = encode_png(image)
-        for rel in skill_outputs(item):
-            write_file(staging, "assets", rel, data, "skill_icon", result)
+            result["missing"].append({"key": item["key"], "role": "icon", "reason": f"failed: {exc!r}"})
     return result
 
 
@@ -481,18 +580,20 @@ def extract_equip_icons(items, rarities, cache_dir, staging):
     Returns:
         A worker result.
     """
+    try:
+        textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir)
+        backgrounds = load_named_textures(FRAME_BUNDLE, cache_dir, "Sprite")
+    except Exception as exc:
+        return load_failure(items, exc)
     result = new_result()
-    textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir)
-    backgrounds = load_named_textures(FRAME_BUNDLE, cache_dir, "Sprite")
     for item in items:
         try:
             image, source_size = build_equip_icon(textures, backgrounds, item, rarities[item["equip_id"]])
+            if source_size != EQUIP_SOURCE_SIZE:
+                result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(source_size), "expected": list(EQUIP_SOURCE_SIZE)})
+            write_file(staging, "assets", equip_output(item), encode_png(image), "equip_icon", result)
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": "icon", "reason": f"failed: {exc!r}"})
-            continue
-        if source_size != EQUIP_SOURCE_SIZE:
-            result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(source_size), "expected": list(EQUIP_SOURCE_SIZE)})
-        write_file(staging, "assets", equip_output(item), encode_png(image), "equip_icon", result)
     return result
 
 
@@ -643,6 +744,25 @@ def tree_size(root):
     return total, files
 
 
+def oversized_files(root, limit=MAX_FILE_BYTES):
+    """List the files under a directory that are over the per-file limit.
+
+    Args:
+        root: The directory.
+        limit: Largest allowed size in bytes.
+
+    Returns:
+        Sorted paths relative to `root`.
+    """
+    found = []
+    for folder, _dirs, names in os.walk(root):
+        for name in names:
+            path = os.path.join(folder, name)
+            if os.path.getsize(path) > limit:
+                found.append(os.path.relpath(path, root).replace(os.sep, "/"))
+    return sorted(found)
+
+
 def reset_staging(staging):
     """Remove previous outputs of this extractor, leaving other staged folders such as `spine/` alone.
 
@@ -667,6 +787,7 @@ def copy_ui(clone, staging):
     """
     names = sorted(name for name in os.listdir(clone) if os.path.isfile(os.path.join(clone, name)) and name not in UI_SKIP and not name.startswith("."))
     for name in names:
+        check_file_size("assets", name, os.path.getsize(os.path.join(clone, name)))
         shutil.copyfile(os.path.join(clone, name), os.path.join(staging, "assets", name))
     return names
 
@@ -704,10 +825,15 @@ def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
 
     files, done = [], 0
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(extract_skill_icons, skill_items, cache_dir, staging), pool.submit(extract_equip_icons, equip_items, rarities, cache_dir, staging)]
-        futures += [pool.submit(extract_art_item, item, cache_dir, staging) for item in art_items]
+        futures = {pool.submit(extract_skill_icons, skill_items, cache_dir, staging): "worker:skill_icon"}
+        futures[pool.submit(extract_equip_icons, equip_items, rarities, cache_dir, staging)] = "worker:equip_icon"
+        futures.update({pool.submit(extract_art_item, item, cache_dir, staging): item["key"] for item in art_items})
         for future in concurrent.futures.as_completed(futures):
-            result = future.result()
+            try:
+                result = future.result()
+            except Exception as exc:
+                result = new_result()
+                result["missing"].append({"key": futures[future], "role": "*", "reason": f"worker crashed: {exc!r}"})
             files.extend(result["files"])
             report["missing"].extend(result["missing"])
             report["nonstandard"].extend(result["nonstandard"])
@@ -724,14 +850,48 @@ def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
     report["tiers"] = counts
     report["missing"].sort(key=lambda row: (row["key"], row["role"]))
     report["nonstandard"].sort(key=lambda row: (row["key"], row["role"]))
-    report["trees"] = {}
-    for tree in TREES:
-        size, count = tree_size(os.path.join(staging, tree))
-        report["trees"][tree] = {"files": count, "bytes": size, "mb": round(size / BYTES_PER_MB, 1), "status": tree_limit_status(size)}
+    finish_report(report, inventory, staging)
     report["seconds"] = round(time.monotonic() - started, 1)
     with open(os.path.join(staging, "extract-report.json"), "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=1, ensure_ascii=False)
     return report
+
+
+def finish_report(report, inventory, staging):
+    """Add the tree sizes, oversized files and unexpected gaps to a report.
+
+    Args:
+        report: The report dict, with `missing` filled in.
+        inventory: The inventory dict.
+        staging: The staging root.
+    """
+    report["unexpected_missing"] = unexpected_missing(report["missing"], expected_gap_keys(inventory))
+    report["trees"], report["oversized"] = {}, []
+    for tree in TREES:
+        root = os.path.join(staging, tree)
+        size, count = tree_size(root)
+        report["trees"][tree] = {"files": count, "bytes": size, "mb": round(size / BYTES_PER_MB, 1), "status": tree_limit_status(size)}
+        report["oversized"].extend(f"{tree}/{rel}" for rel in oversized_files(root))
+
+
+def failure_reasons(report):
+    """Explain why a finished report should fail the run.
+
+    Args:
+        report: A report finished by `finish_report`.
+
+    Returns:
+        A list of reasons, empty when the run passed.
+    """
+    reasons = []
+    over = [tree for tree, entry in report["trees"].items() if entry["status"] == "over"]
+    if over:
+        reasons.append(f"{', '.join(over)} over {LIMIT_BYTES // BYTES_PER_MB} MB")
+    if report["oversized"]:
+        reasons.append(f"files over {MAX_FILE_BYTES // BYTES_PER_MB} MB: {', '.join(report['oversized'])}")
+    if report["unexpected_missing"]:
+        reasons.append(f"{len(report['unexpected_missing'])} unexpected missing assets")
+    return reasons
 
 
 def print_report(report):
@@ -745,7 +905,7 @@ def print_report(report):
         print(f"{tier:<16}{entry['tree']:<8}{entry['files']:>7}{entry['bytes'] / BYTES_PER_MB:>9.1f}")
     for tree, entry in report["trees"].items():
         print(f"tree {tree}: {entry['files']} files, {entry['mb']} MB ({entry['status']})")
-    print(f"missing: {len(report['missing'])}, non-standard sizes: {len(report['nonstandard'])}, {report['seconds']}s")
+    print(f"missing: {len(report['missing'])} ({len(report['unexpected_missing'])} unexpected), non-standard sizes: {len(report['nonstandard'])}, {report['seconds']}s")
     for row in report["missing"]:
         print(f"  missing {row['key']} {row['role']}: {row['reason']}")
     for row in report["nonstandard"]:
@@ -801,9 +961,9 @@ def main():
     print(f"extracting with {args.workers} workers", flush=True)
     report = run_extraction(inventory, args.reference_clone, args.site_data, args.cache, args.staging, args.workers)
     print_report(report)
-    over = [tree for tree, entry in report["trees"].items() if entry["status"] == "over"]
-    if over:
-        sys.exit(f"refusing to finish: {', '.join(over)} over {LIMIT_BYTES // BYTES_PER_MB} MB")
+    reasons = failure_reasons(report)
+    if reasons:
+        sys.exit(f"extraction failed: {'; '.join(reasons)}")
 
 
 if __name__ == "__main__":
