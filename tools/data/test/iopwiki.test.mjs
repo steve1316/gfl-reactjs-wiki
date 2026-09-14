@@ -10,6 +10,9 @@ const hk416 = fs.readFileSync("tools/data/test/fixtures/iopwiki-hk416.wikitext",
 const beowulf = fs.readFileSync("tools/data/test/fixtures/iopwiki-beowulf.wikitext", "utf8");
 const dorothy = fs.readFileSync("tools/data/test/fixtures/iopwiki-dorothy.wikitext", "utf8");
 
+/** Stands in for the real waits between requests and before a retry, so tests do not sleep. */
+const noWait = async () => {};
+
 // Only the fetchIopwikiPages tests below touch a cache directory. Each gets its own throwaway one, never
 // the real tools/data/.cache the importer uses.
 let cacheDir;
@@ -164,11 +167,34 @@ test("fetchIopwikiPages rejects with the API's error code when IOPWiki answers 2
 	}
 });
 
-test("fetchIopwikiPages rejects when IOPWiki answers with an HTTP 500", async () => {
+test("fetchIopwikiPages rejects when IOPWiki still answers with an HTTP 500 after one retry", async () => {
 	const original = globalThis.fetch;
-	globalThis.fetch = async () => ({ ok: false, status: 500, statusText: "Internal Server Error", json: async () => ({}) });
+	let calls = 0;
+	globalThis.fetch = async () => {
+		calls++;
+		return { ok: false, status: 500, statusText: "Internal Server Error", json: async () => ({}) };
+	};
 	try {
-		await assert.rejects(fetchIopwikiPages({ cacheDir }));
+		await assert.rejects(fetchIopwikiPages({ cacheDir, wait: noWait }), /500/);
+		assert.equal(calls, 2);
+	} finally {
+		globalThis.fetch = original;
+	}
+});
+
+test("fetchIopwikiPages retries a network error once and carries on", async () => {
+	const original = globalThis.fetch;
+	let calls = 0;
+	globalThis.fetch = async () => {
+		calls++;
+		if (calls === 1) {
+			throw new TypeError("fetch failed");
+		}
+		return { ok: true, status: 200, json: async () => ({ query: { pages: [{ title: "Test", revisions: [{ slots: { main: { content: "{{PlayableUnit|index=1}}" } } }] }] } }) };
+	};
+	try {
+		assert.deepEqual(await fetchIopwikiPages({ cacheDir, wait: noWait }), [{ title: "Test", wikitext: "{{PlayableUnit|index=1}}" }]);
+		assert.equal(calls, 2);
 	} finally {
 		globalThis.fetch = original;
 	}
@@ -214,7 +240,7 @@ test("fetchIopwikiPages sends the original request plus only the latest continue
 		return { ok: true, status: 200, json: async () => bodies[urls.length - 1] };
 	};
 	try {
-		const pages = await fetchIopwikiPages({ cacheDir });
+		const pages = await fetchIopwikiPages({ cacheDir, wait: noWait });
 		assert.deepEqual(
 			pages.map((entry) => entry.title),
 			["A", "BB", "CCC"]

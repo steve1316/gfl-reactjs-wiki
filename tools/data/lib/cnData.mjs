@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { fetchWithRetry, sleep } from "./http.mjs";
 import { readLock } from "./upstream.mjs";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26,14 +27,15 @@ const CACHE_FILENAME = "gf-data-ch-gun.json";
  * Used to detect gf-data-us rows whose `launch_time` is really just a copied CN release date rather than
  * a true EN date. The pinned commit lives in `tools/data/upstream.lock.json` under `cn`. The fetched table
  * is cached to `tools/data/.cache/gf-data-ch-gun.json` (or `options.cacheDir`) alongside the sha it was
- * fetched at, and is refetched only when that recorded sha no longer matches the pin.
+ * fetched at, and is refetched only when that recorded sha no longer matches the pin. The fetch times out and is retried once.
  *
  * @param {object} [options] Options.
  * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.
  *   Tests must set this, so they never touch the real cache the importer relies on.
+ * @param {(ms: number) => Promise<void>} [options.wait] Waits before a retry. Tests pass a stub so they do not sleep.
  * @returns {Promise<Map<number, string>>} CN `launch_time` (e.g. `"2023-07-25 00:00:00"`) keyed by gun id.
  */
-export async function loadCnGuns({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
+export async function loadCnGuns({ cacheDir = DEFAULT_CACHE_DIR, wait = sleep } = {}) {
 	const cacheFile = path.join(cacheDir, CACHE_FILENAME);
 	const { cn } = readLock();
 	let cached = null;
@@ -42,7 +44,7 @@ export async function loadCnGuns({ cacheDir = DEFAULT_CACHE_DIR } = {}) {
 	}
 	if (!cached || cached.sha !== cn.sha) {
 		const url = `https://raw.githubusercontent.com/${cn.repo}/${cn.sha}/stc/gun.json`;
-		const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+		const response = await fetchWithRetry(url, { headers: { "User-Agent": USER_AGENT } }, { wait });
 		if (!response.ok) {
 			throw new Error(`Failed to fetch gf-data-ch gun.json: ${response.status} ${response.statusText}`);
 		}

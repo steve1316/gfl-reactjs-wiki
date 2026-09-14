@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { fetchWithRetry, sleep } from "./http.mjs";
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Module constants
@@ -34,16 +36,6 @@ const CACHE_FILENAME = "wikidata.json";
 // Fetching
 
 /**
- * Wait before the next polite, sequential request.
- *
- * @param {number} ms Milliseconds to wait.
- * @returns {Promise<void>} Resolves after the delay.
- */
-function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
  * Split a list into chunks of at most `size` items.
  *
  * @param {unknown[]} items Items to split.
@@ -59,14 +51,15 @@ function chunk(items, size) {
 }
 
 /**
- * Call `action=wbgetentities` and return its parsed JSON body.
+ * Call `action=wbgetentities` and return its parsed JSON body. The request times out and is retried once, see `fetchWithRetry`.
  *
  * @param {URLSearchParams} params Query parameters, `action` excluded.
+ * @param {(ms: number) => Promise<void>} wait Waits before a retry.
  * @returns {Promise<object>} The response body.
  */
-async function callWikidata(params) {
+async function callWikidata(params, wait) {
 	const query = new URLSearchParams({ action: "wbgetentities", format: "json", ...Object.fromEntries(params) });
-	const response = await fetch(`${API_BASE}?${query.toString()}`, { headers: { "User-Agent": USER_AGENT } });
+	const response = await fetchWithRetry(`${API_BASE}?${query.toString()}`, { headers: { "User-Agent": USER_AGENT } }, { wait });
 	if (!response.ok) {
 		throw new Error(`Wikidata API request failed: ${response.status} ${response.statusText}`);
 	}
@@ -134,10 +127,11 @@ function buildTitleMap(body, requestedTitles) {
  * back missing, so that doll gets no Wikidata facts.
  *
  * @param {string[]} titles Up to `BATCH_SIZE` enwiki titles.
+ * @param {(ms: number) => Promise<void>} wait Waits before a retry.
  * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Item-id claims keyed by the
  *   requested title (not necessarily the resolved sitelink title).
  */
-async function resolveClaims(titles) {
+async function resolveClaims(titles, wait) {
 	const body = await callWikidata(
 		new URLSearchParams({
 			sites: "enwiki",
@@ -145,7 +139,8 @@ async function resolveClaims(titles) {
 			props: "claims|sitelinks",
 			sitefilter: "enwiki",
 			redirects: "yes"
-		})
+		}),
+		wait
 	);
 	const titleMap = buildTitleMap(body, titles);
 	const looseTitles = new Map(titles.map((title) => [looseTitleKey(title), title]));
@@ -166,10 +161,11 @@ async function resolveClaims(titles) {
  * Resolve a batch of Wikidata item ids to their English label.
  *
  * @param {string[]} ids Up to `BATCH_SIZE` QIDs.
+ * @param {(ms: number) => Promise<void>} wait Waits before a retry.
  * @returns {Promise<Map<string, string>>} English label per id, omitting ids with no English label.
  */
-async function resolveLabels(ids) {
-	const body = await callWikidata(new URLSearchParams({ ids: ids.join("|"), props: "labels", languages: "en" }));
+async function resolveLabels(ids, wait) {
+	const body = await callWikidata(new URLSearchParams({ ids: ids.join("|"), props: "labels", languages: "en" }), wait);
 	const labels = new Map();
 	for (const [id, entity] of Object.entries(body.entities ?? {})) {
 		const label = entity.labels?.en?.value;
@@ -185,7 +181,7 @@ async function resolveLabels(ids) {
  *
  * Two rounds of batched `wbgetentities` calls: the first resolves each title to its P176 (manufacturer)
  * and P495 (country of origin) item ids, the second resolves those item ids to English labels. Requests are
- * sequential and at least a second apart. Results are cached to `tools/data/.cache/wikidata.json` (or
+ * sequential, at least a second apart, and retried once on a network error, 429 or 5xx. Results are cached to `tools/data/.cache/wikidata.json` (or
  * `options.cacheDir`) keyed by title, including titles that yielded no facts, so a reuse run can tell "no facts"
  * from "never fetched". Set `WIKIDATA_CACHE=reuse` to read that cache back without touching the network; it fails
  * when the cache file is missing or a requested title was never fetched. The default always refetches and
@@ -193,15 +189,14 @@ async function resolveLabels(ids) {
  *
  * @param {string[]} titles Enwiki article titles to resolve.
  * @param {object} [options] Options.
- * @param {number} [options.delayMs] Milliseconds between requests, overriding `REQUEST_DELAY_MS`. Exists so
- *   tests can skip the real wait; real callers should leave this at its default.
  * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.
  *   Tests must set this, so they never touch the real cache the importer relies on.
+ * @param {(ms: number) => Promise<void>} [options.wait] Waits between requests and before a retry. Tests pass a stub so they do not sleep.
  * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Manufacturer and country
  *   labels for every requested title. A title with no Wikidata item, or no claims, has empty lists.
  * @throws {Error} In reuse mode, when the cache file is missing or does not hold a requested title.
  */
-export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS, cacheDir = DEFAULT_CACHE_DIR } = {}) {
+export async function fetchWikidataFacts(titles, { cacheDir = DEFAULT_CACHE_DIR, wait = sleep } = {}) {
 	const cacheFile = path.join(cacheDir, CACHE_FILENAME);
 	const uniqueTitles = [...new Set(titles)];
 	if (process.env.WIKIDATA_CACHE === "reuse" && !fs.existsSync(cacheFile)) {
@@ -219,17 +214,17 @@ export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS, c
 	// One shared flag across both call phases below, so requests to Wikidata stay at least a second apart
 	// end to end, without an unnecessary wait before the very first call.
 	let first = true;
-	const wait = async () => {
+	const pause = async () => {
 		if (!first) {
-			await sleep(delayMs);
+			await wait(REQUEST_DELAY_MS);
 		}
 		first = false;
 	};
 
 	const claimsByTitle = new Map();
 	for (const titleBatch of chunk(uniqueTitles, BATCH_SIZE)) {
-		await wait();
-		for (const [title, claims] of await resolveClaims(titleBatch)) {
+		await pause();
+		for (const [title, claims] of await resolveClaims(titleBatch, wait)) {
 			claimsByTitle.set(title, claims);
 		}
 	}
@@ -241,8 +236,8 @@ export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS, c
 	}
 	const labels = new Map();
 	for (const idBatch of chunk([...itemIds], BATCH_SIZE)) {
-		await wait();
-		for (const [id, label] of await resolveLabels(idBatch)) {
+		await pause();
+		for (const [id, label] of await resolveLabels(idBatch, wait)) {
 			labels.set(id, label);
 		}
 	}
