@@ -9,6 +9,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 
+import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 
@@ -46,6 +47,9 @@ const REFERENCE_PROFILES = {
 	beowulf: { id: 393, release: { date: "2024-09", precision: "month" } }
 };
 
+/** Most released dolls allowed to be missing from the pinned gf-data-ch table. More means the CN pin is stale and copied dates go unspotted. */
+const MAX_MISSING_FROM_CN = 5;
+
 /**
  * Check a `YYYY-MM-DD` string is a real calendar date.
  *
@@ -54,6 +58,27 @@ const REFERENCE_PROFILES = {
  */
 function isIsoDate(date) {
 	return typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(Date.parse(date)) && new Date(date).toISOString().startsWith(date);
+}
+
+/**
+ * Check a release's date has the shape its precision promises: a real day, a `YYYY-MM` month, or null when unknown or unreleased.
+ *
+ * @param {{ date: unknown, precision: unknown }} release A generated profile release.
+ * @returns {boolean} True when the precision is known and the date suits it.
+ */
+function isValidRelease({ date, precision }) {
+	switch (precision) {
+		case "day":
+			return isIsoDate(date);
+		case "month":
+		case "launch":
+			return typeof date === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(date);
+		case "unknown":
+		case "unreleased":
+			return date === null;
+		default:
+			return false;
+	}
 }
 
 /**
@@ -84,12 +109,51 @@ function previousCounts() {
 }
 
 /**
- * Run every check against the generated data and exit 1 with a failure list if any check fails.
+ * Read the doll shards and their profile side files, checking the two line up and that the shards carry no profile or spec sheet.
+ *
+ * @param {(message: string) => void} fail Records a failure.
+ * @returns {object[]} Every doll with its profile and spec sheets merged back in, a Mod with no sheet of its own taking the base form's.
  */
-function main() {
+function readDolls(fail) {
+	const withSpecs = (form, specs) => form && { ...form, specs };
+	const dolls = [];
+	for (const shard of SHARDS) {
+		const records = JSON.parse(fs.readFileSync(`src/data/${shard.file}.json`, "utf8"));
+		const profiles = JSON.parse(fs.readFileSync(`src/data/${shard.profiles}.json`, "utf8"));
+		const ids = new Set(records.map((record) => String(record.normal.id)));
+		for (const id of Object.keys(profiles).filter((key) => !ids.has(key))) {
+			fail(`${shard.profiles}.json has an entry for doll ${id}, which ${shard.file}.json does not hold`);
+		}
+		for (const record of records) {
+			const id = record.normal.id;
+			if ("profile" in record || [record.normal, record.mod].some((form) => form && "specs" in form)) {
+				fail(`doll ${id} in ${shard.file}.json still carries a profile or spec sheet, which the T-Doll index would download`);
+			}
+			const details = profiles[String(id)];
+			if (!details) {
+				fail(`doll ${id} in ${shard.file}.json has no entry in ${shard.profiles}.json`);
+				dolls.push(record);
+				continue;
+			}
+			const { normal, mod } = details.specs ?? {};
+			if (mod !== null && (!record.mod || !Array.isArray(mod) || JSON.stringify(mod) === JSON.stringify(normal))) {
+				fail(`doll ${id} Mod specs must be null when the doll has no Mod or its sheet matches the base form's`);
+			}
+			dolls.push({ ...record, normal: withSpecs(record.normal, normal), mod: withSpecs(record.mod, mod ?? normal), profile: details.profile });
+		}
+	}
+	return dolls;
+}
+
+/**
+ * Run every check against the generated data and exit 1 with a failure list if any check fails.
+ *
+ * @returns {Promise<void>} Resolves once every check has run, or exits the process on a failure.
+ */
+async function main() {
 	const failures = [];
 	const fail = (message) => failures.push(message);
-	const dolls = SHARDS.flatMap((shard) => JSON.parse(fs.readFileSync(`src/data/${shard.file}.json`, "utf8")));
+	const dolls = readDolls(fail);
 	const byId = new Map(dolls.map((doll) => [doll.normal.id, doll]));
 	const equipment = JSON.parse(fs.readFileSync("src/data/equipment.json", "utf8"));
 	const upstream = JSON.parse(fs.readFileSync("src/data/upstream.json", "utf8"));
@@ -142,12 +206,15 @@ function main() {
 		}
 	}
 
+	const overrideIds = new Set(JSON.parse(fs.readFileSync("tools/data/overrides.json", "utf8")).addDolls.map((doll) => doll.normal.id));
 	for (const doll of dolls) {
 		const release = doll.profile?.release;
 		if (!release || !Array.isArray(doll.profile.faction) || !Array.isArray(doll.profile.manufacturer) || !Array.isArray(doll.profile.country)) {
 			fail(`doll ${doll.normal.id} has no profile`);
-		} else if (release.precision === "day" && !isIsoDate(release.date)) {
-			fail(`doll ${doll.normal.id} has a day-precision release that is not a valid date: ${release.date}`);
+		} else if (!isValidRelease(release)) {
+			fail(`doll ${doll.normal.id} has a release whose date does not suit its precision: ${JSON.stringify(release)}`);
+		} else if (release.precision === "unreleased" && !overrideIds.has(doll.normal.id)) {
+			fail(`doll ${doll.normal.id} is unreleased but is not an override doll, so it came from the Global gun table`);
 		}
 		const profile = doll.profile ?? {};
 		const profileTexts = [...(profile.faction ?? []), ...(profile.manufacturer ?? []), ...(profile.country ?? []), profile.fullName ?? ""];
@@ -185,7 +252,13 @@ function main() {
 		fail(`Beowulf release differs from the pinned ${JSON.stringify(beowulf.release)}: ${JSON.stringify(beowulfRelease)}`);
 	}
 
-	const overrideIds = new Set(JSON.parse(fs.readFileSync("tools/data/overrides.json", "utf8")).addDolls.map((doll) => doll.normal.id));
+	// Unreleased dolls have no Global gun row, so every other doll is a released US doll that the CN table should also hold.
+	const cnGuns = await loadCnGuns();
+	const missingFromCn = dolls.filter((doll) => doll.profile?.release?.precision !== "unreleased" && !cnGuns.has(doll.normal.id)).map((doll) => doll.normal.id);
+	if (missingFromCn.length > MAX_MISSING_FROM_CN) {
+		fail(`${missingFromCn.length} released dolls are missing from the pinned gf-data-ch table (${missingFromCn.join(", ")}), so the CN pin is probably stale`);
+	}
+
 	for (const [id, slots] of Object.entries(skinAssets)) {
 		if (overrideIds.has(Number(id))) {
 			continue;
@@ -212,6 +285,7 @@ function main() {
 		}
 	}
 
+	console.log(`released dolls missing from the CN table: ${missingFromCn.length} (at most ${MAX_MISSING_FROM_CN} allowed)`);
 	if (failures.length > 0) {
 		console.error(`check failed (${failures.length}):\n- ${failures.join("\n- ")}`);
 		process.exit(1);
@@ -219,4 +293,4 @@ function main() {
 	console.log(`check passed: ${dolls.length} dolls, ${items.length} equipment, coverage ${JSON.stringify(coverage)}`);
 }
 
-main();
+await main();
