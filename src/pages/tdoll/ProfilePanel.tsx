@@ -2,14 +2,11 @@ import { Fragment, memo, useCallback, useId, useMemo, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
 // MaterialUI imports
-import { Box, Button, Link, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Tooltip, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { formatRelease } from "../../lib/formatRelease";
 import type { DollProfile, SpecRow } from "../../types/tdoll";
-
-/** Base of every IOPWiki page URL. */
-const IOPWIKI_BASE = "https://iopwiki.com/wiki/";
 
 /** Manufacturers named in full before the rest fold into "+N more". */
 const MAX_MANUFACTURERS = 3;
@@ -89,11 +86,6 @@ const styles = {
 		borderRadius: 0.5,
 		"&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: "2px" }
 	},
-	sourceNote: {
-		display: "block",
-		mt: 0.75,
-		color: "text.secondary"
-	},
 	toggle: {
 		display: { xs: "inline-flex", sm: "none" },
 		mt: 0.5,
@@ -101,16 +93,6 @@ const styles = {
 		minWidth: 0
 	}
 } satisfies Record<string, SxProps<Theme>>;
-
-/**
- * Build a doll's IOPWiki page URL. Spaces become underscores as MediaWiki writes them, and `/` and `:` stay readable since wiki paths use them.
- *
- * @param title The IOPWiki page title.
- * @returns The page URL.
- */
-function iopwikiUrl(title: string): string {
-	return IOPWIKI_BASE + encodeURIComponent(title.replace(/ /g, "_")).replace(/%2F/g, "/").replace(/%3A/g, ":");
-}
 
 /** Props for MoreMakers. */
 interface MoreMakersProps {
@@ -215,15 +197,6 @@ export default memo(function ProfilePanel({ profile, specs, name }: ProfilePanel
 							</Fragment>
 						))}
 					</Box>
-					{profile.iopwikiTitle ? (
-						<Typography variant="caption" sx={styles.sourceNote}>
-							Profile:{" "}
-							<Link href={iopwikiUrl(profile.iopwikiTitle)} target="_blank" rel="noopener noreferrer" color="inherit">
-								IOPWiki
-							</Link>
-							{profile.sources.includes("wikidata") ? <> &middot; Wikidata</> : null}
-						</Typography>
-					) : null}
 				</Box>
 
 				{specs.length > 0 ? (
