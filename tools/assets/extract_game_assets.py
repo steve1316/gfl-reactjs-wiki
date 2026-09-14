@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
-"""Extract card art, full art, skill icons and equipment icons from the cached game bundles into the staging trees.
+"""Extract card art, full art, skill icons, equipment icons and Spine rigs from the cached game bundles into the staging trees.
 
 Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and the bundles it names, and writes:
 
 - `tools/assets/.staging/assets/`: `tdolls/<id>/card.webp` / `card_d.webp` (plus `mod/` and `skins/<skinId>/`, with `mod_card(_d).webp` for
   Mod-skin cards), `tdolls/<id>/skill1.png` / `skill2.png`, `equipment/<equipId>.png` and the UI images carried over from the current asset repo.
 - `tools/assets/.staging/art/`: `tdolls/<id>/full.webp` / `full_d.webp`, with the same `mod/` and `skins/<skinId>/` folders.
+- `tools/assets/.staging/assets/spine/<id>/`: the base combat and dorm rigs, with `mod/` and `skins/<skinId>/` folders for the Mod and skin rigs.
 - `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes per tree.
+- `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes per tree after the Spine pass.
 
 Cards are the two halves of the game's 512x512 `pic_<Code>_N` atlas. Equipment icons are composited onto the game's own rarity pattern sprites
 from `atlasclips_listequipment`. The exclusive "ONLY" badge is already drawn into the game icon, so no badge sprite is added.
 
+Spine rigs keep the game's own file names (`<Code>.skel`, `R<Code>.skel`, `<Code>.atlas`, page PNGs), as `download_spine.py` wrote them,
+so the site's Spine 2.1 runtime reads them unchanged. Atlas page lines that differ from their texture only by case are rewritten, as
+`fix_atlas_pages.mjs` does. A dorm rig with no atlas of its own shares the combat atlas.
+
 Subcommands:
 
-- `run` checks 20 hosted cards against the bundles, then extracts everything with a process pool.
+- `run` checks 20 hosted cards against the bundles, then extracts every image tier with a process pool.
+- `spine` extracts every Spine rig into `assets/spine/`, replacing what was there.
 - `verify-cards` runs only the hosted card check.
 - `proof-equip` writes side-by-side comparisons of composited and hosted equipment icons.
 """
@@ -74,6 +81,10 @@ ROLE_OUTPUTS = (
     ("full_d", "art", ("full_d.webp",)),
 )
 ART_TIERS = ("art", "mod_art", "skin_art")
+SPINE_TIERS = ("spine", "mod_spine", "skin_spine")
+
+# Skin rigs the game does not ship at all. Anything else missing fails the Spine pass.
+EXPECTED_MISSING_RIGS = frozenset(("skin_spine:95:1809",))
 
 # Report tiers, keyed by inventory tier and role.
 REPORT_TIERS = {
@@ -316,6 +327,88 @@ def equip_output(item):
         The relative path `equipment/<equipId>.png`.
     """
     return f"equipment/{item['equip_id']}.png"
+
+
+def rig_dir(item):
+    """Build the folder a Spine item's files live in, inside the asset tree.
+
+    Args:
+        item: A `spine`, `mod_spine` or `skin_spine` inventory item.
+
+    Returns:
+        A relative folder such as `spine/65/skins/805`.
+    """
+    parts = ["spine", str(item["doll_id"])]
+    if item["tier"] == "mod_spine":
+        parts.append("mod")
+    elif item["tier"] == "skin_spine":
+        parts.extend(("skins", str(item["skin_id"])))
+    return "/".join(parts)
+
+
+def spine_file_name(name, extension):
+    """Turn a TextAsset name into the file name it is published under.
+
+    Args:
+        name: The TextAsset `m_Name`, normally already ending in the extension, e.g. `HK416.skel`.
+        extension: `.skel` or `.atlas`.
+
+    Returns:
+        The file name with the extension exactly once.
+    """
+    return name if name.endswith(extension) else f"{name}{extension}"
+
+
+def rewrite_atlas_pages(text, texture_names):
+    """Point each atlas page at a texture file that exists, fixing case-only differences.
+
+    A page name is the first non-blank line of the file and the first non-blank line after every blank line. Everything else is untouched.
+
+    Args:
+        text: The atlas text.
+        texture_names: File names of the textures available, e.g. `HK416.png`.
+
+    Returns:
+        A `(text, pages, unresolved)` triple: the atlas text with case fixed, the texture file names the pages use, and page names with no
+        texture of any casing.
+    """
+    by_lower = {name.lower(): name for name in texture_names}
+    lines, pages, unresolved, at_page = text.split("\n"), [], [], True
+    for number, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped:
+            at_page = True
+            continue
+        if not at_page:
+            continue
+        at_page = False
+        actual = stripped if stripped in texture_names else by_lower.get(stripped.lower())
+        if not actual:
+            unresolved.append(stripped)
+            continue
+        pages.append(actual)
+        if actual != stripped:
+            lines[number] = line.replace(stripped, actual)
+    return "\n".join(lines), pages, unresolved
+
+
+def rig_counts(rigs):
+    """Count extracted rigs per tier, dorm rigs, shared atlases and atlas pages.
+
+    Args:
+        rigs: Rig records from the Spine workers.
+
+    Returns:
+        A dict of counts.
+    """
+    counts = {tier: 0 for tier in SPINE_TIERS}
+    counts.update(dorm=0, shared_atlas=0, pages=0)
+    for rig in rigs:
+        counts[rig["tier"]] += 1
+        counts["dorm"] += rig["dorm"]
+        counts["shared_atlas"] += rig["shared_atlas"]
+        counts["pages"] += rig["pages"]
+    return counts
 
 
 def parse_hosted_card(filename):
@@ -597,6 +690,90 @@ def extract_equip_icons(items, rarities, cache_dir, staging):
     return result
 
 
+def text_bytes(data):
+    """Recover the raw bytes of a TextAsset.
+
+    UnityPy returns the payload as a string decoded with surrogateescape, so encoding it back the same way restores binary skeletons exactly.
+
+    Args:
+        data: The read TextAsset.
+
+    Returns:
+        The payload bytes.
+    """
+    raw = data.m_Script
+    return raw.encode("utf-8", "surrogateescape") if isinstance(raw, str) else bytes(raw)
+
+
+def extract_spine_item(item, cache_dir, staging, loader=unity_load):
+    """Extract one base, Mod or skin rig: combat skeleton, atlas and pages, plus the dorm skeleton and its atlas when it has one.
+
+    Args:
+        item: A Spine inventory item.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result with an extra `rigs` list holding one `{key, tier, dorm, shared_atlas, pages}` record when the rig was written.
+    """
+    result = new_result()
+    result["rigs"] = []
+    key, folder, tier = item["key"], rig_dir(item), f"{item['tier']}_rig"
+    try:
+        objects, textures = {}, {}
+        for name in item["bundles"]:
+            for path, obj in loader(os.path.join(cache_dir, f"{name}.ab")).container.items():
+                objects[(name, path.lower())] = obj
+                if obj.type.name == "Texture2D":
+                    texture_name = obj.read().m_Name
+                    textures[(name, texture_name.lower())] = (texture_name, obj)
+    except Exception as exc:
+        result["missing"].append({"key": key, "role": "*", "reason": f"bundle load failed: {exc!r}"})
+        return result
+
+    def read_text(role):
+        """Read one TextAsset role as `(file name, bytes)`."""
+        data = objects[(item["assets"][role]["bundle"], item["assets"][role]["path"].lower())].read()
+        return data.m_Name, text_bytes(data)
+
+    outputs, names, pages_written = {}, {}, set()
+    try:
+        for role, extension in (("skel", ".skel"), ("atlas", ".atlas"), ("dorm_skel", ".skel"), ("dorm_atlas", ".atlas")):
+            if role not in item["assets"]:
+                continue
+            name, data = read_text(role)
+            names[role] = name = spine_file_name(name, extension)
+            if extension == ".atlas":
+                bundle = item["assets"][role]["bundle"]
+                available = [f"{texture_name}.png" for (owner, _lowered), (texture_name, _obj) in textures.items() if owner == bundle]
+                text, pages, unresolved = rewrite_atlas_pages(data.decode("utf-8"), available)
+                for page in unresolved:
+                    result["missing"].append({"key": key, "role": "page", "reason": f"{name} names {page}, which no texture in {bundle} matches"})
+                data = text.encode("utf-8")
+                for page in set(pages) - pages_written:
+                    outputs[page] = encode_png(textures[(bundle, page[:-4].lower())][1].read().image)
+                    pages_written.add(page)
+            outputs[name] = data
+    except Exception as exc:
+        result["missing"].append({"key": key, "role": "*", "reason": f"read failed: {exc!r}"})
+        return result
+    if any(row["key"] == key for row in result["missing"]):
+        return result
+
+    try:
+        for name, data in sorted(outputs.items()):
+            write_file(staging, "assets", f"{folder}/{name}", data, tier, result)
+    except Exception as exc:
+        result["missing"].append({"key": key, "role": "*", "reason": f"write failed: {exc}"})
+        return result
+    has_dorm = "dorm_skel" in item["assets"]
+    if has_dorm and names["dorm_skel"].lower() != f"r{names['skel']}".lower():
+        result["nonstandard"].append({"key": key, "role": "dorm_skel", "size": names["dorm_skel"], "expected": f"R{names['skel']}"})
+    result["rigs"].append({"key": key, "tier": item["tier"], "dorm": has_dorm, "shared_atlas": has_dorm and "dorm_atlas" not in item["assets"], "pages": len(pages_written)})
+    return result
+
+
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # Verification against the hosted assets
@@ -792,6 +969,23 @@ def copy_ui(clone, staging):
     return names
 
 
+def tier_counts(files):
+    """Total the written files and bytes per report tier.
+
+    Args:
+        files: Worker `files` rows of `(tree, path, bytes, tier)`.
+
+    Returns:
+        An ordered dict of tier to `{tree, files, bytes}`, tiers sorted by name.
+    """
+    counts = collections.OrderedDict()
+    for tree, _rel, size, tier in sorted(files, key=lambda row: (row[3], row[1])):
+        entry = counts.setdefault(tier, {"tree": tree, "files": 0, "bytes": 0})
+        entry["files"] += 1
+        entry["bytes"] += size
+    return counts
+
+
 def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
     """Extract every image tier into the staging trees and write the report.
 
@@ -841,31 +1035,27 @@ def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
             if done % 100 == 0 or done == len(futures):
                 print(f"[{done}/{len(futures)}] {len(files)} files, {time.monotonic() - started:.0f}s", flush=True)
 
-    counts = collections.OrderedDict()
-    for tree, _rel, size, tier in sorted(files, key=lambda row: (row[3], row[1])):
-        entry = counts.setdefault(tier, {"tree": tree, "files": 0, "bytes": 0})
-        entry["files"] += 1
-        entry["bytes"] += size
+    counts = tier_counts(files)
     counts["ui"] = {"tree": "assets", "files": len(ui_files), "bytes": sum(os.path.getsize(os.path.join(staging, "assets", name)) for name in ui_files)}
     report["tiers"] = counts
     report["missing"].sort(key=lambda row: (row["key"], row["role"]))
     report["nonstandard"].sort(key=lambda row: (row["key"], row["role"]))
-    finish_report(report, inventory, staging)
+    finish_report(report, expected_gap_keys(inventory), staging)
     report["seconds"] = round(time.monotonic() - started, 1)
     with open(os.path.join(staging, "extract-report.json"), "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=1, ensure_ascii=False)
     return report
 
 
-def finish_report(report, inventory, staging):
+def finish_report(report, expected_keys, staging):
     """Add the tree sizes, oversized files and unexpected gaps to a report.
 
     Args:
         report: The report dict, with `missing` filled in.
-        inventory: The inventory dict.
+        expected_keys: Item keys of the accepted gaps.
         staging: The staging root.
     """
-    report["unexpected_missing"] = unexpected_missing(report["missing"], expected_gap_keys(inventory))
+    report["unexpected_missing"] = unexpected_missing(report["missing"], expected_keys)
     report["trees"], report["oversized"] = {}, []
     for tree in TREES:
         root = os.path.join(staging, tree)
@@ -894,6 +1084,60 @@ def failure_reasons(report):
     return reasons
 
 
+def run_spine(inventory, cache_dir, staging, workers):
+    """Extract every Spine rig into `assets/spine/` and write the Spine report.
+
+    Args:
+        inventory: The inventory dict.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        workers: Process pool size.
+
+    Returns:
+        The report dict.
+    """
+    started = time.monotonic()
+    spine_root = os.path.join(staging, "assets", "spine")
+    shutil.rmtree(spine_root, ignore_errors=True)
+    os.makedirs(spine_root)
+
+    report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
+    items = []
+    for item in inventory["items"]:
+        if item["tier"] not in SPINE_TIERS:
+            continue
+        if not item["assets"]:
+            report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
+            continue
+        report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
+        items.append(item)
+
+    files, rigs = [], []
+    with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(extract_spine_item, item, cache_dir, staging): item["key"] for item in items}
+        for done, future in enumerate(concurrent.futures.as_completed(futures), start=1):
+            try:
+                result = future.result()
+            except Exception as exc:
+                result = {**new_result(), "rigs": [], "missing": [{"key": futures[future], "role": "*", "reason": f"worker crashed: {exc!r}"}]}
+            files.extend(result["files"])
+            rigs.extend(result["rigs"])
+            report["missing"].extend(result["missing"])
+            report["nonstandard"].extend(result["nonstandard"])
+            if done % 200 == 0 or done == len(futures):
+                print(f"[{done}/{len(futures)}] {len(files)} files, {time.monotonic() - started:.0f}s", flush=True)
+
+    report["rigs"] = rig_counts(rigs)
+    report["tiers"] = tier_counts(files)
+    report["missing"].sort(key=lambda row: (row["key"], row["role"]))
+    report["nonstandard"].sort(key=lambda row: (row["key"], row["role"]))
+    finish_report(report, EXPECTED_MISSING_RIGS, staging)
+    report["seconds"] = round(time.monotonic() - started, 1)
+    with open(os.path.join(staging, "spine-report.json"), "w", encoding="utf-8") as handle:
+        json.dump(report, handle, indent=1, ensure_ascii=False)
+    return report
+
+
 def print_report(report):
     """Print the extraction report summary.
 
@@ -903,6 +1147,8 @@ def print_report(report):
     print(f"{'TIER':<16}{'TREE':<8}{'FILES':>7}{'MB':>9}")
     for tier, entry in report["tiers"].items():
         print(f"{tier:<16}{entry['tree']:<8}{entry['files']:>7}{entry['bytes'] / BYTES_PER_MB:>9.1f}")
+    if "rigs" in report:
+        print("rigs: " + ", ".join(f"{name} {count}" for name, count in report["rigs"].items()))
     for tree, entry in report["trees"].items():
         print(f"tree {tree}: {entry['files']} files, {entry['mb']} MB ({entry['status']})")
     print(f"missing: {len(report['missing'])} ({len(report['unexpected_missing'])} unexpected), non-standard sizes: {len(report['nonstandard'])}, {report['seconds']}s")
@@ -935,9 +1181,9 @@ def check_cards(inventory, clone, cache_dir, allow_diffs=False):
 
 def main():
     """Parse arguments and run the requested subcommand."""
-    parser = argparse.ArgumentParser(description="Extract card art, full art and icons from the cached game bundles into the staging trees.")
-    parser.add_argument("command", choices=("run", "verify-cards", "proof-equip"))
-    parser.add_argument("--reference-clone", required=True, help="Local clone of the current gfl-wiki-assets repo.")
+    parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging trees.")
+    parser.add_argument("command", choices=("run", "spine", "verify-cards", "proof-equip"))
+    parser.add_argument("--reference-clone", help="Local clone of the current gfl-wiki-assets repo. Required by every command but `spine`.")
     parser.add_argument("--site-data", default=SITE_DATA_DIR, help="Directory holding the site's equipment.json.")
     parser.add_argument("--cache", default=BUNDLE_CACHE_DIR, help="Bundle cache directory.")
     parser.add_argument("--staging", default=STAGING_DIR, help="Staging root holding the assets and art trees.")
@@ -946,6 +1192,17 @@ def main():
     parser.add_argument("--allow-card-diffs", action="store_true", help="Report hosted cards that differ from the game atlas instead of stopping.")
     args = parser.parse_args()
     inventory = read_json(INVENTORY_PATH)
+
+    if args.command == "spine":
+        print(f"extracting Spine rigs with {args.workers} workers", flush=True)
+        report = run_spine(inventory, args.cache, args.staging, args.workers)
+        print_report(report)
+        reasons = failure_reasons(report)
+        if reasons:
+            sys.exit(f"Spine extraction failed: {'; '.join(reasons)}")
+        return
+    if not args.reference_clone:
+        sys.exit(f"{args.command} needs --reference-clone")
 
     if args.command == "proof-equip":
         if not args.out_dir:
