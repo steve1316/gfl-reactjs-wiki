@@ -225,7 +225,7 @@ export default function TDollArt() {
 					</Box>
 				</Box>
 			) : (
-				<Box ref={zoom.containerRef} sx={{ flexGrow: 1, overflow: "hidden", display: "grid", placeItems: "center" }} style={zoom.containerStyle} {...zoom.handlers}>
+				<Box ref={zoom.containerRef} sx={{ flexGrow: 1, position: "relative", overflow: "hidden" }} style={zoom.containerStyle} {...zoom.handlers}>
 					{source ? <Box component="img" src={source} alt="" sx={containArtSx} style={zoom.contentStyle} /> : null}
 				</Box>
 			)}

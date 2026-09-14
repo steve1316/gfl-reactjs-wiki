@@ -47,16 +47,19 @@ export const heroArtSx: SxProps<Theme> = {
 };
 
 /**
- * Full art in a tall or unknown-shaped box.
+ * Full art filling a positioned box of any shape, letterboxed rather than cropped.
  *
  * A tall box crops horizontally, and these arts sit off-centre sideways: one spans 21% to 76% of the
  * width, another 30% to 82%. Without a per-doll measurement of where the drawing sits, `contain` is
- * honest where a guessed horizontal anchor would slice somebody down the middle. Capped with `max*`
- * rather than forced to `100%`, so a box bigger than the art's natural size does not upscale it.
+ * honest where a guessed horizontal anchor would slice somebody down the middle. The element is pinned to
+ * the box rather than capped with `max*`, since a percentage max height never resolves in a box that sizes
+ * to its content, and the 2048px art then drew at full size with its top and bottom cut off.
  */
 export const containArtSx: SxProps<Theme> = {
-	maxWidth: "100%",
-	maxHeight: "100%",
+	position: "absolute",
+	inset: 0,
+	width: "100%",
+	height: "100%",
 	objectFit: "contain",
 	display: "block"
 };
