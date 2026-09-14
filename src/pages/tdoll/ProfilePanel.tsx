@@ -1,5 +1,5 @@
 import { Fragment, memo, useCallback, useId, useMemo, useState } from "react";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 // MaterialUI imports
 import { Box, Button, Link, Tooltip, Typography } from "@mui/material";
@@ -124,7 +124,7 @@ interface MoreMakersProps {
  * The "+N more" after the first manufacturers, with the full list in a tooltip.
  *
  * The tooltip is controlled so a tap opens it on click. MUI's touch path waits on a timer Chrome delays during a quick tap, so it never opened.
- * Hover and keyboard focus still open it through the tooltip's own handlers.
+ * Hover and keyboard focus still open it through the tooltip's own handlers, and Enter or Space opens it too, as a button should.
  *
  * @param props Component props.
  * @returns The "+N more" text with its tooltip.
@@ -133,12 +133,19 @@ function MoreMakers({ names, shown }: MoreMakersProps) {
 	const [open, setOpen] = useState(false);
 	const handleOpen = useCallback(() => setOpen(true), []);
 	const handleClose = useCallback(() => setOpen(false), []);
+	const handleKeyDown = useCallback((event: KeyboardEvent) => {
+		if (event.key === "Enter" || event.key === " ") {
+			event.preventDefault();
+			setOpen(true);
+		}
+	}, []);
 	const all = names.join(", ");
+	const more = names.length - shown;
 
 	return (
 		<Tooltip title={all} open={open} onOpen={handleOpen} onClose={handleClose} enterTouchDelay={0} leaveTouchDelay={5000} arrow>
-			<Box component="span" tabIndex={0} aria-label={`All manufacturers: ${all}`} onClick={handleOpen} sx={styles.moreMakers}>
-				+{names.length - shown} more
+			<Box component="span" role="button" tabIndex={0} aria-label={`+${more} more manufacturers: ${all}`} onClick={handleOpen} onKeyDown={handleKeyDown} sx={styles.moreMakers}>
+				+{more} more
 			</Box>
 		</Tooltip>
 	);
@@ -157,8 +164,10 @@ interface ProfilePanelProps {
 /**
  * The doll's profile and its gun's spec sheet, shown in the hero under the skin pills.
  *
+ * The Profile block always shows, since every doll has at least its Global release row. The Specifications block shows when the form has a sheet.
+ *
  * @param props Component props.
- * @returns The two blocks, or null when the doll has neither.
+ * @returns The Profile block, and the Specifications block beside it when there is a sheet.
  */
 export default memo(function ProfilePanel({ profile, specs, name }: ProfilePanelProps) {
 	const [showAllSpecs, setShowAllSpecs] = useState(false);
@@ -191,37 +200,31 @@ export default memo(function ProfilePanel({ profile, specs, name }: ProfilePanel
 
 	const toggleSpecs = useCallback(() => setShowAllSpecs((current) => !current), []);
 
-	if (profileRows.length === 0 && specs.length === 0) {
-		return null;
-	}
-
 	return (
 		<Box sx={styles.root}>
 			<Box sx={styles.layout}>
-				{profileRows.length > 0 ? (
-					<Box sx={styles.profileBlock}>
-						<Typography variant="overline" component="h2" sx={styles.sectionLabel}>
-							Profile
-						</Typography>
-						<Box component="dl" sx={styles.profileList}>
-							{profileRows.map((row) => (
-								<Fragment key={row.label}>
-									<dt>{row.label}</dt>
-									<dd>{row.value}</dd>
-								</Fragment>
-							))}
-						</Box>
-						{profile.iopwikiTitle ? (
-							<Typography variant="caption" sx={styles.sourceNote}>
-								Profile:{" "}
-								<Link href={iopwikiUrl(profile.iopwikiTitle)} target="_blank" rel="noopener noreferrer" color="inherit">
-									IOPWiki
-								</Link>
-								{profile.sources.includes("wikidata") ? <> &middot; Wikidata</> : null}
-							</Typography>
-						) : null}
+				<Box sx={styles.profileBlock}>
+					<Typography variant="overline" component="h2" sx={styles.sectionLabel}>
+						Profile
+					</Typography>
+					<Box component="dl" sx={styles.profileList}>
+						{profileRows.map((row) => (
+							<Fragment key={row.label}>
+								<dt>{row.label}</dt>
+								<dd>{row.value}</dd>
+							</Fragment>
+						))}
 					</Box>
-				) : null}
+					{profile.iopwikiTitle ? (
+						<Typography variant="caption" sx={styles.sourceNote}>
+							Profile:{" "}
+							<Link href={iopwikiUrl(profile.iopwikiTitle)} target="_blank" rel="noopener noreferrer" color="inherit">
+								IOPWiki
+							</Link>
+							{profile.sources.includes("wikidata") ? <> &middot; Wikidata</> : null}
+						</Typography>
+					) : null}
+				</Box>
 
 				{specs.length > 0 ? (
 					<Box sx={styles.specsBlock}>
