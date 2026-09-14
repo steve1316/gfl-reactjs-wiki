@@ -169,3 +169,9 @@ test("fetchIopwikiPages writes its cache under the given cacheDir, not the real 
 		globalThis.fetch = original;
 	}
 });
+
+test("plainText strips '' italic, ''' bold and ''''' bold italic markup but keeps a single apostrophe", () => {
+	assert.equal(plainText("Heckler & Koch '''M'''aschinen'''P'''istole 7"), "Heckler & Koch MaschinenPistole 7");
+	assert.equal(plainText("''Italic'' and '''''both'''''"), "Italic and both");
+	assert.equal(plainText("Kitty's '''Colt''''s''' gun"), "Kitty's Colt's gun");
+});

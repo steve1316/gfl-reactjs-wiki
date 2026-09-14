@@ -45,6 +45,9 @@ const REFERENCE_PROFILES = {
 	beowulf: { id: 393, release: { date: "2024-09", precision: "month" } }
 };
 
+/** Wiki or HTML markup that must never survive into a generated profile or spec sheet string. */
+const MARKUP_TOKENS = ["'''", "''", "[[", "]]", "{{", "}}", "<", "&amp;"];
+
 /**
  * Check a `YYYY-MM-DD` string is a real calendar date.
  *
@@ -147,6 +150,15 @@ function main() {
 			fail(`doll ${doll.normal.id} has no profile`);
 		} else if (release.precision === "day" && !isIsoDate(release.date)) {
 			fail(`doll ${doll.normal.id} has a day-precision release that is not a valid date: ${release.date}`);
+		}
+		const profile = doll.profile ?? {};
+		const profileTexts = [...(profile.faction ?? []), ...(profile.manufacturer ?? []), ...(profile.country ?? []), profile.fullName ?? ""];
+		const specTexts = [doll.normal, doll.mod].filter(Boolean).flatMap((form) => (form.specs ?? []).flatMap((row) => [row.label, row.value]));
+		for (const text of [...profileTexts, ...specTexts]) {
+			const token = MARKUP_TOKENS.find((candidate) => String(text).includes(candidate));
+			if (token) {
+				fail(`doll ${doll.normal.id} has markup "${token}" left in ${JSON.stringify(text)}`);
+			}
 		}
 	}
 	const coverage = {
