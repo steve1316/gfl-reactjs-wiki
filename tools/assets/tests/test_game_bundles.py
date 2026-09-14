@@ -434,6 +434,14 @@ class NewTargetTests(unittest.TestCase):
         problems = game_bundles.only_missing_problems({"summary": summary})
         self.assertEqual(problems, ["art:424 is unresolved: no bundle holds the files", "skin_art:65:9001 is missing card"])
 
+    def test_expected_missing_rig_is_not_a_problem(self):
+        """A skin rig the game does not ship is an expected gap, so it never stops an only-missing run."""
+        item = {"key": "skin_spine:95:1809", "tier": "skin_spine", "doll_id": 95, "skin_id": 1809, "status": "unresolved", "bundles": []}
+        summary, _bundles = game_bundles.summarise([item], {}, include_ui=False)
+        self.assertEqual([entry["key"] for entry in summary["unresolved_expected"]], ["skin_spine:95:1809"])
+        self.assertEqual(summary["unresolved_unexpected"], [])
+        self.assertEqual(game_bundles.only_missing_problems({"summary": summary}), [])
+
     def test_ui_bundle_only_with_equipment(self):
         """The equipment UI bundle is left out when asked, and kept by default."""
         index = {"atlasclips_listequipment": {"resname": "x", "sizeOriginal": 5}}
