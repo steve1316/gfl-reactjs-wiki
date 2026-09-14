@@ -80,7 +80,7 @@ export function resolveUpstreamDir() {
 	}
 	let head = "";
 	try {
-		head = git(CACHE_DIR, ["rev-parse", "HEAD"]);
+		head = git(CACHE_DIR, ["rev-parse", "--verify", "--quiet", "HEAD"]);
 	} catch {
 		head = "";
 	}
