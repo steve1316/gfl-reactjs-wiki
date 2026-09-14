@@ -93,6 +93,12 @@ jobs:
       US_SHA: ${{ needs.plan.outputs.us }}
       CN_SHA: ${{ needs.plan.outputs.cn }}
       CUTOFF: ${{ needs.plan.outputs.date }}
+    # IOPWiki's Cloudflare challenges GitHub's runners, so the import loads its API pages in this browser.
+    services:
+      flaresolverr:
+        image: ghcr.io/flaresolverr/flaresolverr:v3.5.2
+        ports:
+          - 8191:8191
     steps:
       - uses: actions/checkout@v7
         with:
@@ -124,7 +130,20 @@ jobs:
       - name: Move the upstream pins
         run: node tools/data/set_lock.mjs --us "$US_SHA" --cn "$CN_SHA"
 
+      - name: Wait for FlareSolverr
+        run: |
+          for _ in $(seq 1 30); do
+            if curl -fsS http://localhost:8191/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "FlareSolverr did not start within 60 seconds" >&2
+          exit 1
+
       - name: Import game data
+        env:
+          FLARESOLVERR_URL: http://localhost:8191
         run: node tools/data/import.mjs --date "$CUTOFF"
 
       # When a newly released form genuinely has no asset in the game, add its skill code to `EXPECTED_MISSING_SKILL_CODES` or its item key to
