@@ -34,6 +34,9 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 	{ value: "release", label: "Global release" }
 ];
 
+/** Compares names so digits order by value, putting "9A-91" before "43M", and case is ignored. Built once rather than per comparison. */
+const NAME_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
 /** A doll paired with the form the current filters mean we should show. */
 interface IndexEntry extends TDoll {
 	/** Either the base form or the Mod, depending on the Mod filter. */
@@ -56,26 +59,38 @@ function isSortKey(value: unknown): value is SortKey {
  * @param entries The matching dolls, left unchanged.
  * @param key What to sort by. Name and rarity come from the shown form, so a Mod counts as 6 stars while the Mod filter is on.
  * @param descending Whether to reverse the order.
- * @returns A sorted copy.
+ * @returns A sorted copy, or `entries` itself when the order asked for is ascending id, which it is already in.
  */
 function sortEntries(entries: IndexEntry[], key: SortKey, descending: boolean): IndexEntry[] {
+	// The shards are already in ascending id order, and filtering keeps it.
+	if (key === "id" && !descending) {
+		return entries;
+	}
 	const direction = descending ? -1 : 1;
 	return [...entries].sort((a, b) => {
-		let order = 0;
-		if (key === "name") {
-			order = a.selected.name.localeCompare(b.selected.name, undefined, { numeric: true, sensitivity: "base" });
-		} else if (key === "rarity") {
-			order = a.selected.rarity - b.selected.rarity;
-		} else if (key === "release") {
-			const aDate = a.release.date;
-			const bDate = b.release.date;
-			if (aDate === null || bDate === null) {
-				return aDate === bDate ? a.normal.id - b.normal.id : aDate === null ? 1 : -1;
+		let order: number;
+		switch (key) {
+			case "name":
+				order = NAME_COLLATOR.compare(a.selected.name, b.selected.name);
+				break;
+			case "rarity":
+				order = a.selected.rarity - b.selected.rarity;
+				break;
+			case "release": {
+				// Decided before the direction applies, so dolls with no known date stay last either way.
+				const missing = Number(a.release.date === null) - Number(b.release.date === null);
+				if (missing !== 0) {
+					return missing;
+				}
+				// ISO dates compare as text. A month-precision date sorts before the days of that month.
+				const aDate = a.release.date ?? "";
+				const bDate = b.release.date ?? "";
+				order = aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
+				break;
 			}
-			// ISO dates compare as text. A month-precision date sorts before the days of that month.
-			order = aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
-		} else {
-			order = a.normal.id - b.normal.id;
+			case "id":
+				order = a.normal.id - b.normal.id;
+				break;
 		}
 		return direction * order || a.normal.id - b.normal.id;
 	});
