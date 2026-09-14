@@ -5,8 +5,9 @@
 from origin (never from local state), requires the clone's copy of that branch to be exactly in sync with origin, regenerates the
 version 3 manifest from the staging trees, requires it to match the repo-root `assets-manifest.json` byte for byte, runs the v3
 audit, checks the Pages size limits, and then commits the staging tree onto an orphan branch in the clone with a `.nojekyll` file.
-It prints the push command for a person to run and never runs it. Pass `--replace-branch` to delete and recreate an existing local `rebuild` branch
-when re-running prepare; the default branch itself is never touched.
+It prints a push command leased to the origin commit it checked, plus the publish runbook, for a person to run, and never runs
+them. Pass `--replace-branch` to delete and recreate an existing local `rebuild` branch when re-running prepare; the default branch
+itself is never touched.
 
 Usage:
     python3 tools/assets/publish.py backup --clone <path> --out <dir>
@@ -145,6 +146,38 @@ def parse_symref_head(output):
         if match:
             return match.group(1)
     return None
+
+
+def push_command(clone, base_branch, lease_sha):
+    """Build the force-push command for a prepared clone, leased to the origin commit `prepare` checked.
+
+    Args:
+        clone: The clone's path.
+        base_branch: The remote's default branch.
+        lease_sha: The full sha `origin/<base_branch>` pointed at when `prepare` ran.
+
+    Returns:
+        The command line. The push is refused if the remote branch has moved since.
+    """
+    return f"git -C {clone} push --force-with-lease={base_branch}:{lease_sha} origin {BRANCH}:{base_branch}"
+
+
+def runbook_text():
+    """Build the publish runbook printed after `prepare`.
+
+    Returns:
+        The runbook lines, joined with newlines.
+    """
+    return "\n".join(
+        (
+            "Publish runbook (back to back, only with explicit confirmation):",
+            f"  1. Push {REPO_TITLES['assets']} with its printed command.",
+            f"  2. Push {REPO_TITLES['art']} with its printed command.",
+            "  3. Push the site's master immediately after, so the new site and the new asset layout go live together.",
+            "  4. Wait for all three Pages deploys to finish (`gh api repos/<owner>/<repo>/pages/builds/latest` for each).",
+            "  5. Run `node tools/assets/verify_live_assets.mjs <assets base URL> <art base URL>` against the live hosts.",
+        )
+    )
 
 
 def readme_text(repo, res_version):
@@ -436,6 +469,7 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
     if base_branch == BRANCH:
         sys.exit(f"{clone} is on {BRANCH}. Check out the default branch first")
     require_synced_with_origin(clone, base_branch)
+    lease_sha = git(clone, "rev-parse", "--verify", f"refs/remotes/origin/{base_branch}")
     if git(clone, "rev-parse", "--verify", "--quiet", f"refs/heads/{BRANCH}", check=False) and not replace_branch:
         sys.exit(f"{clone} already has a {BRANCH} branch. Pass --replace-branch to rebuild it")
 
@@ -499,8 +533,9 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
     print_stats("committed tree", final)
     for warning in final["warnings"]:
         print(f"WARNING: {warning}")
-    print("\nNot pushed. To publish, run:")
-    print(f"  git -C {clone} push --force origin {BRANCH}:{base_branch}")
+    print(f"\nNot pushed. origin/{base_branch} was {lease_sha} when checked. To publish, run:")
+    print(f"  {push_command(clone, base_branch, lease_sha)}")
+    print(f"\n{runbook_text()}")
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////

@@ -261,8 +261,12 @@ class PrepareTests(unittest.TestCase):
         with open(self.paths["manifest_path"], encoding="utf-8") as handle:
             self.assertEqual(run_git(clone, "show", "HEAD:assets-manifest.json") + "\n", handle.read())
         self.assertEqual(run_git(clone, "show", "HEAD:CNAME"), "assets.example.com")
-        self.assertIn("git -C", output)
-        self.assertIn("push --force origin rebuild:main", output)
+        lease = run_git(self.paths["origin"], "rev-parse", "main")
+        self.assertIn(f"git -C {clone} push --force-with-lease=main:{lease} origin rebuild:main", output)
+        self.assertNotIn("push --force origin", output)
+        self.assertLess(output.index("gfl-wiki-assets with"), output.index("gfl-wiki-assets-art with"))
+        self.assertLess(output.index("gfl-wiki-assets-art with"), output.index("site's master immediately"))
+        self.assertIn("verify_live_assets.mjs", output)
         self.assertEqual(run_git(clone, "status", "--porcelain"), "")
 
     def test_nojekyll_is_written_when_the_clone_has_none(self):
