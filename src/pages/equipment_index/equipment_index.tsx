@@ -5,6 +5,7 @@ import { Container, Typography, Divider, Grid, Zoom, Fade, Box, Slider } from "@
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
+import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import FilterChip from "../../components/FilterChip";
 import EquipmentCard from "./EquipmentCard";
@@ -66,6 +67,10 @@ const styles = {
  */
 export default function EquipmentIndex() {
 	const [equipment, setEquipment] = useState<{ types: EquipmentType[]; items: Record<string, Equipment[]> }>({ types: [], items: {} });
+	// True when the equipment file failed to load, which swaps the results for a retry notice.
+	const [loadFailed, setLoadFailed] = useState(false);
+	// Bumped by the retry button to load the equipment again.
+	const [loadAttempt, setLoadAttempt] = useState(0);
 
 	// Keys of the equipment types whose chips are on. None selected shows every type.
 	const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
@@ -82,10 +87,18 @@ export default function EquipmentIndex() {
 	// catch up behind it, instead of every step of a drag waiting for all of them to re-render first.
 	const deferredLevel = useDeferredValue(currentLevel);
 
-	// Equipment is fetched once, on mount, rather than pulled in at module scope.
+	// Equipment is fetched once, on mount, rather than pulled in at module scope. A failed load is fetched again from the retry button.
 	useEffect(() => {
-		void loadEquipment().then(setEquipment);
-	}, []);
+		let active = true;
+		setLoadFailed(false);
+		loadEquipment().then(
+			(loaded) => active && setEquipment(loaded),
+			() => active && setLoadFailed(true)
+		);
+		return () => {
+			active = false;
+		};
+	}, [loadAttempt]);
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
@@ -106,6 +119,8 @@ export default function EquipmentIndex() {
 			return next;
 		});
 	}, []);
+
+	const handleRetryLoad = useCallback(() => setLoadAttempt((current) => current + 1), []);
 
 	const handleOnClickExclusive = useCallback(() => {
 		setExclusiveFilter((exclusive) => ({ ...exclusive, selected: !exclusive.selected }));
@@ -176,6 +191,8 @@ export default function EquipmentIndex() {
 			</Box>
 
 			<Container sx={styles.cardGrid} maxWidth="md">
+				{loadFailed && <LoadError what="the equipment" onRetry={handleRetryLoad} />}
+
 				<Typography component="h1" variant="h6" color="textPrimary" gutterBottom>
 					Now showing {searchResults.length} search results
 				</Typography>
