@@ -3,15 +3,17 @@
  * Check a published pair of asset hosts by fetching a random sample of the URLs the site can ask for.
  *
  * URLs are derived from the version 3 manifest and Spine index exactly as `src/lib/assets.ts` builds them, grouped into tiers, and the
- * sample is spread across every tier. The page images of each sampled atlas are fetched too. Any response other than 200 fails the run.
+ * sample is spread across every tier. The top-level UI images come from the `uiUrl("<name>")` calls in the site source. The page images of
+ * each sampled atlas are fetched too. Any response other than 200 fails the run.
  *
  * Usage:
- *     node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>] [--manifest <file>] [--spine-index <file>]
+ *     node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>] [--manifest <file>] [--spine-index <file>] [--src <dir>]
  *
  * The seed is printed, so a failing sample can be fetched again with `--seed`.
  */
 
 import fs from "node:fs";
+import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,7 +21,10 @@ import { pathToFileURL } from "node:url";
 // Constants
 
 /** Default inputs: the manifest and Spine index the site bundles. */
-const DEFAULTS = { sample: 200, manifest: "assets-manifest.json", spineIndex: "src/data/spine-index.json", concurrency: 4 };
+const DEFAULTS = { sample: 200, manifest: "assets-manifest.json", spineIndex: "src/data/spine-index.json", src: "src", concurrency: 4 };
+
+/** A `uiUrl("<name>")` call in the site source, capturing the file name. */
+const UI_URL_CALL = /\buiUrl\(\s*["']([^"']+)["']\s*\)/g;
 
 /** Per-request timeout in milliseconds. */
 const TIMEOUT_MS = 30000;
@@ -49,18 +54,48 @@ export function join(base, path) {
 }
 
 /**
- * Derive every URL the manifest and Spine index imply, grouped by tier.
+ * Collect the UI image names the site asks for, from every `uiUrl("<name>")` call in its source.
+ *
+ * @param {string} srcDir The site's source folder.
+ * @returns {string[]} Distinct file names, sorted.
+ */
+export function uiImageNames(srcDir) {
+	const names = new Set();
+	for (const entry of fs.readdirSync(srcDir, { recursive: true, withFileTypes: true })) {
+		if (entry.isFile() && /\.(ts|tsx)$/.test(entry.name)) {
+			const text = fs.readFileSync(path.join(entry.parentPath, entry.name), "utf8");
+			for (const match of text.matchAll(UI_URL_CALL)) {
+				names.add(match[1]);
+			}
+		}
+	}
+	return [...names].sort();
+}
+
+/**
+ * Derive every URL the manifest, Spine index and UI image names imply, grouped by tier.
  *
  * @param {object} manifest The version 3 asset manifest.
  * @param {object} spineIndex The version 3 Spine index.
  * @param {string} assetsBase Base URL of the asset host.
  * @param {string} artBase Base URL of the art host.
- * @returns {Record<string, string[]>} Tier name -> URLs. Tiers are `manifest`, `cards`, `modCards`, `full`, `skills`, `equipment`,
+ * @param {string[]} [uiNames] Top-level UI image names, as `uiImageNames` finds them.
+ * @returns {Record<string, string[]>} Tier name -> URLs. Tiers are `manifest`, `ui`, `cards`, `modCards`, `full`, `skills`, `equipment`,
  *     `spineSkel` and `spineAtlas`.
  */
-export function candidateUrls(manifest, spineIndex, assetsBase, artBase) {
+export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames = []) {
 	const bases = { assets: assetsBase, art: artBase };
-	const tiers = { manifest: [join(assetsBase, "assets-manifest.json")], cards: [], modCards: [], full: [], skills: [], equipment: [], spineSkel: [], spineAtlas: [] };
+	const tiers = {
+		manifest: [join(assetsBase, "assets-manifest.json")],
+		ui: uiNames.map((name) => join(assetsBase, name)),
+		cards: [],
+		modCards: [],
+		full: [],
+		skills: [],
+		equipment: [],
+		spineSkel: [],
+		spineAtlas: []
+	};
 	for (const [id, doll] of Object.entries(manifest.dolls ?? {})) {
 		const forms = [[`tdolls/${id}`, doll.normal], [`tdolls/${id}/mod`, doll.mod], ...Object.entries(doll.skins ?? {}).map(([skinId, skin]) => [`tdolls/${id}/skins/${skinId}`, skin])];
 		for (const [folder, form] of forms) {
@@ -235,7 +270,7 @@ const option = (args, name, fallback) => (args.includes(name) ? args[args.indexO
  * @param {string[]} args Command-line arguments.
  */
 async function main(args) {
-	const valued = new Set(["--sample", "--seed", "--manifest", "--spine-index", "--concurrency"]);
+	const valued = new Set(["--sample", "--seed", "--manifest", "--spine-index", "--src", "--concurrency"]);
 	const positional = args.filter((arg, i) => !arg.startsWith("--") && !valued.has(args[i - 1]));
 	if (positional.length !== 2) {
 		console.error("usage: node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>]");
@@ -249,7 +284,7 @@ async function main(args) {
 	const manifest = JSON.parse(fs.readFileSync(option(args, "--manifest", DEFAULTS.manifest), "utf8"));
 	const spineIndex = JSON.parse(fs.readFileSync(option(args, "--spine-index", DEFAULTS.spineIndex), "utf8"));
 
-	const tiers = candidateUrls(manifest, spineIndex, assetsBase, artBase);
+	const tiers = candidateUrls(manifest, spineIndex, assetsBase, artBase, uiImageNames(option(args, "--src", DEFAULTS.src)));
 	const sample = sampleByTier(tiers, size, seed);
 	console.log(`assets ${assetsBase}`);
 	console.log(`art    ${artBase}`);

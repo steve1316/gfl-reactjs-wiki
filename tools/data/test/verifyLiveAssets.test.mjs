@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { atlasPageNames, candidateUrls, join, sampleByTier, seededRandom } from "../../assets/verify_live_assets.mjs";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+import { atlasPageNames, candidateUrls, join, sampleByTier, seededRandom, uiImageNames } from "../../assets/verify_live_assets.mjs";
 
 const rig = (skel, atlas = skel) => ({ skel, atlas, anims: ["wait"] });
 
@@ -32,6 +36,26 @@ test("URLs are derived per tier on the right host", () => {
 	assert.deepEqual(tiers.equipment, ["https://a.test/assets/equipment/5.png", "https://a.test/assets/equipment/12.png"]);
 	assert.equal(tiers.spineSkel.length, 4);
 	assert.deepEqual(tiers.spineAtlas, ["https://a.test/assets/spine/65/HK416.atlas", "https://a.test/assets/spine/65/mod/HK416Mod.atlas", "https://a.test/assets/spine/65/skins/805/HK416_805.atlas"]);
+});
+
+test("UI images are read from uiUrl calls and sampled on the asset host", () => {
+	const src = fs.mkdtempSync(path.join(os.tmpdir(), "verify-ui-"));
+	fs.mkdirSync(path.join(src, "pages", "home"), { recursive: true });
+	fs.writeFileSync(path.join(src, "pages", "home", "home.tsx"), 'const a = uiUrl("mod.png");\nconst b = uiUrl( "logo name.jpg" );\n');
+	fs.writeFileSync(path.join(src, "Navbar.ts"), 'const c = uiUrl(\'mod.png\'); const d = spineUrl(1, "x", "png");\n');
+	fs.writeFileSync(path.join(src, "notes.md"), 'uiUrl("ignored.png")\n');
+	try {
+		const names = uiImageNames(src);
+		assert.deepEqual(names, ["logo name.jpg", "mod.png"]);
+		assert.deepEqual(candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art", names).ui, ["https://a.test/assets/logo%20name.jpg", "https://a.test/assets/mod.png"]);
+		assert.deepEqual(candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art").ui, []);
+	} finally {
+		fs.rmSync(src, { recursive: true, force: true });
+	}
+});
+
+test("the site's own UI images are all found", () => {
+	assert.ok(uiImageNames("src").length >= 14);
 });
 
 test("join encodes each path segment like the site", () => {
