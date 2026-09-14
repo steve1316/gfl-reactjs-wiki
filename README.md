@@ -116,6 +116,8 @@ yarn deploy
 
 Doll and equipment data is generated from [gf-data-tools/gf-data-us](https://github.com/gf-data-tools/gf-data-us) by `tools/data/import.mjs`. That repository carries no licence. Game data and assets are © Sunborn / MICA Team, mirrored for fan-wiki use.
 
+Doll profiles (faction, manufacturer, country of origin and Global release date) and the real-world gun spec sheets come from [IOPWiki](https://iopwiki.com/), used under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Each doll page links back to its IOPWiki source page. Where IOPWiki gives no manufacturer or country, the gap is filled from [Wikidata](https://www.wikidata.org/), which is [CC0](https://creativecommons.org/publicdomain/zero/1.0/), and the doll page notes it.
+
 # License
 
 [GNU GPL 3.0](https://choosealicense.com/licenses/gpl-3.0/)
