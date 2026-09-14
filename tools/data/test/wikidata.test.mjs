@@ -55,15 +55,56 @@ function stubFetchRaw(response) {
 	};
 }
 
-test("resolves manufacturer and country labels for a found title, and skips a missing one", async () => {
+test("resolves manufacturer and country labels for a found title, and records a missing one as having no facts", async () => {
 	const restore = stubFetch([sample.entitiesResponse, sample.labelsResponse]);
 	try {
 		const facts = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0, cacheDir });
 		assert.deepEqual(facts.get("Test Rifle"), { manufacturer: ["Test Arms Co"], country: ["Testland"] });
-		assert.equal(facts.has("Unknown Weapon"), false);
-		assert.ok(fs.existsSync(path.join(cacheDir, "wikidata.json")));
+		assert.deepEqual(facts.get("Unknown Weapon"), { manufacturer: [], country: [] });
+		const cached = JSON.parse(fs.readFileSync(path.join(cacheDir, "wikidata.json"), "utf8"));
+		assert.deepEqual(cached["Unknown Weapon"], { manufacturer: [], country: [] });
 	} finally {
 		restore();
+	}
+});
+
+test("a reuse run gives back exactly what the network run returned, missing titles included, without fetching", async () => {
+	const restore = stubFetch([sample.entitiesResponse, sample.labelsResponse]);
+	let fetched;
+	try {
+		fetched = await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0, cacheDir });
+	} finally {
+		restore();
+	}
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => {
+		throw new Error("network should not be called in reuse mode");
+	};
+	process.env.WIKIDATA_CACHE = "reuse";
+	try {
+		assert.deepEqual(await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { cacheDir }), fetched);
+	} finally {
+		delete process.env.WIKIDATA_CACHE;
+		globalThis.fetch = original;
+	}
+});
+
+test("WIKIDATA_CACHE=reuse fails when there is no cache file", async () => {
+	process.env.WIKIDATA_CACHE = "reuse";
+	try {
+		await assert.rejects(fetchWikidataFacts(["Cached Rifle"], { cacheDir }), /WIKIDATA_CACHE=reuse.*no cache file/);
+	} finally {
+		delete process.env.WIKIDATA_CACHE;
+	}
+});
+
+test("WIKIDATA_CACHE=reuse fails when a requested title was never fetched", async () => {
+	fs.writeFileSync(path.join(cacheDir, "wikidata.json"), JSON.stringify({ "Cached Rifle": { manufacturer: ["Cached Co"], country: ["Cacheland"] } }));
+	process.env.WIKIDATA_CACHE = "reuse";
+	try {
+		await assert.rejects(fetchWikidataFacts(["Cached Rifle", "New Rifle"], { cacheDir }), /New Rifle/);
+	} finally {
+		delete process.env.WIKIDATA_CACHE;
 	}
 });
 
