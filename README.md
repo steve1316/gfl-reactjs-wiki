@@ -120,11 +120,7 @@ Doll and equipment data is generated from [gf-data-tools/gf-data-us](https://git
 - **Global release dates** come from gf-data-us launch times, cross-checked against [gf-data-tools/gf-data-ch](https://github.com/gf-data-tools/gf-data-ch) to catch copied CN dates. Where the Global date cannot be trusted, [IOPWiki](https://iopwiki.com/) supplies the release month.
 - **Faction, manufacturer, country of origin and full gun name** come from [IOPWiki](https://iopwiki.com/), used under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Where IOPWiki gives no manufacturer or country, the gap is filled from [Wikidata](https://www.wikidata.org/), which is [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
 
-The data refreshes itself. A daily GitHub Action (`.github/workflows/refresh.yml`) moves the gf-data-us and gf-data-ch pins to their latest
-commits, regenerates `src/data/`, extracts art for any new doll, Mod, skin or equipment from the game's own asset bundles, publishes it to the
-two asset repos, checks everything with `tools/data/check.mjs`, then commits and deploys. When nothing new has been released it stops without
-committing, and when any step fails it commits nothing and tries again the next day. It can also be started by hand from the Actions tab,
-with a dry run option that skips every push.
+The data refreshes itself. A daily GitHub Action (`.github/workflows/refresh.yml`) moves the gf-data-us and gf-data-ch pins to their latest commits, regenerates `src/data/`, extracts art for any new doll, Mod, skin or equipment from the game's own asset bundles, and checks everything with `tools/data/check.mjs`. Only then does it publish the new art to the two asset repos, wait for it to go live, commit the data and deploy. When nothing new has been released it stops early, and when the game data moved without changing anything the site shows it commits only the new pins. A failed run leaves the site untouched, and the next day's run tries again, reusing any art it already published. It can also be started by hand from the Actions tab, with a dry run option that skips every push and the deploy.
 
 # License
 

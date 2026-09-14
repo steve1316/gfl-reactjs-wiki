@@ -31,6 +31,8 @@ jobs:
       cn: ${{ steps.shas.outputs.cn }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: master
 
       - uses: actions/setup-node@v7
         with:
@@ -72,6 +74,8 @@ jobs:
       CN_SHA: ${{ needs.plan.outputs.cn }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: master
 
       - uses: pnpm/action-setup@v6
 
