@@ -71,7 +71,6 @@ export function buildDoll(upstream, gun, ctx) {
 	return {
 		normal: buildForm(upstream, gun, gun, ctx),
 		mod: modGun ? buildForm(upstream, modGun, gun, ctx) : null,
-		skins: buildSkins(upstream, gun.id, ctx.skinAssets[String(gun.id)]),
-		released: gun.launch_time.slice(0, 10)
+		skins: buildSkins(upstream, gun.id, ctx.skinAssets[String(gun.id)])
 	};
 }

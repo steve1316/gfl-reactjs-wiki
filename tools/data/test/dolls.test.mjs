@@ -31,7 +31,7 @@ test("HK416 assembles with its Mod, skins in art-slot order first", () => {
 	assert.deepEqual(doll.skins.skin_ids.slice(0, skinAssets["65"].length), skinAssets["65"]);
 	assert.equal(doll.skins.number_of_skins, doll.skins.skin_names.length);
 	assert.ok(doll.skins.skin_ids.includes(537) && !doll.skins.skin_ids.includes(5024));
-	assert.match(doll.released, /^\d{4}-\d{2}-\d{2}$/);
+	assert.equal(doll.released, undefined);
 });
 
 test("each form carries its spec sheet rows, and a collab doll with no spec text has none", () => {
