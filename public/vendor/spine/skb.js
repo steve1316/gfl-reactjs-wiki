@@ -522,13 +522,18 @@ SkeletonBinary.prototype = {
                 var mix = this.readFloat();
                 var bendPositive = this.readBoolean();
                 // Maybe use ReadSByte()
+                // Local patch: the frame object was never created here, so any skeleton with an IK timeline failed to parse.
+                timeline[frameIndex] = {};
                 timeline[frameIndex].time = time;
                 timeline[frameIndex].mix = mix;
                 timeline[frameIndex].bendPositive = bendPositive;
                 if(frameIndex < frameCount - 1)
                     this.readCurve(frameIndex, timeline);
             }
-            ik[this.json.ik[ikIndex]] = timeline;
+            // Local patch: keyed by the constraint's name, as the JSON reader looks it up, rather than by the constraint object.
+            ik[this.json.ik[ikIndex].name] = timeline;
+            if(frameCount > 0)
+                duration = Math.max(duration, timeline[frameCount - 1].time);
         }
         animation.ik = ik;
 
