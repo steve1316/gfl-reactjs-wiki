@@ -11,7 +11,7 @@ const CACHE_DIR = path.resolve("tools/data/.cache/gf-data-us");
 const REPO_URL = "https://github.com/gf-data-tools/gf-data-us.git";
 
 /** The lock file recording which upstream commit to build from. */
-const LOCK_FILE = path.resolve("tools/data/upstream.lock.json");
+export const LOCK_FILE = path.resolve("tools/data/upstream.lock.json");
 
 /**
  * Run git in a directory and return its trimmed output.
@@ -31,6 +31,34 @@ function git(dir, args) {
  */
 export function readLock() {
 	return JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
+}
+
+/**
+ * Move the pinned gf-data-us and gf-data-ch commits in the lock file's text, keeping its formatting.
+ *
+ * Only the two sha strings are replaced, so the Prettier layout of the file survives and an unmoved pin leaves its line untouched.
+ *
+ * @param {string} text The current contents of `upstream.lock.json`.
+ * @param {{ us: string, cn: string }} shas The full commit shas to pin for gf-data-us and gf-data-ch.
+ * @returns {string} The new file contents.
+ * @throws {Error} When a sha is not a full 40-character commit sha, or a current pin does not appear exactly once in the text.
+ */
+export function setLockShas(text, { us, cn }) {
+	for (const sha of [us, cn]) {
+		if (!/^[0-9a-f]{40}$/.test(sha)) {
+			throw new Error(`not a full commit sha: ${sha}`);
+		}
+	}
+	const lock = JSON.parse(text);
+	const swap = (source, from, to) => {
+		const needle = `"sha": "${from}"`;
+		if (source.split(needle).length !== 2) {
+			throw new Error(`upstream.lock.json does not hold ${needle} exactly once`);
+		}
+		return source.replace(needle, `"sha": "${to}"`);
+	};
+	const withUs = lock.sha === us ? text : swap(text, lock.sha, us);
+	return lock.cn.sha === cn ? withUs : swap(withUs, lock.cn.sha, cn);
 }
 
 /**
