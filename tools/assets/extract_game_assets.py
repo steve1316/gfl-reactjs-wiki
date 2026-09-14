@@ -1,0 +1,810 @@
+#!/usr/bin/env python3
+"""Extract card art, full art, skill icons and equipment icons from the cached game bundles into the staging trees.
+
+Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and the bundles it names, and writes:
+
+- `tools/assets/.staging/assets/`: `tdolls/<id>/card.webp` / `card_d.webp` (plus `mod/` and `skins/<skinId>/`, with `mod_card(_d).webp` for
+  Mod-skin cards), `tdolls/<id>/skill1.png` / `skill2.png`, `equipment/<equipId>.png` and the UI images carried over from the current asset repo.
+- `tools/assets/.staging/art/`: `tdolls/<id>/full.webp` / `full_d.webp`, with the same `mod/` and `skins/<skinId>/` folders.
+- `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes per tree.
+
+Cards are the two halves of the game's 512x512 `pic_<Code>_N` atlas. Equipment icons are composited onto the game's own rarity pattern sprites
+from `atlasclips_listequipment`. The exclusive "ONLY" badge is already drawn into the game icon, so no badge sprite is added.
+
+Subcommands:
+
+- `run` checks 20 hosted cards against the bundles, then extracts everything with a process pool.
+- `verify-cards` runs only the hosted card check.
+- `proof-equip` writes side-by-side comparisons of composited and hosted equipment icons.
+"""
+
+import argparse
+import collections
+import concurrent.futures
+import io
+import json
+import os
+import random
+import re
+import shutil
+import sys
+import time
+
+from PIL import Image
+
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, TOOLS_DIR)
+
+from game_bundles import BUNDLE_CACHE_DIR, BYTES_PER_MB, INVENTORY_PATH, SITE_DATA_DIR, read_json  # noqa: E402
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Constants
+
+STAGING_DIR = os.path.join(TOOLS_DIR, ".staging")
+TREES = ("assets", "art")
+
+CARD_QUALITY = 90
+FULL_QUALITY = 85
+WEBP_METHOD = 4
+FULL_SIZE = (2048, 2048)
+CARD_ATLAS_SIZE = (512, 512)
+SKILL_SIZE = (100, 100)
+EQUIP_SOURCE_SIZE = (256, 256)
+
+WARN_BYTES = 900 * BYTES_PER_MB
+LIMIT_BYTES = 1000 * BYTES_PER_MB
+
+# Equipment frame. The game's list card is 128x98 with the 256px icon drawn at 123px, so the hosted 256x196 icons are that card at 2x.
+# Size and offset were fitted against the hosted icons (best match at 246px, offset (6, -24)).
+FRAME_BUNDLE = "atlasclips_listequipment"
+EQUIP_SIZE = (256, 196)
+EQUIP_ICON_SIZE = 246
+EQUIP_ICON_OFFSET = (6, -24)
+# Rarity -> the game's own sprite name for the white, blue, green and yellow pattern.
+RARITY_BACKGROUNDS = {2: "底纹_白", 3: "底纹_蓝", 4: "底纹_绿", 5: "底纹_黄"}
+
+# Inventory role -> output tree and names. Cards split into a normal and damaged half, so they carry two names.
+ROLE_OUTPUTS = (
+    ("card", "assets", ("card.webp", "card_d.webp")),
+    ("mod_card", "assets", ("mod_card.webp", "mod_card_d.webp")),
+    ("full", "art", ("full.webp",)),
+    ("full_d", "art", ("full_d.webp",)),
+)
+ART_TIERS = ("art", "mod_art", "skin_art")
+
+# Report tiers, keyed by inventory tier and role.
+REPORT_TIERS = {
+    ("art", "card"): "card",
+    ("art", "full"): "full",
+    ("art", "full_d"): "full",
+    ("mod_art", "card"): "mod_card",
+    ("mod_art", "full"): "mod_full",
+    ("mod_art", "full_d"): "mod_full",
+    ("skin_art", "card"): "skin_card",
+    ("skin_art", "mod_card"): "skin_mod_card",
+    ("skin_art", "full"): "skin_full",
+    ("skin_art", "full_d"): "skin_full",
+}
+
+HOSTED_CARD_RE = re.compile(r"^\d+_(?:(mod)_)?(?:skin(\d+)_)?card\.png$")
+CARD_CHECK_COUNT = 20
+CARD_CHECK_SEED = 4
+PROOF_EQUIP_IDS = (1, 2, 3, 4, 59)
+
+# Files at the root of the asset repo clone that are not UI images.
+UI_SKIP = frozenset(("README.md", "assets-manifest.json", "CNAME", ".nojekyll"))
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Image logic
+
+
+def split_card_atlas(atlas):
+    """Split a card atlas into its normal (left) and damaged (right) halves.
+
+    Args:
+        atlas: The decoded `pic_<Code>_N` texture.
+
+    Raises:
+        ValueError: When the width is odd.
+
+    Returns:
+        A `(normal, damaged)` pair of images, each half the width and the full height.
+    """
+    width, height = atlas.size
+    if width % 2:
+        raise ValueError(f"card atlas width {width} is odd")
+    half = width // 2
+    return atlas.crop((0, 0, half, height)), atlas.crop((half, 0, width, height))
+
+
+def merge_alpha(color, alpha):
+    """Merge an `_Alpha` sibling texture into a colour texture.
+
+    Args:
+        color: The colour texture.
+        alpha: The alpha texture. Its `A` channel is used when it has one, otherwise its single channel. It is resized when smaller.
+
+    Returns:
+        A new RGBA image.
+    """
+    channel = alpha.getchannel("A") if "A" in alpha.getbands() else alpha.convert("L")
+    if channel.size != color.size:
+        channel = channel.resize(color.size, Image.Resampling.BICUBIC)
+    merged = color.convert("RGBA")
+    merged.putalpha(channel)
+    return merged
+
+
+def rarity_background(rarity):
+    """Name the pattern sprite used behind an equipment icon.
+
+    Args:
+        rarity: Equipment rarity from the site data.
+
+    Raises:
+        ValueError: For a rarity with no known background.
+
+    Returns:
+        The sprite name inside `FRAME_BUNDLE`.
+    """
+    if rarity not in RARITY_BACKGROUNDS:
+        raise ValueError(f"no background for rarity {rarity}")
+    return RARITY_BACKGROUNDS[rarity]
+
+
+def compose_equip_icon(icon, background):
+    """Draw an equipment icon over its rarity background at the hosted size.
+
+    Args:
+        icon: The RGBA game icon, normally 256x256.
+        background: The rarity pattern sprite, normally 127x98.
+
+    Returns:
+        A 256x196 RGB image.
+    """
+    canvas = background.convert("RGBA").resize(EQUIP_SIZE, Image.Resampling.BICUBIC)
+    layer = Image.new("RGBA", EQUIP_SIZE, (0, 0, 0, 0))
+    layer.paste(icon.convert("RGBA").resize((EQUIP_ICON_SIZE, EQUIP_ICON_SIZE), Image.Resampling.BICUBIC), EQUIP_ICON_OFFSET)
+    return Image.alpha_composite(canvas, layer).convert("RGB")
+
+
+def encode_webp(image, quality):
+    """Encode an image as lossy WebP with every encoder option set explicitly.
+
+    Args:
+        image: An RGB or RGBA image.
+        quality: WebP quality, 0-100.
+
+    Returns:
+        The encoded bytes.
+    """
+    buffer = io.BytesIO()
+    image.save(buffer, "WEBP", lossless=False, quality=quality, method=WEBP_METHOD, alpha_quality=100, exact=False)
+    return buffer.getvalue()
+
+
+def encode_png(image):
+    """Encode an image as PNG with fixed compression settings.
+
+    Args:
+        image: The image to encode.
+
+    Returns:
+        The encoded bytes.
+    """
+    buffer = io.BytesIO()
+    image.save(buffer, "PNG", compress_level=9, optimize=False)
+    return buffer.getvalue()
+
+
+def tree_limit_status(total_bytes):
+    """Classify a staging tree size against the Pages limits.
+
+    Args:
+        total_bytes: Bytes in the tree.
+
+    Returns:
+        `ok`, `warn` above 900 MB, or `over` above 1,000 MB.
+    """
+    if total_bytes > LIMIT_BYTES:
+        return "over"
+    return "warn" if total_bytes > WARN_BYTES else "ok"
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Paths
+
+
+def form_dir(item):
+    """Build the folder an art item's files live in.
+
+    Args:
+        item: An `art`, `mod_art` or `skin_art` inventory item.
+
+    Returns:
+        A relative folder such as `tdolls/65/skins/30033`.
+    """
+    parts = ["tdolls", str(item["doll_id"])]
+    if item["tier"] == "mod_art":
+        parts.append("mod")
+    elif item["tier"] == "skin_art":
+        parts.extend(("skins", str(item["skin_id"])))
+    return "/".join(parts)
+
+
+def art_outputs(item):
+    """List the files an art item produces, role by role.
+
+    Args:
+        item: An `art`, `mod_art` or `skin_art` inventory item.
+
+    Returns:
+        A list of `(role, tree, [relative paths])`, in `ROLE_OUTPUTS` order, for the roles the item resolved.
+    """
+    folder = form_dir(item)
+    return [(role, tree, [f"{folder}/{name}" for name in names]) for role, tree, names in ROLE_OUTPUTS if role in item["assets"]]
+
+
+def skill_outputs(item):
+    """List the skill icon files one skill codename is written to.
+
+    Args:
+        item: A `skill_icon` inventory item with `users`.
+
+    Returns:
+        One `tdolls/<id>/<slot>.png` path per doll slot using the icon.
+    """
+    return [f"tdolls/{doll_id}/{slot}.png" for doll_id, slot in item["users"]]
+
+
+def equip_output(item):
+    """Build the output path of an equipment icon.
+
+    Args:
+        item: An `equip_icon` inventory item.
+
+    Returns:
+        The relative path `equipment/<equipId>.png`.
+    """
+    return f"equipment/{item['equip_id']}.png"
+
+
+def parse_hosted_card(filename):
+    """Parse a card filename from the current asset repo.
+
+    Args:
+        filename: A basename such as `65_mod_skin2_card.png`.
+
+    Returns:
+        A `(form, slot)` pair with form `normal`, `mod`, `skin` or `mod_skin` and the 1-based skin slot, or None for anything else.
+    """
+    match = HOSTED_CARD_RE.match(filename)
+    if not match:
+        return None
+    mod, slot = match.group(1), match.group(2)
+    form = ("mod_skin" if mod else "skin") if slot else ("mod" if mod else "normal")
+    return form, int(slot) if slot else None
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Bundle access
+
+
+def load_textures(bundle_names, cache_dir):
+    """Index the `Texture2D` objects of some bundles by lowercased container path.
+
+    Args:
+        bundle_names: Bundle names to open.
+        cache_dir: The bundle cache directory.
+
+    Returns:
+        A dict of lowercased asset path to the UnityPy object reader.
+    """
+    import UnityPy
+
+    textures = {}
+    for name in bundle_names:
+        env = UnityPy.load(os.path.join(cache_dir, f"{name}.ab"))
+        for path, obj in env.container.items():
+            if obj.type.name == "Texture2D":
+                textures[path.lower()] = obj
+    return textures
+
+
+def load_named_textures(bundle_name, cache_dir, kind):
+    """Index one bundle's objects of a kind by name.
+
+    Args:
+        bundle_name: Bundle name.
+        cache_dir: The bundle cache directory.
+        kind: `Texture2D` or `Sprite`.
+
+    Returns:
+        A dict of object name to the decoded image.
+    """
+    import UnityPy
+
+    env = UnityPy.load(os.path.join(cache_dir, f"{bundle_name}.ab"))
+    images = {}
+    for obj in env.objects:
+        if obj.type.name == kind:
+            data = obj.read()
+            images[data.m_Name] = data.image
+    return images
+
+
+def decode(textures, asset):
+    """Decode one inventory asset from a texture index.
+
+    Args:
+        textures: The index from `load_textures`.
+        asset: An inventory asset dict with `path`.
+
+    Raises:
+        KeyError: When the bundle holds no texture at that path.
+
+    Returns:
+        The decoded PIL image.
+    """
+    return textures[asset["path"].lower()].read().image
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Workers
+
+
+def new_result():
+    """Build an empty worker result.
+
+    Returns:
+        A dict with `files` (tree, path, bytes, report tier), `missing` and `nonstandard` lists.
+    """
+    return {"files": [], "missing": [], "nonstandard": []}
+
+
+def write_file(staging, tree, rel, data, tier, result):
+    """Write one output file and record it.
+
+    Args:
+        staging: The staging root.
+        tree: `assets` or `art`.
+        rel: Path inside the tree.
+        data: Encoded bytes.
+        tier: Report tier the file counts under.
+        result: The worker result to append to.
+    """
+    path = os.path.join(staging, tree, rel)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as handle:
+        handle.write(data)
+    result["files"].append([tree, rel, len(data), tier])
+
+
+def extract_art_item(item, cache_dir, staging):
+    """Extract the cards and full art of one doll, Mod or skin.
+
+    Args:
+        item: An art inventory item.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    try:
+        textures = load_textures(item["bundles"], cache_dir)
+    except Exception as exc:
+        result["missing"].append({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc}"})
+        return result
+    for role, tree, paths in art_outputs(item):
+        tier = REPORT_TIERS[(item["tier"], role)]
+        try:
+            image = decode(textures, item["assets"][role])
+        except Exception as exc:
+            result["missing"].append({"key": item["key"], "role": role, "reason": f"decode failed: {exc!r}"})
+            continue
+        if tree == "assets":
+            if image.size != CARD_ATLAS_SIZE:
+                result["nonstandard"].append({"key": item["key"], "role": role, "size": list(image.size), "expected": list(CARD_ATLAS_SIZE)})
+            for rel, half in zip(paths, split_card_atlas(image.convert("RGB"))):
+                write_file(staging, tree, rel, encode_webp(half, CARD_QUALITY), tier, result)
+        else:
+            if image.size != FULL_SIZE:
+                result["nonstandard"].append({"key": item["key"], "role": role, "size": list(image.size), "expected": list(FULL_SIZE)})
+            full = image if image.mode in ("RGB", "RGBA") else image.convert("RGBA")
+            write_file(staging, tree, paths[0], encode_webp(full, FULL_QUALITY), tier, result)
+    return result
+
+
+def extract_skill_icons(items, cache_dir, staging):
+    """Extract every skill icon from the skill bundle.
+
+    Args:
+        items: Resolved `skill_icon` inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir)
+    for item in items:
+        try:
+            image = decode(textures, item["assets"]["icon"])
+        except Exception as exc:
+            result["missing"].append({"key": item["key"], "role": "icon", "reason": f"decode failed: {exc!r}"})
+            continue
+        if image.size != SKILL_SIZE:
+            result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(image.size), "expected": list(SKILL_SIZE)})
+        data = encode_png(image)
+        for rel in skill_outputs(item):
+            write_file(staging, "assets", rel, data, "skill_icon", result)
+    return result
+
+
+def build_equip_icon(textures, backgrounds, item, rarity):
+    """Composite one equipment icon.
+
+    Args:
+        textures: Texture index of the equipment bundle.
+        backgrounds: Rarity sprites by name, from `FRAME_BUNDLE`.
+        item: An `equip_icon` inventory item.
+        rarity: The item's rarity from the site data.
+
+    Returns:
+        A `(composite, source size)` pair.
+    """
+    icon = decode(textures, item["assets"]["icon"])
+    if "alpha" in item["assets"]:
+        icon = merge_alpha(icon, decode(textures, item["assets"]["alpha"]))
+    return compose_equip_icon(icon, backgrounds[rarity_background(rarity)]), icon.size
+
+
+def extract_equip_icons(items, rarities, cache_dir, staging):
+    """Extract and composite every equipment icon.
+
+    Args:
+        items: Resolved `equip_icon` inventory items.
+        rarities: Rarity by equipment id.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir)
+    backgrounds = load_named_textures(FRAME_BUNDLE, cache_dir, "Sprite")
+    for item in items:
+        try:
+            image, source_size = build_equip_icon(textures, backgrounds, item, rarities[item["equip_id"]])
+        except Exception as exc:
+            result["missing"].append({"key": item["key"], "role": "icon", "reason": f"failed: {exc!r}"})
+            continue
+        if source_size != EQUIP_SOURCE_SIZE:
+            result["nonstandard"].append({"key": item["key"], "role": "icon", "size": list(source_size), "expected": list(EQUIP_SOURCE_SIZE)})
+        write_file(staging, "assets", equip_output(item), encode_png(image), "equip_icon", result)
+    return result
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Verification against the hosted assets
+
+
+def load_rarities(site_dir):
+    """Read equipment rarity and hosted image path by id from the site data.
+
+    Args:
+        site_dir: Directory holding `equipment.json`.
+
+    Returns:
+        A `(rarities, images)` pair of dicts keyed by equipment id.
+    """
+    items = [item for group in read_json(os.path.join(site_dir, "equipment.json"))["items"].values() for item in group]
+    return {item["id"]: item["rarity"] for item in items}, {item["id"]: item.get("image") for item in items}
+
+
+def mean_abs_diff(first, second):
+    """Mean absolute per-channel difference of two same-sized images.
+
+    Args:
+        first: An image.
+        second: An image of the same size, compared in the first image's mode.
+
+    Returns:
+        The mean difference on a 0-255 scale.
+    """
+    from PIL import ImageChops, ImageStat
+
+    diff = ImageChops.difference(first, second.convert(first.mode))
+    return sum(ImageStat.Stat(diff).mean) / len(diff.getbands())
+
+
+def hosted_card_targets(inventory, clone):
+    """Map every hosted card in the asset repo clone to the inventory asset it should match.
+
+    Args:
+        inventory: The inventory dict.
+        clone: The local clone of the current asset repo.
+
+    Returns:
+        A sorted list of `(hosted path, item, role)`.
+    """
+    items = {item["key"]: item for item in inventory["items"]}
+    slots = read_json(os.path.join(os.path.dirname(TOOLS_DIR), "data", "skin-assets.json"))
+    targets = []
+    root = os.path.join(clone, "tdolls")
+    for doll in sorted(os.listdir(root)):
+        for filename in sorted(os.listdir(os.path.join(root, doll))):
+            parsed = parse_hosted_card(filename)
+            if not parsed:
+                continue
+            form, slot = parsed
+            key, role = {"normal": (f"art:{doll}", "card"), "mod": (f"mod_art:{doll}", "card")}.get(form, (None, "mod_card" if form == "mod_skin" else "card"))
+            if slot:
+                skin_ids = slots.get(doll, [])
+                skin_id = skin_ids[slot - 1] if slot <= len(skin_ids) else None
+                if not isinstance(skin_id, int):
+                    continue
+                key = f"skin_art:{doll}:{skin_id}"
+            item = items.get(key)
+            if item and role in item["assets"]:
+                targets.append((os.path.join(root, doll, filename), item, role))
+    return targets
+
+
+def verify_hosted_cards(inventory, clone, cache_dir, count=CARD_CHECK_COUNT, seed=CARD_CHECK_SEED):
+    """Check that atlas halves match a random sample of hosted cards pixel for pixel.
+
+    Args:
+        inventory: The inventory dict.
+        clone: The local clone of the current asset repo.
+        cache_dir: The bundle cache directory.
+        count: How many hosted cards to sample.
+        seed: Random seed, so the sample is repeatable.
+
+    Returns:
+        A list of `{hosted, key, role, diff_card, diff_card_d}` rows.
+    """
+    rows = []
+    for hosted, item, role in random.Random(seed).sample(hosted_card_targets(inventory, clone), count):
+        textures = load_textures(item["bundles"], cache_dir)
+        normal, damaged = split_card_atlas(decode(textures, item["assets"][role]).convert("RGB"))
+        diffs = [mean_abs_diff(half, Image.open(path)) for half, path in ((normal, hosted), (damaged, hosted.replace("_card.png", "_card_d.png")))]
+        rows.append({"hosted": os.path.relpath(hosted, clone), "key": item["key"], "role": role, "diff_card": diffs[0], "diff_card_d": diffs[1]})
+    return rows
+
+
+def proof_equip(inventory, clone, site_dir, cache_dir, out_dir):
+    """Write side-by-side proofs of composited against hosted equipment icons.
+
+    Each proof is our icon, the hosted icon and their difference amplified 4x, left to right.
+
+    Args:
+        inventory: The inventory dict.
+        clone: The local clone of the current asset repo.
+        site_dir: Directory holding `equipment.json`.
+        cache_dir: The bundle cache directory.
+        out_dir: Where to write the proof PNGs.
+
+    Returns:
+        A list of `{equip_id, rarity, hosted, diff, proof}` rows.
+    """
+    from PIL import ImageChops
+
+    rarities, images = load_rarities(site_dir)
+    items = {item["equip_id"]: item for item in inventory["items"] if item["tier"] == "equip_icon"}
+    textures = load_textures(sorted({name for item in items.values() for name in item["bundles"]}), cache_dir)
+    backgrounds = load_named_textures(FRAME_BUNDLE, cache_dir, "Sprite")
+    os.makedirs(out_dir, exist_ok=True)
+    rows = []
+    for equip_id in PROOF_EQUIP_IDS:
+        ours, _size = build_equip_icon(textures, backgrounds, items[equip_id], rarities[equip_id])
+        hosted = Image.open(os.path.join(clone, images[equip_id])).convert("RGB")
+        diff = ImageChops.difference(ours, hosted).point(lambda value: min(255, value * 4))
+        sheet = Image.new("RGB", (EQUIP_SIZE[0] * 3, EQUIP_SIZE[1]))
+        for column, image in enumerate((ours, hosted, diff)):
+            sheet.paste(image, (column * EQUIP_SIZE[0], 0))
+        proof = os.path.join(out_dir, f"proof_equip_{equip_id}.png")
+        sheet.save(proof)
+        rows.append({"equip_id": equip_id, "rarity": rarities[equip_id], "hosted": images[equip_id], "diff": mean_abs_diff(ours, hosted), "proof": proof})
+    return rows
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Run
+
+
+def tree_size(root):
+    """Total the bytes and files under a directory.
+
+    Args:
+        root: The directory.
+
+    Returns:
+        A `(bytes, files)` pair, zeros when the directory does not exist.
+    """
+    total, files = 0, 0
+    for folder, _dirs, names in os.walk(root):
+        for name in names:
+            total += os.path.getsize(os.path.join(folder, name))
+            files += 1
+    return total, files
+
+
+def reset_staging(staging):
+    """Remove previous outputs of this extractor, leaving other staged folders such as `spine/` alone.
+
+    Args:
+        staging: The staging root.
+    """
+    for rel in ("assets/tdolls", "assets/equipment", "art/tdolls"):
+        shutil.rmtree(os.path.join(staging, rel), ignore_errors=True)
+    for tree in TREES:
+        os.makedirs(os.path.join(staging, tree), exist_ok=True)
+
+
+def copy_ui(clone, staging):
+    """Copy the UI images at the root of the current asset repo into the asset tree unchanged.
+
+    Args:
+        clone: The local clone of the current asset repo.
+        staging: The staging root.
+
+    Returns:
+        The copied filenames.
+    """
+    names = sorted(name for name in os.listdir(clone) if os.path.isfile(os.path.join(clone, name)) and name not in UI_SKIP and not name.startswith("."))
+    for name in names:
+        shutil.copyfile(os.path.join(clone, name), os.path.join(staging, "assets", name))
+    return names
+
+
+def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
+    """Extract every image tier into the staging trees and write the report.
+
+    Args:
+        inventory: The inventory dict.
+        clone: The local clone of the current asset repo, for the UI images.
+        site_dir: Directory holding `equipment.json`.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        workers: Process pool size.
+
+    Returns:
+        The report dict.
+    """
+    started = time.monotonic()
+    reset_staging(staging)
+    ui_files = copy_ui(clone, staging)
+    rarities, _images = load_rarities(site_dir)
+
+    report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
+    art_items, skill_items, equip_items = [], [], []
+    for item in inventory["items"]:
+        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon")
+        if not wanted:
+            continue
+        if item["status"] != "resolved" and not item["assets"]:
+            report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
+            continue
+        report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
+        {"skill_icon": skill_items, "equip_icon": equip_items}.get(item["tier"], art_items).append(item)
+
+    files, done = [], 0
+    with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(extract_skill_icons, skill_items, cache_dir, staging), pool.submit(extract_equip_icons, equip_items, rarities, cache_dir, staging)]
+        futures += [pool.submit(extract_art_item, item, cache_dir, staging) for item in art_items]
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            files.extend(result["files"])
+            report["missing"].extend(result["missing"])
+            report["nonstandard"].extend(result["nonstandard"])
+            done += 1
+            if done % 100 == 0 or done == len(futures):
+                print(f"[{done}/{len(futures)}] {len(files)} files, {time.monotonic() - started:.0f}s", flush=True)
+
+    counts = collections.OrderedDict()
+    for tree, _rel, size, tier in sorted(files, key=lambda row: (row[3], row[1])):
+        entry = counts.setdefault(tier, {"tree": tree, "files": 0, "bytes": 0})
+        entry["files"] += 1
+        entry["bytes"] += size
+    counts["ui"] = {"tree": "assets", "files": len(ui_files), "bytes": sum(os.path.getsize(os.path.join(staging, "assets", name)) for name in ui_files)}
+    report["tiers"] = counts
+    report["missing"].sort(key=lambda row: (row["key"], row["role"]))
+    report["nonstandard"].sort(key=lambda row: (row["key"], row["role"]))
+    report["trees"] = {}
+    for tree in TREES:
+        size, count = tree_size(os.path.join(staging, tree))
+        report["trees"][tree] = {"files": count, "bytes": size, "mb": round(size / BYTES_PER_MB, 1), "status": tree_limit_status(size)}
+    report["seconds"] = round(time.monotonic() - started, 1)
+    with open(os.path.join(staging, "extract-report.json"), "w", encoding="utf-8") as handle:
+        json.dump(report, handle, indent=1, ensure_ascii=False)
+    return report
+
+
+def print_report(report):
+    """Print the extraction report summary.
+
+    Args:
+        report: The report dict from `run_extraction`.
+    """
+    print(f"{'TIER':<16}{'TREE':<8}{'FILES':>7}{'MB':>9}")
+    for tier, entry in report["tiers"].items():
+        print(f"{tier:<16}{entry['tree']:<8}{entry['files']:>7}{entry['bytes'] / BYTES_PER_MB:>9.1f}")
+    for tree, entry in report["trees"].items():
+        print(f"tree {tree}: {entry['files']} files, {entry['mb']} MB ({entry['status']})")
+    print(f"missing: {len(report['missing'])}, non-standard sizes: {len(report['nonstandard'])}, {report['seconds']}s")
+    for row in report["missing"]:
+        print(f"  missing {row['key']} {row['role']}: {row['reason']}")
+    for row in report["nonstandard"]:
+        print(f"  size {row['key']} {row['role']}: {row['size']} (expected {row['expected']})")
+
+
+def check_cards(inventory, clone, cache_dir, allow_diffs=False):
+    """Run the hosted card check and stop the program when any card differs.
+
+    Args:
+        inventory: The inventory dict.
+        clone: The local clone of the current asset repo.
+        cache_dir: The bundle cache directory.
+        allow_diffs: Print differing cards but carry on. Only for runs where the differences were inspected and are art revisions.
+    """
+    rows = verify_hosted_cards(inventory, clone, cache_dir)
+    for row in rows:
+        print(f"card check {row['hosted']} <- {row['key']} {row['role']}: diff {row['diff_card']:.4f} / {row['diff_card_d']:.4f}")
+    bad = [row for row in rows if row["diff_card"] or row["diff_card_d"]]
+    if bad and not allow_diffs:
+        sys.exit(f"card check failed on {len(bad)} of {len(rows)} hosted cards")
+    if bad:
+        print(f"card check: {len(bad)} of {len(rows)} hosted cards differ, continuing because --allow-card-diffs was passed")
+        return
+    print(f"card check passed: {len(rows)} hosted cards match their atlas halves exactly")
+
+
+def main():
+    """Parse arguments and run the requested subcommand."""
+    parser = argparse.ArgumentParser(description="Extract card art, full art and icons from the cached game bundles into the staging trees.")
+    parser.add_argument("command", choices=("run", "verify-cards", "proof-equip"))
+    parser.add_argument("--reference-clone", required=True, help="Local clone of the current gfl-wiki-assets repo.")
+    parser.add_argument("--site-data", default=SITE_DATA_DIR, help="Directory holding the site's equipment.json.")
+    parser.add_argument("--cache", default=BUNDLE_CACHE_DIR, help="Bundle cache directory.")
+    parser.add_argument("--staging", default=STAGING_DIR, help="Staging root holding the assets and art trees.")
+    parser.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1), help="Process pool size, defaults to cores - 1.")
+    parser.add_argument("--out-dir", help="Output folder for proof-equip.")
+    parser.add_argument("--allow-card-diffs", action="store_true", help="Report hosted cards that differ from the game atlas instead of stopping.")
+    args = parser.parse_args()
+    inventory = read_json(INVENTORY_PATH)
+
+    if args.command == "proof-equip":
+        if not args.out_dir:
+            sys.exit("proof-equip needs --out-dir")
+        for row in proof_equip(inventory, args.reference_clone, args.site_data, args.cache, args.out_dir):
+            print(f"equip {row['equip_id']} rarity {row['rarity']} ({row['hosted']}): mean abs diff {row['diff']:.2f} -> {row['proof']}")
+        return
+
+    check_cards(inventory, args.reference_clone, args.cache, args.allow_card_diffs)
+    if args.command == "verify-cards":
+        return
+
+    print(f"extracting with {args.workers} workers", flush=True)
+    report = run_extraction(inventory, args.reference_clone, args.site_data, args.cache, args.staging, args.workers)
+    print_report(report)
+    over = [tree for tree, entry in report["trees"].items() if entry["status"] == "over"]
+    if over:
+        sys.exit(f"refusing to finish: {', '.join(over)} over {LIMIT_BYTES // BYTES_PER_MB} MB")
+
+
+if __name__ == "__main__":
+    main()

@@ -59,6 +59,9 @@ NOM_SUFFIX = "_nom"
 SKILL_BUNDLE = "sprites_ui"
 EQUIP_BUNDLE = "resource_icon_equip"
 
+# UI bundles the extractor needs as a whole, e.g. the equipment rarity backgrounds. Downloaded whenever ResData lists them.
+UI_BUNDLES = ("atlasclips_listequipment",)
+
 # Tiers in report order.
 TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon")
 
@@ -431,7 +434,7 @@ def summarise(items, index):
     """
     tiers = {tier: {"items": 0, "resolved": 0, "partial": 0, "unresolved": 0} for tier in TIERS}
     summary = {"tiers": tiers, "partial": [], "unresolved_expected": [], "unresolved_unexpected": []}
-    names = set()
+    names = {name for name in UI_BUNDLES if name in index}
     for item in items:
         tiers[item["tier"]]["items"] += 1
         tiers[item["tier"]][item["status"]] += 1

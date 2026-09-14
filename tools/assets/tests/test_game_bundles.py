@@ -148,6 +148,13 @@ class ResolutionTests(unittest.TestCase):
         self.assertEqual(summary["download_bytes"], 18250)
         self.assertEqual(self.inventory["bundles"]["sprites_ui"], {"resname": "hashspritesui", "sizeOriginal": 5000})
 
+    def test_ui_bundles_are_downloaded_when_listed(self):
+        """UI bundles the extractor needs join the download list when ResData has them, and are skipped otherwise."""
+        index = {"atlasclips_listequipment": {"resname": "hashframe", "sizeOriginal": 7, "files": []}}
+        _summary, bundles = game_bundles.summarise([], index)
+        self.assertEqual(bundles, {"atlasclips_listequipment": {"resname": "hashframe", "sizeOriginal": 7}})
+        self.assertEqual(game_bundles.summarise([], {})[1], {})
+
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
