@@ -2,7 +2,7 @@
 /**
  * Generate the site's doll and equipment data from gf-data-us.
  *
- * Writes the doll shards, equipment.json, upstream.json and the search index under src/data. Output is deterministic
+ * Writes the doll shards, their profile side files, equipment.json, upstream.json and the search index under src/data. Output is deterministic
  * for a given upstream commit and set of released dolls, so a scheduled run only commits when something really changed.
  * The search index keeps the pre-2026-09-13 wiki names from `tools/data/name-aliases.json` as aliases for renamed dolls.
  * The run date only selects which dolls are released and is not written out, so an unchanged import produces no diff.
@@ -19,7 +19,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 
 import { loadCnGuns } from "./lib/cnData.mjs";
-import { buildDoll, selectReleased } from "./lib/dolls.mjs";
+import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
 import { buildEquipment } from "./lib/equipment.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
 import { buildProfile, fillFromWikidata, indexPages, releaseFor } from "./lib/profile.mjs";
@@ -133,10 +133,12 @@ async function main() {
 	dolls.sort((a, b) => a.normal.id - b.normal.id);
 
 	for (const shard of SHARDS) {
+		const split = dolls.filter((doll) => doll.normal.id >= shard.min && doll.normal.id <= shard.max).map(splitDetails);
 		writeJson(
 			`${OUT_DIR}/${shard.file}.json`,
-			dolls.filter((doll) => doll.normal.id >= shard.min && doll.normal.id <= shard.max)
+			split.map((entry) => entry.record)
 		);
+		writeJson(`${OUT_DIR}/${shard.profiles}.json`, Object.fromEntries(split.map((entry) => [entry.record.normal.id, entry.details])));
 	}
 	const equipment = buildEquipment(upstream, equipmentAssets);
 	writeJson(`${OUT_DIR}/equipment.json`, equipment);
