@@ -122,6 +122,15 @@ test("a short lowercase line after a complete item starts a new item, and a sent
 	]);
 });
 
+test("a short item after a fairly long line, or a sub-heading ending in a colon, starts a new item (dolls 410 and 289)", () => {
+	const action = sheetRow("Action", ["Gas-operated short-stroke fixed piston", "rotating bolt"]);
+	const length = sheetRow("Length", ['w/ 10.5" barrel:', "688 mm (27.10 in) collapsed, 768 mm (30.25 in) extended", 'w/ 14.5" barrel:', "780 mm (30.6 in) collapsed"]);
+	assert.deepEqual(parseSpecs(`${action}\n\n${length}`), [
+		{ label: "Action", value: "Gas-operated short-stroke fixed piston; rotating bolt" },
+		{ label: "Length", value: 'w/ 10.5" barrel: 688 mm (27.10 in) collapsed, 768 mm (30.25 in) extended; w/ 14.5" barrel: 780 mm (30.6 in) collapsed' }
+	]);
+});
+
 test("a known two-word label split across the gap is rejoined (doll 19)", () => {
 	const text = "Barrel                     length 168 mm\n\nMuzzle                     velocity 380 m/s\n\nBarrels                    1";
 	assert.deepEqual(parseSpecs(text), [

@@ -26,8 +26,11 @@ const ENDS_MID_PHRASE = /\b(a|an|and|at|by|for|from|in|of|on|or|the|to|up|with)$
 /** A line starting with a word that carries on the phrase above it. */
 const STARTS_MID_PHRASE = /^(and|but|for|from|nor|of|or|to|with)\b/i;
 
-/** Lines at least this long are taken to have wrapped, so a lowercase line after one carries on the same phrase. */
-const WRAPPED_LINE_LENGTH = 37;
+/** A line at least this long is taken to have wrapped, so a lowercase line after it carries on the same phrase. */
+const WRAPPED_LINE_LENGTH = 40;
+
+/** A line at least this long has also wrapped when the lowercase line after it is `WRAPPED_LINE_LENGTH` or longer. */
+const FAIRLY_LONG_LINE_LENGTH = 30;
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +67,13 @@ function normaliseLabel(label) {
  * @returns {" " | "; "} The joiner.
  */
 function joinerFor(previous, next) {
-	if (/[,:.]$/.test(previous) || ENDS_MID_PHRASE.test(previous)) {
+	if (ENDS_MID_PHRASE.test(previous)) {
+		return " ";
+	}
+	if (next.endsWith(":")) {
+		return "; ";
+	}
+	if (/[,:.]$/.test(previous)) {
 		return " ";
 	}
 	if (/[;)\]]$/.test(previous)) {
@@ -76,7 +85,8 @@ function joinerFor(previous, next) {
 	if (!/^[a-z]/.test(next)) {
 		return "; ";
 	}
-	return STARTS_MID_PHRASE.test(next) || previous.length >= WRAPPED_LINE_LENGTH || next.endsWith(".") ? " " : "; ";
+	const wrapped = previous.length >= WRAPPED_LINE_LENGTH || (previous.length >= FAIRLY_LONG_LINE_LENGTH && next.length >= WRAPPED_LINE_LENGTH);
+	return STARTS_MID_PHRASE.test(next) || wrapped || next.endsWith(".") ? " " : "; ";
 }
 
 /**
