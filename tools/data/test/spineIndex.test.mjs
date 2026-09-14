@@ -28,6 +28,16 @@ test("a v2 or malformed spine index is reported", () => {
 	assert.deepEqual(findSpineIndexProblems([]), ["the spine index is not an object keyed by doll id"]);
 });
 
+test("a rig with no animations is reported wherever it sits", () => {
+	const empty = (skel) => ({ skel, atlas: skel, anims: [] });
+	const index = { 7: { combat: empty("A"), dorm: rig("RA"), mod: { combat: rig("mod/AMod"), dorm: empty("mod/RAMod") }, skins: { 12: { combat: empty("skins/12/A_12") } } } };
+	assert.deepEqual(findSpineIndexProblems(index), [
+		"doll 7 combat rig A has no animations",
+		"doll 7 Mod dorm rig mod/RAMod has no animations",
+		"doll 7 skin 12 combat rig skins/12/A_12 has no animations"
+	]);
+});
+
 test("the committed spine index is v3-shaped", () => {
 	assert.deepEqual(findSpineIndexProblems(JSON.parse(fs.readFileSync("src/data/spine-index.json", "utf8"))), []);
 });
