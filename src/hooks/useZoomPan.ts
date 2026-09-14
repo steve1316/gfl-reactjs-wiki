@@ -36,6 +36,11 @@ export interface UseZoomPanOptions {
 	doubleScale?: number;
 	/** Whether a double click toggles the zoom. Defaults to true. Turn it off where a single click already means something, or two quick clicks do both. */
 	doubleClickZoom?: boolean;
+	/**
+	 * How far, in CSS pixels, the content may sit from centre on each axis at a given scale. When set, dragging also works while fitted and every
+	 * move, zoom and container resize is held inside these limits. When unset, fitted content cannot be dragged and zoomed content is not limited.
+	 */
+	panBounds?: (scale: number) => { x: number; y: number };
 }
 
 /** What `useZoomPan` hands back. `T` is the concrete type of the gesture container, e.g. `HTMLDivElement`. */
@@ -82,6 +87,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 	const maxScale = options.maxScale ?? DEFAULT_MAX;
 	const doubleScale = options.doubleScale ?? DEFAULT_DOUBLE;
 	const doubleClickZoom = options.doubleClickZoom ?? true;
+	const hasPanBounds = options.panBounds !== undefined;
 
 	const [transform, setTransform] = useState<ZoomPanTransform>({ scale: minScale, x: 0, y: 0 });
 
@@ -115,7 +121,22 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 	const transformRef = useRef(transform);
 	transformRef.current = transform;
 
+	// Read through a ref for the same reason, and so a caller passing a fresh function each render does not rebuild every handler.
+	const panBoundsRef = useRef(options.panBounds);
+	panBoundsRef.current = options.panBounds;
+
 	const clamp = useCallback((scale: number) => Math.min(maxScale, Math.max(minScale, scale)), [minScale, maxScale]);
+
+	// Holds an offset inside `panBounds` for the transform's scale. Without `panBounds` the transform is returned unchanged.
+	const limitPan = useCallback((next: ZoomPanTransform): ZoomPanTransform => {
+		const bounds = panBoundsRef.current?.(next.scale);
+		if (!bounds) {
+			return next;
+		}
+		const x = Math.min(bounds.x, Math.max(-bounds.x, next.x));
+		const y = Math.min(bounds.y, Math.max(-bounds.y, next.y));
+		return x === next.x && y === next.y ? next : { ...next, x, y };
+	}, []);
 
 	const reset = useCallback(() => {
 		setTransform({ scale: minScale, x: 0, y: 0 });
@@ -126,10 +147,10 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 			setTransform((current) => {
 				const scale = clamp(current.scale * factor);
 				// Snapping back to fitted also recentres, or the content is left parked off screen.
-				return scale === minScale ? { scale, x: 0, y: 0 } : { ...current, scale };
+				return scale === minScale ? { scale, x: 0, y: 0 } : limitPan({ ...current, scale });
 			});
 		},
-		[clamp, minScale]
+		[clamp, minScale, limitPan]
 	);
 
 	// React attaches wheel listeners passively, so `preventDefault` inside an `onWheel` prop is silently
@@ -183,19 +204,19 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 				moved.current = true;
 				const ratio = distance / (pinchStart.current.distance || 1);
 				const scale = clamp(pinchStart.current.scale * ratio);
-				setTransform((current) => (scale === minScale ? { scale, x: 0, y: 0 } : { ...current, scale }));
+				setTransform((current) => (scale === minScale ? { scale, x: 0, y: 0 } : limitPan({ ...current, scale })));
 				return;
 			}
 
-			// One pointer is a drag, and dragging is only meaningful once there is overflow to move.
+			// One pointer is a drag. Without pan limits that is only meaningful once there is overflow to move.
 			const origin = dragStart.current;
-			if (!origin || transformRef.current.scale <= minScale) {
+			if (!origin || (!panBoundsRef.current && transformRef.current.scale <= minScale)) {
 				return;
 			}
 			if (Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > DRAG_THRESHOLD) {
 				moved.current = true;
 			}
-			setTransform((current) => ({ ...current, x: origin.originX + (event.clientX - origin.x), y: origin.originY + (event.clientY - origin.y) }));
+			setTransform((current) => limitPan({ ...current, x: origin.originX + (event.clientX - origin.x), y: origin.originY + (event.clientY - origin.y) }));
 		};
 
 		const end = (event: PointerEvent) => {
@@ -214,7 +235,18 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 		window.addEventListener("pointermove", move);
 		window.addEventListener("pointerup", end);
 		window.addEventListener("pointercancel", end);
-	}, [clamp, minScale, detach]);
+	}, [clamp, minScale, detach, limitPan]);
+
+	// The limits depend on the container's size, so a resize pulls content that is now too far out back inside them.
+	useEffect(() => {
+		const element = containerRef.current;
+		if (!element || !hasPanBounds) {
+			return;
+		}
+		const observer = new ResizeObserver(() => setTransform((current) => limitPan(current)));
+		observer.observe(element);
+		return () => observer.disconnect();
+	}, [hasPanBounds, limitPan]);
 
 	// A gesture still running when the component goes away would otherwise leave its listeners behind.
 	useEffect(() => detach, [detach]);
@@ -254,9 +286,9 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 			// The browser must not claim the gesture for scrolling, or pinch never reaches these handlers. This has to sit
 			// on the container rather than the content, since that is the element the handlers are actually spread onto.
 			touchAction: "none",
-			cursor: transform.scale > minScale ? (gesturing ? "grabbing" : "grab") : "default"
+			cursor: hasPanBounds || transform.scale > minScale ? (gesturing ? "grabbing" : "grab") : "default"
 		}),
-		[transform.scale, minScale, gesturing]
+		[transform.scale, minScale, gesturing, hasPanBounds]
 	);
 
 	const contentStyle = useMemo<CSSProperties>(

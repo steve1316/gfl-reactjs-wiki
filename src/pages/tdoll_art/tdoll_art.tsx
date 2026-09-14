@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
@@ -96,7 +96,24 @@ export default function TDollArt() {
 	// The Mod wearing a skin has no full art of its own, so the doll page links to the skin with `mod=1`. Kept so closing returns to the Mod.
 	const [modSkin] = useState(() => searchParams.get("mod") === "1");
 
-	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5 });
+	// The art element fills the stage, so its box is the stage's size and its natural size gives the drawn picture's shape.
+	const artRef = useRef<HTMLImageElement | null>(null);
+
+	// Zoomed past the stage, the art's edge may be dragged to the middle of the screen. Smaller than the stage, as when fitted,
+	// its centre may be dragged to the screen's edge, leaving half of it on screen. Both are half of the larger of art and stage.
+	const panBounds = useCallback((scale: number) => {
+		const art = artRef.current;
+		if (!art) {
+			return { x: 0, y: 0 };
+		}
+		// Before the art loads its natural size is 0, so it is treated as a square until then.
+		const fit = Math.min(art.clientWidth / (art.naturalWidth || 1), art.clientHeight / (art.naturalHeight || 1));
+		const width = (art.naturalWidth || 1) * fit * scale;
+		const height = (art.naturalHeight || 1) * fit * scale;
+		return { x: Math.max(width, art.clientWidth) / 2, y: Math.max(height, art.clientHeight) / 2 };
+	}, []);
+
+	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5, panBounds });
 
 	useEffect(() => {
 		let active = true;
@@ -227,7 +244,7 @@ export default function TDollArt() {
 			) : (
 				<Box ref={zoom.containerRef} sx={{ flexGrow: 1, position: "relative", overflow: "hidden" }} style={zoom.containerStyle} {...zoom.handlers}>
 					{/* Not draggable: a mouse drag on an image otherwise starts the browser's own image drag, which cancels the pan. */}
-					{source ? <Box component="img" src={source} alt="" draggable={false} sx={containArtSx} style={zoom.contentStyle} /> : null}
+					{source ? <Box component="img" ref={artRef} src={source} alt="" draggable={false} sx={containArtSx} style={zoom.contentStyle} /> : null}
 				</Box>
 			)}
 
