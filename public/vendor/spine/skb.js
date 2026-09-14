@@ -16,6 +16,11 @@ SkeletonBinary.prototype = {
     readBoolean : function(){
         return this.readByte() != 0;
     },
+    // Local patch: signed byte, which Spine uses for IK bend directions (1 or -1).
+    readSByte : function(){
+        var value = this.readByte();
+        return value === null ? null : (value << 24) >> 24;
+    },
     readShort : function(){
         return (this.readByte() << 8) | this.readByte();
     },
@@ -205,8 +210,8 @@ SkeletonBinary.prototype = {
                 }
                 ikConstraints.target = this.json.bones[this.readInt(true)].name;
                 ikConstraints.mix = this.readFloat();
-                ikConstraints.bendPositive = this.readBoolean();
-                // Maybe use ReadSByte();
+                // Local patch: the bend direction is a signed byte, so -1 read as a boolean came out positive.
+                ikConstraints.bendPositive = this.readSByte() >= 0;
                 ik[i] = ikConstraints;
             }
         }
@@ -520,8 +525,8 @@ SkeletonBinary.prototype = {
             for(var frameIndex = 0; frameIndex < frameCount; frameIndex++){
                 var time = this.readFloat();
                 var mix = this.readFloat();
-                var bendPositive = this.readBoolean();
-                // Maybe use ReadSByte()
+                // Local patch: signed byte, as for the constraint's own bend direction above.
+                var bendPositive = this.readSByte() >= 0;
                 // Local patch: the frame object was never created here, so any skeleton with an IK timeline failed to parse.
                 timeline[frameIndex] = {};
                 timeline[frameIndex].time = time;
