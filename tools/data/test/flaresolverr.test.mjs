@@ -53,6 +53,55 @@ test("createFlareSolverrClient opens one session, reuses it for every request an
 
 test("createFlareSolverrClient rejects with FlareSolverr's message when a request fails", async () => {
 	const { fetchImpl } = fakeSolver((payload) => (payload.cmd === "request.get" ? { status: "error", message: "Error: Challenge not solved" } : { status: "ok", session: "s1" }));
-	const client = await createFlareSolverrClient("http://localhost:8191", { fetchImpl });
+	const client = await createFlareSolverrClient("http://localhost:8191", { fetchImpl, wait: async () => {} });
 	await assert.rejects(client.get("https://iopwiki.com/api.php"), /FlareSolverr request\.get failed: Error: Challenge not solved/);
+});
+
+test("createFlareSolverrClient retries once after a FlareSolverr error and resolves ok on the second request.get", async () => {
+	let getCalls = 0;
+	const { calls, fetchImpl } = fakeSolver((payload) => {
+		if (payload.cmd !== "request.get") {
+			return { status: "ok", session: "s1" };
+		}
+		getCalls++;
+		return getCalls === 1 ? { status: "error", message: "Error: timeout" } : { status: "ok", solution: { status: 200, response: `<pre>{"ok":true}</pre>` } };
+	});
+	const client = await createFlareSolverrClient("http://localhost:8191", { fetchImpl, wait: async () => {} });
+	const response = await client.get("https://iopwiki.com/api.php?a=1");
+	assert.equal(response.ok, true);
+	assert.deepEqual(await response.json(), { ok: true });
+	const getCommands = calls.filter((call) => call.payload.cmd === "request.get");
+	assert.equal(getCommands.length, 2);
+	assert.deepEqual(
+		getCommands.map((call) => call.payload.session),
+		["s1", "s1"]
+	);
+});
+
+test("createFlareSolverrClient retries once after a 503 solution status and resolves ok on the second request.get", async () => {
+	let getCalls = 0;
+	const { fetchImpl } = fakeSolver((payload) => {
+		if (payload.cmd !== "request.get") {
+			return { status: "ok", session: "s1" };
+		}
+		getCalls++;
+		return getCalls === 1 ? { status: "ok", solution: { status: 503, response: "" } } : { status: "ok", solution: { status: 200, response: `<pre>{"ok":true}</pre>` } };
+	});
+	const client = await createFlareSolverrClient("http://localhost:8191", { fetchImpl, wait: async () => {} });
+	const response = await client.get("https://iopwiki.com/api.php?a=1");
+	assert.equal(response.ok, true);
+	assert.deepEqual(await response.json(), { ok: true });
+});
+
+test("createFlareSolverrClient rejects with the second request.get's message when both attempts fail", async () => {
+	let getCalls = 0;
+	const { fetchImpl } = fakeSolver((payload) => {
+		if (payload.cmd !== "request.get") {
+			return { status: "ok", session: "s1" };
+		}
+		getCalls++;
+		return { status: "error", message: getCalls === 1 ? "Error: first failure" : "Error: second failure" };
+	});
+	const client = await createFlareSolverrClient("http://localhost:8191", { fetchImpl, wait: async () => {} });
+	await assert.rejects(client.get("https://iopwiki.com/api.php"), /FlareSolverr request\.get failed: Error: second failure/);
 });

@@ -81,7 +81,7 @@ export async function fetchIopwikiPages({ cacheDir = DEFAULT_CACHE_DIR, wait = s
 	// Each round sends the original request plus only the latest `continue` object, as MediaWiki asks, so stale keys never carry over.
 	let params = new URLSearchParams(baseParams);
 	let first = true;
-	const solver = flareSolverrUrl ? await createFlareSolverrClient(flareSolverrUrl) : null;
+	const solver = flareSolverrUrl ? await createFlareSolverrClient(flareSolverrUrl, { wait }) : null;
 	try {
 		for (;;) {
 			if (!first) {

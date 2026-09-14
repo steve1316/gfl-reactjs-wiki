@@ -1,3 +1,5 @@
+import { sleep } from "./http.mjs";
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Module constants
@@ -7,6 +9,9 @@ const MAX_TIMEOUT_MS = 90_000;
 
 /** Extra time the HTTP call to FlareSolverr itself gets on top of its own page timeout. */
 const CALL_MARGIN_MS = 30_000;
+
+/** Wait before the retry when a FlareSolverr request fails. */
+const RETRY_WAIT_MS = 5_000;
 
 /** Named entities a browser writes when it serialises text inside a page. */
 const NAMED_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
@@ -57,11 +62,12 @@ export function jsonFromPage(page) {
  * @param {string} endpoint FlareSolverr's base URL, such as `http://localhost:8191`.
  * @param {object} [options] Options.
  * @param {typeof fetch} [options.fetchImpl] Fetch used to call FlareSolverr. Tests pass a fake.
+ * @param {(ms: number) => Promise<void>} [options.wait] Waits before a retry. Tests pass a stub so they do not sleep.
  * @returns {Promise<{ get: (url: string) => Promise<{ ok: boolean, status: number, statusText: string, json: () => Promise<unknown> }>, close: () => Promise<void> }>}
- *   A client whose `get` returns a response-like object and whose `close` destroys the session.
+ *   A client whose `get` retries once on a thrown FlareSolverr error or a 429/5xx solution status, and whose `close` destroys the session.
  * @throws {Error} When FlareSolverr cannot create the session.
  */
-export async function createFlareSolverrClient(endpoint, { fetchImpl = fetch } = {}) {
+export async function createFlareSolverrClient(endpoint, { fetchImpl = fetch, wait = sleep } = {}) {
 	const url = `${endpoint.replace(/\/$/, "")}/v1`;
 	const call = async (payload) => {
 		const response = await fetchImpl(url, {
@@ -77,10 +83,31 @@ export async function createFlareSolverrClient(endpoint, { fetchImpl = fetch } =
 		return body;
 	};
 	const { session } = await call({ cmd: "sessions.create" });
+	const request = async (target) => {
+		const { solution } = await call({ cmd: "request.get", url: target, session, maxTimeout: MAX_TIMEOUT_MS });
+		return {
+			ok: solution.status >= 200 && solution.status < 300,
+			status: solution.status,
+			statusText: "via FlareSolverr",
+			json: async () => jsonFromPage(solution.response)
+		};
+	};
 	return {
 		async get(target) {
-			const { solution } = await call({ cmd: "request.get", url: target, session, maxTimeout: MAX_TIMEOUT_MS });
-			return { ok: solution.status >= 200 && solution.status < 300, status: solution.status, statusText: "", json: async () => jsonFromPage(solution.response) };
+			let response;
+			try {
+				response = await request(target);
+			} catch (error) {
+				console.warn(`warning: FlareSolverr request for ${target} failed (${error.message}), retrying once`);
+				await wait(RETRY_WAIT_MS);
+				return request(target);
+			}
+			if (response.status !== 429 && response.status < 500) {
+				return response;
+			}
+			console.warn(`warning: FlareSolverr request for ${target} failed (status ${response.status}), retrying once`);
+			await wait(RETRY_WAIT_MS);
+			return request(target);
 		},
 		async close() {
 			await call({ cmd: "sessions.destroy", session });
