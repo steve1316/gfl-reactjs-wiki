@@ -7,7 +7,7 @@
  * The search index keeps the pre-2026-09-13 wiki names from `tools/data/name-aliases.json` as aliases for renamed dolls.
  * The run date only selects which dolls are released and is not written out, so an unchanged import produces no diff.
  * Doll profiles come from IOPWiki, with Wikidata filling empty makers and countries and gf-data-ch spotting copied CN dates.
- * Profile fields can be corrected through `overrides.json` `fields` with paths such as `profile.manufacturer`.
+ * Profile fields can be corrected through `overrides.json` `fields` with paths such as `profile.manufacturer`, each with a one-line `reason`.
  *
  * Usage:
  *     node tools/data/import.mjs [--date YYYY-MM-DD]

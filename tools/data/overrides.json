@@ -221,5 +221,56 @@
 			}
 		}
 	],
-	"fields": []
+	"fields": [
+		{
+			"doll": 29,
+			"path": "profile.manufacturer",
+			"value": [
+				"Royal Small Arms Factory Enfield",
+				"Birmingham Small Arms Company",
+				"ROF Fazakerley",
+				"ROF Maltby",
+				"ROF Theale, Berkshire",
+				"Lines Brothers Ltd",
+				"Long Branch Canada (plus numerous sub-contractors making individual parts)"
+			],
+			"reason": "IOPWiki writes \"ROF Theale, Berkshire\" as one factory and place, which the comma split breaks in two."
+		},
+		{
+			"doll": 89,
+			"path": "profile.manufacturer",
+			"value": ["Royal Small Arms Factory, Enfield", "John Inglis and Co.", "Long Branch Factory", "Ishapore", "Lithgow Small Arms"],
+			"reason": "IOPWiki writes \"Royal Small Arms Factory, Enfield\" as one factory and place, which the comma split breaks in two."
+		},
+		{
+			"doll": 253,
+			"path": "profile.manufacturer",
+			"value": ["The Birmingham Small Arms Company Limited", "Savage Arms Co."],
+			"reason": "IOPWiki joins the two makers with \"or BSA\" in one phrase, which no separator splits."
+		},
+		{
+			"doll": 331,
+			"path": "profile.country",
+			"value": ["Austria-Hungary"],
+			"reason": "IOPWiki writes the historical state Austria-Hungary as \"Austria/Hungary\", which the slash split breaks in two."
+		},
+		{
+			"doll": 375,
+			"path": "profile.manufacturer",
+			"value": ["Eli Whitney Jr.", "Samuel Colt"],
+			"reason": "IOPWiki gives a prose sentence (Whitney made it in Whitneyville, Connecticut under contract for Colt), so keep just the two makers it names."
+		},
+		{
+			"doll": 397,
+			"path": "profile.manufacturer",
+			"value": ["J. Stevens Arms & Tool Co", "J. Stevens Arms Co", "Savage Arms Co"],
+			"reason": "IOPWiki joins two makers with an unspaced slash, which the manufacturer split keeps whole for names like Izhmash/Kalashnikov Concern."
+		},
+		{
+			"doll": 398,
+			"path": "profile.manufacturer",
+			"value": ["J. Stevens Arms & Tool Co", "J. Stevens Arms Co", "Savage Arms Co"],
+			"reason": "IOPWiki joins two makers with an unspaced slash, which the manufacturer split keeps whole for names like Izhmash/Kalashnikov Concern."
+		}
+	]
 }
