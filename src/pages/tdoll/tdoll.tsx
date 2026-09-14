@@ -17,14 +17,17 @@ import { Box, Container, Grid, Paper, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { skinFormKey } from "../../lib/assets";
-import { loadDollDetails, spineFor } from "../../lib/data";
+import { loadDollDetails, loadSpineRigs } from "../../lib/data";
 import { animationTabs } from "../../lib/spine";
+import type { SpineDollEntry } from "../../types/spine";
 import type { TDoll as TDollData, TDollForm, TDollWithDetails } from "../../types/tdoll";
 
 /** A doll paired with the form currently being displayed. */
 interface DisplayTDoll extends TDollWithDetails {
 	/** The form on screen: the base form, the Mod, or a skin. */
 	selected: TDollForm;
+	/** The doll's Spine rigs, or undefined when none were published. */
+	spine: SpineDollEntry | undefined;
 }
 
 const styles = {
@@ -170,14 +173,14 @@ export default function TDoll() {
 	// Undefined while loading and null once the shard has loaded without this id, so a missing doll is not stuck on "Loading".
 	const [doll, setDoll] = useState<DisplayTDoll | null | undefined>(undefined);
 
-	// Only the shard holding this doll and its profile side file are fetched. A copy is stored rather than the cached object,
-	// because `selected` is assigned onto it below and the cache is shared with every other route.
+	// Only the shard holding this doll, its profile side file and the Spine index are fetched. A copy is stored rather than the cached
+	// object, because `selected` is assigned onto it below and the cache is shared with every other route.
 	useEffect(() => {
 		let active = true;
 		setDoll(undefined);
-		void loadDollDetails(id).then((found) => {
+		void Promise.all([loadDollDetails(id), loadSpineRigs(id)]).then(([found, spine]) => {
 			if (active) {
-				setDoll(found ? { ...found, selected: found.normal } : null);
+				setDoll(found ? { ...found, selected: found.normal, spine } : null);
 			}
 		});
 		return () => {
@@ -266,7 +269,7 @@ function TDollContent({ doll }: TDollContentProps) {
 
 	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
-	const spineEntry = spineFor(tdoll.normal.id);
+	const spineEntry = tdoll.spine;
 
 	const selectedSkinRigs = skinKey === null ? null : (spineEntry?.skins?.[skinKey] ?? null);
 	// A Mod doll is a different chibi with its own animations, so the base rig cannot stand in for it.

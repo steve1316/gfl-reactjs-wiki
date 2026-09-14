@@ -8,7 +8,6 @@
  */
 
 import searchIndexJson from "../data/search-index.json";
-import spineIndexJson from "../data/spine-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
@@ -49,23 +48,6 @@ interface Shard {
  * Small enough to load eagerly on every route, unlike the full dataset.
  */
 export const searchIndex: SearchEntry[] = searchIndexJson as SearchEntry[];
-
-/**
- * Which Spine rigs exist for each doll.
- *
- * Small enough to ship with the app. Paths inside it are relative to the doll's Spine directory and are turned into URLs by `src/lib/assets.ts`.
- */
-const spineIndex: SpineIndex = spineIndexJson as SpineIndex;
-
-/**
- * Look up a doll's Spine rigs.
- *
- * @param id Doll id.
- * @returns The doll's rigs, or undefined when nothing was published for it.
- */
-export function spineFor(id: number): SpineDollEntry | undefined {
-	return spineIndex[String(id)];
-}
 
 /**
  * The generated data shards, in id order. This table mirrors `tools/data/lib/shards.mjs`.
@@ -110,6 +92,9 @@ const shardCache = new Map<number, Promise<TDoll[]>>();
 
 /** Cache of in-flight and settled profile side file loads, so each is fetched at most once. */
 const detailsCache = new Map<number, Promise<Record<string, DollDetails>>>();
+
+/** Cache of the in-flight or settled Spine index load. */
+let spineIndexCache: Promise<SpineIndex> | undefined;
 
 /** Cache of the in-flight or settled equipment load. */
 let equipmentCache: Promise<{ types: EquipmentType[]; items: Record<string, Equipment[]> }> | undefined;
@@ -233,6 +218,27 @@ export function dollIdsWithArt(): number[] {
  * @returns The doll with assets resolved.
  */
 export { processDoll };
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Spine
+
+/**
+ * Look up a doll's Spine rigs.
+ *
+ * The index runs to a few hundred KB and only the doll page reads it, so it is its own chunk, fetched once and cached. Paths inside it are
+ * relative to the doll's Spine directory and are turned into URLs by `src/lib/assets.ts`.
+ *
+ * @param id Doll id.
+ * @returns The doll's rigs, or undefined when nothing was published for it.
+ */
+export async function loadSpineRigs(id: number): Promise<SpineDollEntry | undefined> {
+	if (!spineIndexCache) {
+		spineIndexCache = import("../data/spine-index.json").then((module) => module.default as unknown as SpineIndex);
+	}
+	const index = await spineIndexCache;
+	return index[String(id)];
+}
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
