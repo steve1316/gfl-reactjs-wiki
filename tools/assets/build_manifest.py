@@ -352,12 +352,12 @@ def main():
     """Parse arguments, build the manifest and write it to disk."""
     parser = argparse.ArgumentParser(description="Generate assets-manifest.json from the image tree.")
     parser.add_argument("--images", default="src/images", help="Directory holding tdolls/ and equipment/.")
-    parser.add_argument("--out", default="assets-manifest.json", help="Where to write the manifest.")
+    parser.add_argument("--out", default="assets-manifest.json", help="Where to write the manifest. Defaults to the repo root copy the site bundles.")
     parser.add_argument("--indent", type=int, default=None, help="JSON indent. Omit for the compact form used in production.")
     parser.add_argument("--format", choices=("full", "compact"), default="full", help="'full' keeps every path, 'compact' stores only what naming cannot derive.")
     parser.add_argument("--v3", action="store_true", help="Build the version 3 manifest from the skin-id layout staging trees.")
-    parser.add_argument("--assets", help="With --v3, the asset staging tree.")
-    parser.add_argument("--art", help="With --v3, the art staging tree.")
+    parser.add_argument("--assets", default="tools/assets/.staging/assets", help="With --v3, the asset staging tree.")
+    parser.add_argument("--art", default="tools/assets/.staging/art", help="With --v3, the art staging tree.")
     args = parser.parse_args()
 
     if args.v3:

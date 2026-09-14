@@ -239,7 +239,7 @@ def main():
     """Scan the Spine tree and write the index."""
     parser = argparse.ArgumentParser(description="Index published Spine data by doll id.")
     parser.add_argument("--spine", required=True, help="Directory holding spine/<id>/ subdirectories.")
-    parser.add_argument("--out", required=True, help="Where to write spine-index.json.")
+    parser.add_argument("--out", default="src/data/spine-index.json", help="Where to write the index. Defaults to the one the site bundles.")
     parser.add_argument("--v3", action="store_true", help="Index the skin-id layout (base, mod/ and skins/<skinId>/ folders).")
     args = parser.parse_args()
 
