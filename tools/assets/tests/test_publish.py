@@ -265,6 +265,16 @@ class PrepareTests(unittest.TestCase):
         self.assertIn("push --force origin rebuild:main", output)
         self.assertEqual(run_git(clone, "status", "--porcelain"), "")
 
+    def test_nojekyll_is_written_when_the_clone_has_none(self):
+        """A clone without `.nojekyll` still gets an empty one, so Pages skips its Jekyll build."""
+        run_git(self.paths["origin"], "rm", "--quiet", ".nojekyll")
+        run_git(self.paths["origin"], "commit", "--quiet", "-m", "Drop nojekyll")
+        run_git(self.paths["clone"], "pull", "--quiet", "--ff-only", "origin", "main")
+        self.prepare("art")
+        files = set(run_git(self.paths["clone"], "ls-tree", "-r", "--name-only", "HEAD").splitlines())
+        self.assertIn(".nojekyll", files)
+        self.assertEqual(run_git(self.paths["clone"], "cat-file", "-s", "HEAD:.nojekyll"), "0")
+
     def test_art_repo_holds_only_art(self):
         """The art repo holds only the art tree plus the kept files and README."""
         self.prepare("art")

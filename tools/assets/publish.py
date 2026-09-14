@@ -4,8 +4,8 @@
 `backup` writes a `git bundle` of every ref in a clone and proves it restores. `prepare` resolves the repo's default branch straight
 from origin (never from local state), requires the clone's copy of that branch to be exactly in sync with origin, regenerates the
 version 3 manifest from the staging trees, requires it to match the repo-root `assets-manifest.json` byte for byte, runs the v3
-audit, checks the Pages size limits, and then commits the staging tree onto an orphan branch in the clone. It prints the push
-command for a person to run and never runs it. Pass `--replace-branch` to delete and recreate an existing local `rebuild` branch
+audit, checks the Pages size limits, and then commits the staging tree onto an orphan branch in the clone with a `.nojekyll` file.
+It prints the push command for a person to run and never runs it. Pass `--replace-branch` to delete and recreate an existing local `rebuild` branch
 when re-running prepare; the default branch itself is never touched.
 
 Usage:
@@ -46,6 +46,9 @@ MAX_FILE_BYTES = 50 * BYTES_PER_MB
 
 # Files a Pages repo may carry that the staging tree does not produce, kept when present in the clone.
 KEEP_FILES = ("CNAME", ".nojekyll")
+
+# Written into every rebuilt tree so Pages serves the files as they are, without a Jekyll build.
+NOJEKYLL = ".nojekyll"
 
 MANIFEST_NAME = "assets-manifest.json"
 
@@ -443,6 +446,7 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
         if os.path.isfile(os.path.join(clone, name)):
             with open(os.path.join(clone, name), "rb") as handle:
                 kept[name] = handle.read()
+    kept.setdefault(NOJEKYLL, b"")
     readme = readme_text(repo, res_version)
     planned = list_tree(staging, skip={MANIFEST_NAME})
     planned += [(name, len(data)) for name, data in kept.items()] + [("README.md", len(readme.encode("utf-8")))]
