@@ -79,16 +79,17 @@ export function buildDoll(upstream, gun, ctx) {
  * Split a finished doll into its shard record and its side-file details, so pages that list every doll do not download profiles
  * and spec sheets. The record keeps a copy of the profile's release date, which the T-Doll index sorts by.
  *
- * @param {object} doll A built doll with overrides applied: a `profile`, and a `specs` list on each form.
- * @returns {{ record: object, details: { profile: object, specs: { normal: object[], mod: object[] | null } } }} The record without
- *   `profile` or form `specs` but with `release`, and the details. Mod specs are null when the doll has no Mod or the Mod's sheet matches the base form's.
+ * @param {object} doll A built doll with overrides applied: a `profile`, an `exclusiveEquipment` list, and a `specs` list on each form.
+ * @returns {{ record: object, details: { profile: object, specs: { normal: object[], mod: object[] | null }, exclusiveEquipment: object[] } }} The
+ *   record without `profile`, `exclusiveEquipment` or form `specs` but with `release`, and the details. Mod specs are null when the doll
+ *   has no Mod or the Mod's sheet matches the base form's.
  */
 export function splitDetails(doll) {
-	const { profile, normal, mod, ...rest } = doll;
+	const { profile, exclusiveEquipment, normal, mod, ...rest } = doll;
 	const withoutSpecs = ({ specs, ...form }) => form;
 	const modSpecs = mod && JSON.stringify(mod.specs) !== JSON.stringify(normal.specs) ? mod.specs : null;
 	return {
 		record: { normal: withoutSpecs(normal), mod: mod && withoutSpecs(mod), ...rest, release: profile.release },
-		details: { profile, specs: { normal: normal.specs, mod: modSpecs } }
+		details: { profile, specs: { normal: normal.specs, mod: modSpecs }, exclusiveEquipment }
 	};
 }

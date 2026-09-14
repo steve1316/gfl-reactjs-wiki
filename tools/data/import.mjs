@@ -139,16 +139,18 @@ async function main() {
 	dolls.sort((a, b) => a.normal.id - b.normal.id);
 
 	const equipment = buildEquipment(upstream);
+	// The doll page reads its exclusive equipment from the profile side file, so it never downloads equipment.json.
 	const exclusives = exclusivesByDoll(equipment);
+	for (const doll of dolls) {
+		doll.exclusiveEquipment = exclusives.get(doll.normal.id) ?? [];
+	}
 	for (const shard of SHARDS) {
 		const split = dolls.filter((doll) => doll.normal.id >= shard.min && doll.normal.id <= shard.max).map(splitDetails);
 		writeJson(
 			`${OUT_DIR}/${shard.file}.json`,
 			split.map((entry) => entry.record)
 		);
-		// The doll page reads its exclusive equipment from the profile side file, so it never downloads equipment.json.
-		const details = split.map((entry) => [entry.record.normal.id, { ...entry.details, exclusiveEquipment: exclusives.get(entry.record.normal.id) ?? [] }]);
-		writeJson(`${OUT_DIR}/${shard.profiles}.json`, Object.fromEntries(details));
+		writeJson(`${OUT_DIR}/${shard.profiles}.json`, Object.fromEntries(split.map((entry) => [entry.record.normal.id, entry.details])));
 	}
 	writeJson(`${OUT_DIR}/equipment.json`, equipment);
 
