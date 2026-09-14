@@ -42,10 +42,10 @@ const HTML_ENTITIES = {
 /**
  * Fetch every IOPWiki page that embeds `Template:PlayableUnit`, which is every T-Doll page.
  *
- * Requests are sequential, at least a second apart, time out after 30 seconds, are retried once on a network error, 429 or 5xx, and follow the API's `continue` token until it disappears. Set `IOPWIKI_CACHE=reuse`
- * to read the cache file back instead of touching the network, which fails when there is no cache file. Otherwise this always refetches
- * and overwrites that cache. The cache lives at `tools/data/.cache/iopwiki-pages.json` by default. Pass `options.cacheDir` to use a
- * different directory (tests must, so they never touch the real cache the importer relies on).
+ * Requests are sequential, at least a second apart, and follow the API's `continue` token until it disappears. Each one times out and is
+ * retried once, see `fetchWithRetry`. Set `IOPWIKI_CACHE=reuse` to read the cache file back instead of touching the network, which fails
+ * when there is no cache file. Otherwise this always refetches and overwrites that cache. The cache lives at `tools/data/.cache/iopwiki-pages.json`
+ * by default. Pass `options.cacheDir` to use a different directory (tests must, so they never touch the real cache the importer relies on).
  *
  * @param {object} [options] Options.
  * @param {string} [options.cacheDir] Directory the cache file lives in, instead of `tools/data/.cache`.

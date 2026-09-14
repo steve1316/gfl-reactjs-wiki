@@ -179,12 +179,11 @@ async function resolveLabels(ids, wait) {
 /**
  * Resolve manufacturer and country of origin for a set of enwiki titles via Wikidata.
  *
- * Two rounds of batched `wbgetentities` calls: the first resolves each title to its P176 (manufacturer)
- * and P495 (country of origin) item ids, the second resolves those item ids to English labels. Requests are
- * sequential, at least a second apart, and retried once on a network error, 429 or 5xx. Results are cached to `tools/data/.cache/wikidata.json` (or
- * `options.cacheDir`) keyed by title, including titles that yielded no facts, so a reuse run can tell "no facts"
- * from "never fetched". Set `WIKIDATA_CACHE=reuse` to read that cache back without touching the network; it fails
- * when the cache file is missing or a requested title was never fetched. The default always refetches and
+ * Two rounds of batched `wbgetentities` calls: the first resolves each title to its P176 (manufacturer) and P495 (country of origin) item
+ * ids, the second resolves those item ids to English labels. Requests are sequential, at least a second apart, and retried once on a network
+ * error, 429 or 5xx. Results are cached to `tools/data/.cache/wikidata.json` (or `options.cacheDir`) keyed by title, including titles that
+ * yielded no facts, so a reuse run can tell "no facts" from "never fetched". Set `WIKIDATA_CACHE=reuse` to read that cache back without
+ * touching the network. It fails when the cache file is missing or a requested title was never fetched. The default always refetches and
  * rewrites the cache, merged with whatever was already there.
  *
  * @param {string[]} titles Enwiki article titles to resolve.
