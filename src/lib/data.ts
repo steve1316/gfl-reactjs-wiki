@@ -192,7 +192,7 @@ export async function loadDoll(id: number): Promise<TDoll | undefined> {
  * The shard and its profile side file are fetched in parallel. Both are cached, so a later `loadDoll` or `loadAllDolls` reuses the shard.
  *
  * @param id Doll id.
- * @returns The doll with its details attached, or `undefined` when no doll has that id.
+ * @returns The doll with its details attached and its exclusive equipment icons resolved, or `undefined` when no doll has that id.
  * @throws When the shard or side file fails to load, or the doll exists but its side file has no entry for it, which `tools/data/check.mjs`
  *   guards against.
  */
@@ -207,7 +207,8 @@ export async function loadDollDetails(id: number): Promise<TDollWithDetails | un
 	if (!entry) {
 		throw new Error(`doll ${id} has no profile entry`);
 	}
-	return { ...doll, ...entry };
+	const exclusiveEquipment = entry.exclusiveEquipment.map((item) => ({ ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null }));
+	return { ...doll, ...entry, exclusiveEquipment };
 }
 
 /**

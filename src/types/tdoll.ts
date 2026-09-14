@@ -128,6 +128,26 @@ export interface DollSpecs {
 	mod: SpecRow[] | null;
 }
 
+/** One exclusive equipment item as the doll page lists it, as generated in the doll's profile side file. */
+export interface RawExclusiveEquipment {
+	/** Equipment id, which also names its icon. */
+	id: number;
+	/** Official English name. */
+	name: string;
+	/** Rarity, 2 to 6. */
+	rarity: number;
+	/** True when only the doll's Mod can equip it. */
+	mod: boolean;
+	/** Each stat at the item's maximum level, formatted like `"+25"` or `"+13~20"`, by stat key. */
+	stats: Record<string, string>;
+}
+
+/** An exclusive equipment item with its icon URL resolved. */
+export interface ExclusiveEquipment extends RawExclusiveEquipment {
+	/** Absolute icon URL, or null when no icon is hosted yet. */
+	image: string | null;
+}
+
 /**
  * A doll's profile and spec sheets, as generated in the `profiles-*.json` side file next to its shard.
  *
@@ -138,6 +158,8 @@ export interface DollDetails {
 	profile: DollProfile;
 	/** The gun's spec sheets. */
 	specs: DollSpecs;
+	/** The equipment only this doll can use, items every form can equip before Mod-only ones. Empty for most dolls. */
+	exclusiveEquipment: RawExclusiveEquipment[];
 }
 
 /** Resolved asset URLs for one form. */
@@ -174,5 +196,8 @@ export interface TDoll {
 	skillImages: Partial<Record<"skill1" | "skill2", string>>;
 }
 
-/** A doll with its profile and spec sheets attached, as `loadDollDetails` returns it for the doll page. */
-export interface TDollWithDetails extends TDoll, DollDetails {}
+/** A doll with its profile, spec sheets and exclusive equipment attached, as `loadDollDetails` returns it for the doll page. */
+export interface TDollWithDetails extends TDoll, Omit<DollDetails, "exclusiveEquipment"> {
+	/** The equipment only this doll can use, with icon URLs resolved. */
+	exclusiveEquipment: ExclusiveEquipment[];
+}

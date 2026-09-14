@@ -7,6 +7,7 @@ import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
 import ChibiPanel from "./ChibiPanel";
 import DollHero from "./DollHero";
+import ExclusiveEquipmentPanel from "./ExclusiveEquipmentPanel";
 import LazySection from "./LazySection";
 import PageBackdrop from "./PageBackdrop";
 import SkillsPanel from "./SkillsPanel";
@@ -80,6 +81,12 @@ const styles = {
 	abilityHeading: {
 		mb: 1,
 		fontWeight: 600
+	},
+	// The Animations and exclusive equipment cards stacked in the column beside the hero.
+	sideColumn: {
+		display: "flex",
+		flexDirection: "column",
+		gap: 2
 	},
 	// The Spine stage tracks its container, so this is what actually decides how large the chibi draws.
 	chibiColumn: {
@@ -299,6 +306,8 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 	// The Animations card is kept while the index loads, so the layout does not jump on the usual fast load, and dropped once there is
 	// nothing to show.
 	const showAnimations = spine !== null;
+	// The column beside the hero holds the Animations card and the exclusive equipment card, and only exists when one of them does.
+	const showSideColumn = showAnimations || tdoll.exclusiveEquipment.length > 0;
 
 	const selectedSkinRigs = skinKey === null ? null : (spineEntry?.skins?.[skinKey] ?? null);
 	// A Mod doll is a different chibi with its own animations, so the base rig cannot stand in for it.
@@ -481,8 +490,8 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 				                everything stacks, with the animations last since they are the heaviest to load. **************/}
 				<Grid container spacing={2}>
 					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills, Mod toggle, profile and spec sheet **************/}
-					{/* Without the Animations card the hero takes the whole first row, so Stats and Abilities still pair up below it. */}
-					<Grid size={showAnimations ? { xs: 12, md: 7, lg: 8, xl: 9 } : { xs: 12 }} sx={{ order: 0 }}>
+					{/* Without the side column the hero takes the whole first row, so Stats and Abilities still pair up below it. */}
+					<Grid size={showSideColumn ? { xs: 12, md: 7, lg: 8, xl: 9 } : { xs: 12 }} sx={{ order: 0 }}>
 						<DollHero
 							name={tdoll.selected.name}
 							id={tdoll.selected.id}
@@ -503,8 +512,8 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 							specs={specs}
 						/>
 					</Grid>
-					{/* Stats shares its small-screen row with the Animations card, so it takes the full row when that card is absent. */}
-					<Grid size={{ xs: 12, sm: showAnimations ? 6 : 12, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
+					{/* Stats shares its small-screen row with the side column, so it takes the full row when that column is absent. */}
+					<Grid size={{ xs: 12, sm: showSideColumn ? 6 : 12, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
@@ -549,27 +558,40 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					{showAnimations ? (
+					{/* The Animations card, then the doll's exclusive equipment filling the space under it. On a phone both come last. */}
+					{showSideColumn ? (
 						<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
-							<Paper sx={styles.section} variant="outlined">
-								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-									Animations
-								</Typography>
-								<Box sx={styles.chibiColumn}>
-									<LazySection minHeight={320}>
-										<ChibiPanel
-											animationMode={animationMode}
-											spineAnimationName={spineAnimationName}
-											spineTabs={spineTabs}
-											onSwitchAnimations={switchAnimations}
-											onSwitchAnimationMode={switchAnimationMode}
-											spineRig={spineRig}
-											normalId={tdoll.normal.id}
-											onPlayerSwitchAnimations={playerSwitchAnimations}
-										/>
-									</LazySection>
-								</Box>
-							</Paper>
+							<Box sx={styles.sideColumn}>
+								{showAnimations ? (
+									<Paper sx={styles.section} variant="outlined">
+										<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+											Animations
+										</Typography>
+										<Box sx={styles.chibiColumn}>
+											<LazySection minHeight={320}>
+												<ChibiPanel
+													animationMode={animationMode}
+													spineAnimationName={spineAnimationName}
+													spineTabs={spineTabs}
+													onSwitchAnimations={switchAnimations}
+													onSwitchAnimationMode={switchAnimationMode}
+													spineRig={spineRig}
+													normalId={tdoll.normal.id}
+													onPlayerSwitchAnimations={playerSwitchAnimations}
+												/>
+											</LazySection>
+										</Box>
+									</Paper>
+								) : null}
+								{tdoll.exclusiveEquipment.length > 0 ? (
+									<Paper sx={styles.section} variant="outlined">
+										<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+											Exclusive equipment
+										</Typography>
+										<ExclusiveEquipmentPanel items={tdoll.exclusiveEquipment} />
+									</Paper>
+								) : null}
+							</Box>
 						</Grid>
 					) : null}
 				</Grid>
