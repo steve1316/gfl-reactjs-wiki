@@ -12,16 +12,35 @@
  *
  * Usage:
  *     node tools/assets/audit_assets.mjs [--concurrency 16] [--skip-network]
+ *     node tools/assets/audit_assets.mjs --v3 [--assets <dir>] [--art <dir>] [--manifest <file>] [--spine-index <file>]
+ *
+ * The default mode audits the live hosts against the version 2 manifest and index in `src/data/`. `--v3` audits the skin-id layout on
+ * disk instead: every file the version 3 manifest and Spine index reference must exist in the staging trees.
  *
  * Exits non-zero when anything is missing, so it can gate a deploy.
  */
 
 import fs from "node:fs";
+import path from "node:path";
 
 const ASSET_BASE = "https://steve1316.github.io/gfl-wiki-assets";
 const ART_BASE = "https://steve1316.github.io/gfl-wiki-assets-art";
 const ART_KINDS = new Set(["full", "full_damaged"]);
 const IMAGE_SUFFIX = { card: "card", card_damaged: "card_d", full: "full", full_damaged: "full_d" };
+
+/** Default v3 inputs: the staging trees, the manifest written into the asset tree and the v3 Spine index. */
+const V3_DEFAULTS = {
+	assets: "tools/assets/.staging/assets",
+	art: "tools/assets/.staging/art",
+	manifest: "tools/assets/.staging/assets/assets-manifest.json",
+	spineIndex: "src/data/spine-index.v3.json"
+};
+
+/** v3 image kind -> tree and filename inside a form folder. */
+const V3_IMAGE_FILES = { card: ["assets", "card.webp"], card_damaged: ["assets", "card_d.webp"], full: ["art", "full.webp"], full_damaged: ["art", "full_d.webp"] };
+
+/** v3 Mod-skin card kind -> filename inside a skin folder. */
+const V3_MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
 
 /** Animation names src/lib/spine.ts can give a readable label. Anything else shows as its raw name. */
 const KNOWN_ANIMATION_NAMES = new Set([
@@ -115,8 +134,154 @@ async function pool(items, limit, worker) {
 	);
 }
 
+/**
+ * Read a command-line option value.
+ *
+ * @param {string[]} args Command-line arguments.
+ * @param {string} name Option name including the dashes.
+ * @param {string} fallback Value when the option is absent.
+ * @returns {string} The option value.
+ */
+const option = (args, name, fallback) => (args.includes(name) ? args[args.indexOf(name) + 1] : fallback);
+
+/**
+ * List every rig a v3 Spine index entry holds, labelled for messages.
+ *
+ * @param {object} rigs One doll's v3 index entry.
+ * @returns {Array<[string, object]>} Label and rig pairs, absent rigs dropped.
+ */
+function v3Rigs(rigs) {
+	return [
+		["combat", rigs.combat],
+		["dorm", rigs.dorm],
+		["mod", rigs.mod?.combat],
+		["mod dorm", rigs.mod?.dorm],
+		...Object.entries(rigs.skins ?? {}).flatMap(([skinId, pair]) => [
+			[`skin ${skinId}`, pair.combat],
+			[`skin ${skinId} dorm`, pair.dorm]
+		])
+	].filter(([, rig]) => rig);
+}
+
+/**
+ * Audit the v3 manifest and Spine index against the staging trees on disk.
+ *
+ * @param {string[]} args Command-line arguments.
+ */
+function auditV3(args) {
+	const roots = { assets: option(args, "--assets", V3_DEFAULTS.assets), art: option(args, "--art", V3_DEFAULTS.art) };
+	const manifest = JSON.parse(fs.readFileSync(option(args, "--manifest", V3_DEFAULTS.manifest), "utf8"));
+	const spineIndex = JSON.parse(fs.readFileSync(option(args, "--spine-index", V3_DEFAULTS.spineIndex), "utf8"));
+
+	const missing = [];
+	const problems = [];
+	const notes = [];
+	let checked = 0;
+
+	/** Record one required file, relative to a tree root. */
+	const need = (tree, rel, why) => {
+		checked++;
+		if (!fs.existsSync(path.join(roots[tree], rel))) {
+			missing.push(`${tree}/${rel} (${why})`);
+		}
+	};
+
+	if (manifest.version !== 3) {
+		problems.push(`manifest version is ${manifest.version}, expected 3`);
+	}
+
+	for (const [id, doll] of Object.entries(manifest.dolls)) {
+		const forms = [
+			["normal", `tdolls/${id}`, doll.normal],
+			["mod", `tdolls/${id}/mod`, doll.mod],
+			...Object.entries(doll.skins ?? {}).map(([skinId, skin]) => [`skin ${skinId}`, `tdolls/${id}/skins/${skinId}`, skin])
+		];
+		for (const [label, folder, form] of forms) {
+			if (!form) continue;
+			for (const kind of form.images) {
+				const [tree, name] = V3_IMAGE_FILES[kind];
+				need(tree, `${folder}/${name}`, `doll ${id} ${label} ${kind}`);
+			}
+			for (const kind of form.modImages ?? []) {
+				need("assets", `${folder}/${V3_MOD_CARD_FILES[kind]}`, `doll ${id} ${label} Mod ${kind}`);
+			}
+		}
+		for (const skill of doll.skills) {
+			need("assets", `tdolls/${id}/${skill}.png`, `doll ${id} ${skill}`);
+		}
+
+		const rigs = spineIndex[id];
+		if (!rigs?.combat) {
+			problems.push(`doll ${id}: no combat rig, the animation panel would be empty`);
+			continue;
+		}
+		if (doll.mod && !rigs.mod?.combat) {
+			problems.push(`doll ${id}: has a Mod form but no Mod rig, so it would play the base animations`);
+		}
+		for (const skinId of Object.keys(doll.skins ?? {})) {
+			if (!rigs.skins?.[skinId]?.combat) {
+				notes.push(`doll ${id} skin ${skinId}: no Spine rig, the page falls back to the base rig`);
+			}
+		}
+	}
+
+	for (const [id, rigs] of Object.entries(spineIndex)) {
+		if (!manifest.dolls[id]) {
+			notes.push(`doll ${id}: has rigs but no manifest entry`);
+		}
+		for (const [kind, rig] of v3Rigs(rigs)) {
+			need("assets", `spine/${id}/${rig.skel}.skel`, `doll ${id} ${kind} skeleton`);
+			const atlasRel = `spine/${id}/${rig.atlas}.atlas`;
+			need("assets", atlasRel, `doll ${id} ${kind} atlas`);
+			const atlasFile = path.join(roots.assets, atlasRel);
+			if (fs.existsSync(atlasFile)) {
+				// Page images resolve against the atlas's own folder, exactly as `spineImageBase` builds the URL.
+				for (const line of fs.readFileSync(atlasFile, "utf8").split("\n")) {
+					const name = line.trim();
+					if (name.toLowerCase().endsWith(".png")) {
+						need("assets", `${path.posix.dirname(atlasRel)}/${name}`, `doll ${id} ${kind} atlas page`);
+					}
+				}
+			}
+			if (kind === "combat" && /_\d+$/.test(rig.skel.split("/").pop())) {
+				problems.push(`doll ${id}: default rig ${rig.skel} is a skin, not the base rig`);
+			}
+			if (!rig.anims?.length) {
+				problems.push(`doll ${id} ${kind}: skeleton ${rig.skel} defines no animations, or skb.js cannot parse it`);
+				continue;
+			}
+			const unlabelled = rig.anims.filter((name) => !KNOWN_ANIMATION_NAMES.has(name));
+			if (unlabelled.length) {
+				notes.push(`doll ${id} ${kind}: shown under raw names ${unlabelled.join(",")}`);
+			}
+		}
+	}
+
+	for (const equipId of manifest.equipment) {
+		need("assets", `equipment/${equipId}.png`, `equipment ${equipId}`);
+	}
+
+	console.log(`dolls               ${Object.keys(manifest.dolls).length}`);
+	console.log(`equipment           ${manifest.equipment.length}`);
+	console.log(`files checked       ${checked}`);
+	console.log(`missing files       ${missing.length}`);
+	missing.slice(0, 20).forEach((m) => console.log(`   ${m}`));
+	console.log(`structural problems ${problems.length}`);
+	problems.slice(0, 25).forEach((p) => console.log(`   ${p}`));
+	console.log(`notes (not failures) ${notes.length}`);
+	notes.slice(0, 10).forEach((n) => console.log(`   ${n}`));
+	if (missing.length || problems.length) {
+		process.exitCode = 1;
+	} else {
+		console.log("\nall good");
+	}
+}
+
 function main() {
 	const args = process.argv.slice(2);
+	if (args.includes("--v3")) {
+		return auditV3(args);
+	}
 	const concurrency = args.includes("--concurrency") ? Number(args[args.indexOf("--concurrency") + 1]) : 8;
 	const skipNetwork = args.includes("--skip-network");
 

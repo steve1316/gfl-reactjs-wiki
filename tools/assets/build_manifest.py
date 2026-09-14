@@ -9,6 +9,9 @@ exactly what the filesystem holds, so the app can stop guessing.
 
 Every path in the manifest is relative to the asset base URL, never to this repo, so the same
 manifest works whether assets are served from a Pages site, a CDN, or a local directory.
+
+`--v3` scans the skin-id layout the asset rebuild stages instead, reading cards, skill icons and equipment from the asset tree and full art
+from the art tree, and writes the version 3 manifest.
 """
 
 import argparse
@@ -44,6 +47,13 @@ SKILL_KINDS = ("skill1", "skill2")
 DORM_PREFIX = "dorm_"
 
 SPINE_EXTENSIONS = (".skel", ".atlas", ".png")
+
+# v3 image kinds, in manifest order, with the tree and filename each is read from.
+V3_IMAGE_FILES = (("card", "assets", "card.webp"), ("card_damaged", "assets", "card_d.webp"), ("full", "art", "full.webp"), ("full_damaged", "art", "full_d.webp"))
+V3_IMAGE_KINDS = [kind for kind, _tree, _name in V3_IMAGE_FILES]
+
+# Mod-coloured cards of a skin, stored next to the skin's own cards.
+V3_MOD_CARD_FILES = (("card", "mod_card.webp"), ("card_damaged", "mod_card_d.webp"))
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +258,76 @@ def compact(manifest):
     }
 
 
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Skin-id layout (v3)
+
+
+def numeric_dirs(folder):
+    """List the numerically named subfolders of a folder in numeric order.
+
+    Args:
+        folder: The folder, which may not exist.
+
+    Returns:
+        The subfolder names.
+    """
+    if not os.path.isdir(folder):
+        return []
+    return sorted((name for name in os.listdir(folder) if name.isdigit() and os.path.isdir(os.path.join(folder, name))), key=int)
+
+
+def form_images(roots, rel):
+    """List the image kinds present for one form folder.
+
+    Args:
+        roots: Map of `assets` and `art` to their tree roots.
+        rel: The form folder inside both trees, e.g. `tdolls/65/skins/805`.
+
+    Returns:
+        Image kinds in `V3_IMAGE_KINDS` order.
+    """
+    return [kind for kind, tree, name in V3_IMAGE_FILES if os.path.isfile(os.path.join(roots[tree], rel, name))]
+
+
+def build_v3(assets_root, art_root):
+    """Scan both staging trees and assemble the version 3 manifest.
+
+    Args:
+        assets_root: The asset tree, holding `tdolls/` cards and skill icons and `equipment/<id>.png`.
+        art_root: The art tree, holding `tdolls/` full art.
+
+    Returns:
+        The manifest dict, dolls and skins in numeric order.
+    """
+    roots = {"assets": assets_root, "art": art_root}
+    doll_ids = sorted(set(numeric_dirs(os.path.join(assets_root, "tdolls"))) | set(numeric_dirs(os.path.join(art_root, "tdolls"))), key=int)
+    dolls = {}
+    for doll_id in doll_ids:
+        base = f"tdolls/{doll_id}"
+        record = {"normal": {"images": form_images(roots, base)}}
+        if any(os.path.isdir(os.path.join(root, base, "mod")) for root in roots.values()):
+            record["mod"] = {"images": form_images(roots, f"{base}/mod")}
+        skin_ids = sorted(set(numeric_dirs(os.path.join(assets_root, base, "skins"))) | set(numeric_dirs(os.path.join(art_root, base, "skins"))), key=int)
+        skins = {}
+        for skin_id in skin_ids:
+            rel = f"{base}/skins/{skin_id}"
+            skin = {"images": form_images(roots, rel)}
+            mod_images = [kind for kind, name in V3_MOD_CARD_FILES if os.path.isfile(os.path.join(assets_root, rel, name))]
+            if mod_images:
+                skin["modImages"] = mod_images
+            skins[skin_id] = skin
+        if skins:
+            record["skins"] = skins
+        record["skills"] = [skill for skill in SKILL_KINDS if os.path.isfile(os.path.join(assets_root, base, f"{skill}.png"))]
+        dolls[doll_id] = record
+
+    equipment_dir = os.path.join(assets_root, "equipment")
+    names = os.listdir(equipment_dir) if os.path.isdir(equipment_dir) else []
+    equipment = sorted(int(name[:-4]) for name in names if name.endswith(".png") and name[:-4].isdigit())
+    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls}
+
+
 def main():
     """Parse arguments, build the manifest and write it to disk."""
     parser = argparse.ArgumentParser(description="Generate assets-manifest.json from the image tree.")
@@ -255,7 +335,25 @@ def main():
     parser.add_argument("--out", default="assets-manifest.json", help="Where to write the manifest.")
     parser.add_argument("--indent", type=int, default=None, help="JSON indent. Omit for the compact form used in production.")
     parser.add_argument("--format", choices=("full", "compact"), default="full", help="'full' keeps every path, 'compact' stores only what naming cannot derive.")
+    parser.add_argument("--v3", action="store_true", help="Build the version 3 manifest from the skin-id layout staging trees.")
+    parser.add_argument("--assets", help="With --v3, the asset staging tree.")
+    parser.add_argument("--art", help="With --v3, the art staging tree.")
     args = parser.parse_args()
+
+    if args.v3:
+        if not (args.assets and args.art and os.path.isdir(args.assets) and os.path.isdir(args.art)):
+            sys.exit("--v3 needs existing --assets and --art trees")
+        manifest = build_v3(args.assets, args.art)
+        with open(args.out, "w", encoding="utf-8") as handle:
+            json.dump(manifest, handle, indent=args.indent)
+            handle.write("\n")
+        dolls = manifest["dolls"].values()
+        print(f"wrote {args.out} ({os.path.getsize(args.out) / 1024:.0f} KB, version 3)")
+        print(f"  dolls        {len(manifest['dolls'])}")
+        print(f"  mods         {sum(1 for doll in dolls if 'mod' in doll)}")
+        print(f"  skins        {sum(len(doll.get('skins', {})) for doll in dolls)}")
+        print(f"  equipment    {len(manifest['equipment'])}")
+        return
 
     if not os.path.isdir(args.images):
         sys.exit(f"no such directory: {args.images}")
