@@ -103,7 +103,14 @@ REPORT_TIERS = {
 HOSTED_CARD_RE = re.compile(r"^\d+_(?:(mod)_)?(?:skin(\d+)_)?card\.png$")
 CARD_CHECK_COUNT = 20
 CARD_CHECK_SEED = 4
-PROOF_EQUIP_IDS = (1, 2, 3, 4, 59)
+# Hosted icons the equipment proofs compare against, by equipment id. The site data no longer carries hosted icon paths.
+PROOF_EQUIP_ICONS = {
+    1: "equipment/opticalSight/BM 3-12X40.png",
+    2: "equipment/opticalSight/LRA 2-12x50.png",
+    3: "equipment/opticalSight/PSO-1.png",
+    4: "equipment/opticalSight/VFL 6-24x56.png",
+    59: "equipment/armorPiercingAmmo/National Match-Grade Armor-Piercing Ammo.png",
+}
 
 # Files at the root of the asset repo clone that are not UI images.
 UI_SKIP = frozenset(("README.md", "assets-manifest.json", "CNAME", ".nojekyll"))
@@ -780,16 +787,16 @@ def extract_spine_item(item, cache_dir, staging, loader=unity_load):
 
 
 def load_rarities(site_dir):
-    """Read equipment rarity and hosted image path by id from the site data.
+    """Read equipment rarity by id from the site data.
 
     Args:
         site_dir: Directory holding `equipment.json`.
 
     Returns:
-        A `(rarities, images)` pair of dicts keyed by equipment id.
+        A dict of rarity keyed by equipment id.
     """
     items = [item for group in read_json(os.path.join(site_dir, "equipment.json"))["items"].values() for item in group]
-    return {item["id"]: item["rarity"] for item in items}, {item["id"]: item.get("image") for item in items}
+    return {item["id"]: item["rarity"] for item in items}
 
 
 def mean_abs_diff(first, second):
@@ -809,7 +816,9 @@ def mean_abs_diff(first, second):
 
 
 def hosted_card_targets(inventory, clone):
-    """Map every hosted card in the asset repo clone to the inventory asset it should match.
+    """Map every hosted base and Mod card in the asset repo clone to the inventory asset it should match.
+
+    Hosted skin cards sit in positional `skinN` slots, and the slot map that tied them to skin ids is retired, so they are left out.
 
     Args:
         inventory: The inventory dict.
@@ -819,25 +828,16 @@ def hosted_card_targets(inventory, clone):
         A sorted list of `(hosted path, item, role)`.
     """
     items = {item["key"]: item for item in inventory["items"]}
-    slots = read_json(os.path.join(os.path.dirname(TOOLS_DIR), "data", "skin-assets.json"))
     targets = []
     root = os.path.join(clone, "tdolls")
     for doll in sorted(os.listdir(root)):
         for filename in sorted(os.listdir(os.path.join(root, doll))):
             parsed = parse_hosted_card(filename)
-            if not parsed:
+            if not parsed or parsed[1]:
                 continue
-            form, slot = parsed
-            key, role = {"normal": (f"art:{doll}", "card"), "mod": (f"mod_art:{doll}", "card")}.get(form, (None, "mod_card" if form == "mod_skin" else "card"))
-            if slot:
-                skin_ids = slots.get(doll, [])
-                skin_id = skin_ids[slot - 1] if slot <= len(skin_ids) else None
-                if not isinstance(skin_id, int):
-                    continue
-                key = f"skin_art:{doll}:{skin_id}"
-            item = items.get(key)
-            if item and role in item["assets"]:
-                targets.append((os.path.join(root, doll, filename), item, role))
+            item = items.get(f"art:{doll}" if parsed[0] == "normal" else f"mod_art:{doll}")
+            if item and "card" in item["assets"]:
+                targets.append((os.path.join(root, doll, filename), item, "card"))
     return targets
 
 
@@ -880,22 +880,22 @@ def proof_equip(inventory, clone, site_dir, cache_dir, out_dir):
     """
     from PIL import ImageChops
 
-    rarities, images = load_rarities(site_dir)
+    rarities = load_rarities(site_dir)
     items = {item["equip_id"]: item for item in inventory["items"] if item["tier"] == "equip_icon"}
     textures = load_textures(sorted({name for item in items.values() for name in item["bundles"]}), cache_dir)
     backgrounds = load_named_textures(FRAME_BUNDLE, cache_dir, "Sprite")
     os.makedirs(out_dir, exist_ok=True)
     rows = []
-    for equip_id in PROOF_EQUIP_IDS:
+    for equip_id, hosted_path in PROOF_EQUIP_ICONS.items():
         ours, _size = build_equip_icon(textures, backgrounds, items[equip_id], rarities[equip_id])
-        hosted = Image.open(os.path.join(clone, images[equip_id])).convert("RGB")
+        hosted = Image.open(os.path.join(clone, hosted_path)).convert("RGB")
         diff = ImageChops.difference(ours, hosted).point(lambda value: min(255, value * 4))
         sheet = Image.new("RGB", (EQUIP_SIZE[0] * 3, EQUIP_SIZE[1]))
         for column, image in enumerate((ours, hosted, diff)):
             sheet.paste(image, (column * EQUIP_SIZE[0], 0))
         proof = os.path.join(out_dir, f"proof_equip_{equip_id}.png")
         sheet.save(proof)
-        rows.append({"equip_id": equip_id, "rarity": rarities[equip_id], "hosted": images[equip_id], "diff": mean_abs_diff(ours, hosted), "proof": proof})
+        rows.append({"equip_id": equip_id, "rarity": rarities[equip_id], "hosted": hosted_path, "diff": mean_abs_diff(ours, hosted), "proof": proof})
     return rows
 
 
@@ -1003,7 +1003,7 @@ def run_extraction(inventory, clone, site_dir, cache_dir, staging, workers):
     started = time.monotonic()
     reset_staging(staging)
     ui_files = copy_ui(clone, staging)
-    rarities, _images = load_rarities(site_dir)
+    rarities = load_rarities(site_dir)
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
     art_items, skill_items, equip_items = [], [], []

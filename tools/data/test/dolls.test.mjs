@@ -1,15 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import fs from "node:fs";
 
 import { buildDoll, selectReleased, splitDetails } from "../lib/dolls.mjs";
-import { buildSkins } from "../lib/skins.mjs";
+import { buildSkins, findSkinArtGaps } from "../lib/skins.mjs";
 import { readStatConfig } from "../lib/stats.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 
 const upstream = loadUpstream(resolveUpstreamDir());
-const skinAssets = JSON.parse(fs.readFileSync("tools/data/skin-assets.json", "utf8"));
-const ctx = { config: readStatConfig(upstream), skinAssets, warnings: [] };
+const ctx = { config: readStatConfig(upstream), warnings: [] };
 
 test("release filter keeps 450 dolls on 2026-09-13 and drops NPCs and future dolls", () => {
 	const ids = selectReleased(upstream, "2026-09-13").map((gun) => gun.id);
@@ -18,7 +16,7 @@ test("release filter keeps 450 dolls on 2026-09-13 and drops NPCs and future dol
 	assert.ok(ids.includes(423) && ids.includes(1046));
 });
 
-test("HK416 assembles with its Mod, skins in art-slot order first", () => {
+test("HK416 assembles with its Mod, skins in skin-id order", () => {
 	const gun = upstream.stc("gun").find((row) => row.id === 65);
 	const doll = buildDoll(upstream, gun, ctx);
 	assert.equal(doll.normal.id, 65);
@@ -28,7 +26,7 @@ test("HK416 assembles with its Mod, skins in art-slot order first", () => {
 	assert.equal(doll.mod.rarity, 6);
 	assert.equal(doll.mod.name, `${doll.normal.name} Mod`);
 	assert.equal(doll.mod.skill2.initial_cooldown, "Passive");
-	assert.deepEqual(doll.skins.skin_ids.slice(0, skinAssets["65"].length), skinAssets["65"]);
+	assert.deepEqual(doll.skins.skin_ids, [537, 548, 557, 581, 805, 3401, 6505, 10203, 30033]);
 	assert.equal(doll.skins.number_of_skins, doll.skins.skin_names.length);
 	assert.ok(doll.skins.skin_ids.includes(537) && !doll.skins.skin_ids.includes(5024));
 	assert.equal(doll.released, undefined);
@@ -48,17 +46,33 @@ test("collab dolls use the Extra rarity", () => {
 });
 
 test("a doll with no skins has null skins", () => {
-	assert.equal(buildSkins(upstream, 68, undefined), null);
+	assert.equal(buildSkins(upstream, 68), null);
 });
 
-test("named slots keep their art position with a null id", () => {
-	const skins = buildSkins(upstream, 162, [2408, { name: "Marching Band" }, 3203]);
-	assert.deepEqual(skins.skin_ids.slice(0, 3), [2408, null, 3203]);
-	assert.equal(skins.skin_names[1], "Marching Band");
+test("skins list every visible upstream skin in id order with no named entries", () => {
+	const skins = buildSkins(upstream, 162);
+	assert.deepEqual(skins.skin_ids, [2408, 3203, 10103, 30034]);
+	assert.equal(skins.number_of_skins, 4);
+	assert.ok(!skins.skin_names.includes("Marching Band"));
 });
 
-test("a mapped id that is not a visible upstream skin fails loudly", () => {
-	assert.throws(() => buildSkins(upstream, 65, [999999]), /not a visible upstream skin/);
+test("skin art gaps report artless skins and dolls, unlisted art, art without a card, and null ids", () => {
+	const card = { images: ["card", "card_damaged"] };
+	const manifest = {
+		dolls: {
+			1: { normal: card, skins: { 10: card, 11: card, 12: { images: ["full"] } } },
+			2: { normal: { images: [] } }
+		}
+	};
+	const doll = (id, skins) => ({ normal: { id }, skins });
+	const dolls = [doll(1, { number_of_skins: 3, skin_names: ["A", "B", "C"], skin_ids: [10, 12, 13] }), doll(2, { number_of_skins: 1, skin_names: ["Named"], skin_ids: [null] }), doll(3, null)];
+	assert.deepEqual(findSkinArtGaps(dolls, manifest), {
+		skinsWithoutArt: ["1:13", "2:Named"],
+		dollsWithoutArt: [2, 3],
+		unlistedArt: ["1:11"],
+		artWithoutCard: ["1:12"],
+		nullIds: [{ doll: 2, name: "Named" }]
+	});
 });
 
 test("splitDetails moves the profile and spec sheets out of the record, keeping Mod specs only when they differ", () => {
