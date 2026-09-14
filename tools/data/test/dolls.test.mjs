@@ -34,6 +34,14 @@ test("HK416 assembles with its Mod, skins in art-slot order first", () => {
 	assert.match(doll.released, /^\d{4}-\d{2}-\d{2}$/);
 });
 
+test("each form carries its spec sheet rows, and a collab doll with no spec text has none", () => {
+	const byId = new Map(upstream.stc("gun").map((row) => [row.id, row]));
+	const hk416 = buildDoll(upstream, byId.get(65), ctx);
+	assert.deepEqual(hk416.normal.specs[0], { label: "Type", value: "Assault rifle" });
+	assert.ok(hk416.mod.specs.length > 0);
+	assert.deepEqual(buildDoll(upstream, byId.get(1002), ctx).normal.specs, []);
+});
+
 test("collab dolls use the Extra rarity", () => {
 	const gun = upstream.stc("gun").find((row) => row.id === 1002);
 	assert.equal(buildDoll(upstream, gun, ctx).normal.rarity, 1);

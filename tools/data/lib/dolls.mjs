@@ -1,5 +1,6 @@
 import { buildSkill } from "./skills.mjs";
 import { buildSkins } from "./skins.mjs";
+import { specsFor } from "./specs.mjs";
 import { computeStats } from "./stats.mjs";
 import { cleanName } from "./text.mjs";
 import { TYPE_NAMES, buildTiles } from "./tiles.mjs";
@@ -53,6 +54,7 @@ function buildForm(upstream, gun, base, ctx) {
 		form.skill2 = buildSkill(upstream, gun.skill2, ctx.warnings);
 	}
 	form.tile_set = buildTiles(gun);
+	form.specs = specsFor(upstream.t(gun.en_introduce), isMod ? upstream.t(base.en_introduce) : "");
 	return form;
 }
 
