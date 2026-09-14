@@ -9,6 +9,10 @@ on:
         description: Do everything except pushing to the asset repos and master, and deploying
         type: boolean
         default: false
+      date:
+        description: Release cutoff as YYYY-MM-DD, defaults to today in UTC
+        type: string
+        required: false
 
 # One refresh at a time. A second run queues behind the first rather than racing it to master.
 concurrency:
@@ -27,16 +31,31 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       work: ${{ steps.plan.outputs.work }}
+      date: ${{ steps.date.outputs.date }}
       us: ${{ steps.shas.outputs.us }}
       cn: ${{ steps.shas.outputs.cn }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: master
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:
           node-version: 22
+
+      # Both jobs read the cutoff from here, so a refresh that starts after midnight still matches its plan.
+      - name: Resolve the release cutoff
+        id: date
+        env:
+          DATE_INPUT: ${{ inputs.date }}
+        run: |
+          DATE="${DATE_INPUT:-$(date -u +%F)}"
+          if ! [[ "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+            echo "the date input must be YYYY-MM-DD, got '$DATE'"
+            exit 1
+          fi
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
 
       - id: shas
         run: |
@@ -58,7 +77,8 @@ jobs:
       - id: plan
         env:
           SHA: ${{ steps.shas.outputs.us }}
-        run: node tools/data/plan.mjs --gf-data "$RUNNER_TEMP/gf-plan" --latest "$SHA"
+          DATE: ${{ steps.date.outputs.date }}
+        run: node tools/data/plan.mjs --gf-data "$RUNNER_TEMP/gf-plan" --latest "$SHA" --date "$DATE"
 
   refresh:
     needs: plan
@@ -72,10 +92,12 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run == true }}
       US_SHA: ${{ needs.plan.outputs.us }}
       CN_SHA: ${{ needs.plan.outputs.cn }}
+      CUTOFF: ${{ needs.plan.outputs.date }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: master
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
@@ -103,8 +125,10 @@ jobs:
         run: node tools/data/set_lock.mjs --us "$US_SHA" --cn "$CN_SHA"
 
       - name: Import game data
-        run: node tools/data/import.mjs
+        run: node tools/data/import.mjs --date "$CUTOFF"
 
+      # When a newly released form genuinely has no asset in the game, add its skill code to `EXPECTED_MISSING_SKILL_CODES` or its item key to
+      # `EXPECTED_MISSING_RIGS` in tools/assets/game_bundles.py, otherwise every run stops at this step.
       - name: Resolve and download new assets
         run: python3 tools/assets/game_bundles.py download --only-missing --gf-data tools/data/.cache/gf-data-us
 
@@ -138,16 +162,7 @@ jobs:
           chmod 600 ~/.ssh/assets_key ~/.ssh/art_key
           ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
 
-      - name: Publish to gfl-wiki-assets
-        env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/assets_key -o IdentitiesOnly=yes
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          flags=()
-          if [ "$DRY_RUN" = true ]; then flags+=(--dry-run); fi
-          python3 tools/assets/publish.py add --repo assets --staging "$RUNNER_TEMP/staging/assets" \
-            --remote git@github.com:steve1316/gfl-wiki-assets.git --list "$RUNNER_TEMP/assets-paths.json" "${flags[@]}"
-
+      # The art repo is the one near its size limit, so it goes first. A refusal there then stops the run before anything is pushed.
       - name: Publish to gfl-wiki-assets-art
         env:
           GIT_SSH_COMMAND: ssh -i ~/.ssh/art_key -o IdentitiesOnly=yes
@@ -158,14 +173,28 @@ jobs:
           python3 tools/assets/publish.py add --repo art --staging "$RUNNER_TEMP/staging/art" \
             --remote git@github.com:steve1316/gfl-wiki-assets-art.git --list "$RUNNER_TEMP/art-paths.json" "${flags[@]}"
 
+      - name: Publish to gfl-wiki-assets
+        env:
+          GIT_SSH_COMMAND: ssh -i ~/.ssh/assets_key -o IdentitiesOnly=yes
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          flags=()
+          if [ "$DRY_RUN" = true ]; then flags+=(--dry-run); fi
+          python3 tools/assets/publish.py add --repo assets --staging "$RUNNER_TEMP/staging/assets" \
+            --remote git@github.com:steve1316/gfl-wiki-assets.git --list "$RUNNER_TEMP/assets-paths.json" "${flags[@]}"
+
       - name: Wait for the new assets to go live
         if: env.DRY_RUN != 'true'
         run: |
           python3 tools/assets/publish.py wait-live --base "$(grep '^VITE_ASSET_BASE_URL=' .env | cut -d= -f2-)" --list "$RUNNER_TEMP/assets-paths.json"
           python3 tools/assets/publish.py wait-live --base "$(grep '^VITE_ART_BASE_URL=' .env | cut -d= -f2-)" --list "$RUNNER_TEMP/art-paths.json"
 
+      # The checkouts keep no token, so the push below is the only step that authenticates to this repo. upstream.json is committed but never
+      # read by the site, so it alone does not deploy.
       - name: Commit the refreshed data
         id: commit
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git add tools/data/upstream.lock.json src/data assets-manifest.json
           if git diff --cached --quiet; then
@@ -173,7 +202,7 @@ jobs:
             echo "deploy=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if git diff --cached --quiet -- src/data assets-manifest.json; then
+          if git diff --cached --quiet -- src/data ':!src/data/upstream.json' assets-manifest.json; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=true" >> "$GITHUB_OUTPUT"
@@ -181,7 +210,7 @@ jobs:
           git commit -q -m "Refresh game data to gf-data-us ${US_SHA:0:8}"
           git show --stat HEAD
           if [ "$DRY_RUN" != true ]; then
-            git push -q origin HEAD:master
+            git push -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:master
           fi
 
       # A push made with the workflow token does not start deploy.yml on its own, but dispatching it does.
