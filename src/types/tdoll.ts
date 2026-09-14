@@ -116,6 +116,8 @@ export interface RawTDoll {
 	mod: RawForm | null;
 	/** `null` when the doll has no skins. */
 	skins: RawSkins | null;
+	/** A copy of the profile's release date, kept in the shard so the T-Doll index can sort by it without loading the profiles. */
+	release: DollRelease;
 }
 
 /** A doll's spec sheets, one per form. */
@@ -164,6 +166,8 @@ export interface TDoll {
 	mod: TDollForm | null;
 	/** The doll's skins, or null when it has none. */
 	skins: RawSkins | null;
+	/** The doll's Global release date at its known precision. */
+	release: DollRelease;
 	/** Every form the manifest knows about, keyed `normal`, `mod` or `skin-<skinKey>`. */
 	forms: Record<string, FormAssets>;
 	/** Skill icon URLs, keyed `skill1` and `skill2`. */
