@@ -175,7 +175,7 @@ function main() {
 	const hk416Profile = byId.get(hk416.id)?.profile;
 	if (
 		JSON.stringify(hk416Profile?.faction) !== JSON.stringify(hk416.faction) ||
-		!hk416Profile?.manufacturer.includes(hk416.manufacturer) ||
+		!(hk416Profile?.manufacturer ?? []).includes(hk416.manufacturer) ||
 		JSON.stringify(hk416Profile?.country) !== JSON.stringify(hk416.country) ||
 		JSON.stringify(hk416Profile?.release) !== JSON.stringify(hk416.release)
 	) {
