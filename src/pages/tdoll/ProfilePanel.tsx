@@ -5,8 +5,9 @@ import type { KeyboardEvent, ReactNode } from "react";
 import { Box, Button, Tooltip, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import { formatBuildTime } from "../../lib/buildTime";
 import { formatRelease } from "../../lib/formatRelease";
-import type { DollProfile, SpecRow } from "../../types/tdoll";
+import type { DollProduction, DollProfile, SpecRow } from "../../types/tdoll";
 
 /** Manufacturers named in full before the rest fold into "+N more". */
 const MAX_MANUFACTURERS = 3;
@@ -141,17 +142,20 @@ interface ProfilePanelProps {
 	specs: SpecRow[];
 	/** Name of the form on screen, used as the spec heading when the profile has no full gun name. */
 	name: string;
+	/** The doll's build time and production pools, or null when production never gives it. */
+	production: DollProduction | null;
 }
 
 /**
  * The doll's profile and its gun's spec sheet, shown in the hero under the skin pills.
  *
- * The Profile block always shows, since every doll has at least its Global release row. The Specifications block shows when the form has a sheet.
+ * The Profile block always shows, since every doll has at least its Global release row, plus a Production row when production can give the
+ * doll. The Specifications block shows when the form has a sheet.
  *
  * @param props Component props.
  * @returns The Profile block, and the Specifications block beside it when there is a sheet.
  */
-export default memo(function ProfilePanel({ profile, specs, name }: ProfilePanelProps) {
+export default memo(function ProfilePanel({ profile, specs, name, production }: ProfilePanelProps) {
 	const [showAllSpecs, setShowAllSpecs] = useState(false);
 	const specListId = useId();
 
@@ -177,8 +181,12 @@ export default memo(function ProfilePanel({ profile, specs, name }: ProfilePanel
 			rows.push({ label: "Country", value: profile.country.join(", ") });
 		}
 		rows.push({ label: "Global release", value: formatRelease(profile.release) });
+		if (production !== null) {
+			const pools = production.standard && production.heavy ? "standard and heavy" : production.standard ? "standard" : "heavy";
+			rows.push({ label: "Production", value: `${formatBuildTime(production.seconds)} (${pools})` });
+		}
 		return rows;
-	}, [profile]);
+	}, [profile, production]);
 
 	const toggleSpecs = useCallback(() => setShowAllSpecs((current) => !current), []);
 

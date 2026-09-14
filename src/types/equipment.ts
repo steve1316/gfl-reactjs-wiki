@@ -37,6 +37,8 @@ export interface RawEquipment {
 	description: string;
 	/** Stat values by stat key. */
 	stats: EquipmentStats;
+	/** Build time in seconds when Equipment Productions can give the item, otherwise null. */
+	buildSeconds: number | null;
 }
 
 /** Equipment with its icon URL resolved. */
