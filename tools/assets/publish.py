@@ -578,15 +578,20 @@ def fetch_tree_sizes(repo_title, branch="main", token=None, opener=urllib.reques
         A dict of size in bytes by path, blobs only.
 
     Raises:
-        SystemExit: When the API truncates the listing.
+        SystemExit: When the request fails, or the API truncates the listing.
     """
     request = urllib.request.Request(
         f"{GITHUB_API}/repos/{OWNER}/{repo_title}/git/trees/{branch}?recursive=1", headers={"Accept": "application/vnd.github+json", "User-Agent": USER_AGENT}
     )
     if token:
         request.add_header("Authorization", f"Bearer {token}")
-    with opener(request, timeout=60) as response:
-        body = json.load(response)
+    try:
+        with opener(request, timeout=60) as response:
+            body = json.load(response)
+    except urllib.error.HTTPError as error:
+        sys.exit(f"reading the tree of {repo_title} from the GitHub API failed: HTTP {error.code}")
+    except urllib.error.URLError as error:
+        sys.exit(f"reading the tree of {repo_title} from the GitHub API failed: {error.reason}")
     if body.get("truncated"):
         sys.exit(f"the Git Trees API truncated the listing of {repo_title}, so its size cannot be checked")
     return {entry["path"]: entry["size"] for entry in body["tree"] if entry["type"] == "blob"}

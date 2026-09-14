@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.error
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -439,7 +440,7 @@ class BackupTests(unittest.TestCase):
 # Incremental add
 
 
-def run_git(cwd, *args, stdin=None):
+def git_in(cwd, *args, stdin=None):
     """Run git with the test identity and return its output.
 
     Args:
@@ -465,19 +466,19 @@ def make_remote(scratch, files):
         A `file://` URL of the bare repo and its path.
     """
     bare = os.path.join(scratch, "remote.git")
-    run_git(scratch, "init", "-q", "--bare", "-b", "main", bare)
-    run_git(bare, "config", "uploadpack.allowfilter", "true")
-    run_git(bare, "config", "uploadpack.allowanysha1inwant", "true")
+    git_in(scratch, "init", "-q", "--bare", "-b", "main", bare)
+    git_in(bare, "config", "uploadpack.allowfilter", "true")
+    git_in(bare, "config", "uploadpack.allowanysha1inwant", "true")
     seed = os.path.join(scratch, "seed")
-    run_git(scratch, "clone", "-q", bare, seed)
+    git_in(scratch, "clone", "-q", bare, seed)
     for rel, data in files.items():
         path = os.path.join(seed, rel)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "wb") as handle:
             handle.write(data)
-    run_git(seed, "add", "-A")
-    run_git(seed, "commit", "-q", "-m", "seed")
-    run_git(seed, "push", "-q", "origin", "HEAD:main")
+    git_in(seed, "add", "-A")
+    git_in(seed, "commit", "-q", "-m", "seed")
+    git_in(seed, "push", "-q", "origin", "HEAD:main")
     return f"file://{bare}", bare
 
 
@@ -542,9 +543,9 @@ class AddTests(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()):
                 paths = publish.add("assets", tree, remote, sizes=no_sizes)
             self.assertEqual(paths, ["tdolls/424/card.webp", "tdolls/424/card_d.webp"])
-            self.assertEqual(run_git(bare, "log", "-1", "--format=%s", "main"), "Add art for doll 424")
+            self.assertEqual(git_in(bare, "log", "-1", "--format=%s", "main"), "Add art for doll 424")
             self.assertEqual(
-                run_git(bare, "ls-tree", "-r", "--name-only", "main").split("\n"),
+                git_in(bare, "ls-tree", "-r", "--name-only", "main").split("\n"),
                 [".nojekyll", "tdolls/1/card.webp", "tdolls/424/card.webp", "tdolls/424/card_d.webp"],
             )
 
@@ -556,32 +557,32 @@ class AddTests(unittest.TestCase):
             stage(tree, {"tdolls/424/card.webp": b"fresh"})
             with contextlib.redirect_stdout(io.StringIO()):
                 publish.add("assets", tree, remote, sizes=no_sizes)
-                head = run_git(bare, "rev-parse", "main")
-                self.assertEqual(run_git(bare, "show", "main:tdolls/424/card.webp"), "fresh")
+                head = git_in(bare, "rev-parse", "main")
+                self.assertEqual(git_in(bare, "show", "main:tdolls/424/card.webp"), "fresh")
                 publish.add("assets", tree, remote, sizes=no_sizes)
-            self.assertEqual(run_git(bare, "rev-parse", "main"), head)
+            self.assertEqual(git_in(bare, "rev-parse", "main"), head)
 
     def test_dry_run_does_not_push(self):
         """A dry run commits in the throwaway clone only."""
         with tempfile.TemporaryDirectory() as scratch:
             remote, bare = make_remote(scratch, {".nojekyll": b""})
-            head = run_git(bare, "rev-parse", "main")
+            head = git_in(bare, "rev-parse", "main")
             tree = os.path.join(scratch, "staging", "art")
             stage(tree, {"tdolls/424/full.webp": b"art"})
             with contextlib.redirect_stdout(io.StringIO()):
                 publish.add("art", tree, remote, dry_run=True, sizes=no_sizes)
-            self.assertEqual(run_git(bare, "rev-parse", "main"), head)
+            self.assertEqual(git_in(bare, "rev-parse", "main"), head)
 
     def test_oversized_tree_is_refused_before_cloning(self):
         """A tree that would pass the Pages limit stops before anything is cloned or pushed."""
         with tempfile.TemporaryDirectory() as scratch:
             remote, bare = make_remote(scratch, {".nojekyll": b""})
-            head = run_git(bare, "rev-parse", "main")
+            head = git_in(bare, "rev-parse", "main")
             tree = os.path.join(scratch, "staging", "art")
             stage(tree, {"tdolls/424/full.webp": b"art"})
             with self.assertRaises(SystemExit), contextlib.redirect_stdout(io.StringIO()):
                 publish.add("art", tree, remote, sizes=lambda _title, _branch: {"huge.bin": 1000 * MB})
-            self.assertEqual(run_git(bare, "rev-parse", "main"), head)
+            self.assertEqual(git_in(bare, "rev-parse", "main"), head)
 
     def test_nothing_staged(self):
         """A missing or empty staging tree returns no paths without touching the remote."""
@@ -641,6 +642,15 @@ class TreeSizeTests(unittest.TestCase):
         """A truncated listing cannot be trusted for the size limit."""
         with self.assertRaises(SystemExit):
             publish.fetch_tree_sizes("gfl-wiki-assets", opener=self.response({"truncated": True, "tree": []}))
+
+    def test_http_error_exits(self):
+        """An HTTP error from the API exits with a readable message instead of a raw traceback."""
+
+        def failing_opener(_request, timeout=None):
+            raise urllib.error.HTTPError("https://api.github.com/x", 403, "rate limited", {}, None)
+
+        with self.assertRaises(SystemExit):
+            publish.fetch_tree_sizes("gfl-wiki-assets", opener=failing_opener)
 
 
 if __name__ == "__main__":
