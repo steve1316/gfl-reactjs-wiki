@@ -67,7 +67,52 @@ async function callWikidata(params) {
 	if (!response.ok) {
 		throw new Error(`Wikidata API request failed: ${response.status} ${response.statusText}`);
 	}
-	return response.json();
+	const body = await response.json();
+	if (body.error) {
+		throw new Error(`Wikidata API error ${body.error.code ?? "unknown"}: ${body.error.info ?? JSON.stringify(body.error)}`);
+	}
+	if (!body.entities) {
+		throw new Error(`Wikidata API response is missing "entities": ${JSON.stringify(body)}`);
+	}
+	return body;
+}
+
+/**
+ * Reduce a title to a loose, case- and underscore-insensitive form for matching two spellings of the same
+ * page title against each other.
+ *
+ * @param {string} title A page title.
+ * @returns {string} The title, lowercased, with underscores turned into spaces, and trimmed.
+ */
+function looseTitleKey(title) {
+	return title.toLowerCase().replaceAll("_", " ").trim();
+}
+
+/**
+ * Build a map from every title Wikidata actually resolved (the request as normalised, and again as
+ * redirected) back to the title we originally asked for.
+ *
+ * `wbgetentities` reports both steps as `{from, to}` pairs under `normalized` (MediaWiki title
+ * normalisation, e.g. case or spacing) and `redirects` (page redirects), each keyed by an arbitrary index
+ * rather than the title itself. Chaining both lets a heavily-redirected title (e.g. requesting "Tommy gun"
+ * and getting back the "Thompson submachine gun" article) still resolve to the title we asked for.
+ *
+ * @param {object} body The `wbgetentities` response body.
+ * @param {string[]} requestedTitles Titles as passed to `resolveClaims`.
+ * @returns {Map<string, string>} Resolved title (as it appears in `entity.sitelinks.enwiki.title`) to
+ *   requested title.
+ */
+function buildTitleMap(body, requestedTitles) {
+	const resolvedToRequested = new Map(requestedTitles.map((title) => [title, title]));
+	for (const key of ["normalized", "redirects"]) {
+		for (const step of Object.values(body[key] ?? {})) {
+			const requested = resolvedToRequested.get(step.from);
+			if (requested !== undefined) {
+				resolvedToRequested.set(step.to, requested);
+			}
+		}
+	}
+	return resolvedToRequested;
 }
 
 /**
@@ -78,8 +123,15 @@ async function callWikidata(params) {
  * `sitelinks` (restricted to `enwiki` via `sitefilter`) gives back each entity's own enwiki title so the
  * batch can be split apart again. Verified live against the real API.
  *
+ * That resolved sitelink title can still differ from what was requested (case, underscores, or a page
+ * redirect), which would otherwise silently drop the doll and poison the reuse cache under the wrong key.
+ * `normalize=1` and `redirects=yes` ask Wikidata to report both steps, resolved via `buildTitleMap`; a
+ * case/underscore-insensitive match against the request list is the fallback for anything that slips
+ * through.
+ *
  * @param {string[]} titles Up to `BATCH_SIZE` enwiki titles.
- * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Item-id claims per title.
+ * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Item-id claims keyed by the
+ *   requested title (not necessarily the resolved sitelink title).
  */
 async function resolveClaims(titles) {
 	const body = await callWikidata(
@@ -87,17 +139,22 @@ async function resolveClaims(titles) {
 			sites: "enwiki",
 			titles: titles.join("|"),
 			props: "claims|sitelinks",
-			sitefilter: "enwiki"
+			sitefilter: "enwiki",
+			normalize: "1",
+			redirects: "yes"
 		})
 	);
+	const titleMap = buildTitleMap(body, titles);
+	const looseTitles = new Map(titles.map((title) => [looseTitleKey(title), title]));
 	const claimsByTitle = new Map();
 	for (const entity of Object.values(body.entities ?? {})) {
-		const title = entity.sitelinks?.enwiki?.title;
-		if (!title || !entity.claims) {
+		const resolvedTitle = entity.sitelinks?.enwiki?.title;
+		if (!resolvedTitle || !entity.claims) {
 			continue;
 		}
+		const requestedTitle = titleMap.get(resolvedTitle) ?? looseTitles.get(looseTitleKey(resolvedTitle)) ?? resolvedTitle;
 		const idsFor = (property) => (entity.claims[property] ?? []).map((claim) => claim.mainsnak?.datavalue?.value?.id).filter((id) => typeof id === "string");
-		claimsByTitle.set(title, { manufacturer: idsFor(MANUFACTURER_PROPERTY), country: idsFor(COUNTRY_PROPERTY) });
+		claimsByTitle.set(requestedTitle, { manufacturer: idsFor(MANUFACTURER_PROPERTY), country: idsFor(COUNTRY_PROPERTY) });
 	}
 	return claimsByTitle;
 }
@@ -131,10 +188,13 @@ async function resolveLabels(ids) {
  * cache, merged with whatever was already there.
  *
  * @param {string[]} titles Enwiki article titles to resolve.
+ * @param {object} [options] Options.
+ * @param {number} [options.delayMs] Milliseconds between requests, overriding `REQUEST_DELAY_MS`. Exists so
+ *   tests can skip the real wait; real callers should leave this at its default.
  * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Manufacturer and country
  *   labels per title. A title with no Wikidata item, or no claims, is omitted.
  */
-export async function fetchWikidataFacts(titles) {
+export async function fetchWikidataFacts(titles, { delayMs = REQUEST_DELAY_MS } = {}) {
 	const uniqueTitles = [...new Set(titles)];
 	const cached = fs.existsSync(CACHE_FILE) ? JSON.parse(fs.readFileSync(CACHE_FILE, "utf8")) : {};
 	if (process.env.WIKIDATA_CACHE === "reuse") {
@@ -152,7 +212,7 @@ export async function fetchWikidataFacts(titles) {
 	let first = true;
 	const wait = async () => {
 		if (!first) {
-			await sleep(REQUEST_DELAY_MS);
+			await sleep(delayMs);
 		}
 		first = false;
 	};

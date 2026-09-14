@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-import { parseEnRelease, parsePlayableUnit, plainText, wikipediaTitle } from "../lib/iopwiki.mjs";
+import { fetchIopwikiPages, parseEnRelease, parsePlayableUnit, plainText, wikipediaTitle } from "../lib/iopwiki.mjs";
 
 const hk416 = fs.readFileSync("tools/data/test/fixtures/iopwiki-hk416.wikitext", "utf8");
 const beowulf = fs.readFileSync("tools/data/test/fixtures/iopwiki-beowulf.wikitext", "utf8");
@@ -87,4 +87,55 @@ test("wikipediaTitle normalises underscores to spaces", () => {
 
 test("wikipediaTitle returns null when no field has a wikipedia link", () => {
 	assert.equal(wikipediaTitle({ nationality: "Germany", faction: "[[Squad 404]]" }), null);
+});
+
+test("an HTML comment between two real parameters (as on the Beowulf fixture) does not corrupt either field", () => {
+	const fields = parsePlayableUnit(beowulf);
+	assert.equal(fields.max_hp, "121");
+	assert.equal(fields.min_dmg, "23");
+	assert.equal(fields.fix_min, undefined);
+	assert.equal(fields.fix_max, undefined);
+	for (const value of Object.values(fields)) {
+		assert.doesNotMatch(value, /<!--/);
+	}
+});
+
+test("a comment containing pipes and braces is stripped before parameter splitting, not treated as syntax", () => {
+	const wikitext = "{{PlayableUnit\n|a=1<!-- comment | with {{braces}} and a pipe -->\n|b=2}}";
+	assert.deepEqual(parsePlayableUnit(wikitext), { a: "1", b: "2" });
+});
+
+test("plainText strips HTML comments, including a multi-line one with an embedded >", () => {
+	assert.equal(plainText("Before <!-- hidden --> After"), "Before After");
+	assert.equal(plainText("Before <!-- a\nmulti-line > comment --> After"), "Before After");
+});
+
+test("fetchIopwikiPages rejects with the API's error code when IOPWiki answers 200 with an error body", async () => {
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ error: { code: "badtitle", info: "Bad title" } }) });
+	try {
+		await assert.rejects(fetchIopwikiPages(), /badtitle/);
+	} finally {
+		globalThis.fetch = original;
+	}
+});
+
+test("fetchIopwikiPages rejects when IOPWiki answers with an HTTP 500", async () => {
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => ({ ok: false, status: 500, statusText: "Internal Server Error", json: async () => ({}) });
+	try {
+		await assert.rejects(fetchIopwikiPages());
+	} finally {
+		globalThis.fetch = original;
+	}
+});
+
+test("fetchIopwikiPages rejects when the response has no query object", async () => {
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ batchcomplete: true }) });
+	try {
+		await assert.rejects(fetchIopwikiPages(), /query/);
+	} finally {
+		globalThis.fetch = original;
+	}
 });

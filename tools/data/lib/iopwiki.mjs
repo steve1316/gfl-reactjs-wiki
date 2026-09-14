@@ -81,7 +81,13 @@ export async function fetchIopwikiPages() {
 			throw new Error(`IOPWiki API request failed: ${response.status} ${response.statusText}`);
 		}
 		const body = await response.json();
-		for (const page of body.query?.pages ?? []) {
+		if (body.error) {
+			throw new Error(`IOPWiki API error ${body.error.code ?? "unknown"}: ${body.error.info ?? JSON.stringify(body.error)}`);
+		}
+		if (!body.query) {
+			throw new Error(`IOPWiki API response is missing "query": ${JSON.stringify(body)}`);
+		}
+		for (const page of body.query.pages ?? []) {
 			const content = page.revisions?.[0]?.slots?.main?.content;
 			if (typeof content === "string") {
 				pages.push({ title: page.title, wikitext: content });
@@ -158,29 +164,32 @@ function resolveTemplate(inner) {
 /**
  * Extract the named parameters of the top-level `{{PlayableUnit ...}}` template from a page's wikitext.
  *
- * Nested `{{...}}` templates and `[[...]]` links are tracked by depth, so a `|` inside either never splits
- * a parameter. Content after the template's matching `}}` (such as a trailing `[[Category:...]]`) is ignored.
+ * `<!-- ... -->` comments (including multi-line ones) are stripped first, since a `|` or `{{`/`}}` inside a
+ * comment is not real template syntax and would otherwise corrupt parameter splitting. Nested `{{...}}`
+ * templates and `[[...]]` links are then tracked by depth, so a `|` inside either never splits a parameter.
+ * Content after the template's matching `}}` (such as a trailing `[[Category:...]]`) is ignored.
  *
  * @param {string} wikitext Raw page wikitext.
  * @returns {Record<string, string> | null} Parameter values keyed by trimmed, lowercased name, or null when
  *   no `{{PlayableUnit` template is found.
  */
 export function parsePlayableUnit(wikitext) {
-	const start = wikitext.search(/\{\{\s*PlayableUnit\b/i);
+	const cleaned = wikitext.replace(/<!--[\s\S]*?-->/g, "");
+	const start = cleaned.search(/\{\{\s*PlayableUnit\b/i);
 	if (start === -1) {
 		return null;
 	}
 	let braceDepth = 0;
 	let contentStart = -1;
 	let contentEnd = -1;
-	for (let i = start; i < wikitext.length; i++) {
-		if (wikitext.startsWith("{{", i)) {
+	for (let i = start; i < cleaned.length; i++) {
+		if (cleaned.startsWith("{{", i)) {
 			braceDepth++;
 			if (braceDepth === 1) {
 				contentStart = i + 2;
 			}
 			i++;
-		} else if (wikitext.startsWith("}}", i)) {
+		} else if (cleaned.startsWith("}}", i)) {
 			braceDepth--;
 			i++;
 			if (braceDepth === 0) {
@@ -192,7 +201,7 @@ export function parsePlayableUnit(wikitext) {
 	if (contentEnd === -1) {
 		return null;
 	}
-	const content = wikitext.slice(contentStart, contentEnd);
+	const content = cleaned.slice(contentStart, contentEnd);
 	const segments = [];
 	let braces = 0;
 	let links = 0;
@@ -238,15 +247,17 @@ export function parsePlayableUnit(wikitext) {
 /**
  * Reduce one raw `parsePlayableUnit` field value to plain display text.
  *
- * Order: `<ref>` tags (paired and self-closing) are removed, templates are resolved innermost-first (see
- * `resolveTemplate`), `[[a|b]]` links resolve to `b` and `[[a]]` to `a`, `<br/>` becomes ", ", any other
- * HTML tag is stripped, HTML entities are decoded, and finally whitespace is collapsed and trimmed.
+ * Order: `<!-- ... -->` comments are stripped, `<ref>` tags (paired and self-closing) are removed, templates
+ * are resolved innermost-first (see `resolveTemplate`), `[[a|b]]` links resolve to `b` and `[[a]]` to `a`,
+ * `<br/>` becomes ", ", any other HTML tag is stripped, HTML entities are decoded, and finally whitespace is
+ * collapsed and trimmed.
  *
  * @param {string} value A raw field value from `parsePlayableUnit`.
  * @returns {string} Plain text.
  */
 export function plainText(value) {
 	let text = value;
+	text = text.replace(/<!--[\s\S]*?-->/g, "");
 	text = text.replace(/<ref\b[^>]*\/>/gi, "");
 	text = text.replace(/<ref\b[^>]*>[\s\S]*?<\/ref>/gi, "");
 	while (/\{\{[^{}]*\}\}/.test(text)) {
