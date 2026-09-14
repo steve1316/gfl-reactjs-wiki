@@ -32,11 +32,7 @@
 				"specs": []
 			},
 			"mod": null,
-			"skins": {
-				"number_of_skins": 1,
-				"skin_names": ["Formal Dress"],
-				"skin_ids": [null]
-			}
+			"skins": null
 		},
 		{
 			"normal": {
@@ -104,11 +100,7 @@
 				"specs": []
 			},
 			"mod": null,
-			"skins": {
-				"number_of_skins": 1,
-				"skin_names": ["Bronya's Armor"],
-				"skin_ids": [null]
-			}
+			"skins": null
 		},
 		{
 			"normal": {
@@ -214,11 +206,7 @@
 				"specs": []
 			},
 			"mod": null,
-			"skins": {
-				"number_of_skins": 1,
-				"skin_names": ["Festival"],
-				"skin_ids": [null]
-			}
+			"skins": null
 		}
 	],
 	"fields": [

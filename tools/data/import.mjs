@@ -24,6 +24,7 @@ import { buildEquipment } from "./lib/equipment.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
 import { buildProfile, fillFromWikidata, indexPages, releaseFor } from "./lib/profile.mjs";
 import { SHARDS } from "./lib/shards.mjs";
+import { addExtraSkins, validateExtraSkins } from "./lib/skins.mjs";
 import { readStatConfig } from "./lib/stats.mjs";
 import { loadUpstream, readLock, resolveUpstreamDir } from "./lib/upstream.mjs";
 import { fetchWikidataFacts } from "./lib/wikidata.mjs";
@@ -111,6 +112,8 @@ async function main() {
 	const cutoff = args.includes("--date") ? args[args.indexOf("--date") + 1] : new Date().toISOString().slice(0, 10);
 	const upstream = loadUpstream(resolveUpstreamDir());
 	const overrides = JSON.parse(fs.readFileSync("tools/data/overrides.json", "utf8"));
+	const extraSkins = JSON.parse(fs.readFileSync("tools/data/extra-skins.json", "utf8"));
+	validateExtraSkins(extraSkins, upstream);
 	const ctx = { config: readStatConfig(upstream), warnings: [] };
 
 	const dolls = selectReleased(upstream, cutoff).map((gun) => buildDoll(upstream, gun, ctx));
@@ -118,6 +121,12 @@ async function main() {
 		if (!dolls.some((doll) => doll.normal.id === extra.normal.id)) {
 			dolls.push(extra);
 		}
+	}
+	for (const extra of extraSkins.filter((entry) => !dolls.some((doll) => doll.normal.id === entry.doll))) {
+		throw new Error(`extra skin ${extra.doll}:${extra.key} belongs to a doll the data does not hold`);
+	}
+	for (const doll of dolls) {
+		doll.skins = addExtraSkins(doll.skins, doll.normal.id, extraSkins);
 	}
 	const profiles = await attachProfiles(dolls, upstream);
 	for (const fix of overrides.fields) {

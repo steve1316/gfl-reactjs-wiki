@@ -275,6 +275,11 @@ async function main() {
 			for (const { doll, name } of artGaps.nullIds.filter((entry) => !overrideIds.has(entry.doll))) {
 				fail(`doll ${doll} skin "${name}" has no skin id, so its art cannot be found`);
 			}
+			// Every skin key, table id or extra, must have v3 art. Only the allowed null-id skins above are exempt.
+			const allowedNamed = new Set(artGaps.nullIds.filter((entry) => overrideIds.has(entry.doll)).map((entry) => `${entry.doll}:${entry.name}`));
+			for (const label of artGaps.skinsWithoutArt.filter((entry) => !allowedNamed.has(entry))) {
+				fail(`skin ${label} has no v3 art in the manifest`);
+			}
 			for (const label of artGaps.unlistedArt) {
 				fail(`skin art ${label} is in the manifest but the doll's skins do not list it`);
 			}

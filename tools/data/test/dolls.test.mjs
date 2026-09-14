@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { buildDoll, selectReleased, splitDetails } from "../lib/dolls.mjs";
-import { buildSkins, findSkinArtGaps } from "../lib/skins.mjs";
+import fs from "node:fs";
+
+import { addExtraSkins, buildSkins, findSkinArtGaps, validateExtraSkins } from "../lib/skins.mjs";
 import { readStatConfig } from "../lib/stats.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 
@@ -60,19 +62,77 @@ test("skin art gaps report artless skins and dolls, unlisted art, art without a 
 	const card = { images: ["card", "card_damaged"] };
 	const manifest = {
 		dolls: {
-			1: { normal: card, skins: { 10: card, 11: card, 12: { images: ["full"] } } },
+			1: { normal: card, skins: { 10: card, 11: card, 12: { images: ["full"] }, "legacy-a": card, "legacy-z": card } },
 			2: { normal: { images: [] } }
 		}
 	};
 	const doll = (id, skins) => ({ normal: { id }, skins });
-	const dolls = [doll(1, { number_of_skins: 3, skin_names: ["A", "B", "C"], skin_ids: [10, 12, 13] }), doll(2, { number_of_skins: 1, skin_names: ["Named"], skin_ids: [null] }), doll(3, null)];
+	const dolls = [
+		doll(1, { number_of_skins: 5, skin_names: ["A", "B", "C", "L", "M"], skin_ids: [10, 12, 13, "legacy-a", "legacy-b"] }),
+		doll(2, { number_of_skins: 1, skin_names: ["Named"], skin_ids: [null] }),
+		doll(3, null)
+	];
 	assert.deepEqual(findSkinArtGaps(dolls, manifest), {
-		skinsWithoutArt: ["1:13", "2:Named"],
+		skinsWithoutArt: ["1:13", "1:legacy-b", "2:Named"],
 		dollsWithoutArt: [2, 3],
-		unlistedArt: ["1:11"],
+		unlistedArt: ["1:11", "1:legacy-z"],
 		artWithoutCard: ["1:12"],
 		nullIds: [{ doll: 2, name: "Named" }]
 	});
+});
+
+const extras = JSON.parse(fs.readFileSync("tools/data/extra-skins.json", "utf8"));
+
+test("extra skins follow the table skins: game extras in id order, then legacy extras in file order", () => {
+	const list = [
+		{ doll: 1, key: "legacy-b", name: "Legacy B", source: "legacy", legacySlot: 2, reason: "r" },
+		{ doll: 1, key: 9, name: "Game 9", source: "game", reason: "r" },
+		{ doll: 1, key: "legacy-a", name: "Legacy A", source: "legacy", legacySlot: 1, reason: "r" },
+		{ doll: 1, key: 4, name: "Game 4", source: "game", reason: "r" },
+		{ doll: 2, key: 5, name: "Other doll", source: "game", reason: "r" }
+	];
+	const table = { number_of_skins: 1, skin_names: ["Table"], skin_ids: [700] };
+	assert.deepEqual(addExtraSkins(table, 1, list), {
+		number_of_skins: 5,
+		skin_names: ["Table", "Game 4", "Game 9", "Legacy B", "Legacy A"],
+		skin_ids: [700, 4, 9, "legacy-b", "legacy-a"]
+	});
+	assert.deepEqual(table.skin_ids, [700]);
+	assert.deepEqual(addExtraSkins(null, 2, list), { number_of_skins: 1, skin_names: ["Other doll"], skin_ids: [5] });
+	assert.equal(addExtraSkins(null, 3, list), null);
+});
+
+test("extra skin validation rejects table rows, bad keys and duplicates", () => {
+	const fake = { stc: () => [{ id: 700, fit_gun: 1 }] };
+	const game = (key) => ({ doll: 1, key, name: "N", source: "game", reason: "r" });
+	assert.doesNotThrow(() => validateExtraSkins([game(4), { doll: 1, key: "legacy-x", name: "X", source: "legacy", legacySlot: 1, reason: "r" }], fake));
+	assert.throws(() => validateExtraSkins([game(700)], fake), /skin.json/);
+	assert.throws(() => validateExtraSkins([game("4")], fake), /numeric/);
+	assert.throws(() => validateExtraSkins([{ doll: 1, key: "x", name: "X", source: "legacy", legacySlot: 1, reason: "r" }], fake), /legacy-/);
+	assert.throws(() => validateExtraSkins([{ doll: 1, key: "legacy-x", name: "X", source: "legacy", reason: "r" }], fake), /legacySlot/);
+	assert.throws(() => validateExtraSkins([game(4), game(4)], fake), /twice/);
+	assert.throws(() => validateExtraSkins([{ ...game(4), source: "other" }], fake), /source/);
+});
+
+test("the committed extra skins are valid and game extras carry their skin.txt names", () => {
+	validateExtraSkins(extras, upstream);
+	for (const extra of extras.filter((entry) => entry.source === "game")) {
+		assert.equal(upstream.t(`skin-${10000000 + extra.key}`), extra.name);
+	}
+	assert.deepEqual(
+		extras.filter((entry) => entry.source === "game").map((entry) => [entry.doll, entry.key]),
+		[
+			[44, 502],
+			[1003, 506],
+			[1005, 507],
+			[1008, 508]
+		]
+	);
+});
+
+test("SV-98 lists its table skin before the game extra", () => {
+	assert.deepEqual(addExtraSkins(buildSkins(upstream, 44), 44, extras).skin_ids, [1906, 502]);
+	assert.deepEqual(addExtraSkins(buildSkins(upstream, 275), 275, extras), { number_of_skins: 1, skin_names: ["Slipper Orchid"], skin_ids: ["legacy-slipper-orchid"] });
 });
 
 test("splitDetails moves the profile and spec sheets out of the record, keeping Mod specs only when they differ", () => {

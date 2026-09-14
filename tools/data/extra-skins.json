@@ -1,0 +1,9 @@
+[
+	{ "doll": 44, "key": 502, "name": "At Your Service", "source": "game", "reason": "Game bundle holds card and full art but skin.json has no row" },
+	{ "doll": 1003, "key": 506, "name": "Kiana's Dress", "source": "game", "reason": "Collab skin with bundle art and no skin.json row, formerly a hand-written override skin" },
+	{ "doll": 1005, "key": 507, "name": "Bronya's Armor", "source": "game", "reason": "Collab skin with bundle art and no skin.json row, formerly a hand-written override skin" },
+	{ "doll": 1008, "key": 508, "name": "Seele's Ceremony", "source": "game", "reason": "Collab skin with bundle art and no skin.json row, formerly a hand-written override skin" },
+	{ "doll": 162, "key": "legacy-marching-band", "name": "Marching Band", "source": "legacy", "legacySlot": 2, "reason": "Art only hosted in the old asset repos, not in the game tables" },
+	{ "doll": 103, "key": "legacy-winter-journey", "name": "Winter Journey", "source": "legacy", "legacySlot": 3, "reason": "Art only hosted in the old asset repos, not in the game tables" },
+	{ "doll": 275, "key": "legacy-slipper-orchid", "name": "Slipper Orchid", "source": "legacy", "legacySlot": 1, "reason": "Art only hosted in the old asset repos, not in the game tables" }
+]
