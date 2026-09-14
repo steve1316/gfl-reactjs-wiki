@@ -16,16 +16,23 @@ Naming rules, from the Phase 4B research:
 Subcommands:
 
 - `inventory` writes `tools/assets/.cache/inventory.json` and prints the summary. Nothing is downloaded.
-- `download` fetches every resolved bundle into `tools/assets/.cache/bundles/<name>.ab`, skipping bundles already cached at the right size.
-- `verify` checks that every resolved bundle is cached at the size ResData records.
+- `download` fetches every resolved bundle into `tools/assets/.cache/bundles/<name>.ab`, skipping bundles already cached under the same content
+  hash name (`resname`) at the right size.
+- `verify` checks that every resolved bundle is cached at the size ResData records, under the `resname` ResData records.
+
+`bundles/cache-index.json` records the `resname` each cached bundle was downloaded under, since the file name alone cannot tell an updated
+bundle of the same size from the old one. A cached bundle with no record is adopted without a download when its SHA-1 matches ResData's
+`fileHash`.
 """
 
 import argparse
 import collections
 import concurrent.futures
 import glob
+import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 import threading
@@ -45,6 +52,9 @@ SITE_DATA_DIR = os.path.join(REPO_ROOT, "src", "data")
 CACHE_DIR = os.path.join(TOOLS_DIR, ".cache")
 BUNDLE_CACHE_DIR = os.path.join(CACHE_DIR, "bundles")
 INVENTORY_PATH = os.path.join(CACHE_DIR, "inventory.json")
+
+# Sidecar file in the bundle cache recording the `resname`, size and SHA-1 each bundle was cached under.
+CACHE_INDEX_NAME = "cache-index.json"
 
 USER_AGENT = "gfl-reactjs-wiki-asset-rebuild/1.0 (fan wiki asset pipeline; https://github.com/steve1316/gfl-reactjs-wiki)"
 MAX_WORKERS = 4
@@ -117,14 +127,32 @@ def load_index(resdata):
         resdata: The parsed `resdata_no_hash.json`.
 
     Returns:
-        A `(index, res_url)` pair. Each index entry holds `resname`, `sizeOriginal` and `files`, a list of `(lowercased path, path)` pairs.
+        A `(index, res_url)` pair. Each index entry holds `resname`, `sizeOriginal`, `files`, a list of `(lowercased path, path)` pairs,
+        and `sha1` when ResData records a `fileHash`.
     """
     index = {}
     for key in BUNDLE_KEYS:
         for bundle in resdata.get(key, []):
             files = [(res["pathKey"].lower(), res["pathKey"]) for res in bundle.get("assetAllRes", [])]
-            index[bundle["assetBundleName"].lower()] = {"resname": bundle["resname"], "sizeOriginal": bundle["sizeOriginal"], "files": files}
+            entry = {"resname": bundle["resname"], "sizeOriginal": bundle["sizeOriginal"], "files": files}
+            sha1 = normalise_file_hash(bundle.get("fileHash"))
+            if sha1:
+                entry["sha1"] = sha1
+            index[bundle["assetBundleName"].lower()] = entry
     return index, resdata["resUrl"]
+
+
+def normalise_file_hash(file_hash):
+    """Turn a ResData `fileHash` into a plain lowercase SHA-1 hex digest.
+
+    Args:
+        file_hash: The recorded hash, such as `DA-D3-32-...`, or None.
+
+    Returns:
+        The 40-character hex digest, or None when the value is missing or not a SHA-1.
+    """
+    digest = (file_hash or "").replace("-", "").lower()
+    return digest if re.fullmatch(r"[0-9a-f]{40}", digest) else None
 
 
 def load_site(site_dir):
@@ -431,7 +459,7 @@ def summarise(items, index):
         index: The bundle index from `load_index`.
 
     Returns:
-        A `(summary, bundles)` pair. `bundles` maps each needed bundle name to its `resname` and `sizeOriginal`.
+        A `(summary, bundles)` pair. `bundles` maps each needed bundle name to its `resname`, `sizeOriginal` and, when known, `sha1`.
     """
     tiers = {tier: {"items": 0, "resolved": 0, "partial": 0, "unresolved": 0} for tier in TIERS}
     summary = {"tiers": tiers, "partial": [], "unresolved_expected": [], "unresolved_unexpected": []}
@@ -445,7 +473,7 @@ def summarise(items, index):
         elif item["status"] == "unresolved":
             entry = {"key": item["key"], "reason": item.get("reason", "no bundle holds the files")}
             summary["unresolved_expected" if is_expected_gap(item) else "unresolved_unexpected"].append(entry)
-    bundles = {name: {"resname": index[name]["resname"], "sizeOriginal": index[name]["sizeOriginal"]} for name in sorted(names)}
+    bundles = {name: {key: index[name][key] for key in ("resname", "sizeOriginal", "sha1") if key in index[name]} for name in sorted(names)}
     summary["bundle_count"] = len(bundles)
     summary["download_bytes"] = sum(bundle["sizeOriginal"] for bundle in bundles.values())
     summary["download_mb"] = round(summary["download_bytes"] / BYTES_PER_MB, 1)
@@ -536,6 +564,92 @@ def cached_size(cache_dir, name):
     return os.path.getsize(path) if os.path.isfile(path) else None
 
 
+def file_sha1(path):
+    """Hash a file with SHA-1, the digest ResData records as `fileHash`.
+
+    Args:
+        path: The file.
+
+    Returns:
+        The lowercase hex digest.
+    """
+    digest = hashlib.sha1()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(CHUNK_BYTES), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def read_cache_index(cache_dir):
+    """Read the cache index sidecar.
+
+    Args:
+        cache_dir: The bundle cache directory.
+
+    Returns:
+        A dict of bundle name to `{resname, size, sha1?}`, empty when the sidecar does not exist yet.
+    """
+    path = os.path.join(cache_dir, CACHE_INDEX_NAME)
+    return read_json(path) if os.path.isfile(path) else {}
+
+
+def write_cache_index(cache_dir, index):
+    """Write the cache index sidecar atomically, names sorted so reruns give the same file.
+
+    Args:
+        cache_dir: The bundle cache directory.
+        index: The dict from `read_cache_index`, updated.
+    """
+    path = os.path.join(cache_dir, CACHE_INDEX_NAME)
+    with open(f"{path}.tmp", "w", encoding="utf-8") as handle:
+        json.dump(dict(sorted(index.items())), handle, indent=1)
+        handle.write("\n")
+    os.replace(f"{path}.tmp", path)
+
+
+def index_record(bundle, size):
+    """Build the cache index record of a bundle cached at a size.
+
+    Args:
+        bundle: Dict with `resname` and, when known, `sha1`.
+        size: The cached file's size.
+
+    Returns:
+        The record dict.
+    """
+    record = {"resname": bundle["resname"], "size": size}
+    if bundle.get("sha1"):
+        record["sha1"] = bundle["sha1"]
+    return record
+
+
+def cache_state(cache_dir, name, bundle, index, hasher=file_sha1):
+    """Decide whether a cached bundle can be used as it is.
+
+    The content hash name (`resname`) is the key and the size a second check. A bundle cached before the index existed has no record, so it is
+    adopted only when its SHA-1 matches the `fileHash` ResData records.
+
+    Args:
+        cache_dir: The bundle cache directory.
+        name: Bundle name.
+        bundle: Dict with `resname`, `sizeOriginal` and, when known, `sha1`.
+        index: The cache index from `read_cache_index`.
+        hasher: Callable hashing a file, replaceable in tests.
+
+    Returns:
+        `cached` when the record matches, `migrated` when an unrecorded or outdated file's hash matches, otherwise `stale`.
+    """
+    size = cached_size(cache_dir, name)
+    if size != bundle["sizeOriginal"]:
+        return "stale"
+    record = index.get(name) or {}
+    if record.get("resname") == bundle["resname"] and record.get("size") == size:
+        return "cached"
+    if bundle.get("sha1") and hasher(os.path.join(cache_dir, f"{name}.ab")) == bundle["sha1"]:
+        return "migrated"
+    return "stale"
+
+
 def fetch_bundle(name, bundle, res_url, cache_dir, fetch, sleep):
     """Download one bundle with retries, writing through a `.part` file.
 
@@ -562,6 +676,8 @@ def fetch_bundle(name, bundle, res_url, cache_dir, fetch, sleep):
             size = os.path.getsize(part)
             if size != bundle["sizeOriginal"]:
                 raise OSError(f"size {size} != expected {bundle['sizeOriginal']}")
+            if bundle.get("sha1") and file_sha1(part) != bundle["sha1"]:
+                raise OSError(f"SHA-1 does not match fileHash {bundle['sha1']}")
             os.replace(part, final)
             return None
         except Exception as exc:
@@ -572,10 +688,10 @@ def fetch_bundle(name, bundle, res_url, cache_dir, fetch, sleep):
 
 
 def download_bundles(bundles, res_url, cache_dir, fetch=http_fetch, workers=MAX_WORKERS, sleep=time.sleep, log=log_line):
-    """Download every bundle not already cached at its expected size.
+    """Download every bundle not already cached under its `resname` at its expected size, and record each in the cache index.
 
     Args:
-        bundles: Map of bundle name to `resname` and `sizeOriginal`.
+        bundles: Map of bundle name to `resname`, `sizeOriginal` and, when known, `sha1`.
         res_url: CDN base URL.
         cache_dir: The bundle cache directory.
         fetch: Callable `(url, dest)` that writes the URL to `dest`.
@@ -584,50 +700,65 @@ def download_bundles(bundles, res_url, cache_dir, fetch=http_fetch, workers=MAX_
         log: Callable receiving progress lines.
 
     Returns:
-        A dict with `downloaded` and `skipped` name lists, `failed` entries of `{name, error}` and `bytes` downloaded.
+        A dict with `downloaded`, `skipped` and `migrated` name lists (`migrated` is the part of `skipped` adopted by hash), `failed` entries of
+        `{name, error}` and `bytes` downloaded.
     """
     os.makedirs(cache_dir, exist_ok=True)
-    skipped = [name for name, bundle in bundles.items() if cached_size(cache_dir, name) == bundle["sizeOriginal"]]
-    cached = set(skipped)
-    pending = [name for name in bundles if name not in cached]
+    index = read_cache_index(cache_dir)
+    states = {name: cache_state(cache_dir, name, bundle, index) for name, bundle in bundles.items()}
+    skipped = [name for name in bundles if states[name] != "stale"]
+    migrated = [name for name in bundles if states[name] == "migrated"]
+    for name in migrated:
+        index[name] = index_record(bundles[name], bundles[name]["sizeOriginal"])
+    if migrated:
+        write_cache_index(cache_dir, index)
+    pending = [name for name in bundles if states[name] == "stale"]
     total_bytes = sum(bundles[name]["sizeOriginal"] for name in pending)
-    log(f"{len(bundles)} bundles: {len(skipped)} cached, {len(pending)} to download ({total_bytes / BYTES_PER_MB:.1f} MB)")
+    log(f"{len(bundles)} bundles: {len(skipped)} cached ({len(migrated)} adopted by SHA-1), {len(pending)} to download ({total_bytes / BYTES_PER_MB:.1f} MB)")
 
-    result = {"downloaded": [], "skipped": skipped, "failed": [], "bytes": 0}
+    result = {"downloaded": [], "skipped": skipped, "migrated": migrated, "failed": [], "bytes": 0}
     started = time.monotonic()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(workers, MAX_WORKERS))) as pool:
-        futures = {pool.submit(fetch_bundle, name, bundles[name], res_url, cache_dir, fetch, sleep): name for name in pending}
-        for done, future in enumerate(concurrent.futures.as_completed(futures), start=1):
-            name = futures[future]
-            error = future.result()
-            if error:
-                result["failed"].append({"name": name, "error": error})
-                log(f"[{done}/{len(pending)}] FAILED {name}: {error}")
-                continue
-            result["downloaded"].append(name)
-            result["bytes"] += bundles[name]["sizeOriginal"]
-            elapsed = time.monotonic() - started
-            log(f"[{done}/{len(pending)}] {name} {bundles[name]['sizeOriginal'] / BYTES_PER_MB:.2f} MB, {result['bytes'] / BYTES_PER_MB:.1f} MB in {elapsed:.0f}s")
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, min(workers, MAX_WORKERS))) as pool:
+            futures = {pool.submit(fetch_bundle, name, bundles[name], res_url, cache_dir, fetch, sleep): name for name in pending}
+            for done, future in enumerate(concurrent.futures.as_completed(futures), start=1):
+                name = futures[future]
+                error = future.result()
+                if error:
+                    result["failed"].append({"name": name, "error": error})
+                    log(f"[{done}/{len(pending)}] FAILED {name}: {error}")
+                    continue
+                index[name] = index_record(bundles[name], bundles[name]["sizeOriginal"])
+                result["downloaded"].append(name)
+                result["bytes"] += bundles[name]["sizeOriginal"]
+                elapsed = time.monotonic() - started
+                log(f"[{done}/{len(pending)}] {name} {bundles[name]['sizeOriginal'] / BYTES_PER_MB:.2f} MB, {result['bytes'] / BYTES_PER_MB:.1f} MB in {elapsed:.0f}s")
+    finally:
+        if pending:
+            write_cache_index(cache_dir, index)
     result["downloaded"].sort()
     result["failed"].sort(key=lambda entry: entry["name"])
     return result
 
 
 def verify_cache(bundles, cache_dir):
-    """List bundles that are missing from the cache or have the wrong size.
+    """List bundles that are missing from the cache, have the wrong size, or were cached under another `resname`.
 
     Args:
         bundles: Map of bundle name to `resname` and `sizeOriginal`.
         cache_dir: The bundle cache directory.
 
     Returns:
-        A list of `{name, expected, actual}` dicts, empty when the cache is complete.
+        A list of `{name, check, expected, actual}` dicts with `check` of `size` or `resname`, empty when the cache is complete.
     """
+    index = read_cache_index(cache_dir)
     problems = []
     for name, bundle in sorted(bundles.items()):
         actual = cached_size(cache_dir, name)
         if actual != bundle["sizeOriginal"]:
-            problems.append({"name": name, "expected": bundle["sizeOriginal"], "actual": actual})
+            problems.append({"name": name, "check": "size", "expected": bundle["sizeOriginal"], "actual": actual})
+        elif (index.get(name) or {}).get("resname") != bundle["resname"]:
+            problems.append({"name": name, "check": "resname", "expected": bundle["resname"], "actual": (index.get(name) or {}).get("resname")})
     return problems
 
 
@@ -682,15 +813,18 @@ def main():
         started = time.monotonic()
         result = download_bundles(bundles, inventory["resUrl"], args.cache, workers=args.workers)
         minutes = (time.monotonic() - started) / 60
-        print(f"downloaded {len(result['downloaded'])} ({result['bytes'] / BYTES_PER_MB:.1f} MB), skipped {len(result['skipped'])}, failed {len(result['failed'])} in {minutes:.1f} min")
+        print(
+            f"downloaded {len(result['downloaded'])} ({result['bytes'] / BYTES_PER_MB:.1f} MB), skipped {len(result['skipped'])} "
+            f"({len(result['migrated'])} adopted by SHA-1), failed {len(result['failed'])} in {minutes:.1f} min"
+        )
         for entry in result["failed"]:
             print(f"  FAILED {entry['name']}: {entry['error']}")
 
     problems = verify_cache(bundles, args.cache)
     cached_mb = sum(bundle["sizeOriginal"] for bundle in bundles.values()) / BYTES_PER_MB
-    print(f"verify: {len(bundles) - len(problems)}/{len(bundles)} bundles cached at expected size ({cached_mb:.1f} MB expected)")
+    print(f"verify: {len(bundles) - len(problems)}/{len(bundles)} bundles cached at expected size and resname ({cached_mb:.1f} MB expected)")
     for problem in problems:
-        print(f"  {problem['name']}: expected {problem['expected']}, found {problem['actual']}")
+        print(f"  {problem['name']}: {problem['check']} expected {problem['expected']}, found {problem['actual']}")
     if problems:
         sys.exit(1)
 
