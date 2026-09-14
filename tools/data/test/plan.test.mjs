@@ -15,6 +15,11 @@ test("planRefresh has no work when the pin is current and the released dolls mat
 	assert.deepEqual(plan, { work: false, upstream: { locked: OLD_US, latest: OLD_US }, released: { added: [], removed: [] } });
 });
 
+test("planRefresh has no work when upstream releases a hand-added doll that is already committed", () => {
+	const plan = planRefresh({ lockedSha: OLD_US, latestSha: OLD_US, releasedIds: [1, 1003], committedIds: [1, 1003], extraIds: [1003] });
+	assert.deepEqual(plan, { work: false, upstream: { locked: OLD_US, latest: OLD_US }, released: { added: [], removed: [] } });
+});
+
 test("planRefresh has work when a doll crosses its release date", () => {
 	const plan = planRefresh({ lockedSha: OLD_US, latestSha: OLD_US, releasedIds: [424, 1, 2], committedIds: [1, 2], extraIds: [] });
 	assert.equal(plan.work, true);
