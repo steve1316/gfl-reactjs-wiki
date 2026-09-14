@@ -1,0 +1,32 @@
+[
+ {
+  "id": 1,
+  "code": "M1873",
+  "skill1": 100,
+  "skill2": 0
+ },
+ {
+  "id": 20001,
+  "code": "M1873Mod",
+  "skill1": 100,
+  "skill2": 200
+ },
+ {
+  "id": 233,
+  "code": "Px4Storm",
+  "skill1": 500,
+  "skill2": 0
+ },
+ {
+  "id": 163,
+  "code": "AA12",
+  "skill1": 100,
+  "skill2": 0
+ },
+ {
+  "id": 999,
+  "code": "Ghost",
+  "skill1": 400,
+  "skill2": 0
+ }
+]

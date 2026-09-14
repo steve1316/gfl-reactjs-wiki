@@ -1,0 +1,38 @@
+[
+ {
+  "id": 1002,
+  "skill_group_id": 100,
+  "level": 2,
+  "code": "wrongLevel"
+ },
+ {
+  "id": 1001,
+  "skill_group_id": 100,
+  "level": 1,
+  "code": "powBuff"
+ },
+ {
+  "id": 2001,
+  "skill_group_id": 200,
+  "level": 1,
+  "code": "ma"
+ },
+ {
+  "id": 3001,
+  "skill_group_id": 300,
+  "level": 1,
+  "code": "RifleGrenade"
+ },
+ {
+  "id": 4001,
+  "skill_group_id": 400,
+  "level": 1,
+  "code": "ghostSkill"
+ },
+ {
+  "id": 5001,
+  "skill_group_id": 500,
+  "level": 1,
+  "code": "c93"
+ }
+]

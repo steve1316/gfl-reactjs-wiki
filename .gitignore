@@ -37,5 +37,9 @@ __pycache__/
 # importer's cached upstream checkout
 tools/data/.cache/
 
+# asset rebuild bundle cache and staging trees
+tools/assets/.cache/
+tools/assets/.staging/
+
 # superpowers brainstorming session files
 .superpowers/
