@@ -13,9 +13,13 @@ import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 import { findSkinArtGaps } from "./lib/skins.mjs";
+import { findSpineIndexProblems } from "./lib/spineIndex.mjs";
 
 /** The v3 asset manifest the site bundles and the skin art check reads. */
 const MANIFEST_PATH = "assets-manifest.json";
+
+/** The skin-id Spine index the site bundles. */
+const SPINE_INDEX_PATH = "src/data/spine-index.json";
 
 /** Lines of combined stdout+stderr kept in the failure message when `pnpm build` fails. */
 const BUILD_FAILURE_LOG_LINES = 40;
@@ -281,6 +285,14 @@ async function main() {
 			for (const label of artGaps.artWithoutCard) {
 				fail(`skin art ${label} is in the manifest without a card`);
 			}
+		}
+	}
+
+	if (!fs.existsSync(SPINE_INDEX_PATH)) {
+		fail(`the Spine index ${SPINE_INDEX_PATH} is missing. Run tools/assets/build_spine_index.py and add_spine_animations.mjs`);
+	} else {
+		for (const problem of findSpineIndexProblems(JSON.parse(fs.readFileSync(SPINE_INDEX_PATH, "utf8")))) {
+			fail(`${SPINE_INDEX_PATH}: ${problem}`);
 		}
 	}
 
