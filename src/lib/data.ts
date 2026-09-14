@@ -127,6 +127,16 @@ function cacheUntilFailure<K, V>(cache: Map<K, Promise<V>>, key: K, pending: Pro
 }
 
 /**
+ * Attach an equipment item's icon URL, shared by the Equipment Index list and a doll's exclusive equipment.
+ *
+ * @param item An equipment item from the generated data.
+ * @returns A copy of the item with `image` set to its icon URL, or null when no icon is hosted yet.
+ */
+function withEquipmentIcon<T extends { id: number }>(item: T): T & { image: string | null } {
+	return { ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null };
+}
+
+/**
  * Load and process one shard, reusing an earlier load when there is one.
  *
  * @param index Position in `SHARDS`.
@@ -207,8 +217,7 @@ export async function loadDollDetails(id: number): Promise<TDollWithDetails | un
 	if (!entry) {
 		throw new Error(`doll ${id} has no profile entry`);
 	}
-	const exclusiveEquipment = entry.exclusiveEquipment.map((item) => ({ ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null }));
-	return { ...doll, ...entry, exclusiveEquipment };
+	return { ...doll, ...entry, exclusiveEquipment: entry.exclusiveEquipment.map(withEquipmentIcon) };
 }
 
 /**
@@ -279,7 +288,7 @@ export async function loadEquipment(): Promise<{ types: EquipmentType[]; items: 
 		fetchData<{ types: EquipmentType[]; items: Record<string, RawEquipment[]> }>("equipment").then((source) => {
 			const items: Record<string, Equipment[]> = {};
 			for (const [key, list] of Object.entries(source.items)) {
-				items[key] = list.map((item) => ({ ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null }));
+				items[key] = list.map(withEquipmentIcon);
 			}
 			return { types: source.types, items };
 		})
