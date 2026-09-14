@@ -144,3 +144,19 @@ test("joins results back to the requested title across a case difference and a r
 		restore();
 	}
 });
+
+test("a batched title lookup does not send normalize, which Wikidata only allows for a single title", async () => {
+	const urls = [];
+	const original = globalThis.fetch;
+	globalThis.fetch = async (url) => {
+		urls.push(String(url));
+		return { ok: true, status: 200, json: async () => (urls.length === 1 ? sample.entitiesResponse : sample.labelsResponse) };
+	};
+	try {
+		await fetchWikidataFacts(["Test Rifle", "Unknown Weapon"], { delayMs: 0, cacheDir });
+		assert.ok(urls[0].includes("titles=Test+Rifle%7CUnknown+Weapon"), urls[0]);
+		assert.doesNotMatch(urls[0], /normalize=/);
+	} finally {
+		globalThis.fetch = original;
+	}
+});

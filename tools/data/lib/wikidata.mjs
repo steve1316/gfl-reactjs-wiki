@@ -126,11 +126,12 @@ function buildTitleMap(body, requestedTitles) {
  * `sitelinks` (restricted to `enwiki` via `sitefilter`) gives back each entity's own enwiki title so the
  * batch can be split apart again. Verified live against the real API.
  *
- * That resolved sitelink title can still differ from what was requested (case, underscores, or a page
- * redirect), which would otherwise silently drop the doll and poison the reuse cache under the wrong key.
- * `normalize=1` and `redirects=yes` ask Wikidata to report both steps, resolved via `buildTitleMap`; a
- * case/underscore-insensitive match against the request list is the fallback for anything that slips
- * through.
+ * That resolved sitelink title can still differ from what was requested (case or underscores), which would
+ * otherwise silently drop the doll and poison the reuse cache under the wrong key. Any `normalized` or
+ * `redirects` steps the response reports are resolved via `buildTitleMap`, and a case/underscore-insensitive
+ * match against the request list is the fallback. `normalize=1` is not sent: Wikidata rejects it with
+ * `params-illegal` unless exactly one title is given. A batched title that is an enwiki page redirect comes
+ * back missing, so that doll gets no Wikidata facts.
  *
  * @param {string[]} titles Up to `BATCH_SIZE` enwiki titles.
  * @returns {Promise<Map<string, { manufacturer: string[], country: string[] }>>} Item-id claims keyed by the
@@ -143,7 +144,6 @@ async function resolveClaims(titles) {
 			titles: titles.join("|"),
 			props: "claims|sitelinks",
 			sitefilter: "enwiki",
-			normalize: "1",
 			redirects: "yes"
 		})
 	);
