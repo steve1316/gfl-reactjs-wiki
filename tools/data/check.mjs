@@ -9,6 +9,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 
+import { findMarkup } from "./lib/markup.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 
 /** Lines of combined stdout+stderr kept in the failure message when `pnpm build` fails. */
@@ -44,9 +45,6 @@ const REFERENCE_PROFILES = {
 	hk416: { id: 65, faction: ["Squad 404"], manufacturer: "Heckler & Koch", country: ["Germany"], release: { date: "2018-05", precision: "launch" } },
 	beowulf: { id: 393, release: { date: "2024-09", precision: "month" } }
 };
-
-/** Wiki or HTML markup that must never survive into a generated profile or spec sheet string. */
-const MARKUP_TOKENS = ["'''", "''", "[[", "]]", "{{", "}}", "<", "&amp;"];
 
 /**
  * Check a `YYYY-MM-DD` string is a real calendar date.
@@ -154,8 +152,9 @@ function main() {
 		const profile = doll.profile ?? {};
 		const profileTexts = [...(profile.faction ?? []), ...(profile.manufacturer ?? []), ...(profile.country ?? []), profile.fullName ?? ""];
 		const specTexts = [doll.normal, doll.mod].filter(Boolean).flatMap((form) => (form.specs ?? []).flatMap((row) => [row.label, row.value]));
-		for (const text of [...profileTexts, ...specTexts]) {
-			const token = MARKUP_TOKENS.find((candidate) => String(text).includes(candidate));
+		const texts = [...profileTexts.map((text) => [text, "profile"]), ...specTexts.map((text) => [text, "spec"])];
+		for (const [text, kind] of texts) {
+			const token = findMarkup(String(text), kind);
 			if (token) {
 				fail(`doll ${doll.normal.id} has markup "${token}" left in ${JSON.stringify(text)}`);
 			}
