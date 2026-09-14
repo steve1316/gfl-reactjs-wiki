@@ -473,5 +473,11 @@ class NewTargetTests(unittest.TestCase):
             self.assertEqual(inventory["bundles"], {})
 
 
+    def test_committed_data_has_no_new_targets(self):
+        """The committed site data and manifest agree, so the daily refresh never selects a hosted form."""
+        targets = game_bundles.new_targets(*game_bundles.load_site(game_bundles.SITE_DATA_DIR), game_bundles.read_json(game_bundles.MANIFEST_PATH))
+        self.assertEqual(targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()})
+
+
 if __name__ == "__main__":
     unittest.main()
