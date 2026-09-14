@@ -22,6 +22,7 @@ import { loadCnGuns } from "./lib/cnData.mjs";
 import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
 import { buildEquipment, exclusivesByDoll } from "./lib/equipment.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
+import { findEquipmentMentions } from "./lib/mentions.mjs";
 import { buildProfile, fillFromWikidata, indexPages, releaseFor } from "./lib/profile.mjs";
 import { SHARDS } from "./lib/shards.mjs";
 import { addExtraSkins, validateExtraSkins } from "./lib/skins.mjs";
@@ -113,6 +114,7 @@ async function main() {
 	const upstream = loadUpstream(resolveUpstreamDir());
 	const overrides = JSON.parse(fs.readFileSync("tools/data/overrides.json", "utf8"));
 	const extraSkins = JSON.parse(fs.readFileSync("tools/data/extra-skins.json", "utf8"));
+	const aliases = JSON.parse(fs.readFileSync("tools/data/equipment-aliases.json", "utf8"));
 	validateExtraSkins(extraSkins, upstream);
 	const ctx = { config: readStatConfig(upstream), warnings: [] };
 
@@ -145,6 +147,14 @@ async function main() {
 		// Hand-added collaboration dolls have no gun row, so nothing records a build time for them.
 		doll.production ??= null;
 		doll.exclusiveEquipment = exclusives.get(doll.normal.id) ?? [];
+		const dollAliases = aliases.filter((alias) => alias.doll === doll.normal.id);
+		for (const form of [doll.normal, doll.mod].filter(Boolean)) {
+			for (const key of ["skill", "skill2"]) {
+				if (form[key]) {
+					form[key].equipmentMentions = findEquipmentMentions(form[key].description, doll.exclusiveEquipment, dollAliases);
+				}
+			}
+		}
 	}
 	for (const shard of SHARDS) {
 		const split = dolls.filter((doll) => doll.normal.id >= shard.min && doll.normal.id <= shard.max).map(splitDetails);

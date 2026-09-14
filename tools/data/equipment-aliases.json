@@ -1,0 +1,21 @@
+[
+	{ "doll": 7, "equipment": 133, "text": "APS Stock", "reason": "Mod skill uses APS Stock for the Stechkin Buttstock, APS being the Stechkin pistol's own designation" },
+	{ "doll": 16, "equipment": 236, "text": "Thompson Exoskeleton", "reason": "Skill drops the possessive 's from Thompson's Exoskeleton" },
+	{ "doll": 75, "equipment": 340, "text": "M2 Custom AP Rounds", "reason": "Skill abbreviates Armor-Piercing Round to AP Rounds for M2 Custom Armor-Piercing Round" },
+	{ "doll": 94, "equipment": 218, "text": "High Performance Camouflage Exoskeleton", "reason": "Skill uses Camouflage instead of Camouflaged for High-Performance Camouflaged Exoskeleton" },
+	{ "doll": 100, "equipment": 276, "text": "M13 Frame", "reason": "Skill uses Frame instead of Receiver for the M13 Receiver" },
+	{ "doll": 163, "equipment": 174, "text": "Frag-12 HE Rounds", "reason": "Skill abbreviates High Explosive Rounds to HE Rounds for FRAG-12 High Explosive Rounds" },
+	{
+		"doll": 166,
+		"equipment": 270,
+		"text": "OMEGA Slide",
+		"reason": "Skill names OMEGA Slide for the OMEGA Rail; an alternate battle_skill_config entry for the same skill in gf-data-us reads 'When \"OMEGA Rail\" is equipped' for the identical effect, confirming they are the same item"
+	},
+	{ "doll": 188, "equipment": 454, "text": "Shielded Reactive Armor", "reason": "Skill reorders and adjectivises the Reactive Armor Shield name" },
+	{ "doll": 243, "equipment": 282, "text": "Type 64 Sniper Scope", "reason": "Skill uses the Type 64 name for 64 Shiki Sniper Scope" },
+	{ "doll": 254, "equipment": 341, "text": "7.62P80 AP Rounds", "reason": "Skill drops the space and abbreviates Armor-Piercing Round for 7.62 P80 Armor-Piercing Round" },
+	{ "doll": 269, "equipment": 457, "text": "ST-type Exoskeleton", "reason": "Skill inserts '-type' before Exoskeleton for the ST Exoskeleton" },
+	{ "doll": 270, "equipment": 211, "text": "Arisaka Rounds", "reason": "Skill drops AP from the Arisaka AP Rounds name" },
+	{ "doll": 296, "equipment": 339, "text": "233 Competition Cartridge", "reason": "Skill text has a transposed digit, .233 instead of .223, for the .223 Competition Cartridge" },
+	{ "doll": 306, "equipment": 441, "text": "TLL enhanced rounds", "reason": "Skill uses enhanced instead of Amplified for the TLL Amplified Rounds" }
+]
