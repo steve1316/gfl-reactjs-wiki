@@ -59,12 +59,12 @@ export interface SpecRow {
 	value: string;
 }
 
-/** How precisely a doll's Global release date is known. */
-export type ReleasePrecision = "day" | "month" | "launch" | "unknown";
+/** How precisely a doll's Global release date is known. `unreleased` marks dolls that never came to Global. */
+export type ReleasePrecision = "day" | "month" | "launch" | "unknown" | "unreleased";
 
 /** When a doll arrived on the Global server. */
 export interface DollRelease {
-	/** `YYYY-MM-DD` for `day`, `YYYY-MM` for `month` and `launch`, and null for `unknown`. */
+	/** `YYYY-MM-DD` for `day`, `YYYY-MM` for `month` and `launch`, and null for `unknown` and `unreleased`. */
 	date: string | null;
 	/** How precise `date` is. `launch` marks the dolls on the Global launch roster of May 2018. */
 	precision: ReleasePrecision;

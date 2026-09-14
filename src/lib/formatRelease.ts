@@ -18,9 +18,13 @@ function monthYear(date: string): string | null {
  * Format a doll's Global release date at the precision it is known.
  *
  * @param release The doll's release date and precision.
- * @returns `25 Jul 2023` for a day, `Sep 2024` for a month, `Global launch (May 2018)` for the launch roster, and `Unknown` otherwise.
+ * @returns `25 Jul 2023` for a day, `Sep 2024` for a month, `Global launch (May 2018)` for the launch roster, `Not released on Global` for a
+ *   doll that never came to Global, and `Unknown` otherwise.
  */
 export function formatRelease(release: DollRelease): string {
+	if (release.precision === "unreleased") {
+		return "Not released on Global";
+	}
 	const date = release.date;
 	const shortMonth = date === null ? null : monthYear(date);
 	if (date === null || shortMonth === null || release.precision === "unknown") {
