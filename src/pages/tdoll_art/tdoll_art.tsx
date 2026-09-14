@@ -218,7 +218,8 @@ export default function TDollArt() {
 
 			{noArt ? null : (
 				<Box sx={{ display: "flex", gap: 1, p: 1, flexWrap: "wrap", justifyContent: "center" }}>
-					<ToggleButtonGroup size="small" exclusive value={current?.key ?? formKey} onChange={handleFormChange}>
+					{/* Wraps so a doll with many skins keeps every button on a phone screen instead of spilling off both edges. */}
+					<ToggleButtonGroup size="small" exclusive value={current?.key ?? formKey} onChange={handleFormChange} sx={{ flexWrap: "wrap", justifyContent: "center" }}>
 						{forms.map((form) => (
 							<ToggleButton key={form.key} value={form.key} sx={{ color: "common.white" }}>
 								{form.label}
