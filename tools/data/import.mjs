@@ -82,8 +82,8 @@ async function attachProfiles(dolls, upstream) {
 		const id = doll.normal.id;
 		const page = pages.get(id);
 		const gun = usGuns.get(id);
-		// Override dolls have no US row, so their release stays unknown.
-		const release = releaseFor(gun?.launch_time, cnGuns.get(id), gun ? parseEnRelease(page?.fields.releasedon) : null);
+		// Override dolls have no US row, so they come out unreleased.
+		const release = releaseFor(gun?.launch_time, cnGuns.get(id), parseEnRelease(page?.fields.releasedon));
 		doll.profile = buildProfile(page, release);
 		const title = page ? wikipediaTitle(page.fields) : null;
 		if (title && (doll.profile.manufacturer.length === 0 || doll.profile.country.length === 0)) {

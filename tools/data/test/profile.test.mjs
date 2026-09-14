@@ -90,10 +90,14 @@ test("the 1970 placeholder is the Global launch month when IOPWiki has no EN mon
 	assert.deepEqual(releaseFor("1970-01-01 08:00:00", "2016-05-20 00:00:00", null), { date: "2018-05", precision: "launch" });
 });
 
-test("a copied CN date with no EN month, a 2030 placeholder or no US row at all is unknown", () => {
+test("a copied CN date with no EN month or a 2030 placeholder is unknown", () => {
 	assert.deepEqual(releaseFor("2025-01-01 00:00:00", "2025-01-01 00:00:00", null), UNKNOWN);
 	assert.deepEqual(releaseFor("2030-12-31 00:00:00", "2020-01-01 00:00:00", null), UNKNOWN);
-	assert.deepEqual(releaseFor(undefined, "2017-11-16 00:00:00", null), UNKNOWN);
+});
+
+test("a doll with no US row is unreleased on Global, whatever CN or IOPWiki say", () => {
+	assert.deepEqual(releaseFor(undefined, "2017-11-16 00:00:00", null), { date: null, precision: "unreleased" });
+	assert.deepEqual(releaseFor(undefined, undefined, { year: 2018, month: 2 }), { date: null, precision: "unreleased" });
 });
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

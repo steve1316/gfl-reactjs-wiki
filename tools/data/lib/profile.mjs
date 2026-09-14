@@ -135,21 +135,24 @@ export function parseCountry(raw) {
  *
  * gf-data-us copies some CN dates, so its date only counts when gf-data-ch has the doll and gives a different date. A doll missing
  * from the CN table cannot be cross-checked, so it falls through with the rest: IOPWiki's EN month, then the Global launch month for
- * the 1970 launch-roster placeholder.
+ * the 1970 launch-roster placeholder. A doll with no US row, such as the override dolls 1003-1008, never came to Global.
  *
  * @param {string | undefined} usLaunch gf-data-us `launch_time` for the base doll, or undefined when it has no row.
  * @param {string | undefined} cnLaunch gf-data-ch `launch_time` for the same id, or undefined when CN has no row.
  * @param {{ year: number, month: number } | null} enRelease IOPWiki's EN release year and month, from `parseEnRelease`.
- * @returns {{ date: string | null, precision: "day" | "month" | "launch" | "unknown" }} The release date at its precision.
+ * @returns {{ date: string | null, precision: "day" | "month" | "launch" | "unknown" | "unreleased" }} The release date at its precision.
  */
 export function releaseFor(usLaunch, cnLaunch, enRelease) {
-	if (usLaunch && cnLaunch !== undefined && !PLACEHOLDER_LAUNCH.test(usLaunch) && usLaunch.slice(0, 10) !== cnLaunch.slice(0, 10)) {
+	if (usLaunch === undefined) {
+		return { date: null, precision: "unreleased" };
+	}
+	if (cnLaunch !== undefined && !PLACEHOLDER_LAUNCH.test(usLaunch) && usLaunch.slice(0, 10) !== cnLaunch.slice(0, 10)) {
 		return { date: usLaunch.slice(0, 10), precision: "day" };
 	}
 	if (enRelease) {
 		return { date: `${enRelease.year}-${String(enRelease.month).padStart(2, "0")}`, precision: "month" };
 	}
-	if (usLaunch?.startsWith("1970")) {
+	if (usLaunch.startsWith("1970")) {
 		return { date: GLOBAL_LAUNCH_MONTH, precision: "launch" };
 	}
 	return { date: null, precision: "unknown" };
