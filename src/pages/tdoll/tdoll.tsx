@@ -13,7 +13,7 @@ import StatsPanel from "./StatsPanel";
 import TilesPanel from "./TilesPanel";
 
 // MaterialUI imports
-import { Box, Container, Grid, Paper, Typography, alpha } from "@mui/material";
+import { Box, Button, Container, Grid, Paper, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { skinFormKey } from "../../lib/assets";
@@ -26,8 +26,6 @@ import type { TDoll as TDollData, TDollForm, TDollWithDetails } from "../../type
 interface DisplayTDoll extends TDollWithDetails {
 	/** The form on screen: the base form, the Mod, or a skin. */
 	selected: TDollForm;
-	/** The doll's Spine rigs, or undefined when none were published. */
-	spine: SpineDollEntry | undefined;
 }
 
 const styles = {
@@ -161,8 +159,7 @@ function writeSelection(params: URLSearchParams, selection: DollSelection) {
 /**
  * Route wrapper that loads the doll before rendering it.
  *
- * @param props Router props carrying the doll id.
- * @returns A placeholder while loading, then the doll's page.
+ * @returns A placeholder while loading, a retry notice when the doll's data fails to load, then the doll's page.
  */
 export default function TDoll() {
 	const { id: routeId } = useParams<{ id?: string }>();
@@ -170,26 +167,60 @@ export default function TDoll() {
 	// The id comes from the /tdoll/:id route, falling back to the older ?id= query string.
 	const rawId = routeId ?? searchParams.get("id") ?? "";
 	const id = Number(rawId);
-	// Undefined while loading and null once the shard has loaded without this id, so a missing doll is not stuck on "Loading".
-	const [doll, setDoll] = useState<DisplayTDoll | null | undefined>(undefined);
+	// Undefined while loading, null once the shard has loaded without this id, and "failed" when the shard or profile file could not load.
+	const [doll, setDoll] = useState<DisplayTDoll | null | undefined | "failed">(undefined);
+	// The doll's Spine rigs: undefined while loading, null when none were published or the index could not load.
+	const [spine, setSpine] = useState<SpineDollEntry | null | undefined>(undefined);
+	// Bumped by the retry button to run the loads again.
+	const [attempt, setAttempt] = useState(0);
+	const retry = useCallback(() => setAttempt((current) => current + 1), []);
 
-	// Only the shard holding this doll, its profile side file and the Spine index are fetched. A copy is stored rather than the cached
-	// object, because `selected` is assigned onto it below and the cache is shared with every other route.
+	// Only the shard holding this doll and its profile side file are fetched. A copy is stored rather than the cached object,
+	// because `selected` is assigned onto it below and the cache is shared with every other route. A failed load shows a retry
+	// notice rather than a page without its profile, since the same network problem usually takes the shard down with it.
 	useEffect(() => {
 		let active = true;
 		setDoll(undefined);
-		void Promise.all([loadDollDetails(id), loadSpineRigs(id)]).then(([found, spine]) => {
-			if (active) {
-				setDoll(found ? { ...found, selected: found.normal, spine } : null);
-			}
-		});
+		loadDollDetails(id).then(
+			(found) => active && setDoll(found ? { ...found, selected: found.normal } : null),
+			() => active && setDoll("failed")
+		);
 		return () => {
 			active = false;
 		};
-	}, [id]);
+	}, [id, attempt]);
+
+	// The Spine index loads on its own, so the page renders as soon as the doll does. When it fails the page simply has no chibi.
+	useEffect(() => {
+		let active = true;
+		setSpine(undefined);
+		loadSpineRigs(id).then(
+			(entry) => active && setSpine(entry ?? null),
+			() => active && setSpine(null)
+		);
+		return () => {
+			active = false;
+		};
+	}, [id, attempt]);
 
 	if (doll === null) {
 		return <NotFound404 message={`There is no T-Doll with the id ${rawId}.`} />;
+	}
+
+	if (doll === "failed") {
+		return (
+			<Box component="main" sx={{ py: 3, px: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+				<Typography component="h1" variant="h5" align="center" color="textPrimary">
+					Could not load this T-Doll.
+				</Typography>
+				<Typography align="center" color="textSecondary">
+					Check your connection and try again.
+				</Typography>
+				<Button variant="outlined" onClick={retry}>
+					Try again
+				</Button>
+			</Box>
+		);
 	}
 
 	if (doll === undefined) {
@@ -203,13 +234,15 @@ export default function TDoll() {
 	}
 
 	// Keyed by id so switching dolls remounts rather than reusing stale state.
-	return <TDollContent key={doll.normal.id} doll={doll} />;
+	return <TDollContent key={doll.normal.id} doll={doll} spine={spine} />;
 }
 
 /** Props for TDollContent. */
 interface TDollContentProps {
 	/** The doll to render, already loaded. */
 	doll: DisplayTDoll;
+	/** The doll's Spine rigs: undefined while loading, null when there are none or they could not load. */
+	spine: SpineDollEntry | null | undefined;
 }
 
 /**
@@ -218,7 +251,7 @@ interface TDollContentProps {
  * @param props Component props.
  * @returns The doll's stats, skills, tiles, art and animations.
  */
-function TDollContent({ doll }: TDollContentProps) {
+function TDollContent({ doll, spine }: TDollContentProps) {
 	const tdoll = doll;
 	const [searchParams, setSearchParams] = useSearchParams();
 
@@ -269,7 +302,10 @@ function TDollContent({ doll }: TDollContentProps) {
 
 	// Spine replaces the animation GIFs entirely. The combat and dorm rigs are separate skeletons, and
 	// the dorm one often shares the combat atlas, which is why the index records the pair explicitly.
-	const spineEntry = tdoll.spine;
+	const spineEntry = spine ?? undefined;
+	// The Animations card is kept while the index loads, so the layout does not jump on the usual fast load, and dropped once there is
+	// nothing to show.
+	const showAnimations = spine !== null;
 
 	const selectedSkinRigs = skinKey === null ? null : (spineEntry?.skins?.[skinKey] ?? null);
 	// A Mod doll is a different chibi with its own animations, so the base rig cannot stand in for it.
@@ -453,7 +489,7 @@ function TDollContent({ doll }: TDollContentProps) {
 				<Grid container spacing={2}>
 					{/************** T-Doll's hero: portrait, name, rarity, type, skin pills, Mod toggle, profile and spec sheet **************/}
 					{/* Without the Animations card the hero takes the whole first row, so Stats and Abilities still pair up below it. */}
-					<Grid size={spineEntry ? { xs: 12, md: 7, lg: 8, xl: 9 } : { xs: 12 }} sx={{ order: 0 }}>
+					<Grid size={showAnimations ? { xs: 12, md: 7, lg: 8, xl: 9 } : { xs: 12 }} sx={{ order: 0 }}>
 						<DollHero
 							name={tdoll.selected.name}
 							id={tdoll.selected.id}
@@ -475,7 +511,7 @@ function TDollContent({ doll }: TDollContentProps) {
 						/>
 					</Grid>
 					{/* Stats shares its small-screen row with the Animations card, so it takes the full row when that card is absent. */}
-					<Grid size={{ xs: 12, sm: spineEntry ? 6 : 12, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
+					<Grid size={{ xs: 12, sm: showAnimations ? 6 : 12, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
@@ -520,7 +556,7 @@ function TDollContent({ doll }: TDollContentProps) {
 						</Paper>
 					</Grid>
 
-					{spineEntry ? (
+					{showAnimations ? (
 						<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
 							<Paper sx={styles.section} variant="outlined">
 								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>

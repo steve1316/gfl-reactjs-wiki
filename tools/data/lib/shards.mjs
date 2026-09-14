@@ -1,6 +1,6 @@
 /**
  * Doll data shards, by id range. `file` holds the doll records the T-Doll index reads, and `profiles` holds the same dolls' profiles
- * and spec sheets, which only the doll page loads. `data.ts` must list the same files in the same order.
+ * and spec sheets, which only the doll page loads. `src/lib/data.ts` must list the same files in the same order.
  */
 export const SHARDS = [
 	{ file: "dolls-1-100", profiles: "profiles-1-100", min: 1, max: 100 },
