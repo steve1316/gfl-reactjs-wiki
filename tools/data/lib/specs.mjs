@@ -115,7 +115,7 @@ function splitRow(line) {
  *
  * An unindented line starts a row. An indented line, or an unindented one with no label, continues the row above, joined
  * with a space when the text runs on and "; " when it starts a new item (see `joinerFor`). A short label alone on its line
- * takes its value from the indented lines below it. Rows with no value are dropped.
+ * takes its value from the indented lines below it. Rows with no value are dropped, and so is a row repeating an earlier row's label and value.
  *
  * @param {string} text The spec sheet text.
  * @returns {{ label: string, value: string }[]} The rows in sheet order.
@@ -150,7 +150,13 @@ export function parseSpecs(text) {
 			append(line);
 		}
 	});
-	return rows.filter((row) => row.label && row.value);
+	const seen = new Set();
+	return rows.filter((row) => {
+		const key = JSON.stringify([row.label, row.value]);
+		const keep = row.label && row.value && !seen.has(key);
+		seen.add(key);
+		return keep;
+	});
 }
 
 /**
