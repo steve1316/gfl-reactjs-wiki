@@ -9,35 +9,13 @@ import type { SxProps, Theme } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { searchIndex } from "../../lib/data";
+import { statName } from "../../lib/equipmentStats";
 import type { SearchEntry } from "../../lib/data";
 import type { Equipment, EquipmentDoll } from "../../types/equipment";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Configuration
-
-/**
- * Display names for the stat keys in the equipment data.
- *
- * This was a thirteen-branch if/else chain rebuilt inside the render for every stat of every card.
- * Anything missing from the map falls back to the raw key, which is at least visible rather than the
- * empty string the chain produced.
- */
-const STAT_NAMES: Record<string, string> = {
-	criticalHitRate: "Critical hit rate",
-	damage: "Damage",
-	accuracy: "Accuracy",
-	criticalDamage: "Critical damage",
-	rateOfFire: "Rate of fire",
-	evasion: "Evasion",
-	nightVision: "Night vision",
-	boostAbilityEffectiveness: "Boost ability effectiveness",
-	armorPiercing: "Armor piercing",
-	target: "Target",
-	clipSize: "Clip size",
-	movementSpeed: "Movement speed",
-	armor: "Armor"
-};
 
 /** Search index entries keyed by doll id, built once for every card to share. */
 const DOLLS_BY_ID = new Map<number, SearchEntry>(searchIndex.map((entry) => [entry.id, entry]));
@@ -189,7 +167,7 @@ export default memo(function EquipmentCard({ equipment, level }: EquipmentCardPr
 					return (
 						<Box key={key} sx={styles.statRow}>
 							<Typography variant="body2" color="text.secondary">
-								{STAT_NAMES[key] ?? key}
+								{statName(key)}
 							</Typography>
 							<Typography variant="body2" sx={{ fontWeight: 650, color: improved ? "primary.main" : "text.primary" }}>
 								{atLevel}
