@@ -5,6 +5,7 @@ Every image here is a tiny synthetic one built in memory. No test reads a bundle
 
 import io
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -338,6 +339,98 @@ class LegacySkinTests(unittest.TestCase):
             result = extract.extract_legacy_skin(self.EXTRA, assets, art, staging)
         self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("legacy_skin:103:legacy-winter-journey", role) for role in ("card_d", "full", "full_d")])
         self.assertEqual([row["role"] for row in result["nonstandard"]], ["card"])
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Legacy snapshot
+
+
+def git(repo, *args):
+    """Run git in a throwaway repo with a fixed identity.
+
+    Args:
+        repo: The repository path.
+        *args: Arguments after `git -C <repo>`.
+
+    Returns:
+        The stripped standard output.
+    """
+    env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
+    return subprocess.run(["git", "-C", repo, *args], check=True, capture_output=True, text=True, env=env).stdout.strip()
+
+
+class LegacySnapshotTests(unittest.TestCase):
+    """Choosing, copying and checking the old-layout inputs kept in `tools/assets/.cache/legacy/`."""
+
+    INVENTORY = {
+        "items": [
+            {"key": "art:65", "tier": "art", "assets": {"card": {"bundle": "b", "path": "p"}}},
+            {"key": "mod_art:65", "tier": "mod_art", "assets": {"card": {"bundle": "b", "path": "p"}}},
+            {"key": "art:66", "tier": "art", "assets": {}},
+        ]
+    }
+    EXTRA = {"doll": 103, "key": "legacy-winter-journey", "source": "legacy", "legacySlot": 3}
+    ASSETS = [
+        "README.md",
+        "assets-manifest.json",
+        "logo.png",
+        "tdolls/65/65_card.png",
+        "tdolls/65/65_card_d.png",
+        "tdolls/65/65_mod_card.png",
+        "tdolls/65/65_mod_card_d.png",
+        "tdolls/65/65_skin1_card.png",
+        "tdolls/65/65_skin1_card_d.png",
+        "tdolls/66/66_card.png",
+        "tdolls/66/66_card_d.png",
+        "tdolls/67/67_card.png",
+        "tdolls/103/103_skin3_card.png",
+        "tdolls/103/103_skin3_card_d.png",
+    ] + list(extract.PROOF_EQUIP_ICONS.values())
+    ART = ["tdolls/103/103_skin3_full.png", "tdolls/103/103_skin3_full_d.png"]
+
+    def test_card_targets_need_an_inventory_card_and_a_damaged_twin(self):
+        """Base and Mod cards with both halves are targets. Skin slots, dolls without a card asset and lone halves are not."""
+        targets = extract.hosted_card_targets(self.INVENTORY, self.ASSETS)
+        self.assertEqual([(rel, item["key"]) for rel, item, _role in targets], [("tdolls/65/65_card.png", "art:65"), ("tdolls/65/65_mod_card.png", "mod_art:65")])
+
+    def test_wanted_files_cover_every_legacy_input(self):
+        """UI images, legacy skins, proof icons and sampled cards are wanted, and a missing required file is absent."""
+        wanted, absent = extract.legacy_wanted(self.INVENTORY, [self.EXTRA], self.ASSETS, self.ART[:1])
+        self.assertEqual(absent, ["art/tdolls/103/103_skin3_full_d.png"])
+        expected = {("assets", rel) for rel in self.ASSETS if rel not in ("README.md", "assets-manifest.json", "tdolls/65/65_skin1_card.png", "tdolls/65/65_skin1_card_d.png")}
+        expected -= {("assets", "tdolls/66/66_card.png"), ("assets", "tdolls/66/66_card_d.png"), ("assets", "tdolls/67/67_card.png")}
+        self.assertEqual(set(wanted), expected | {("art", "tdolls/103/103_skin3_full.png")})
+        self.assertEqual(wanted, sorted(wanted))
+
+    def test_snapshot_reads_the_ref_not_the_working_tree_and_detects_tampering(self):
+        """Files come from the ref even when another branch is checked out, the manifest records commits and blobs, and edits are caught."""
+        with tempfile.TemporaryDirectory() as tmp:
+            clones = {tree: os.path.join(tmp, tree) for tree in ("assets", "art")}
+            for tree, names in (("assets", self.ASSETS), ("art", self.ART)):
+                git(tmp, "init", "--quiet", "-b", "main", clones[tree])
+                for index, rel in enumerate(names):
+                    path = os.path.join(clones[tree], rel)
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    with open(path, "wb") as handle:
+                        handle.write(f"{tree}:{index}".encode())
+                git(clones[tree], "add", "--all")
+                git(clones[tree], "commit", "--quiet", "-m", "old layout")
+                git(clones[tree], "checkout", "--quiet", "--orphan", "rebuild")
+                git(clones[tree], "rm", "-r", "-f", "--quiet", ".")
+            out = os.path.join(tmp, "legacy")
+            manifest = extract.snapshot_legacy(self.INVENTORY, [self.EXTRA], clones, "main", out)
+            self.assertEqual(manifest["sources"]["art"]["commit"], git(clones["art"], "rev-parse", "main"))
+            with open(os.path.join(out, "assets", "tdolls", "103", "103_skin3_card.png"), "rb") as handle:
+                self.assertEqual(handle.read(), f"assets:{self.ASSETS.index('tdolls/103/103_skin3_card.png')}".encode())
+            self.assertEqual(extract.check_legacy_snapshot(out)[1], [])
+            with open(os.path.join(out, "art", "tdolls", "103", "103_skin3_full.png"), "wb") as handle:
+                handle.write(b"changed")
+            os.remove(os.path.join(out, "assets", "logo.png"))
+            problems = extract.check_legacy_snapshot(out)[1]
+            self.assertEqual(len(problems), 2)
+            self.assertIn("assets/logo.png is missing", problems)
+            self.assertIsNone(extract.check_legacy_snapshot(os.path.join(tmp, "nowhere"))[0])
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
