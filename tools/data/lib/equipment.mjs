@@ -45,6 +45,9 @@ const STAT_KEYS = {
 /** Mod doll ids are the base id plus this offset. */
 const MOD_OFFSET = 20000;
 
+/** Obtain id of equipment built in Equipment Productions, from `asset/table/gun_obtain.txt`. */
+const EQUIPMENT_PRODUCTION = "3001";
+
 /**
  * Format one stat at levels 0 to 10.
  *
@@ -111,7 +114,8 @@ export function buildEquipment(upstream) {
 						.map((code) => TYPE_NAMES[code]),
 			dolls: baseIds.map((id) => ({ id, mod: !fitGuns.includes(id) })),
 			description: stripMarkup(upstream.t(row.equip_introduction)).trim(),
-			stats
+			stats,
+			buildSeconds: String(row.obtain_ids).split(",").includes(EQUIPMENT_PRODUCTION) ? row.develop_duration : null
 		};
 		const key = TYPE_KEYS[type.code];
 		(items[key] ??= []).push(item);

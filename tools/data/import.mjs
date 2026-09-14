@@ -142,6 +142,8 @@ async function main() {
 	// The doll page reads its exclusive equipment from the profile side file, so it never downloads equipment.json.
 	const exclusives = exclusivesByDoll(equipment);
 	for (const doll of dolls) {
+		// Hand-added collaboration dolls have no gun row, so nothing records a build time for them.
+		doll.production ??= null;
 		doll.exclusiveEquipment = exclusives.get(doll.normal.id) ?? [];
 	}
 	for (const shard of SHARDS) {

@@ -62,3 +62,11 @@ test("exclusivesByDoll lists each doll's exclusive items with max-level stats, b
 	);
 	assert.equal(byDoll.has(109), false);
 });
+
+test("buildSeconds is set only for equipment from Equipment Productions", () => {
+	const all = Object.values(buildEquipment(loadUpstream(resolveUpstreamDir())).items).flat();
+	assert.equal(all.find((item) => item.id === 1).buildSeconds, 300);
+	assert.equal(all.find((item) => item.id === 49).buildSeconds, null);
+	assert.equal(all.filter((item) => item.buildSeconds !== null).length, 81);
+	assert.ok(all.every((item) => item.buildSeconds === null || item.buildSeconds > 0));
+});

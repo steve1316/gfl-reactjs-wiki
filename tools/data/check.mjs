@@ -330,6 +330,22 @@ async function main() {
 		fail(`doll pages list ${exclusiveLinks} exclusive equipment links, but equipment.json has ${expectedLinks} for released dolls`);
 	}
 
+	// Production: a buildable doll has a positive build time and at least one pool. HK416 is pinned against the game.
+	for (const doll of dolls) {
+		const production = doll.production;
+		if (production === undefined) {
+			fail(`doll ${doll.normal.id} has no production field`);
+		} else if (production !== null && (!(production.seconds > 0) || !(production.standard || production.heavy))) {
+			fail(`doll ${doll.normal.id} has production ${JSON.stringify(production)}, which needs positive seconds and a pool`);
+		}
+	}
+	if (JSON.stringify(byId.get(65)?.production) !== JSON.stringify({ seconds: 14100, standard: true, heavy: true })) {
+		fail(`HK416 production is ${JSON.stringify(byId.get(65)?.production)}, expected 14100 seconds from standard and heavy production`);
+	}
+	for (const item of items.filter((entry) => entry.buildSeconds !== null && !(entry.buildSeconds > 0))) {
+		fail(`equipment ${item.id} has buildSeconds ${item.buildSeconds}, expected null or a positive number`);
+	}
+
 	if (!process.argv.includes("--skip-build")) {
 		try {
 			execFileSync("pnpm", ["build"], { stdio: ["ignore", "pipe", "pipe"], encoding: "utf8" });
