@@ -124,6 +124,36 @@ test("plainText strips HTML comments, including a multi-line one with an embedde
 	assert.equal(plainText("Before <!-- a\nmulti-line > comment --> After"), "Before After");
 });
 
+test("IOPWIKI_CACHE=reuse fails when there is no cache file, without fetching", async () => {
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => {
+		throw new Error("network should not be called in reuse mode");
+	};
+	process.env.IOPWIKI_CACHE = "reuse";
+	try {
+		await assert.rejects(fetchIopwikiPages({ cacheDir }), /IOPWIKI_CACHE=reuse.*no cache file/);
+	} finally {
+		delete process.env.IOPWIKI_CACHE;
+		globalThis.fetch = original;
+	}
+});
+
+test("IOPWIKI_CACHE=reuse reads the cache file back without fetching", async () => {
+	const pages = [{ title: "Cached", wikitext: "{{PlayableUnit|index=2}}" }];
+	fs.writeFileSync(path.join(cacheDir, "iopwiki-pages.json"), JSON.stringify(pages));
+	const original = globalThis.fetch;
+	globalThis.fetch = async () => {
+		throw new Error("network should not be called in reuse mode");
+	};
+	process.env.IOPWIKI_CACHE = "reuse";
+	try {
+		assert.deepEqual(await fetchIopwikiPages({ cacheDir }), pages);
+	} finally {
+		delete process.env.IOPWIKI_CACHE;
+		globalThis.fetch = original;
+	}
+});
+
 test("fetchIopwikiPages rejects with the API's error code when IOPWiki answers 200 with an error body", async () => {
 	const original = globalThis.fetch;
 	globalThis.fetch = async () => ({ ok: true, status: 200, json: async () => ({ error: { code: "badtitle", info: "Bad title" } }) });
