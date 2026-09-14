@@ -38,3 +38,8 @@ test("a longer name wins over a name it contains, and repeats are recorded once"
 		{ text: "Big Adelhyde Extract", id: 2 }
 	]);
 });
+
+test("when two items share a name, the wording is recorded once under the lower id", () => {
+	const found = findEquipmentMentions("Adelhyde, then Adelhyde.", [item(137, "Adelhyde"), item(139, "Adelhyde")], []);
+	assert.deepEqual(found, [{ text: "Adelhyde", id: 137 }]);
+});
