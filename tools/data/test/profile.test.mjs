@@ -65,6 +65,13 @@ test("country splits only on commas and slashes, keeping 'and', '&' and brackete
 	assert.deepEqual(parseCountry(""), []);
 });
 
+test("country shortens Russian Federation and Republic of Korea to the names the other pages use", () => {
+	assert.deepEqual(parseCountry("Russian Federation"), ["Russia"]);
+	assert.deepEqual(parseCountry("Republic of Korea / South Korea"), ["South Korea"]);
+	const filled = fillFromWikidata({ ...buildProfile(undefined, UNKNOWN), sources: ["iopwiki"] }, { manufacturer: [], country: ["Russian Federation"] }, []);
+	assert.deepEqual(filled.country, ["Russia"]);
+});
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Release precision

@@ -19,6 +19,9 @@ const MANUFACTURER_SEPARATOR = /\s*(?:,(?:\s*and\s)?|;|\s\/\s)\s*/y;
 /** Country separators: a comma or a slash, spaced or not. "and" and "&" are left alone, since they occur inside names such as "Bosnia and Herzegovina". */
 const COUNTRY_SEPARATOR = /\s*[,/]\s*/y;
 
+/** Formal country names IOPWiki uses on some pages, mapped to the short names the other pages use. Wikidata labels go through it too. */
+const COUNTRY_NAMES = { "Russian Federation": "Russia", "Republic of Korea": "South Korea" };
+
 /** Values IOPWiki uses for "no manufacturer". */
 const MISSING_VALUE = /^(none|n\/a|unknown)\b/i;
 
@@ -117,13 +120,23 @@ export function parseManufacturer(raw) {
 }
 
 /**
+ * Spell country names the same way on every doll, using `COUNTRY_NAMES`.
+ *
+ * @param {string[]} names Country names in order.
+ * @returns {string[]} The names with formal spellings shortened and repeats dropped.
+ */
+function normaliseCountries(names) {
+	return unique(names.map((name) => COUNTRY_NAMES[name] ?? name));
+}
+
+/**
  * Parse IOPWiki's `nationality` field. Collab dolls hold their franchise name here, which is kept as-is.
  *
  * @param {string | undefined} raw Raw field value.
  * @returns {string[]} Country names in page order.
  */
 export function parseCountry(raw) {
-	return unique(splitTopLevel(fieldText(raw), COUNTRY_SEPARATOR));
+	return normaliseCountries(splitTopLevel(fieldText(raw), COUNTRY_SEPARATOR));
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +239,7 @@ export function fillFromWikidata(profile, facts, ownNames) {
 	const filled = { ...profile };
 	let used = false;
 	for (const key of ["manufacturer", "country"]) {
-		const labels = profile[key].length === 0 ? usable(facts[key]) : [];
+		const labels = profile[key].length === 0 ? usable(key === "country" ? normaliseCountries(facts[key] ?? []) : facts[key]) : [];
 		if (labels.length > 0) {
 			filled[key] = labels;
 			used = true;
