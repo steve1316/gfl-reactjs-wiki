@@ -1,4 +1,4 @@
-/** Types for the generated `spine-index.json`. */
+/** Types for the generated `spine-index.json`, keyed by skin id. */
 
 /** One skeleton and the atlas it renders with. */
 export interface SpineRig {
@@ -23,7 +23,7 @@ export interface SpineRigPair {
 	dorm?: SpineRig;
 }
 
-/** Everything published for one doll. */
+/** Everything published for one doll. Rig paths are relative to `spine/<id>/`. */
 export interface SpineDollEntry {
 	/** The combat rig: attack, move, victory and so on. */
 	combat?: SpineRig;
@@ -32,17 +32,11 @@ export interface SpineDollEntry {
 	/**
 	 * The Mod form's rigs, present only for the dolls that have a Mod.
 	 *
-	 * A Mod doll is a different chibi with its own animation set, so it cannot share the base rig. Mod
-	 * skins do not exist, which is why this is a single pair rather than a list.
+	 * A Mod doll is a different chibi with its own animation set, so it cannot share the base rig.
 	 */
 	mod?: SpineRigPair;
-	/**
-	 * Skin rigs in the same order the skin tabs render.
-	 *
-	 * Aligned by `tools/assets/map_skin_rigs.mjs`, which resolves each skin name through the game's
-	 * own skin table. Entries are `null` where a skin has no rig published, which is common.
-	 */
-	skinRigs?: (SpineRigPair | null)[];
+	/** Skin rigs keyed by skin id as a string, or by a `legacy-<slug>` key. Skins with no rig published are absent. */
+	skins?: Record<string, SpineRigPair>;
 }
 
 /** The whole index, keyed by stringified doll id. */

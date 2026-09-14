@@ -37,12 +37,10 @@ export interface RawEquipment {
 	description: string;
 	/** Stat values by stat key. */
 	stats: EquipmentStats;
-	/** Icon asset path, or null when no icon is hosted yet. */
-	image: string | null;
 }
 
 /** Equipment with its icon URL resolved. */
-export interface Equipment extends Omit<RawEquipment, "image"> {
+export interface Equipment extends RawEquipment {
 	/** Absolute icon URL, or null when no icon is hosted yet. */
 	image: string | null;
 }

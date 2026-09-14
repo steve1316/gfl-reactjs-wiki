@@ -12,8 +12,8 @@ import spineIndexJson from "../data/spine-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
-import { equipmentAssetUrl } from "./assets";
-import { hasDollArt, processDoll, processDolls } from "./processData";
+import { equipmentIconUrl } from "./assets";
+import { hasDollArt, hasEquipmentIcon, processDoll, processDolls } from "./processData";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,8 +53,7 @@ export const searchIndex: SearchEntry[] = searchIndexJson as SearchEntry[];
 /**
  * Which Spine rigs exist for each doll.
  *
- * Small enough to ship with the app: 45 KB raw, under 8 KB gzipped. Paths inside it are relative to
- * the doll's Spine directory and are turned into URLs by `src/lib/assets.ts`.
+ * Small enough to ship with the app. Paths inside it are relative to the doll's Spine directory and are turned into URLs by `src/lib/assets.ts`.
  */
 const spineIndex: SpineIndex = spineIndexJson as SpineIndex;
 
@@ -221,7 +220,7 @@ export async function loadAllDolls(): Promise<TDoll[]> {
 /**
  * Ids of dolls whose art is hosted, for places that should only show dolls with artwork.
  *
- * @returns Doll ids present in the asset manifest.
+ * @returns Doll ids whose base card is in the asset manifest.
  */
 export function dollIdsWithArt(): number[] {
 	return searchIndex.map((entry) => entry.id).filter((id) => hasDollArt(id));
@@ -250,7 +249,7 @@ export async function loadEquipment(): Promise<{ types: EquipmentType[]; items: 
 			const source = module.default as unknown as { types: EquipmentType[]; items: Record<string, RawEquipment[]> };
 			const items: Record<string, Equipment[]> = {};
 			for (const [key, list] of Object.entries(source.items)) {
-				items[key] = list.map((item) => ({ ...item, image: item.image ? equipmentAssetUrl(item.image) : null }));
+				items[key] = list.map((item) => ({ ...item, image: hasEquipmentIcon(item.id) ? equipmentIconUrl(item.id) : null }));
 			}
 			return { types: source.types, items };
 		});
