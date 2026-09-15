@@ -66,3 +66,6 @@ export const containArtSx: SxProps<Theme> = {
 	objectFit: "contain",
 	display: "block"
 };
+
+/** The small full art button pinned to the bottom right corner of a positioned art box. */
+export const FAB_EXPAND_SX: SxProps<Theme> = { position: "absolute", right: 8, bottom: 8, height: 40, width: 40, opacity: 0.85 };

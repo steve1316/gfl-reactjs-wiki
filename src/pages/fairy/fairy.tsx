@@ -17,7 +17,7 @@ import FairySkillPanel from "./FairySkillPanel";
 import FairyStatsPanel from "./FairyStatsPanel";
 import FairyTalentsPopover from "./FairyTalentsPopover";
 
-import { containArtSx } from "../../lib/artLayout";
+import { FAB_EXPAND_SX, containArtSx } from "../../lib/artLayout";
 import { fairyFormUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
 import { FAIRY_MAX_STARS, fairyForm, fairyFormLabel } from "../../lib/fairyStats";
@@ -43,7 +43,6 @@ const styles = {
 		bgcolor: "action.hover"
 	},
 	placeholder: { position: "absolute", inset: 0, aspectRatio: "auto", height: "100%" },
-	fabExpand: { position: "absolute", right: 8, bottom: 8, height: 40, width: 40, opacity: 0.85 },
 	facts: { display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 },
 	forms: { alignSelf: "flex-start" },
 	chips: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 },
@@ -111,7 +110,7 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 												component={Link}
 												to={`/fairy/${fairy.id}/art?form=${form}`}
 												state={{ fromFairyPage: true }}
-												sx={styles.fabExpand}
+												sx={FAB_EXPAND_SX}
 												aria-label="view full art"
 											>
 												<ZoomOutMapIcon />
