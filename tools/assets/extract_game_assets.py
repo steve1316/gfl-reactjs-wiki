@@ -7,6 +7,7 @@ Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and th
   Mod-skin cards), `tdolls/<id>/skill1.png` / `skill2.png`, `equipment/<equipId>.png` and the UI images carried over from the current asset repo.
 - `tools/assets/.staging/art/`: `tdolls/<id>/full.webp` / `full_d.webp`, with the same `mod/` and `skins/<skinId>/` folders.
 - `tools/assets/.staging/assets/spine/<id>/`: the base combat and dorm rigs, with `mod/` and `skins/<skinId>/` folders for the Mod and skin rigs.
+- HOCs: `assets/hocs/<id>/card.webp`, `art/hocs/<id>/full.webp` and `assets/hoc-spine/<id>/`, the combat rig plus its crew skeletons.
 - `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes per tree.
 - `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes per tree after the Spine pass.
 
@@ -30,7 +31,7 @@ Subcommands:
 - `snapshot-legacy` copies the old-layout inputs from the clones' `main` into `tools/assets/.cache/legacy/`.
 - `run` checks 20 snapshot cards against the bundles (skip with `--skip-card-check`), then extracts every image tier with a process pool and
   converts the legacy skins and skill icons.
-- `spine` extracts every Spine rig into `assets/spine/`, replacing what was there.
+- `spine` extracts every Spine rig into `assets/spine/` and `assets/hoc-spine/`, replacing what was there.
 - `add` extracts only an `--only-missing` inventory, art and Spine, into a fresh `--staging` folder, with no legacy snapshot and no card check.
 - `verify-cards` runs only the card check.
 - `proof-equip` writes side-by-side comparisons of composited and hosted equipment icons.
@@ -80,6 +81,8 @@ FULL_SIZE = (2048, 2048)
 CARD_ATLAS_SIZE = (512, 512)
 SKILL_SIZE = (100, 100)
 EQUIP_SOURCE_SIZE = (256, 256)
+HOC_CARD_SIZE = (224, 399)
+HOC_LAYER_SIZE = (1024, 1024)
 
 WARN_BYTES = 900 * BYTES_PER_MB
 LIMIT_BYTES = 1000 * BYTES_PER_MB
@@ -103,6 +106,9 @@ ROLE_OUTPUTS = (
 )
 ART_TIERS = ("art", "mod_art", "skin_art")
 SPINE_TIERS = ("spine", "mod_spine", "skin_spine")
+# HOC scene roles in `compose_hoc_full` argument order. The masks are not size checked, since the game ships them at half size.
+HOC_SCENE_ROLES = ("bgl", "bgr", "left", "left_alpha", "right", "right_alpha")
+HOC_SIZED_ROLES = ("bgl", "bgr", "left", "right")
 
 # Report tiers, keyed by inventory tier and role.
 REPORT_TIERS = {
@@ -116,6 +122,8 @@ REPORT_TIERS = {
     ("skin_art", "mod_card"): "skin_mod_card",
     ("skin_art", "full"): "skin_full",
     ("skin_art", "full_d"): "skin_full",
+    ("hoc_art", "card"): "hoc_card",
+    ("hoc_art", "full"): "hoc_full",
 }
 
 # Legacy skin files: `(role, clone, old file name template, output name, required, report tier)`. `{id}` is the doll id, `{slot}` the old slot.
@@ -191,6 +199,71 @@ def merge_alpha(color, alpha):
     merged = color.convert("RGBA")
     merged.putalpha(channel)
     return merged
+
+
+def layer_mask(mask, size):
+    """Read a HOC layer's mask as an alpha channel at the layer's size.
+
+    Args:
+        mask: The mask texture, shape in its alpha channel.
+        size: The layer size to resize to.
+
+    Returns:
+        An `L` image.
+    """
+    return mask.convert("RGBA").split()[3].resize(size, Image.Resampling.LANCZOS)
+
+
+def compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha):
+    """Compose a HOC's full scene: both background halves side by side, each character layer masked and drawn over its half.
+
+    The game ships each layer's mask as a separate texture whose alpha channel holds the shape, often at half the layer's size.
+
+    Args:
+        bgl: Left background half.
+        bgr: Right background half.
+        left: Left character layer.
+        left_alpha: Mask for `left`, shape in its alpha channel.
+        right: Right character layer.
+        right_alpha: Mask for `right`.
+
+    Returns:
+        The composed RGB image.
+    """
+    width, height = bgl.width + bgr.width, max(bgl.height, bgr.height)
+    scene = Image.new("RGBA", (width, height), (0, 0, 0, 255))
+    scene.alpha_composite(bgl.convert("RGBA"), (0, 0))
+    scene.alpha_composite(bgr.convert("RGBA"), (bgl.width, 0))
+    for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, bgl.width)):
+        red, green, blue = layer.convert("RGB").split()
+        scene.alpha_composite(Image.merge("RGBA", (red, green, blue, layer_mask(mask, layer.size))), (x, 0))
+    return scene.convert("RGB")
+
+
+def derive_hoc_card(left, left_alpha, right, right_alpha, full):
+    """Crop a vertical card from a HOC's full scene for a HOC the game ships no card for.
+
+    The crop is full height at the card's aspect, centred on the union of both layers' opaque mask pixels and kept inside the scene.
+
+    Args:
+        left: Left character layer.
+        left_alpha: Mask for `left`.
+        right: Right character layer.
+        right_alpha: Mask for `right`.
+        full: The scene from `compose_hoc_full`.
+
+    Returns:
+        An RGB image at `HOC_CARD_SIZE`.
+    """
+    boxes = []
+    for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, left.width)):
+        box = layer_mask(mask, layer.size).getbbox()
+        if box:
+            boxes.append((box[0] + x, box[2] + x))
+    centre = (min(box[0] for box in boxes) + max(box[1] for box in boxes)) / 2 if boxes else full.width / 2
+    crop_width = min(full.width, max(1, round(full.height * HOC_CARD_SIZE[0] / HOC_CARD_SIZE[1])))
+    x = min(max(0, round(centre - crop_width / 2)), full.width - crop_width)
+    return full.convert("RGB").crop((x, 0, x + crop_width, full.height)).resize(HOC_CARD_SIZE, Image.Resampling.LANCZOS)
 
 
 def rarity_background(rarity):
@@ -437,6 +510,8 @@ def rewrite_atlas_pages(text, texture_names):
 def rig_counts(rigs):
     """Count extracted rigs per tier, dorm rigs, shared atlases and atlas pages.
 
+    The doll tiers are always listed. `hoc_spine` appears once a HOC rig was extracted.
+
     Args:
         rigs: Rig records from the Spine workers.
 
@@ -446,7 +521,7 @@ def rig_counts(rigs):
     counts = {tier: 0 for tier in SPINE_TIERS}
     counts.update(dorm=0, shared_atlas=0, pages=0)
     for rig in rigs:
-        counts[rig["tier"]] += 1
+        counts[rig["tier"]] = counts.get(rig["tier"], 0) + 1
         counts["dorm"] += rig["dorm"]
         counts["shared_atlas"] += rig["shared_atlas"]
         counts["pages"] += rig["pages"]
@@ -640,6 +715,55 @@ def extract_art_item(item, cache_dir, staging):
     return result
 
 
+def extract_hoc_art_item(item, cache_dir, staging, loader=unity_load):
+    """Extract one HOC's card and compose its full scene.
+
+    RPG29 ships no card, so a missing card is cropped from the scene and flagged as `derived`.
+
+    Args:
+        item: A `hoc_art` inventory item.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result. Nothing is written unless every scene layer decodes.
+    """
+    result = new_result()
+    key, folder = item["key"], f"hocs/{item['hoc_id']}"
+    try:
+        textures = load_textures(item["bundles"], cache_dir, loader)
+    except Exception as exc:
+        result["missing"].append({"key": key, "role": "*", "reason": f"bundle load failed: {exc!r}"})
+        return result
+    images = {}
+    for role in ("card",) + HOC_SCENE_ROLES:
+        if role not in item["assets"]:
+            continue
+        try:
+            images[role] = decode(textures, item["assets"][role])
+        except Exception as exc:
+            result["missing"].append({"key": key, "role": role, "reason": f"decode failed: {exc!r}"})
+    if result["missing"] or any(role not in images for role in HOC_SCENE_ROLES):
+        return result
+    for role in HOC_SIZED_ROLES:
+        if images[role].size != HOC_LAYER_SIZE:
+            result["nonstandard"].append({"key": key, "role": role, "size": list(images[role].size), "expected": list(HOC_LAYER_SIZE)})
+    try:
+        full = compose_hoc_full(*(images[role] for role in HOC_SCENE_ROLES))
+        card = images.get("card")
+        if card is None:
+            card = derive_hoc_card(images["left"], images["left_alpha"], images["right"], images["right_alpha"], full)
+            result["nonstandard"].append({"key": key, "role": "card", "size": "derived", "expected": list(HOC_CARD_SIZE)})
+        elif card.size != HOC_CARD_SIZE:
+            result["nonstandard"].append({"key": key, "role": "card", "size": list(card.size), "expected": list(HOC_CARD_SIZE)})
+        write_file(staging, "assets", f"{folder}/card.webp", encode_webp(card.convert("RGB"), CARD_QUALITY), REPORT_TIERS[("hoc_art", "card")], result)
+        write_file(staging, "art", f"{folder}/full.webp", encode_webp(full, FULL_QUALITY), REPORT_TIERS[("hoc_art", "full")], result)
+    except Exception as exc:
+        result["missing"].append({"key": key, "role": "*", "reason": f"compose, encode or write failed: {exc!r}"})
+    return result
+
+
 def load_failure(items, exc):
     """Build a worker result that marks every item missing because its shared bundles failed to load.
 
@@ -747,21 +871,26 @@ def text_bytes(data):
     return raw.encode("utf-8", "surrogateescape") if isinstance(raw, str) else bytes(raw)
 
 
-def extract_spine_item(item, cache_dir, staging, loader=unity_load):
-    """Extract one base, Mod or skin rig: combat skeleton, atlas and pages, plus the dorm skeleton and its atlas when it has one.
+def write_rig_files(item, roles, folder, tier, cache_dir, staging, loader):
+    """Read a rig's skeletons and atlases from its bundles and write them with their atlas pages, all or nothing.
 
     Args:
         item: A Spine inventory item.
+        roles: `(role, extension)` pairs to read, skipped when the item has no such role.
+        folder: Folder inside the asset tree, such as `spine/65`.
+        tier: Report tier the files count under.
         cache_dir: The bundle cache directory.
         staging: The staging root.
-        loader: Callable opening one `.ab` file, replaceable in tests.
+        loader: Callable opening one `.ab` file.
 
     Returns:
-        A worker result with an extra `rigs` list holding one `{key, tier, dorm, shared_atlas, pages}` record when the rig was written.
+        A `(result, names, pages_written)` triple: the worker result with an empty `rigs` list, file names by role and the page PNGs written.
+        Nothing is written when `result["missing"]` is not empty.
     """
     result = new_result()
     result["rigs"] = []
-    key, folder, tier = item["key"], rig_dir(item), f"{item['tier']}_rig"
+    key = item["key"]
+    names, pages_written = {}, set()
     try:
         objects, textures = {}, {}
         for name in item["bundles"]:
@@ -772,16 +901,16 @@ def extract_spine_item(item, cache_dir, staging, loader=unity_load):
                     textures[(name, texture_name.lower())] = (texture_name, obj)
     except Exception as exc:
         result["missing"].append({"key": key, "role": "*", "reason": f"bundle load failed: {exc!r}"})
-        return result
+        return result, names, pages_written
 
     def read_text(role):
         """Read one TextAsset role as `(file name, bytes)`."""
         data = objects[(item["assets"][role]["bundle"], item["assets"][role]["path"].lower())].read()
         return data.m_Name, text_bytes(data)
 
-    outputs, names, pages_written = {}, {}, set()
+    outputs = {}
     try:
-        for role, extension in (("skel", ".skel"), ("atlas", ".atlas"), ("dorm_skel", ".skel"), ("dorm_atlas", ".atlas")):
+        for role, extension in roles:
             if role not in item["assets"]:
                 continue
             name, data = read_text(role)
@@ -799,20 +928,63 @@ def extract_spine_item(item, cache_dir, staging, loader=unity_load):
             outputs[name] = data
     except Exception as exc:
         result["missing"].append({"key": key, "role": "*", "reason": f"read failed: {exc!r}"})
-        return result
-    if any(row["key"] == key for row in result["missing"]):
-        return result
+        return result, names, pages_written
+    if result["missing"]:
+        return result, names, pages_written
 
     try:
         for name, data in sorted(outputs.items()):
             write_file(staging, "assets", f"{folder}/{name}", data, tier, result)
     except Exception as exc:
         result["missing"].append({"key": key, "role": "*", "reason": f"write failed: {exc}"})
+    return result, names, pages_written
+
+
+def extract_spine_item(item, cache_dir, staging, loader=unity_load):
+    """Extract one base, Mod or skin rig: combat skeleton, atlas and pages, plus the dorm skeleton and its atlas when it has one.
+
+    Args:
+        item: A Spine inventory item.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result with an extra `rigs` list holding one `{key, tier, dorm, shared_atlas, pages}` record when the rig was written.
+    """
+    key = item["key"]
+    roles = (("skel", ".skel"), ("atlas", ".atlas"), ("dorm_skel", ".skel"), ("dorm_atlas", ".atlas"))
+    result, names, pages_written = write_rig_files(item, roles, rig_dir(item), f"{item['tier']}_rig", cache_dir, staging, loader)
+    if result["missing"]:
         return result
     has_dorm = "dorm_skel" in item["assets"]
     if has_dorm and names["dorm_skel"].lower() != f"r{names['skel']}".lower():
         result["nonstandard"].append({"key": key, "role": "dorm_skel", "size": names["dorm_skel"], "expected": f"R{names['skel']}"})
     result["rigs"].append({"key": key, "tier": item["tier"], "dorm": has_dorm, "shared_atlas": has_dorm and "dorm_atlas" not in item["assets"], "pages": len(pages_written)})
+    return result
+
+
+def extract_hoc_spine_item(item, cache_dir, staging, loader=unity_load):
+    """Extract one HOC rig: the combat skeleton, atlas and pages, plus every crew skeleton and any crew atlas.
+
+    Args:
+        item: A `hoc_spine` inventory item with `crew`.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result with an extra `rigs` list holding one `{key, tier, dorm, shared_atlas, pages}` record when the rig was written.
+    """
+    crew = range(1, item["crew"] + 1)
+    roles = [("skel", ".skel"), ("atlas", ".atlas")]
+    for number in crew:
+        roles.extend(((f"crew{number}_skel", ".skel"), (f"crew{number}_atlas", ".atlas")))
+    result, _names, pages_written = write_rig_files(item, roles, f"hoc-spine/{item['hoc_id']}", "hoc_spine_rig", cache_dir, staging, loader)
+    if result["missing"]:
+        return result
+    shared_atlas = any(f"crew{number}_atlas" not in item["assets"] for number in crew)
+    result["rigs"].append({"key": item["key"], "tier": "hoc_spine", "dorm": False, "shared_atlas": shared_atlas, "pages": len(pages_written)})
     return result
 
 
@@ -1265,12 +1437,12 @@ def oversized_files(root, limit=MAX_FILE_BYTES):
 
 
 def reset_staging(staging):
-    """Remove previous outputs of this extractor, leaving other staged folders such as `spine/` alone.
+    """Remove previous outputs of this extractor, leaving other staged folders such as `spine/` and `hoc-spine/` alone.
 
     Args:
         staging: The staging root.
     """
-    for rel in ("assets/tdolls", "assets/equipment", "art/tdolls"):
+    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "art/tdolls", "art/hocs"):
         shutil.rmtree(os.path.join(staging, rel), ignore_errors=True)
     for tree in TREES:
         os.makedirs(os.path.join(staging, tree), exist_ok=True)
@@ -1353,9 +1525,9 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
     ui_files = copy_ui(legacy_assets, staging) if legacy_dir else []
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
-    art_items, skill_items, equip_items, legacy_skill_items = [], [], [], []
+    art_items, hoc_items, skill_items, equip_items, legacy_skill_items = [], [], [], [], []
     for item in inventory["items"]:
-        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon")
+        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art")
         if not wanted:
             continue
         if item["tier"] == "skill_icon" and item.get("source") == "legacy":
@@ -1365,7 +1537,7 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
             continue
         report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
-        {"skill_icon": skill_items, "equip_icon": equip_items}.get(item["tier"], art_items).append(item)
+        {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items}.get(item["tier"], art_items).append(item)
 
     files, done = [], 0
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
@@ -1376,6 +1548,7 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
         if equip_items:
             futures[pool.submit(extract_equip_icons, equip_items, load_rarities(site_dir), cache_dir, staging)] = "worker:equip_icon"
         futures.update({pool.submit(extract_art_item, item, cache_dir, staging): item["key"] for item in art_items})
+        futures.update({pool.submit(extract_hoc_art_item, item, cache_dir, staging): item["key"] for item in hoc_items})
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()
@@ -1450,7 +1623,7 @@ def failure_reasons(report):
 
 
 def run_spine(inventory, cache_dir, staging, workers):
-    """Extract every Spine rig into `assets/spine/` and write the Spine report.
+    """Extract every doll rig into `assets/spine/` and every HOC rig into `assets/hoc-spine/`, and write the Spine report.
 
     Args:
         inventory: The inventory dict.
@@ -1462,14 +1635,14 @@ def run_spine(inventory, cache_dir, staging, workers):
         The report dict.
     """
     started = time.monotonic()
-    spine_root = os.path.join(staging, "assets", "spine")
-    shutil.rmtree(spine_root, ignore_errors=True)
-    os.makedirs(spine_root)
+    for folder in ("spine", "hoc-spine"):
+        shutil.rmtree(os.path.join(staging, "assets", folder), ignore_errors=True)
+    os.makedirs(os.path.join(staging, "assets", "spine"))
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
     items = []
     for item in inventory["items"]:
-        if item["tier"] not in SPINE_TIERS:
+        if item["tier"] not in SPINE_TIERS and item["tier"] != "hoc_spine":
             continue
         if not item["assets"]:
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
@@ -1479,7 +1652,7 @@ def run_spine(inventory, cache_dir, staging, workers):
 
     files, rigs = [], []
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(extract_spine_item, item, cache_dir, staging): item["key"] for item in items}
+        futures = {pool.submit(extract_hoc_spine_item if item["tier"] == "hoc_spine" else extract_spine_item, item, cache_dir, staging): item["key"] for item in items}
         for done, future in enumerate(concurrent.futures.as_completed(futures), start=1):
             try:
                 result = future.result()
