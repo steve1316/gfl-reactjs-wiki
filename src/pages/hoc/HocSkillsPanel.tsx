@@ -1,18 +1,17 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useState } from "react";
 
 // MaterialUI imports
-import { Box, Slider, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import type { HocSkill } from "../../types/hoc";
+import LevelSlider from "./LevelSlider";
 
 /** The highest skill level. */
 const MAX_SKILL_LEVEL = 10;
 
 const styles = {
-	level: { display: "flex", alignItems: "center", gap: 2, px: 0.5, maxWidth: 480 },
-	slider: { flex: 1, minWidth: 0 },
-	levelValue: { fontWeight: 700, minWidth: 56, textAlign: "right" },
+	level: { maxWidth: 480 },
 	skill: { py: 1.5, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0, pb: 0 } },
 	nameRow: { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 2, flexWrap: "wrap" },
 	name: { fontWeight: 700 },
@@ -71,19 +70,9 @@ interface HocSkillsPanelProps {
 export default memo(function HocSkillsPanel({ skills }: HocSkillsPanelProps) {
 	const [level, setLevel] = useState(MAX_SKILL_LEVEL);
 
-	const handleLevel = useCallback((_event: Event, value: number | number[]) => setLevel(Array.isArray(value) ? (value[0] ?? 1) : value), []);
-
 	return (
 		<Box>
-			<Box sx={styles.level}>
-				<Typography id="hoc-skill-level-label" variant="body2" color="text.secondary">
-					Skill level
-				</Typography>
-				<Slider aria-labelledby="hoc-skill-level-label" value={level} onChange={handleLevel} step={1} marks min={1} max={MAX_SKILL_LEVEL} valueLabelDisplay="auto" sx={styles.slider} />
-				<Typography variant="body2" sx={styles.levelValue}>
-					Lvl {level}
-				</Typography>
-			</Box>
+			<LevelSlider id="hoc-skill-level-label" label="Skill level" value={level} max={MAX_SKILL_LEVEL} marks onChange={setLevel} sx={styles.level} />
 
 			{skills.map((skill) => (
 				<Box key={skill.name} sx={styles.skill}>

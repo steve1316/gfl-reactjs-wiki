@@ -2,20 +2,19 @@ import { memo, useCallback, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 
 // MaterialUI imports
-import { Box, LinearProgress, Slider, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, LinearProgress, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import { HOC_MAX_STARS, HOC_STAT_KEYS, HOC_STAT_LABELS, hocChipStats, hocStats } from "../../lib/hocStats";
-import type { Hoc, HocConstants } from "../../types/hoc";
+import type { Hoc, HocConstants, HocStatValues } from "../../types/hoc";
+import LevelSlider from "./LevelSlider";
 
 /** The star picker's buttons, 1 to 5. */
 const STAR_RANKS = Array.from({ length: HOC_MAX_STARS }, (_v, index) => index + 1);
 
 const styles = {
 	stars: { width: "100%", "& .MuiToggleButton-root": { flex: 1, py: 0.5 } },
-	level: { display: "flex", alignItems: "center", gap: 2, pt: 1.5, px: 0.5 },
-	slider: { flex: 1, minWidth: 0 },
-	levelValue: { fontWeight: 700, minWidth: 56, textAlign: "right" },
+	level: { pt: 1.5 },
 	head: { display: "grid", gridTemplateColumns: "1fr 64px 64px", gap: 1, mt: 1.5, pb: 0.5, borderBottom: 1, borderColor: "divider" },
 	row: { py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } },
 	values: { display: "grid", gridTemplateColumns: "1fr 64px 64px", gap: 1, alignItems: "baseline" },
@@ -51,7 +50,7 @@ export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStats
 	// The highest base value any HOC has for each stat at this level, which is a full bar.
 	const best = useMemo(() => {
 		const all = allHocs.map((entry) => hocStats(entry, constants, level));
-		return Object.fromEntries(HOC_STAT_KEYS.map((key) => [key, Math.max(...all.map((stats) => stats[key]))])) as Record<(typeof HOC_STAT_KEYS)[number], number>;
+		return Object.fromEntries(HOC_STAT_KEYS.map((key) => [key, Math.max(...all.map((stats) => stats[key]))])) as HocStatValues;
 	}, [allHocs, constants, level]);
 
 	const handleStars = useCallback((_event: MouseEvent<HTMLElement>, value: number | null) => {
@@ -60,8 +59,6 @@ export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStats
 			setStars(value);
 		}
 	}, []);
-
-	const handleLevel = useCallback((_event: Event, value: number | number[]) => setLevel(Array.isArray(value) ? (value[0] ?? 1) : value), []);
 
 	return (
 		<Box>
@@ -73,15 +70,7 @@ export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStats
 				))}
 			</ToggleButtonGroup>
 
-			<Box sx={styles.level}>
-				<Typography id="hoc-level-label" variant="body2" color="text.secondary">
-					Level
-				</Typography>
-				<Slider aria-labelledby="hoc-level-label" value={level} onChange={handleLevel} min={1} max={constants.maxLevel} valueLabelDisplay="auto" sx={styles.slider} />
-				<Typography variant="body2" sx={styles.levelValue}>
-					Lvl {level}
-				</Typography>
-			</Box>
+			<LevelSlider id="hoc-level-label" label="Level" value={level} max={constants.maxLevel} onChange={setLevel} sx={styles.level} />
 
 			<Box sx={styles.head}>
 				<Typography variant="caption" color="text.secondary">
