@@ -40,19 +40,14 @@ const TIMEOUT_MS = 30000;
 /** Network failures are retried this many times. HTTP error statuses are not. */
 const RETRIES = 2;
 
-/** v3 image kind -> filename and tier inside a form folder, as in `src/lib/assets.ts`. */
-const IMAGE_FILES = {
-	card: { name: "card.webp", tier: "cards" },
-	card_damaged: { name: "card_d.webp", tier: "cards" },
-	full: { name: "full.webp", tier: "full" },
-	full_damaged: { name: "full_d.webp", tier: "full" }
-};
+/** v3 image kind -> filename inside a form folder, as in `src/lib/assets.ts`. Tier is `full` for `full`/`full_damaged`, `cards` otherwise. */
+const IMAGE_FILES = { card: "card.webp", card_damaged: "card_d.webp", full: "full.webp", full_damaged: "full_d.webp" };
 
 /** v3 Mod-skin card kind -> filename inside a skin folder. */
 const MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
 
-/** HOC image kind -> filename and tier inside a HOC folder, as in `hocCardUrl` / `hocFullArtUrl` in `src/lib/assets.ts`. */
-const HOC_IMAGE_FILES = { card: { name: "card.webp", tier: "hocCards" }, full: { name: "full.webp", tier: "hocFull" } };
+/** HOC image kind -> filename inside a HOC folder, as in `hocCardUrl` / `hocFullArtUrl` in `src/lib/assets.ts`. Tier is `hocFull` for `full`, `hocCards` for `card`. */
+const HOC_IMAGE_FILES = { card: "card.webp", full: "full.webp" };
 
 /** Fairy image kind -> filename inside a fairy's `fairies/<id>/` folder. */
 const FAIRY_IMAGE_FILES = { form1: "form1.webp", form2: "form2.webp", form3: "form3.webp" };
@@ -124,8 +119,8 @@ export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpine
 		for (const [folder, form] of forms) {
 			if (!form) continue;
 			for (const kind of form.images ?? []) {
-				const { name, tier } = IMAGE_FILES[kind];
-				tiers[tier].push(join(base, `${folder}/${name}`));
+				const tier = kind.startsWith("full") ? "full" : "cards";
+				tiers[tier].push(join(base, `${folder}/${IMAGE_FILES[kind]}`));
 			}
 			for (const kind of form.modImages ?? []) {
 				tiers.modCards.push(join(base, `${folder}/${MOD_CARD_FILES[kind]}`));
@@ -151,8 +146,8 @@ export function candidateUrls(manifest, spineIndex, base, uiNames = [], hocSpine
 	}
 	for (const [id, kinds] of Object.entries(manifest.hocs ?? {})) {
 		for (const kind of kinds) {
-			const { name, tier } = HOC_IMAGE_FILES[kind];
-			tiers[tier].push(join(base, `hocs/${id}/${name}`));
+			const tier = kind === "full" ? "hocFull" : "hocCards";
+			tiers[tier].push(join(base, `hocs/${id}/${HOC_IMAGE_FILES[kind]}`));
 		}
 	}
 	for (const [id, kinds] of Object.entries(manifest.fairies ?? {})) {
