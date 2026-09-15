@@ -13,7 +13,7 @@ const TOUCH_OPEN_MS = 6000;
 
 const styles = {
 	mention: {
-		color: "text.primary",
+		color: "inherit",
 		textDecorationLine: "underline",
 		textDecorationStyle: "dotted",
 		textUnderlineOffset: "3px",

@@ -1,9 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
-// The bare "html-react-parser" specifier only type-checks its default export under this repo's TS config, so the named
-// exports come from its "lib/index" subpath instead. Both specifiers resolve to the same module at runtime.
-import parse, { Element, domToReact } from "html-react-parser/lib/index";
-import type { DOMNode, HTMLReactParserOptions } from "html-react-parser/lib/index";
+import parse, { Element, domToReact } from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
+import type { DOMNode, HTMLReactParserOptions } from "html-react-parser";
 
 // MaterialUI imports
 import { Avatar, Box, Card, CardContent, CardHeader, Divider, FormControl, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
