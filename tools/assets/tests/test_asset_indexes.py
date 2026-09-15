@@ -215,5 +215,25 @@ class HocIndexTests(unittest.TestCase):
         self.assertEqual(manifest["hocs"], {})
 
 
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Fairy manifest art
+
+
+class FairyIndexTests(unittest.TestCase):
+    """Fairy art lands in the manifest. Fairies have no Spine rigs and no art-tree files, only the three forms in the asset tree."""
+
+    def test_manifest_lists_fairy_forms(self):
+        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
+            touch(assets, "fairies/1/form1.webp", "fairies/1/form2.webp", "fairies/2/form1.webp")
+            manifest = build_manifest.build_v3(assets, art)
+        self.assertEqual(manifest["fairies"], {"1": ["form1", "form2"], "2": ["form1"]})
+
+    def test_manifest_has_no_fairies_when_the_folder_is_absent(self):
+        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
+            manifest = build_manifest.build_v3(assets, art)
+        self.assertEqual(manifest["fairies"], {})
+
+
 if __name__ == "__main__":
     unittest.main()
