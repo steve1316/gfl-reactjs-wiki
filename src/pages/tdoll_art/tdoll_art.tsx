@@ -3,11 +3,9 @@ import { useLocation, useNavigate, useParams, useSearchParams } from "react-rout
 
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
-import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
+import ArtZoomControls from "../../components/ArtZoomControls";
 import LoadError from "../../components/LoadError";
 import { useArtPanBounds, useCloseOnEscape } from "../../hooks/useArtViewer";
 import { useZoomPan } from "../../hooks/useZoomPan";
@@ -170,8 +168,6 @@ export default function TDollArt() {
 	}, [doll]);
 
 	// Stable handlers, in step with the rest of the site.
-	const zoomIn = useCallback(() => zoom.zoomBy(1.4), [zoom.zoomBy]);
-	const zoomOut = useCallback(() => zoom.zoomBy(1 / 1.4), [zoom.zoomBy]);
 	const handleFormChange = useCallback((_event: unknown, value: string | null) => {
 		if (value) {
 			setFormKey(String(value));
@@ -197,19 +193,7 @@ export default function TDollArt() {
 				<Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
 					{doll?.normal.name ?? (loadFailed ? "" : "Loading...")}
 				</Typography>
-				{!showControls ? null : (
-					<>
-						<IconButton onClick={zoomOut} aria-label="zoom out" sx={{ color: "inherit" }}>
-							<RemoveIcon />
-						</IconButton>
-						<IconButton onClick={zoomIn} aria-label="zoom in" sx={{ color: "inherit" }}>
-							<AddIcon />
-						</IconButton>
-						<IconButton onClick={zoom.reset} aria-label="reset zoom" sx={{ color: "inherit" }}>
-							<ZoomOutMapIcon />
-						</IconButton>
-					</>
-				)}
+				{!showControls ? null : <ArtZoomControls zoom={zoom} />}
 			</Box>
 
 			{loadFailed ? (

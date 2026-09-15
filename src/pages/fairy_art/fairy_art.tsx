@@ -6,12 +6,10 @@ import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@m
 import type { SxProps, Theme } from "@mui/material";
 
 // MaterialUI icon imports
-import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import RemoveIcon from "@mui/icons-material/Remove";
-import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
+import ArtZoomControls from "../../components/ArtZoomControls";
 import LoadError from "../../components/LoadError";
 import { useArtPanBounds, useCloseOnEscape } from "../../hooks/useArtViewer";
 import { useZoomPan } from "../../hooks/useZoomPan";
@@ -103,8 +101,6 @@ export default function FairyArt() {
 	}, [fairy]);
 
 	// Stable handlers, in step with the rest of the site.
-	const zoomIn = useCallback(() => zoom.zoomBy(1.4), [zoom.zoomBy]);
-	const zoomOut = useCallback(() => zoom.zoomBy(1 / 1.4), [zoom.zoomBy]);
 	// Replaces rather than pushes, so Back still closes the viewer in one step. The router state rides along so closing still knows where it came from.
 	const handleFormChange = useCallback(
 		(_event: unknown, value: number | null) => {
@@ -128,19 +124,7 @@ export default function FairyArt() {
 				<Typography variant="h6" noWrap sx={styles.title}>
 					{fairy?.name ?? (loadFailed ? "" : "Loading...")}
 				</Typography>
-				{hosted && !loadFailed ? (
-					<>
-						<IconButton onClick={zoomOut} aria-label="zoom out" sx={styles.iconButton}>
-							<RemoveIcon />
-						</IconButton>
-						<IconButton onClick={zoomIn} aria-label="zoom in" sx={styles.iconButton}>
-							<AddIcon />
-						</IconButton>
-						<IconButton onClick={zoom.reset} aria-label="reset zoom" sx={styles.iconButton}>
-							<ZoomOutMapIcon />
-						</IconButton>
-					</>
-				) : null}
+				{hosted && !loadFailed ? <ArtZoomControls zoom={zoom} /> : null}
 			</Box>
 
 			{loadFailed ? (
