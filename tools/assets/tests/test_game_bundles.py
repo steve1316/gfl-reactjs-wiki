@@ -204,6 +204,13 @@ class HocResolutionTests(unittest.TestCase):
         self.assertEqual(art["assets"]["card"]["path"], f"{SQUADS}Squads_Vertical/L9A1_Vertical.png")
         self.assertEqual(sorted(art["assets"]), ["bgl", "bgr", "card", "left", "left_alpha", "right", "right_alpha"])
 
+    def test_missing_card_is_optional(self):
+        """RPG29 ships no vertical card, so the art still resolves and the card role is simply absent."""
+        index = hoc_index({"resource_squads": squad_pictures("RPG29")[1:]})
+        art = game_bundles.hoc_items(index, {"id": 10, "code": "RPG29"})[0]
+        self.assertEqual(art["status"], "resolved")
+        self.assertNotIn("card", art["assets"])
+
     def test_rig_lists_combat_and_crew_with_own_or_shared_atlases(self):
         spine = "Assets/Characters/MK153/Spine/"
         names = ("MK153.atlas.txt", "MK153.png", "MK153.skel.bytes", "RMK153A.skel.bytes", "RMK153B.atlas.txt", "RMK153B.png", "RMK153B.skel.bytes", "RMK153C.skel.bytes")

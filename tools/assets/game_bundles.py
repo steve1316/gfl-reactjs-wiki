@@ -102,7 +102,8 @@ EQUIP_ROLES = (("icon", ("Equip/{stem}.png",), True), ("alpha", ("Equip/{stem}_A
 # HOC pictures all live in one bundle. The card path keeps its folder, since L9A1 also has a root-level `L9A1_Vertical.png`.
 HOC_ART_BUNDLE = "resource_squads"
 HOC_ART_ROLES = (
-    ("card", ("Squads_Vertical/{stem}_Vertical.png",), True),
+    # RPG29 has no vertical card in the game, so the card is optional and the extractor derives one from the full art.
+    ("card", ("Squads_Vertical/{stem}_Vertical.png",), False),
     ("bgl", ("{stem}_BGL.jpg",), True),
     ("bgr", ("{stem}_BGR.jpg",), True),
     ("left", ("{stem}_Left.png",), True),
