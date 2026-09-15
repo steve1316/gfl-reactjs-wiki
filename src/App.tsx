@@ -6,7 +6,6 @@ import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import NotFound404 from "./not_found_404";
 import EquipmentIndex from "./pages/equipment_index/equipment_index";
-import FairyIndex from "./pages/fairy_index/fairy_index";
 import FormationSimulator from "./pages/formation_simulator/formation_simulator";
 import Home from "./pages/home/home";
 import TDoll from "./pages/tdoll/tdoll";
@@ -20,6 +19,9 @@ import "./styles.css";
 /** The HOC pages load on first visit, since few readers open them and they would otherwise add ~4.5 KB gzip to every route. */
 const HOCIndex = lazy(() => import("./pages/hoc_index/hoc_index"));
 const HOCPage = lazy(() => import("./pages/hoc/hoc"));
+
+/** The Fairy index loads on first visit, for the same reason as the HOC pages. */
+const FairyIndex = lazy(() => import("./pages/fairy_index/fairy_index"));
 
 /**
  * The application shell: theme, navigation and routes.
@@ -52,7 +54,14 @@ export default function App() {
 							</Suspense>
 						}
 					/>
-					<Route path="/fairy-index" element={<FairyIndex />} />
+					<Route
+						path="/fairy-index"
+						element={
+							<Suspense>
+								<FairyIndex />
+							</Suspense>
+						}
+					/>
 					<Route path="/formation" element={<FormationSimulator />} />
 					<Route path="/tdoll/:id/art" element={<TDollArt />} />
 					<Route path="/tdoll/:id" element={<TDoll />} />
