@@ -14,10 +14,10 @@ import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import HocCard from "./HocCard";
 
-import { loadHocs } from "../../lib/data";
+import { useHocs } from "../../lib/useHocs";
 import { hocStats } from "../../lib/hocStats";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
-import type { Hoc, HocData, HocStatValues } from "../../types/hoc";
+import type { Hoc, HocStatValues } from "../../types/hoc";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +49,8 @@ interface IndexHoc extends Hoc {
 	maxStats: HocStatValues;
 	/** Position in class order then id order, which is the default sort. */
 	order: number;
+	/** The name passed through `normaliseName`, worked out once per load for the name search. */
+	searchKey: string;
 }
 
 /** What this page saves to session storage. */
@@ -156,11 +158,7 @@ function sortEntries(entries: IndexHoc[], key: SortKey, descending: boolean): In
  * @returns The HOC index page.
  */
 export default function HOCIndex() {
-	const [data, setData] = useState<HocData | null>(null);
-	// True when the HOC file failed to load, which swaps the results for a retry notice.
-	const [loadFailed, setLoadFailed] = useState(false);
-	// Bumped by the retry button to load the HOCs again.
-	const [loadAttempt, setLoadAttempt] = useState(0);
+	const { data, loadFailed, retry: handleRetryLoad } = useHocs();
 
 	// Read once, on the first render, so a restored visit never flashes the defaults.
 	const [saved] = useState(readSavedFilters);
@@ -180,7 +178,7 @@ export default function HOCIndex() {
 				? []
 				: data.classes
 						.flatMap((label) => data.items.filter((hoc) => hoc.className === label))
-						.map((hoc, order) => ({ ...hoc, maxStats: hocStats(hoc, data.constants, data.constants.maxLevel), order })),
+						.map((hoc, order) => ({ ...hoc, maxStats: hocStats(hoc, data.constants, data.constants.maxLevel), order, searchKey: normaliseName(hoc.name) })),
 		[data]
 	);
 
@@ -188,23 +186,10 @@ export default function HOCIndex() {
 		const query = normaliseName(deferredQuery);
 		// Only classes the data still has count, so a class saved from an older dataset cannot silently empty the list.
 		const classOn = classes.some((label) => selectedClasses.has(label));
-		return entries.filter((entry) => (!classOn || selectedClasses.has(entry.className)) && matchesAnyName([normaliseName(entry.name)], query));
+		return entries.filter((entry) => (!classOn || selectedClasses.has(entry.className)) && matchesAnyName([entry.searchKey], query));
 	}, [entries, classes, selectedClasses, deferredQuery]);
 
 	const sorted = useMemo(() => sortEntries(matches, sortKey, sortDescending), [matches, sortKey, sortDescending]);
-
-	// HOCs are fetched once, on mount. A failed load is fetched again from the retry button.
-	useEffect(() => {
-		let active = true;
-		setLoadFailed(false);
-		loadHocs().then(
-			(loaded) => active && setData(loaded),
-			() => active && setLoadFailed(true)
-		);
-		return () => {
-			active = false;
-		};
-	}, [loadAttempt]);
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
@@ -237,8 +222,6 @@ export default function HOCIndex() {
 	const handleClearName = useCallback(() => setNameQuery(""), []);
 
 	const handleToggleSortDirection = useCallback(() => setSortDescending((descending) => !descending), []);
-
-	const handleRetryLoad = useCallback(() => setLoadAttempt((current) => current + 1), []);
 
 	// Clears the class chips and the name search for the panel's Clear all button. The sort is not a filter, so it stays.
 	const handleClearAll = useCallback(() => {
