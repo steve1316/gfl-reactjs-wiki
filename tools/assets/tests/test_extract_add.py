@@ -106,5 +106,15 @@ class LegacyFreeExtractionTests(unittest.TestCase):
         self.assertEqual([row["key"] for row in spine_report["unexpected_missing"]], ["hoc_spine:7"])
 
 
+    def test_fairy_items_are_routed_to_the_fairy_worker(self):
+        """Fairy art goes through `run_extraction`, so a missing bundle is reported under its key."""
+        assets = {"form1": {"bundle": "resource_fairy", "path": "X_1.png"}}
+        item = {"key": "fairy_art:1", "tier": "fairy_art", "fairy_id": 1, "code": "X", "status": "resolved", "missing": [], "bundles": ["resource_fairy"], "assets": assets}
+        inventory = {**EMPTY_INVENTORY, "items": [item]}
+        with tempfile.TemporaryDirectory() as scratch:
+            report = extract.run_extraction(inventory, None, [], SITE_DATA, os.path.join(scratch, "bundles"), os.path.join(scratch, "staging"), 1)
+        self.assertEqual({row["key"] for row in report["unexpected_missing"]}, {"fairy_art:1"})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -677,5 +677,111 @@ class HocCardTests(unittest.TestCase):
         self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("hoc_art:1", "*"), ("hoc_art:2", "*")])
 
 
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# Fairy art
+
+
+class FakeSprite:
+    """A Sprite reader whose `read()` returns trimmed sprite data: a rect, a texture rect offset and the cropped image."""
+
+    def __init__(self, image, rect_size, offset=(0, 0)):
+        """Build the fake.
+
+        Args:
+            image: The trimmed image `read().image` returns.
+            rect_size: The sprite's `m_Rect` width and height.
+            offset: The `m_RD.textureRectOffset` x and y, measured from the bottom left.
+        """
+        self.type = type("Type", (), {"name": "Sprite"})()
+        rect = type("Rect", (), {"width": float(rect_size[0]), "height": float(rect_size[1])})()
+        render_data = type("RenderData", (), {"textureRectOffset": type("Vector2f", (), {"x": float(offset[0]), "y": float(offset[1])})()})()
+        self.data = type("Data", (), {"m_Rect": rect, "m_RD": render_data, "image": image})()
+
+    def read(self):
+        """Return the fake payload.
+
+        Returns:
+            An object with `m_Rect`, `m_RD` and `image` attributes.
+        """
+        return self.data
+
+
+class FairyArtTests(unittest.TestCase):
+    """Fairy forms rebuilt from trimmed Sprites and masked by their `_Alpha` siblings."""
+
+    def test_sprite_full_image_places_the_crop_from_the_bottom_left(self):
+        """A 2x1 crop at offset (1, 0) in a 4x4 rect lands on the bottom row at columns 1-2, everything else transparent."""
+        sprite = FakeSprite(Image.new("RGB", (2, 1), (255, 0, 0)), (4, 4), (1, 0)).read()
+        image = extract.sprite_full_image(sprite)
+        self.assertEqual((image.mode, image.size), ("RGBA", (4, 4)))
+        for y in range(4):
+            for x in range(4):
+                expected = (255, 0, 0, 255) if y == 3 and x in (1, 2) else (0, 0, 0, 0)
+                self.assertEqual(image.getpixel((x, y)), expected, (x, y))
+
+    def test_worker_writes_every_form_masked_by_its_alpha_sprite(self):
+        """Each form is written to `fairies/<id>/form<n>.webp`, and a half-size mask covering the left half keeps only the left opaque."""
+        bundle = "resource_fairy"
+        mask = Image.new("RGBA", (2, 4), (0, 0, 0, 255))
+        container = {}
+        for form in (1, 2, 3):
+            container[f"assets/resources/dabao/pics/fairy/x_{form}.png"] = FakeSprite(Image.new("RGB", (8, 8), (255, 0, 0)), (8, 8))
+            container[f"assets/resources/dabao/pics/fairy/x_{form}_alpha.png"] = FakeSprite(mask, (4, 4))
+        assets = {}
+        for form in (1, 2, 3):
+            assets[f"form{form}"] = {"bundle": bundle, "path": f"Assets/Resources/DaBao/Pics/Fairy/X_{form}.png"}
+            assets[f"form{form}_alpha"] = {"bundle": bundle, "path": f"Assets/Resources/DaBao/Pics/Fairy/X_{form}_Alpha.png"}
+        item = {"key": "fairy_art:1", "tier": "fairy_art", "fairy_id": 1, "code": "X", "bundles": [bundle], "assets": assets}
+        with tempfile.TemporaryDirectory() as staging:
+            result = extract.extract_fairy_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
+            self.assertEqual(result["missing"], [])
+            expected = [("assets", f"fairies/1/form{form}.webp", "fairy_art") for form in (1, 2, 3)]
+            self.assertEqual(sorted((row[0], row[1], row[3]) for row in result["files"]), expected)
+            with Image.open(os.path.join(staging, "assets", "fairies", "1", "form1.webp")) as form1:
+                self.assertEqual(form1.size, (8, 8))
+                rgba = form1.convert("RGBA")
+                self.assertGreater(rgba.getpixel((0, 4))[3], 250)
+                self.assertLess(rgba.getpixel((7, 4))[3], 5)
+
+    def test_worker_reports_missing_sprites_per_role(self):
+        """A form whose sprites the bundle does not hold gets missing rows for its roles, and the other forms are still written."""
+        bundle = "resource_fairy"
+        container = {"x_1.png": FakeSprite(Image.new("RGB", (4, 4)), (4, 4)), "x_1_alpha.png": FakeSprite(Image.new("RGBA", (4, 4)), (4, 4))}
+        assets = {f"form{form}{suffix}": {"bundle": bundle, "path": f"X_{form}{suffix}.png"} for form in (1, 2) for suffix in ("", "_alpha")}
+        item = {"key": "fairy_art:2", "tier": "fairy_art", "fairy_id": 2, "code": "X", "bundles": [bundle], "assets": assets}
+        with tempfile.TemporaryDirectory() as staging:
+            result = extract.extract_fairy_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
+        self.assertEqual([row[1] for row in result["files"]], ["fairies/2/form1.webp"])
+        self.assertEqual(sorted(row["role"] for row in result["missing"]), ["form2", "form2_alpha"])
+
+    def test_worker_ignores_textures_in_the_fairy_bundle(self):
+        """Only Sprites are looked up, so a Texture2D at the same path is not decoded as a form."""
+        container = {"x_1.png": FakeTexture(Image.new("RGB", (4, 4))), "x_1_alpha.png": FakeTexture(Image.new("RGBA", (4, 4)))}
+        item = {"key": "fairy_art:3", "tier": "fairy_art", "fairy_id": 3, "code": "X", "bundles": ["b"], "assets": {"form1": {"bundle": "b", "path": "X_1.png"}, "form1_alpha": {"bundle": "b", "path": "X_1_alpha.png"}}}
+        with tempfile.TemporaryDirectory() as staging:
+            result = extract.extract_fairy_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
+        self.assertEqual(result["files"], [])
+        self.assertEqual(sorted(row["role"] for row in result["missing"]), ["form1", "form1_alpha"])
+
+    def test_worker_marks_every_item_missing_when_the_bundle_fails_to_load(self):
+        """A bundle load error gives one `*` missing row per fairy."""
+        items = [{"key": f"fairy_art:{fairy_id}", "tier": "fairy_art", "fairy_id": fairy_id, "bundles": ["b"], "assets": {}} for fairy_id in (1, 2)]
+
+        def fail(_path):
+            """Raise like an unreadable bundle.
+
+            Args:
+                _path: The bundle path, ignored.
+
+            Raises:
+                OSError: Always.
+            """
+            raise OSError("broken")
+
+        result = extract.extract_fairy_art_items(items, "", "", loader=fail)
+        self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("fairy_art:1", "*"), ("fairy_art:2", "*")])
+
+
 if __name__ == "__main__":
     unittest.main()

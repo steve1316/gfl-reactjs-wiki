@@ -8,6 +8,7 @@ Reads `tools/assets/.cache/inventory.json` (written by `game_bundles.py`) and th
 - `tools/assets/.staging/art/`: `tdolls/<id>/full.webp` / `full_d.webp`, with the same `mod/` and `skins/<skinId>/` folders.
 - `tools/assets/.staging/assets/spine/<id>/`: the base combat and dorm rigs, with `mod/` and `skins/<skinId>/` folders for the Mod and skin rigs.
 - HOCs: `assets/hocs/<id>/card.webp`, `art/hocs/<id>/full.webp` and `assets/hoc-spine/<id>/`, the combat rig plus its crew skeletons.
+- Fairies: `assets/fairies/<id>/form1.webp` to `form3.webp`, each rebuilt from a trimmed Sprite and masked by its `_Alpha` Sprite.
 - `tools/assets/.staging/extract-report.json`: counts per tier, missing assets, non-standard sizes and bytes per tree.
 - `tools/assets/.staging/spine-report.json`: rig counts, missing rigs and bytes per tree after the Spine pass.
 
@@ -109,6 +110,7 @@ SPINE_TIERS = ("spine", "mod_spine", "skin_spine")
 # HOC scene roles in `compose_hoc_full` argument order. The masks are not size checked, since the game ships them at half size.
 HOC_SCENE_ROLES = ("bgl", "bgr", "left", "left_alpha", "right", "right_alpha")
 HOC_SIZED_ROLES = ("bgl", "bgr", "left", "right")
+FAIRY_FORMS = (1, 2, 3)
 
 # Report tiers, keyed by inventory tier and role.
 REPORT_TIERS = {
@@ -124,6 +126,7 @@ REPORT_TIERS = {
     ("skin_art", "full_d"): "skin_full",
     ("hoc_art", "card"): "hoc_card",
     ("hoc_art", "full"): "hoc_full",
+    ("fairy_art", "form"): "fairy_art",
 }
 
 # Legacy skin files: `(role, clone, old file name template, output name, required, report tier)`. `{id}` is the doll id, `{slot}` the old slot.
@@ -199,6 +202,24 @@ def merge_alpha(color, alpha):
     merged = color.convert("RGBA")
     merged.putalpha(channel)
     return merged
+
+
+def sprite_full_image(sprite):
+    """Rebuild a trimmed Sprite at its full `m_Rect` size.
+
+    The game trims transparent borders from some Sprites. `textureRectOffset` places the crop from the rect's bottom left corner.
+
+    Args:
+        sprite: Read Sprite data with `m_Rect`, `m_RD.textureRectOffset` and `image`.
+
+    Returns:
+        A new RGBA image the size of the rect, transparent outside the crop.
+    """
+    rect, offset = sprite.m_Rect, sprite.m_RD.textureRectOffset
+    canvas = Image.new("RGBA", (round(rect.width), round(rect.height)), (0, 0, 0, 0))
+    crop = sprite.image.convert("RGBA")
+    canvas.paste(crop, (round(offset.x), canvas.height - round(offset.y) - crop.height))
+    return canvas
 
 
 def compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha):
@@ -551,8 +572,8 @@ def unity_load(path):
     return UnityPy.load(path)
 
 
-def load_textures(bundle_names, cache_dir, loader=unity_load):
-    """Index the `Texture2D` objects of some bundles by bundle name and lowercased container path.
+def load_textures(bundle_names, cache_dir, loader=unity_load, kind="Texture2D"):
+    """Index the objects of one kind in some bundles by bundle name and lowercased container path.
 
     Keying by bundle as well as path keeps twin bundles that hold the same path from shadowing each other.
 
@@ -560,6 +581,7 @@ def load_textures(bundle_names, cache_dir, loader=unity_load):
         bundle_names: Bundle names to open.
         cache_dir: The bundle cache directory.
         loader: Callable opening one `.ab` file, replaceable in tests.
+        kind: Unity type name to keep, `Texture2D` or `Sprite`.
 
     Returns:
         A dict of `(bundle name, lowercased asset path)` to the UnityPy object reader.
@@ -568,7 +590,7 @@ def load_textures(bundle_names, cache_dir, loader=unity_load):
     for name in bundle_names:
         env = loader(os.path.join(cache_dir, f"{name}.ab"))
         for path, obj in env.container.items():
-            if obj.type.name == "Texture2D":
+            if obj.type.name == kind:
                 textures[(name, path.lower())] = obj
     return textures
 
@@ -779,6 +801,63 @@ def extract_hoc_art_items(items, cache_dir, staging, loader=unity_load):
     result = new_result()
     for item in items:
         for field, rows in build_hoc_art(textures, item, staging).items():
+            result[field].extend(rows)
+    return result
+
+
+def build_fairy_art(sprites, item, staging):
+    """Write each form of one fairy from already loaded Sprites.
+
+    Args:
+        sprites: The `Sprite` index from `load_textures`, holding the item's bundles.
+        item: A `fairy_art` inventory item.
+        staging: The staging root.
+
+    Returns:
+        A worker result for this item. A form is skipped with missing rows when either of its Sprites fails.
+    """
+    result = new_result()
+    key = item["key"]
+    for form in FAIRY_FORMS:
+        roles = (f"form{form}", f"form{form}_alpha")
+        if not any(role in item["assets"] for role in roles):
+            continue
+        images, failed = [], False
+        for role in roles:
+            try:
+                images.append(sprite_full_image(texture_for(sprites, item["assets"][role]).read()))
+            except Exception as exc:
+                result["missing"].append({"key": key, "role": role, "reason": f"decode failed: {exc!r}"})
+                failed = True
+        if failed:
+            continue
+        try:
+            data = encode_webp(merge_alpha(*images), CARD_QUALITY)
+            write_file(staging, "assets", f"fairies/{item['fairy_id']}/form{form}.webp", data, REPORT_TIERS[("fairy_art", "form")], result)
+        except Exception as exc:
+            result["missing"].append({"key": key, "role": roles[0], "reason": f"merge, encode or write failed: {exc!r}"})
+    return result
+
+
+def extract_fairy_art_items(items, cache_dir, staging, loader=unity_load):
+    """Extract every fairy's forms, loading their shared bundle once.
+
+    Args:
+        items: Resolved `fairy_art` inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result merged over every item.
+    """
+    try:
+        sprites = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir, loader, kind="Sprite")
+    except Exception as exc:
+        return load_failure(items, exc)
+    result = new_result()
+    for item in items:
+        for field, rows in build_fairy_art(sprites, item, staging).items():
             result[field].extend(rows)
     return result
 
@@ -1446,7 +1525,7 @@ def reset_staging(staging):
     Args:
         staging: The staging root.
     """
-    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "art/tdolls", "art/hocs"):
+    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies", "art/tdolls", "art/hocs"):
         shutil.rmtree(os.path.join(staging, rel), ignore_errors=True)
     for tree in TREES:
         os.makedirs(os.path.join(staging, tree), exist_ok=True)
@@ -1529,9 +1608,9 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
     ui_files = copy_ui(legacy_assets, staging) if legacy_dir else []
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
-    art_items, hoc_items, skill_items, equip_items, legacy_skill_items = [], [], [], [], []
+    art_items, hoc_items, fairy_items, skill_items, equip_items, legacy_skill_items = [], [], [], [], [], []
     for item in inventory["items"]:
-        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art")
+        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art")
         if not wanted:
             continue
         if item["tier"] == "skill_icon" and item.get("source") == "legacy":
@@ -1541,7 +1620,7 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
             continue
         report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
-        {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items}.get(item["tier"], art_items).append(item)
+        {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items}.get(item["tier"], art_items).append(item)
 
     files, done = [], 0
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
@@ -1554,6 +1633,8 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
         futures.update({pool.submit(extract_art_item, item, cache_dir, staging): item["key"] for item in art_items})
         if hoc_items:
             futures[pool.submit(extract_hoc_art_items, hoc_items, cache_dir, staging)] = "worker:hoc_art"
+        if fairy_items:
+            futures[pool.submit(extract_fairy_art_items, fairy_items, cache_dir, staging)] = "worker:fairy_art"
         for future in concurrent.futures.as_completed(futures):
             try:
                 result = future.result()
