@@ -19,6 +19,7 @@ import { formatBuildTime } from "../../lib/buildTime";
 import { FAIRY_MAX_STARS, fairyForm } from "../../lib/fairyStats";
 import { hasFairyForm } from "../../lib/processData";
 import { useFairies } from "../../lib/useFairies";
+import type { Fairy, FairyConstants } from "../../types/fairy";
 
 const styles = {
 	page: { pt: 2, pb: 3, maxWidth: 1200, mx: "auto" },
@@ -42,53 +43,38 @@ function formLabel(ranks: number[]): string {
 	return ranks.length > 1 ? `${ranks[0]}-${ranks[ranks.length - 1]}★` : `${ranks[0]}★`;
 }
 
+/** Props for FairyDetail. */
+interface FairyDetailProps {
+	/** The fairy to show. */
+	fairy: Fairy;
+	/** The shared stat constants. */
+	constants: FairyConstants;
+}
+
 /**
- * One Fairy's page: its stats at any level and star rank, its skill, and its production info.
+ * One loaded fairy's content: hero art and form picker, stats, info and skill.
  *
- * @returns The Fairy page, a loading state, a retry notice, or the 404 page for an unknown id.
+ * Owns the chosen star rank itself and is keyed by the fairy's id from `FairyPage`, so switching to a different
+ * fairy remounts this component and starts back at the highest star rank instead of carrying the old one over.
+ *
+ * @param props Component props.
+ * @returns The fairy's content.
  */
-export default function FairyPage() {
-	const { id: rawId } = useParams<{ id: string }>();
-	const { data, loadFailed, retry } = useFairies();
-	// Owned here, not by FairyStatsPanel, so picking a star rank there also switches the hero art's form toggle.
+function FairyDetail({ fairy, constants }: FairyDetailProps) {
 	const [stars, setStars] = useState(FAIRY_MAX_STARS);
-
-	const fairy = data?.items.find((entry) => String(entry.id) === rawId);
-
-	useEffect(() => {
-		if (fairy) {
-			document.title = `${fairy.name} - Fairy`;
-			document.querySelector('meta[name="description"]')?.setAttribute("content", `${fairy.name}, a ${fairy.typeName} fairy`);
-		}
-	}, [fairy]);
+	const form = fairyForm(constants, stars);
 
 	const handleForm = useCallback(
 		(_event: MouseEvent<HTMLElement>, value: number | null) => {
-			if (value !== null && data !== null) {
-				const ranks = data.constants.forms[value - 1];
+			if (value !== null) {
+				const ranks = constants.forms[value - 1];
 				if (ranks !== undefined && ranks[0] !== undefined) {
 					setStars(ranks[0]);
 				}
 			}
 		},
-		[data]
+		[constants]
 	);
-
-	if (loadFailed) {
-		return (
-			<Container component="main" sx={styles.page}>
-				<LoadError what="this fairy" onRetry={retry} titleComponent="h1" />
-			</Container>
-		);
-	}
-	if (data === null) {
-		return <Box component="main" />;
-	}
-	if (fairy === undefined) {
-		return <NotFound404 message={`There is no fairy with the id ${rawId ?? ""}.`} />;
-	}
-
-	const form = fairyForm(data.constants, stars);
 
 	return (
 		<main>
@@ -106,7 +92,7 @@ export default function FairyPage() {
 								)}
 								<Box sx={styles.facts}>
 									<ToggleButtonGroup value={form} exclusive onChange={handleForm} size="small" sx={styles.forms} aria-label="Fairy form">
-										{data.constants.forms.map((ranks, index) => (
+										{constants.forms.map((ranks, index) => (
 											<ToggleButton key={index} value={index + 1} aria-label={formLabel(ranks)}>
 												{formLabel(ranks)}
 											</ToggleButton>
@@ -134,8 +120,7 @@ export default function FairyPage() {
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
 							</Typography>
-							{/* Keyed by fairy so moving to another fairy starts again at the highest level. */}
-							<FairyStatsPanel key={fairy.id} fairy={fairy} constants={data.constants} stars={stars} onStarsChange={setStars} />
+							<FairyStatsPanel fairy={fairy} constants={constants} stars={stars} onStarsChange={setStars} />
 						</Paper>
 					</Grid>
 
@@ -170,7 +155,7 @@ export default function FairyPage() {
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Skill
 							</Typography>
-							<FairySkillPanel key={fairy.id} skill={fairy.skill} strategy={fairy.strategy} />
+							<FairySkillPanel skill={fairy.skill} strategy={fairy.strategy} />
 						</Paper>
 					</Grid>
 
@@ -183,4 +168,40 @@ export default function FairyPage() {
 			</Container>
 		</main>
 	);
+}
+
+/**
+ * One Fairy's page: its stats at any level and star rank, its skill, and its production info.
+ *
+ * @returns The Fairy page, a loading state, a retry notice, or the 404 page for an unknown id.
+ */
+export default function FairyPage() {
+	const { id: rawId } = useParams<{ id: string }>();
+	const { data, loadFailed, retry } = useFairies();
+
+	const fairy = data?.items.find((entry) => String(entry.id) === rawId);
+
+	useEffect(() => {
+		if (fairy) {
+			document.title = `${fairy.name} - Fairy`;
+			document.querySelector('meta[name="description"]')?.setAttribute("content", `${fairy.name}, a ${fairy.typeName} fairy`);
+		}
+	}, [fairy]);
+
+	if (loadFailed) {
+		return (
+			<Container component="main" sx={styles.page}>
+				<LoadError what="this fairy" onRetry={retry} titleComponent="h1" />
+			</Container>
+		);
+	}
+	if (data === null) {
+		return <Box component="main" />;
+	}
+	if (fairy === undefined) {
+		return <NotFound404 message={`There is no fairy with the id ${rawId ?? ""}.`} />;
+	}
+
+	// Keyed by fairy so switching to another fairy remounts this and resets its star rank to the highest.
+	return <FairyDetail key={fairy.id} fairy={fairy} constants={data.constants} />;
 }
