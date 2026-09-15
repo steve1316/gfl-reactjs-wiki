@@ -20,7 +20,8 @@ const manifest = {
 			skills: ["skill1", "skill2"]
 		}
 	},
-	hocs: { 6: ["card", "full"] }
+	hocs: { 6: ["card", "full"] },
+	fairies: { 3: ["form1", "form2", "form3"] }
 };
 
 const spineIndex = { 65: { combat: rig("HK416"), dorm: rig("RHK416", "HK416"), mod: { combat: rig("mod/HK416Mod") }, skins: { 805: { combat: rig("skins/805/HK416_805") } } } };
@@ -41,6 +42,7 @@ test("URLs are derived per tier on the right host", () => {
 	assert.deepEqual(tiers.spineAtlas, ["https://a.test/assets/spine/65/HK416.atlas", "https://a.test/assets/spine/65/mod/HK416Mod.atlas", "https://a.test/assets/spine/65/skins/805/HK416_805.atlas"]);
 	assert.deepEqual(tiers.hocCards, ["https://a.test/assets/hocs/6/card.webp"]);
 	assert.deepEqual(tiers.hocFull, ["https://b.test/art/hocs/6/full.webp"]);
+	assert.deepEqual(tiers.fairyForms, ["https://a.test/assets/fairies/3/form1.webp", "https://a.test/assets/fairies/3/form2.webp", "https://a.test/assets/fairies/3/form3.webp"]);
 });
 
 test("HOC Spine URLs are derived on the asset host, with rig names URL-encoded", () => {

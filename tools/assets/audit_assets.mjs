@@ -15,7 +15,8 @@
  *
  * Audits the skin-id layout on disk: every file the version 3 manifest and Spine index reference must exist in the staging trees. `--v3`
  * is still accepted from before the version 2 audit of the live hosts was removed. HOC art and rigs are audited too, the HOC Spine index
- * only when its file exists, since a repo may not have any HOC rigs published yet.
+ * only when its file exists, since a repo may not have any HOC rigs published yet. Fairy art is audited the same way, from the asset tree
+ * only, since fairies have no full art or Spine rigs.
  *
  * Exits non-zero when anything is missing, so it can gate a deploy.
  */
@@ -37,6 +38,9 @@ const V3_IMAGE_FILES = { card: ["assets", "card.webp"], card_damaged: ["assets",
 
 /** HOC image kind -> tree and filename inside a HOC's `hocs/<id>/` folder. */
 const HOC_IMAGE_FILES = { card: ["assets", "card.webp"], full: ["art", "full.webp"] };
+
+/** Fairy image kind -> tree and filename inside a fairy's `fairies/<id>/` folder. Fairy art lives only in the asset tree. */
+const FAIRY_IMAGE_FILES = { form1: ["assets", "form1.webp"], form2: ["assets", "form2.webp"], form3: ["assets", "form3.webp"] };
 
 /** v3 Mod-skin card kind -> filename inside a skin folder. */
 const V3_MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
@@ -225,6 +229,13 @@ function auditV3(args) {
 		for (const kind of kinds) {
 			const [tree, name] = HOC_IMAGE_FILES[kind];
 			need(tree, `hocs/${id}/${name}`, `hoc ${id} ${kind}`);
+		}
+	}
+
+	for (const [id, kinds] of Object.entries(manifest.fairies ?? {})) {
+		for (const kind of kinds) {
+			const [tree, name] = FAIRY_IMAGE_FILES[kind];
+			need(tree, `fairies/${id}/${name}`, `fairy ${id} ${kind}`);
 		}
 	}
 

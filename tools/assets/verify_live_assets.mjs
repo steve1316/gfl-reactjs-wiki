@@ -49,6 +49,9 @@ const MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" 
 /** HOC image kind -> host and filename inside a HOC folder, as in `hocCardUrl` / `hocFullArtUrl` in `src/lib/assets.ts`. */
 const HOC_IMAGE_FILES = { card: ["assets", "card.webp"], full: ["art", "full.webp"] };
 
+/** Fairy image kind -> host and filename inside a fairy's `fairies/<id>/` folder. Fairy art lives only on the asset host. */
+const FAIRY_IMAGE_FILES = { form1: ["assets", "form1.webp"], form2: ["assets", "form2.webp"], form3: ["assets", "form3.webp"] };
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // URL derivation
@@ -93,7 +96,7 @@ export function uiImageNames(srcDir) {
  * @param {string[]} [uiNames] Top-level UI image names, as `uiImageNames` finds them.
  * @param {object} [hocSpineIndex] The HOC Spine index, id -> `{combat, crew}` rigs.
  * @returns {Record<string, string[]>} Tier name -> URLs. Tiers are `manifest`, `ui`, `cards`, `modCards`, `full`, `skills`, `equipment`,
- *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel` and `hocSpineAtlas`.
+ *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel`, `hocSpineAtlas` and `fairyForms`.
  */
 export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames = [], hocSpineIndex = {}) {
 	const bases = { assets: assetsBase, art: artBase };
@@ -110,7 +113,8 @@ export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames
 		hocCards: [],
 		hocFull: [],
 		hocSpineSkel: [],
-		hocSpineAtlas: []
+		hocSpineAtlas: [],
+		fairyForms: []
 	};
 	for (const [id, doll] of Object.entries(manifest.dolls ?? {})) {
 		const forms = [[`tdolls/${id}`, doll.normal], [`tdolls/${id}/mod`, doll.mod], ...Object.entries(doll.skins ?? {}).map(([skinId, skin]) => [`tdolls/${id}/skins/${skinId}`, skin])];
@@ -146,6 +150,12 @@ export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames
 		for (const kind of kinds) {
 			const [host, name] = HOC_IMAGE_FILES[kind];
 			tiers[host === "art" ? "hocFull" : "hocCards"].push(join(bases[host], `hocs/${id}/${name}`));
+		}
+	}
+	for (const [id, kinds] of Object.entries(manifest.fairies ?? {})) {
+		for (const kind of kinds) {
+			const [host, name] = FAIRY_IMAGE_FILES[kind];
+			tiers.fairyForms.push(join(bases[host], `fairies/${id}/${name}`));
 		}
 	}
 	for (const [id, entry] of Object.entries(hocSpineIndex)) {
