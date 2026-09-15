@@ -29,24 +29,24 @@ const spineIndex = { 65: { combat: rig("HK416"), dorm: rig("RHK416", "HK416"), m
 const hocSpineIndex = { 6: { combat: rig("QLZ04"), crew: [rig("QLZ04 A"), rig("QLZ04 B")] } };
 
 test("URLs are derived per tier on the right host", () => {
-	const tiers = candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art");
+	const tiers = candidateUrls(manifest, spineIndex, "https://a.test/assets/");
 	assert.deepEqual(tiers.manifest, ["https://a.test/assets/assets-manifest.json"]);
 	assert.equal(tiers.cards.length, 4);
 	assert.ok(tiers.cards.includes("https://a.test/assets/tdolls/65/skins/805/card.webp"));
 	assert.deepEqual(tiers.modCards, ["https://a.test/assets/tdolls/65/skins/805/mod_card_d.webp"]);
-	assert.ok(tiers.full.includes("https://b.test/art/tdolls/65/skins/legacy-band/full.webp"));
+	assert.ok(tiers.full.includes("https://a.test/assets/tdolls/65/skins/legacy-band/full.webp"));
 	assert.equal(tiers.full.length, 5);
 	assert.deepEqual(tiers.skills, ["https://a.test/assets/tdolls/65/skill1.png", "https://a.test/assets/tdolls/65/skill2.png"]);
 	assert.deepEqual(tiers.equipment, ["https://a.test/assets/equipment/5.png", "https://a.test/assets/equipment/12.png"]);
 	assert.equal(tiers.spineSkel.length, 4);
 	assert.deepEqual(tiers.spineAtlas, ["https://a.test/assets/spine/65/HK416.atlas", "https://a.test/assets/spine/65/mod/HK416Mod.atlas", "https://a.test/assets/spine/65/skins/805/HK416_805.atlas"]);
 	assert.deepEqual(tiers.hocCards, ["https://a.test/assets/hocs/6/card.webp"]);
-	assert.deepEqual(tiers.hocFull, ["https://b.test/art/hocs/6/full.webp"]);
+	assert.deepEqual(tiers.hocFull, ["https://a.test/assets/hocs/6/full.webp"]);
 	assert.deepEqual(tiers.fairyForms, ["https://a.test/assets/fairies/3/form1.webp", "https://a.test/assets/fairies/3/form2.webp", "https://a.test/assets/fairies/3/form3.webp"]);
 });
 
 test("HOC Spine URLs are derived on the asset host, with rig names URL-encoded", () => {
-	const tiers = candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art", [], hocSpineIndex);
+	const tiers = candidateUrls(manifest, spineIndex, "https://a.test/assets/", [], hocSpineIndex);
 	assert.deepEqual(tiers.hocSpineSkel.sort(), [
 		"https://a.test/assets/hoc-spine/6/QLZ04%20A.skel",
 		"https://a.test/assets/hoc-spine/6/QLZ04%20B.skel",
@@ -68,8 +68,8 @@ test("UI images are read from uiUrl calls and sampled on the asset host", () => 
 	try {
 		const names = uiImageNames(src);
 		assert.deepEqual(names, ["logo name.jpg", "mod.png"]);
-		assert.deepEqual(candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art", names).ui, ["https://a.test/assets/logo%20name.jpg", "https://a.test/assets/mod.png"]);
-		assert.deepEqual(candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art").ui, []);
+		assert.deepEqual(candidateUrls(manifest, spineIndex, "https://a.test/assets/", names).ui, ["https://a.test/assets/logo%20name.jpg", "https://a.test/assets/mod.png"]);
+		assert.deepEqual(candidateUrls(manifest, spineIndex, "https://a.test/assets/").ui, []);
 	} finally {
 		fs.rmSync(src, { recursive: true, force: true });
 	}
