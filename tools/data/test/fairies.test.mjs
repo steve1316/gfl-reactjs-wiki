@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { buildFairies, findFairyArtGaps, typeNameFor } from "../lib/fairies.mjs";
-import fs from "node:fs";
 
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 import { effectiveStars, fairyForm, fairyStats } from "../../../src/lib/fairyStats.ts";
@@ -36,8 +35,7 @@ const IOPWIKI = {
 };
 
 const upstream = loadUpstream(resolveUpstreamDir());
-const specialTalents = JSON.parse(fs.readFileSync(new URL("../fairy-special-talents.json", import.meta.url), "utf8"));
-const built = buildFairies(upstream, specialTalents);
+const built = buildFairies(upstream);
 const four = (s) => [s.damage, s.accuracy, s.evasion, s.armor];
 
 test("keeps the 47 obtainable fairies with their types", () => {
@@ -68,7 +66,8 @@ test("builds battle and strategy skills", () => {
 });
 
 test("lists every talent with its effect", () => {
-	assert.equal(built.talents.length, 37);
+	assert.equal(built.talents.length, 17);
+	assert.ok(built.talents.every((t) => t.rank === 1 || t.rank === 2));
 	const assault = built.talents.find((t) => t.name === "Assault");
 	assert.equal(assault.rank, 1);
 	assert.match(assault.description, /ARs' damage by 10%/);
@@ -108,30 +107,4 @@ test("fairy art gaps are only reported once the manifest lists any fairy", () =>
 	assert.deepEqual(findFairyArtGaps(fairies, { dolls: {} }), []);
 	assert.deepEqual(findFairyArtGaps(fairies, { fairies: {} }), []);
 	assert.deepEqual(findFairyArtGaps(fairies, { fairies: { 1: ["form1", "form2", "form3"], 2: ["form1"] } }), ["Armor Fairy"]);
-});
-
-test("applies the special talent mapping", () => {
-	assert.equal(built.items.find((f) => f.id === 18).specialTalent, 910118);
-	assert.equal(built.items.find((f) => f.id === 1).specialTalent, null);
-});
-
-test("rejects invalid special talent pairs", () => {
-	assert.throws(() => buildFairies(upstream, [{ fairy: 9999, talent: 910118 }]), /unknown fairy 9999/);
-	assert.throws(() => buildFairies(upstream, [{ fairy: 1, talent: 910101 }]), /not a special talent/);
-	assert.throws(
-		() =>
-			buildFairies(upstream, [
-				{ fairy: 18, talent: 910118 },
-				{ fairy: 18, talent: 910119 }
-			]),
-		/fairy 18 is mapped to more than one special talent/
-	);
-	assert.throws(
-		() =>
-			buildFairies(upstream, [
-				{ fairy: 18, talent: 910118 },
-				{ fairy: 19, talent: 910118 }
-			]),
-		/special talent 910118 is mapped to more than one fairy/
-	);
 });
