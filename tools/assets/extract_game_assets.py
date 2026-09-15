@@ -240,12 +240,13 @@ def compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha):
     return scene.convert("RGB")
 
 
-def derive_hoc_card(left, left_alpha, right, right_alpha, full):
+def derive_hoc_card(bgl, left, left_alpha, right, right_alpha, full):
     """Crop a vertical card from a HOC's full scene for a HOC the game ships no card for.
 
     The crop is full height at the card's aspect, centred on the union of both layers' opaque mask pixels and kept inside the scene.
 
     Args:
+        bgl: Left background half. Its width places the right mask, as in `compose_hoc_full`.
         left: Left character layer.
         left_alpha: Mask for `left`.
         right: Right character layer.
@@ -256,7 +257,7 @@ def derive_hoc_card(left, left_alpha, right, right_alpha, full):
         An RGB image at `HOC_CARD_SIZE`.
     """
     boxes = []
-    for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, left.width)):
+    for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, bgl.width)):
         box = layer_mask(mask, layer.size).getbbox()
         if box:
             boxes.append((box[0] + x, box[2] + x))
@@ -753,7 +754,7 @@ def extract_hoc_art_item(item, cache_dir, staging, loader=unity_load):
         full = compose_hoc_full(*(images[role] for role in HOC_SCENE_ROLES))
         card = images.get("card")
         if card is None:
-            card = derive_hoc_card(images["left"], images["left_alpha"], images["right"], images["right_alpha"], full)
+            card = derive_hoc_card(images["bgl"], images["left"], images["left_alpha"], images["right"], images["right_alpha"], full)
             result["nonstandard"].append({"key": key, "role": "card", "size": "derived", "expected": list(HOC_CARD_SIZE)})
         elif card.size != HOC_CARD_SIZE:
             result["nonstandard"].append({"key": key, "role": "card", "size": list(card.size), "expected": list(HOC_CARD_SIZE)})

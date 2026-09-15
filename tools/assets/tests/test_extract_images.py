@@ -590,15 +590,16 @@ class HocCardTests(unittest.TestCase):
     """A HOC with no vertical card gets one cropped from its full art around the character layers."""
 
     def test_derived_card_is_centred_on_the_opaque_mask_pixels(self):
-        """Mask pixels at x 12..13 of a 16x8 scene centre the 4px wide crop on columns 11..14."""
-        left = Image.new("RGBA", (8, 8))
+        """Mask pixels at x 12..13 of a 16x8 scene centre the 4px crop on columns 11..14. The right mask sits after `bgl`, not `left`."""
+        bgl = Image.new("RGB", (8, 8))
+        left = Image.new("RGBA", (6, 8))
         right = Image.new("RGBA", (8, 8))
         left_alpha = Image.new("RGBA", (8, 8), (0, 0, 0, 0))
         right_alpha = Image.new("RGBA", (8, 8), (0, 0, 0, 0))
         right_alpha.paste((0, 0, 0, 255), (4, 0, 6, 8))
         full = Image.new("RGB", (16, 8), (0, 0, 255))
         full.paste((255, 0, 0), (11, 0, 15, 8))
-        card = extract.derive_hoc_card(left, left_alpha, right, right_alpha, full)
+        card = extract.derive_hoc_card(bgl, left, left_alpha, right, right_alpha, full)
         self.assertEqual(card.size, extract.HOC_CARD_SIZE)
         for x in (0, card.width // 2, card.width - 1):
             red, _green, blue = card.convert("RGB").getpixel((x, card.height // 2))
