@@ -9,6 +9,7 @@ import type { SxProps, Theme } from "@mui/material";
 import TimerOutlinedIcon from "@mui/icons-material/TimerOutlined";
 
 import { RarityLabel, TypeBadge } from "../../components/DollBadges";
+import HighlightedName from "../../components/HighlightedName";
 import { formatBuildTime } from "../../lib/buildTime";
 import { equipmentDollName, usableSummary } from "../../lib/equipmentDisplay";
 import { statName } from "../../lib/equipmentStats";
@@ -62,7 +63,6 @@ const styles = {
 	name: { fontSize: "0.8rem", fontWeight: 700, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
 	// While a search matches, the rest of the name drops to regular weight so the matched part stands out.
 	nameWhileMatching: { fontWeight: 400, color: "text.secondary" },
-	match: { fontWeight: 800, color: "text.primary" },
 	subRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, mt: 0.25 },
 	type: { fontSize: SMALL_TEXT, color: "text.secondary", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
 	stats: { mt: 0.75 },
@@ -132,17 +132,7 @@ export default memo(function EquipmentCard({ equipment, typeLabel, level, highli
 
 				<Box sx={styles.body}>
 					<Typography component="div" sx={[styles.name, match !== null && styles.nameWhileMatching]} title={name}>
-						{match ? (
-							<>
-								{name.slice(0, match[0])}
-								<Box component="b" sx={styles.match}>
-									{name.slice(match[0], match[1])}
-								</Box>
-								{name.slice(match[1])}
-							</>
-						) : (
-							name
-						)}
+						<HighlightedName name={name} match={match} />
 					</Typography>
 
 					<Box sx={styles.subRow}>
