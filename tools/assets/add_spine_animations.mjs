@@ -51,7 +51,7 @@ function main() {
 	const isHoc = args.includes("--hoc");
 	const indexPath = args.includes("--index") ? args[args.indexOf("--index") + 1] : isHoc ? "src/data/hoc-spine-index.json" : "src/data/spine-index.json";
 	if (!spineDir || !fs.existsSync(spineDir)) {
-		console.error("pass --spine <dir> pointing at the published spine/<id>/ tree");
+		console.error(isHoc ? "pass --spine <dir> pointing at the published hoc-spine/<id>/ tree" : "pass --spine <dir> pointing at the published spine/<id>/ tree");
 		process.exit(1);
 	}
 
