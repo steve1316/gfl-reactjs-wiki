@@ -147,7 +147,8 @@ jobs:
         run: node tools/data/import.mjs --date "$CUTOFF"
 
       # When a newly released form genuinely has no asset in the game, add its skill code to `EXPECTED_MISSING_SKILL_CODES` or its item key to
-      # `EXPECTED_MISSING_RIGS` in tools/assets/game_bundles.py, otherwise every run stops at this step.
+      # `EXPECTED_MISSING_RIGS` in tools/assets/game_bundles.py, otherwise every run stops at this step. HOC items (`hoc_art:<id>`,
+      # `hoc_spine:<id>`) have no expected-gap list, so a new HOC with a missing bundle stops the run until handled in game_bundles.py.
       - name: Resolve and download new assets
         run: python3 tools/assets/game_bundles.py download --only-missing --gf-data tools/data/.cache/gf-data-us
 
