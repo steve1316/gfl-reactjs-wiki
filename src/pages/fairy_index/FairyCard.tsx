@@ -2,20 +2,25 @@ import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 // MaterialUI imports
-import { Box, Card, CardActionArea, Typography } from "@mui/material";
+import { Box, Card, CardActionArea, CardMedia, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import HighlightedName from "../../components/HighlightedName";
+import { fairyFormUrl } from "../../lib/assets";
 import { FAIRY_STAT_KEYS, FAIRY_STAT_LABELS, formatFairyStat } from "../../lib/fairyStats";
 import { findNameMatch } from "../../lib/nameSearch";
+import { hasFairyForm } from "../../lib/processData";
 import type { FairyStatValues } from "../../types/fairy";
+
+/** The form shown on the tile, the fairy's highest rank. */
+const TILE_FORM = 3;
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Configuration
 
-/** Fairy art has no published shape yet, so the placeholder tile just takes a square. Task 9 replaces this with real art. */
+/** Fairy art is a square 512x512 image. */
 const FAIRY_CARD_ASPECT = "1 / 1";
 
 /** Text about 11.5px, the smallest size used on the tiles so they stay readable on a phone. */
@@ -23,7 +28,7 @@ const SMALL_TEXT = "0.72rem";
 
 const styles = {
 	card: { height: "100%", display: "flex", flexDirection: "column" },
-	art: { width: "100%", aspectRatio: FAIRY_CARD_ASPECT, display: "block" },
+	art: { width: "100%", aspectRatio: FAIRY_CARD_ASPECT, objectFit: "contain", display: "block", bgcolor: "action.hover" },
 	action: { height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start" },
 	body: { px: 1.25, pt: 1, pb: 1.25, display: "flex", flexDirection: "column", flex: 1, minWidth: 0 },
 	name: { fontSize: "0.8rem", fontWeight: 700, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
@@ -62,7 +67,7 @@ export default memo(function FairyCard({ id, name, typeName, stats, highlight }:
 	return (
 		<Card sx={styles.card}>
 			<CardActionArea component={Link} to={`/fairy/${id}`} sx={styles.action}>
-				<ArtPlaceholder name={name} sx={styles.art} />
+				{hasFairyForm(id, TILE_FORM) ? <CardMedia component="img" image={fairyFormUrl(id, TILE_FORM)} alt="" loading="lazy" sx={styles.art} /> : <ArtPlaceholder name={name} sx={styles.art} />}
 				<Box sx={styles.body}>
 					<Typography component="div" sx={[styles.name, match !== null && styles.nameWhileMatching]} title={name}>
 						<HighlightedName name={name} match={match} />

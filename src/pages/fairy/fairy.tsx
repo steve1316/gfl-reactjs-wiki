@@ -3,7 +3,7 @@ import type { MouseEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 
 // MaterialUI imports
-import { Box, Chip, Container, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, CardMedia, Chip, Container, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
@@ -14,8 +14,10 @@ import NotFound404 from "../../not_found_404";
 import FairySkillPanel from "./FairySkillPanel";
 import FairyStatsPanel from "./FairyStatsPanel";
 
+import { fairyFormUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
 import { FAIRY_MAX_STARS, fairyForm } from "../../lib/fairyStats";
+import { hasFairyForm } from "../../lib/processData";
 import { useFairies } from "../../lib/useFairies";
 
 const styles = {
@@ -23,7 +25,7 @@ const styles = {
 	section: { p: { xs: 2, md: 2.5 }, height: "100%" },
 	sectionHeading: { mb: 1.5 },
 	hero: { display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: { xs: 2, md: 3 } },
-	art: { width: { xs: 160, sm: 220 }, aspectRatio: "1 / 1", flex: "none", borderRadius: "8px", overflow: "hidden" },
+	art: { width: { xs: 160, sm: 220 }, aspectRatio: "1 / 1", flex: "none", borderRadius: "8px", overflow: "hidden", objectFit: "contain", bgcolor: "action.hover" },
 	facts: { display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
 	forms: { alignSelf: "flex-start" },
 	name: { fontWeight: 700 },
@@ -97,7 +99,11 @@ export default function FairyPage() {
 					<Grid size={12}>
 						<Paper sx={styles.section} variant="outlined">
 							<Box sx={styles.hero}>
-								<ArtPlaceholder name={fairy.name} sx={styles.art} />
+								{hasFairyForm(fairy.id, form) ? (
+									<CardMedia component="img" image={fairyFormUrl(fairy.id, form)} alt="" sx={styles.art} />
+								) : (
+									<ArtPlaceholder name={fairy.name} sx={styles.art} />
+								)}
 								<Box sx={styles.facts}>
 									<ToggleButtonGroup value={form} exclusive onChange={handleForm} size="small" sx={styles.forms} aria-label="Fairy form">
 										{data.constants.forms.map((ranks, index) => (
