@@ -5,8 +5,8 @@ import type { MouseEvent } from "react";
 import { Box, LinearProgress, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import { HOC_MAX_STARS, HOC_STAT_KEYS, HOC_STAT_LABELS, hocChipStats, hocStats } from "../../lib/hocStats";
-import type { Hoc, HocConstants, HocStatKey } from "../../types/hoc";
+import { HOC_MAX_STARS, HOC_STAT_KEYS, HOC_STAT_LABELS, bestHocStats, hocChipStats, hocStats } from "../../lib/hocStats";
+import type { Hoc, HocConstants } from "../../types/hoc";
 import LevelSlider from "./LevelSlider";
 
 /** The star picker's buttons, 1 to 5. */
@@ -49,16 +49,8 @@ export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStats
 
 	const base = useMemo(() => hocStats(hoc, constants, level), [hoc, constants, level]);
 	const chips = useMemo(() => hocChipStats(hoc, constants, level, stars), [hoc, constants, level, stars]);
-	// The best HOC for each stat at this level, whose value is a full bar. The first HOC in data order wins a tie.
-	const best = useMemo(() => {
-		const all = allHocs.map((entry) => ({ name: entry.name, stats: hocStats(entry, constants, level) }));
-		return Object.fromEntries(
-			HOC_STAT_KEYS.map((key) => {
-				const top = all.reduce((leader, entry) => (entry.stats[key] > leader.stats[key] ? entry : leader));
-				return [key, { name: top.name, value: top.stats[key] }];
-			})
-		) as Record<HocStatKey, { name: string; value: number }>;
-	}, [allHocs, constants, level]);
+	// The best HOC for each stat at this level, whose value is a full bar.
+	const best = useMemo(() => bestHocStats(allHocs, constants, level), [allHocs, constants, level]);
 
 	const handleStars = useCallback((_event: MouseEvent<HTMLElement>, value: number | null) => {
 		// Clicking the selected button again reports null. Keep the current rank rather than having none.
