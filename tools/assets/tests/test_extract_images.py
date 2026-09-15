@@ -627,7 +627,7 @@ class HocCardTests(unittest.TestCase):
             "assets": {role: {"bundle": bundle, "path": f"Assets/{role}.png"} for role in roles},
         }
         with tempfile.TemporaryDirectory() as staging:
-            result = extract.extract_hoc_art_item(item, "", staging, loader=lambda _file: FakeEnv(container))
+            result = extract.extract_hoc_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
             self.assertEqual(result["missing"], [])
             self.assertEqual(sorted((row[0], row[1], row[3]) for row in result["files"]), [("art", "hocs/7/full.webp", "hoc_full"), ("assets", "hocs/7/card.webp", "hoc_card")])
             with Image.open(os.path.join(staging, "assets", "hocs", "7", "card.webp")) as card:
@@ -642,9 +642,39 @@ class HocCardTests(unittest.TestCase):
         """A scene layer the bundle does not hold is a missing row, and no file is written."""
         item = {"key": "hoc_art:8", "tier": "hoc_art", "hoc_id": 8, "code": "X", "bundles": ["b"], "assets": {role: {"bundle": "b", "path": f"{role}.png"} for role in extract.HOC_SCENE_ROLES}}
         with tempfile.TemporaryDirectory() as staging:
-            result = extract.extract_hoc_art_item(item, "", staging, loader=lambda _file: FakeEnv({}))
+            result = extract.extract_hoc_art_items([item], "", staging, loader=lambda _file: FakeEnv({}))
         self.assertEqual(result["files"], [])
         self.assertEqual(sorted(row["role"] for row in result["missing"]), sorted(extract.HOC_SCENE_ROLES))
+
+    def test_worker_loads_the_shared_bundle_once_for_every_item(self):
+        """Two HOCs in the same bundle open it once and both get their files."""
+        roles = {role: Image.new("RGBA", (8, 8), (0, 0, 0, 255)) for role in ("card",) + extract.HOC_SCENE_ROLES}
+        container = {f"assets/{role}.png": FakeTexture(image) for role, image in roles.items()}
+        items = [{"key": f"hoc_art:{hoc_id}", "tier": "hoc_art", "hoc_id": hoc_id, "code": "X", "bundles": ["b"], "assets": {role: {"bundle": "b", "path": f"Assets/{role}.png"} for role in roles}} for hoc_id in (1, 2)]
+        opened = []
+        with tempfile.TemporaryDirectory() as staging:
+            result = extract.extract_hoc_art_items(items, "", staging, loader=lambda path: opened.append(path) or FakeEnv(container))
+        self.assertEqual(len(opened), 1)
+        self.assertEqual(result["missing"], [])
+        self.assertEqual(sorted(row[1] for row in result["files"]), ["hocs/1/card.webp", "hocs/1/full.webp", "hocs/2/card.webp", "hocs/2/full.webp"])
+
+    def test_worker_marks_every_item_missing_when_the_bundle_fails_to_load(self):
+        """A bundle load error gives one `*` missing row per item."""
+        items = [{"key": f"hoc_art:{hoc_id}", "tier": "hoc_art", "hoc_id": hoc_id, "bundles": ["b"], "assets": {}} for hoc_id in (1, 2)]
+
+        def fail(_path):
+            """Raise like an unreadable bundle.
+
+            Args:
+                _path: The bundle path, ignored.
+
+            Raises:
+                OSError: Always.
+            """
+            raise OSError("broken")
+
+        result = extract.extract_hoc_art_items(items, "", "", loader=fail)
+        self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("hoc_art:1", "*"), ("hoc_art:2", "*")])
 
 
 if __name__ == "__main__":
