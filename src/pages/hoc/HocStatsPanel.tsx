@@ -6,7 +6,7 @@ import { Box, LinearProgress, ToggleButton, ToggleButtonGroup, Typography } from
 import type { SxProps, Theme } from "@mui/material";
 
 import { HOC_MAX_STARS, HOC_STAT_KEYS, HOC_STAT_LABELS, hocChipStats, hocStats } from "../../lib/hocStats";
-import type { Hoc, HocConstants, HocStatValues } from "../../types/hoc";
+import type { Hoc, HocConstants, HocStatKey } from "../../types/hoc";
 import LevelSlider from "./LevelSlider";
 
 /** The star picker's buttons, 1 to 5. */
@@ -20,7 +20,8 @@ const styles = {
 	values: { display: "grid", gridTemplateColumns: "1fr 64px 64px", gap: 1, alignItems: "baseline" },
 	number: { textAlign: "right", fontVariantNumeric: "tabular-nums" },
 	base: { fontWeight: 700 },
-	bar: { mt: 0.5, height: 6, borderRadius: "3px" }
+	bar: { mt: 0.5, height: 6, borderRadius: "3px" },
+	caption: { display: "block", mt: 0.25, textAlign: "right" }
 } satisfies Record<string, SxProps<Theme>>;
 
 /** Props for HocStatsPanel. */
@@ -37,6 +38,7 @@ interface HocStatsPanelProps {
  * A HOC's stats at a chosen level, with the most its chip board can add at a chosen star rank.
  *
  * Stars do not change a HOC's base stats in the game, only how much its chip board can hold, so the star picker drives the chip column alone.
+ * Each bar compares the stat with the best HOC at the same level, and a caption under it names that HOC.
  *
  * @param props Component props.
  * @returns The panel.
@@ -47,10 +49,15 @@ export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStats
 
 	const base = useMemo(() => hocStats(hoc, constants, level), [hoc, constants, level]);
 	const chips = useMemo(() => hocChipStats(hoc, constants, level, stars), [hoc, constants, level, stars]);
-	// The highest base value any HOC has for each stat at this level, which is a full bar.
+	// The best HOC for each stat at this level, whose value is a full bar. The first HOC in data order wins a tie.
 	const best = useMemo(() => {
-		const all = allHocs.map((entry) => hocStats(entry, constants, level));
-		return Object.fromEntries(HOC_STAT_KEYS.map((key) => [key, Math.max(...all.map((stats) => stats[key]))])) as HocStatValues;
+		const all = allHocs.map((entry) => ({ name: entry.name, stats: hocStats(entry, constants, level) }));
+		return Object.fromEntries(
+			HOC_STAT_KEYS.map((key) => {
+				const top = all.reduce((leader, entry) => (entry.stats[key] > leader.stats[key] ? entry : leader));
+				return [key, { name: top.name, value: top.stats[key] }];
+			})
+		) as Record<HocStatKey, { name: string; value: number }>;
 	}, [allHocs, constants, level]);
 
 	const handleStars = useCallback((_event: MouseEvent<HTMLElement>, value: number | null) => {
@@ -97,7 +104,15 @@ export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStats
 							+{chips[key]}
 						</Typography>
 					</Box>
-					<LinearProgress variant="determinate" value={best[key] > 0 ? (base[key] / best[key]) * 100 : 0} sx={styles.bar} aria-label={`${HOC_STAT_LABELS[key]} compared with the best HOC`} />
+					<LinearProgress
+						variant="determinate"
+						value={best[key].value > 0 ? (base[key] / best[key].value) * 100 : 0}
+						sx={styles.bar}
+						aria-label={`${HOC_STAT_LABELS[key]} compared with ${best[key].name}, the best HOC at this level`}
+					/>
+					<Typography variant="caption" color="text.secondary" sx={styles.caption}>
+						{base[key] >= best[key].value ? "Best of all HOCs at this level" : `Best: ${best[key].name} (${best[key].value})`}
+					</Typography>
 				</Box>
 			))}
 		</Box>
