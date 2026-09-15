@@ -142,7 +142,7 @@ def quiet(function, *args, **kwargs):
 
 
 class CheckSizesTests(unittest.TestCase):
-    """The Pages size limits."""
+    """Size checks against our own limits under GitHub's 5 GB repo recommendation."""
 
     def test_small_tree_passes_with_stats(self):
         """A small tree passes and reports count, total and largest file."""
@@ -530,7 +530,7 @@ class CommitMessageTests(unittest.TestCase):
 
 
 class PlannedTreeTests(unittest.TestCase):
-    """Combining hosted and staged sizes for the Pages limit."""
+    """Combining hosted and staged sizes under GitHub's 5 GB repo recommendation."""
 
     def test_staged_file_replaces_hosted_size(self):
         """A staged file at a hosted path counts once, at its staged size."""
@@ -598,7 +598,7 @@ class AddTests(unittest.TestCase):
 
 
 class WaitLiveTests(unittest.TestCase):
-    """Polling new asset URLs until Pages serves them."""
+    """Polling asset URLs via the raw content API until they are live."""
 
     def test_url_encoding(self):
         """Each path segment is percent-encoded onto the base."""

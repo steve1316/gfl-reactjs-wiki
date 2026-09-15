@@ -47,7 +47,7 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 BYTES_PER_MB = 1000 * 1000
 
-# GitHub warns a repo past 4,000 MB and refuses one at or over 5,000 MB. Decimal megabytes keep the check on the strict side.
+# Our own warn and refuse lines, under GitHub's 5 GB repo recommendation. Decimal megabytes keep the check on the strict side.
 REFUSE_TOTAL_BYTES = 5000 * BYTES_PER_MB
 WARN_TOTAL_BYTES = 4000 * BYTES_PER_MB
 
@@ -384,7 +384,7 @@ def backup(clone, out_dir):
 
 
 def resolve_res_version(explicit):
-    """Find the ResData version the staging trees were extracted from.
+    """Find the ResData version the staging tree was extracted from.
 
     Args:
         explicit: A version passed on the command line, or None.
@@ -428,8 +428,7 @@ def verify_staging(assets_root, manifest_path, spine_index_path):
         sys.exit(difference)
     print(f"manifest: regenerated from the staging tree, byte-identical to {manifest_path} ({len(regenerated)} bytes)")
 
-    # The HOC Spine index sits next to the doll Spine index. Resolving it that way, rather than trusting the audit's own
-    # default, keeps this working regardless of the caller's working directory.
+    # The HOC Spine index sits next to the doll Spine index. Resolving it that way, rather than trusting the audit's own default keeps this working regardless of caller context.
     hoc_spine_index_path = os.path.join(os.path.dirname(spine_index_path), "hoc-spine-index.json")
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as handle:
         handle.write(regenerated)

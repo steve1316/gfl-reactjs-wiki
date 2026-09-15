@@ -113,7 +113,7 @@ function v3Rigs(rigs) {
 }
 
 /**
- * Audit the v3 manifest and Spine index against the staging trees on disk.
+ * Audit the v3 manifest and Spine index against the staging tree on disk.
  *
  * @param {string[]} args Command-line arguments.
  */

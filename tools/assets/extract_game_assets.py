@@ -1598,7 +1598,7 @@ def require_add_inputs(inventory, staging):
 
 
 def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, staging, workers):
-    """Extract every image tier, the legacy skins and the legacy skill icons into the staging trees and write the report.
+    """Extract every image tier, the legacy skins and the legacy skill icons into the staging tree and write the report.
 
     Args:
         inventory: The inventory dict.
@@ -1878,7 +1878,7 @@ def run_legacy_command(args, inventory, legacy_dir):
 
 def main():
     """Parse arguments and run the requested subcommand."""
-    parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging trees.")
+    parser = argparse.ArgumentParser(description="Extract card art, full art, icons and Spine rigs from the cached game bundles into the staging tree.")
     parser.add_argument("command", choices=("snapshot-legacy", "run", "add", "spine", "verify-cards", "proof-equip"))
     parser.add_argument("--legacy", default=LEGACY_DIR, help="The legacy snapshot folder read by `run`, `verify-cards` and `proof-equip`.")
     parser.add_argument("--reference-clone", help="Old-layout gfl-wiki-assets clone. Needed by `snapshot-legacy`, otherwise read instead of the snapshot.")
