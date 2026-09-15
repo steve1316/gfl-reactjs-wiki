@@ -201,19 +201,6 @@ def merge_alpha(color, alpha):
     return merged
 
 
-def layer_mask(mask, size):
-    """Read a HOC layer's mask as an alpha channel at the layer's size.
-
-    Args:
-        mask: The mask texture, shape in its alpha channel.
-        size: The layer size to resize to.
-
-    Returns:
-        An `L` image.
-    """
-    return mask.convert("RGBA").split()[3].resize(size, Image.Resampling.LANCZOS)
-
-
 def compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha):
     """Compose a HOC's full scene: both background halves side by side, each character layer masked and drawn over its half.
 
@@ -235,8 +222,7 @@ def compose_hoc_full(bgl, bgr, left, left_alpha, right, right_alpha):
     scene.alpha_composite(bgl.convert("RGBA"), (0, 0))
     scene.alpha_composite(bgr.convert("RGBA"), (bgl.width, 0))
     for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, bgl.width)):
-        red, green, blue = layer.convert("RGB").split()
-        scene.alpha_composite(Image.merge("RGBA", (red, green, blue, layer_mask(mask, layer.size))), (x, 0))
+        scene.alpha_composite(merge_alpha(layer, mask), (x, 0))
     return scene.convert("RGB")
 
 
@@ -258,7 +244,7 @@ def derive_hoc_card(bgl, left, left_alpha, right, right_alpha, full):
     """
     boxes = []
     for layer, mask, x in ((left, left_alpha, 0), (right, right_alpha, bgl.width)):
-        box = layer_mask(mask, layer.size).getbbox()
+        box = merge_alpha(layer, mask).getchannel("A").getbbox()
         if box:
             boxes.append((box[0] + x, box[2] + x))
     centre = (min(box[0] for box in boxes) + max(box[1] for box in boxes)) / 2 if boxes else full.width / 2
