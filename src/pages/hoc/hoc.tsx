@@ -101,7 +101,7 @@ export default function HOCPage() {
 							{hasFullArt ? <CardMedia component="img" image={hocFullArtUrl(hoc.id)} alt={`${hoc.name} artwork`} sx={styles.fullArt} /> : null}
 							<Box sx={styles.hero}>
 								{hasFullArt ? null : hasHocArt(hoc.id, "card") ? (
-									<CardMedia component="img" image={hocCardUrl(hoc.id)} alt="" loading="lazy" sx={styles.art} />
+									<CardMedia component="img" image={hocCardUrl(hoc.id)} alt="" sx={styles.art} />
 								) : (
 									<ArtPlaceholder name={hoc.name} sx={styles.art} />
 								)}
