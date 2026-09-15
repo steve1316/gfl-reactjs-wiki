@@ -86,6 +86,64 @@ function skillRows(upstream) {
 	return index;
 }
 
+/** `mission_skill_config` rows grouped by `skill_group_id`, built once per upstream. */
+const MISSION_SKILL_GROUPS = new WeakMap();
+
+/**
+ * Group `mission_skill_config` rows by `skill_group_id`, sorted by level.
+ *
+ * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
+ * @returns {Map<number, object[]>} Rows keyed by group id.
+ */
+function missionSkillGroups(upstream) {
+	let index = MISSION_SKILL_GROUPS.get(upstream);
+	if (!index) {
+		index = new Map();
+		for (const row of upstream.stc("mission_skill_config")) {
+			const rows = index.get(row.skill_group_id) ?? [];
+			rows.push(row);
+			index.set(row.skill_group_id, rows);
+		}
+		for (const rows of index.values()) {
+			rows.sort((a, b) => a.level - b.level);
+		}
+		MISSION_SKILL_GROUPS.set(upstream, index);
+	}
+	return index;
+}
+
+/**
+ * Build one strategy fairy skill from its ten level rows in `mission_skill_config`.
+ *
+ * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
+ * @param {number} group The skill group id from a fairy's `skill_id`, with the leading `*` stripped.
+ * @returns {object} The skill in the site's raw shape, with `cost` per level instead of a battle skill's cooldown-driven fields.
+ */
+export function buildMissionSkill(upstream, group) {
+	const rows = missionSkillGroups(upstream).get(group) ?? [];
+	if (rows.length !== 10) {
+		throw new Error(`mission skill ${group} is missing level rows`);
+	}
+	const top = rows[9];
+	const levels = rows.map((row) => stripMarkup(upstream.t(row.description)).trim());
+	const templated = templateLevels(levels);
+	const description = templated ? templated.description : levels[9];
+	const stats = templated ? templated.stats : [];
+
+	const skill = {
+		name: upstream.t(top.name).trim(),
+		initial_cooldown: top.start_cd_time !== undefined ? `${top.start_cd_time ?? 0} turns` : "0 turns",
+		cooldown: rows.map((row) => row.cd_time),
+		cost: rows.map((row) => row.consumption),
+		description,
+		number_of_stats: stats.length
+	};
+	stats.forEach((values, index) => {
+		skill[`stat${index + 1}`] = values;
+	});
+	return skill;
+}
+
 /**
  * Build one skill from its ten level rows.
  *
