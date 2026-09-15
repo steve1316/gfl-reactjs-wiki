@@ -6,7 +6,7 @@ import { Box, Card, CardActionArea, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import HighlightedName from "../../components/HighlightedName";
-import HocArtPlaceholder from "../../components/HocArtPlaceholder";
+import ArtPlaceholder from "../../components/ArtPlaceholder";
 import { HOC_STAT_KEYS, HOC_STAT_LABELS } from "../../lib/hocStats";
 import { findNameMatch } from "../../lib/nameSearch";
 import type { HocStatValues } from "../../types/hoc";
@@ -16,6 +16,8 @@ const SMALL_TEXT = "0.72rem";
 
 const styles = {
 	card: { height: "100%", display: "flex", flexDirection: "column" },
+	// HOC art is square, unlike doll card art.
+	art: { aspectRatio: "1 / 1" },
 	action: { height: "100%", display: "flex", flexDirection: "column", alignItems: "stretch", justifyContent: "flex-start" },
 	body: { px: 1.25, pt: 1, pb: 1.25, display: "flex", flexDirection: "column", flex: 1, minWidth: 0 },
 	name: { fontSize: "0.8rem", fontWeight: 700, lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
@@ -54,7 +56,7 @@ export default memo(function HocCard({ id, name, className, stats, highlight }: 
 	return (
 		<Card sx={styles.card}>
 			<CardActionArea component={Link} to={`/hoc/${id}`} sx={styles.action}>
-				<HocArtPlaceholder name={name} />
+				<ArtPlaceholder name={name} sx={styles.art} />
 				<Box sx={styles.body}>
 					<Typography component="div" sx={[styles.name, match !== null && styles.nameWhileMatching]} title={name}>
 						<HighlightedName name={name} match={match} />
