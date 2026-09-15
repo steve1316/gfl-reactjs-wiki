@@ -5,9 +5,9 @@ import type { MouseEvent } from "react";
 import { Box, LinearProgress, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import LevelSlider from "../../components/LevelSlider";
 import { HOC_MAX_STARS, HOC_STAT_KEYS, HOC_STAT_LABELS, bestHocStats, hocChipStats, hocStats } from "../../lib/hocStats";
 import type { Hoc, HocConstants } from "../../types/hoc";
-import LevelSlider from "./LevelSlider";
 
 /** The star picker's buttons, 1 to 5. */
 const STAR_RANKS = Array.from({ length: HOC_MAX_STARS }, (_v, index) => index + 1);
