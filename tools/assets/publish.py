@@ -711,16 +711,15 @@ def add(staging_tree, remote, branch="main", dry_run=False, sizes=None, token=No
         SystemExit: When the tree would break GitHub's size guidance or a git command fails.
     """
     staged = list_tree(staging_tree) if os.path.isdir(staging_tree) else []
-    title = REPO_TITLE
     if not staged:
-        print(f"{title}: nothing staged")
+        print(f"{REPO_TITLE}: nothing staged")
         return []
-    hosted = (sizes or (lambda repo_title, ref: fetch_tree_sizes(repo_title, ref, token)))(title, branch)
+    hosted = (sizes or (lambda repo_title, ref: fetch_tree_sizes(repo_title, ref, token)))(REPO_TITLE, branch)
     limits = check_sizes(planned_tree(hosted, staged))
     for warning in limits["warnings"]:
-        print(f"warning: {title} {warning}")
+        print(f"warning: {REPO_TITLE} {warning}")
     if limits["errors"]:
-        sys.exit(f"{title} cannot take these files:\n  " + "\n  ".join(limits["errors"]))
+        sys.exit(f"{REPO_TITLE} cannot take these files:\n  " + "\n  ".join(limits["errors"]))
 
     paths = [rel for rel, _size in staged]
     with tempfile.TemporaryDirectory(prefix="add-") as scratch:
@@ -736,16 +735,16 @@ def add(staging_tree, remote, branch="main", dry_run=False, sizes=None, token=No
             shutil.copyfile(os.path.join(staging_tree, *rel.split("/")), target)
         run_with_input(clone, ["add", "--sparse", "--pathspec-from-file=-"], "".join(f"{rel}\n" for rel in paths))
         if not git(clone, "status", "--porcelain"):
-            print(f"{title}: every staged file is already hosted, nothing to commit")
+            print(f"{REPO_TITLE}: every staged file is already hosted, nothing to commit")
             return paths
         message = commit_message(paths)
         git(clone, "commit", "-q", "-m", message)
         print(git(clone, "show", "--stat", "--format=%h %s", "HEAD"))
         if dry_run:
-            print(f"{title}: dry run, not pushed")
+            print(f"{REPO_TITLE}: dry run, not pushed")
             return paths
         git(clone, "push", "-q", "origin", branch)
-        print(f"{title}: pushed {message}")
+        print(f"{REPO_TITLE}: pushed {message}")
     return paths
 
 
