@@ -48,6 +48,13 @@ export default function HOCPage() {
 
 	const hoc = data?.items.find((entry) => String(entry.id) === rawId);
 	const hasFullArt = hoc !== undefined && hasHocArt(hoc.id, "full");
+	// The full scene already shows the HOC, so the hero only gets the card, or a placeholder, when there is no full art.
+	const heroArt =
+		hoc === undefined || hasFullArt ? null : hasHocArt(hoc.id, "card") ? (
+			<CardMedia component="img" image={hocCardUrl(hoc.id)} alt="" sx={styles.art} />
+		) : (
+			<ArtPlaceholder name={hoc.name} sx={styles.art} />
+		);
 	const hocId = hoc?.id;
 	const spineEntry = spineRigs !== undefined && spineRigs.hocId === hocId ? spineRigs.entry : undefined;
 
@@ -100,11 +107,7 @@ export default function HOCPage() {
 						<Paper sx={styles.section} variant="outlined">
 							{hasFullArt ? <CardMedia component="img" image={hocFullArtUrl(hoc.id)} alt={`${hoc.name} artwork`} sx={styles.fullArt} /> : null}
 							<Box sx={styles.hero}>
-								{hasFullArt ? null : hasHocArt(hoc.id, "card") ? (
-									<CardMedia component="img" image={hocCardUrl(hoc.id)} alt="" sx={styles.art} />
-								) : (
-									<ArtPlaceholder name={hoc.name} sx={styles.art} />
-								)}
+								{heroArt}
 								<Box sx={styles.facts}>
 									<Typography component="h1" variant="h4" sx={styles.name}>
 										{hoc.name}
