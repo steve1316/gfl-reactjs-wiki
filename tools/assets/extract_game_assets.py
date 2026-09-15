@@ -782,6 +782,31 @@ def load_failure(items, exc):
     return result
 
 
+def extract_grouped_items(items, cache_dir, staging, build_one, loader=unity_load, kind="Texture2D"):
+    """Load the bundles shared by some items once, then build each item from them and merge the results.
+
+    Args:
+        items: Resolved inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        build_one: Callable taking `(loaded objects, item, staging)` and returning a worker result for that item.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+        kind: Unity type name to load, `Texture2D` or `Sprite`.
+
+    Returns:
+        A worker result merged over every item, or every item marked missing when the bundles fail to load.
+    """
+    try:
+        loaded = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir, loader, kind=kind)
+    except Exception as exc:
+        return load_failure(items, exc)
+    result = new_result()
+    for item in items:
+        for field, rows in build_one(loaded, item, staging).items():
+            result[field].extend(rows)
+    return result
+
+
 def extract_hoc_art_items(items, cache_dir, staging, loader=unity_load):
     """Extract every HOC's card and full scene, loading their shared bundles once.
 
@@ -794,15 +819,7 @@ def extract_hoc_art_items(items, cache_dir, staging, loader=unity_load):
     Returns:
         A worker result merged over every item.
     """
-    try:
-        textures = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir, loader)
-    except Exception as exc:
-        return load_failure(items, exc)
-    result = new_result()
-    for item in items:
-        for field, rows in build_hoc_art(textures, item, staging).items():
-            result[field].extend(rows)
-    return result
+    return extract_grouped_items(items, cache_dir, staging, build_hoc_art, loader)
 
 
 def build_fairy_art(sprites, item, staging):
@@ -851,15 +868,7 @@ def extract_fairy_art_items(items, cache_dir, staging, loader=unity_load):
     Returns:
         A worker result merged over every item.
     """
-    try:
-        sprites = load_textures(sorted({name for item in items for name in item["bundles"]}), cache_dir, loader, kind="Sprite")
-    except Exception as exc:
-        return load_failure(items, exc)
-    result = new_result()
-    for item in items:
-        for field, rows in build_fairy_art(sprites, item, staging).items():
-            result[field].extend(rows)
-    return result
+    return extract_grouped_items(items, cache_dir, staging, build_fairy_art, loader, kind="Sprite")
 
 
 def extract_skill_icons(items, cache_dir, staging, loader=unity_load):
