@@ -169,5 +169,51 @@ class ManifestV3Tests(unittest.TestCase):
         self.assertEqual(manifest["dolls"]["9"], {"normal": {"images": ["full"]}, "skills": []})
 
 
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# HOC Spine index and manifest art
+
+
+class HocIndexTests(unittest.TestCase):
+    """HOC rigs index as one combat rig plus crew rigs, and HOC art lands in the manifest."""
+
+    def test_combat_and_crew_with_shared_and_own_atlases(self):
+        with tempfile.TemporaryDirectory() as root:
+            touch(root, "7/MK153.skel", "7/MK153.atlas", "7/MK153.png", "7/RMK153A.skel", "7/RMK153B.skel", "7/RMK153B.atlas", "7/RMK153B.png")
+            index = build_spine_index.build_hoc_index(root)
+        self.assertEqual(index, {"7": {
+            "combat": {"skel": "MK153", "atlas": "MK153", "anims": []},
+            "crew": [{"skel": "RMK153A", "atlas": "MK153", "anims": []}, {"skel": "RMK153B", "atlas": "RMK153B", "anims": []}],
+        }})
+
+    def test_crew_named_with_a_space(self):
+        with tempfile.TemporaryDirectory() as root:
+            touch(root, "6/QLZ04.skel", "6/QLZ04.atlas", "6/QLZ04 A.skel")
+            self.assertEqual(build_spine_index.build_hoc_index(root)["6"]["crew"], [{"skel": "QLZ04 A", "atlas": "QLZ04", "anims": []}])
+
+    def test_no_combat_atlas_skips_the_hoc(self):
+        """A folder whose only atlas belongs to no skeleton has no combat rig, so the HOC is skipped."""
+        with tempfile.TemporaryDirectory() as root:
+            touch(root, "5/TOW.skel", "5/OTHER.atlas")
+            self.assertEqual(build_spine_index.build_hoc_index(root), {})
+
+    def test_missing_folder_yields_an_empty_index(self):
+        with tempfile.TemporaryDirectory() as root:
+            self.assertEqual(build_spine_index.build_hoc_index(os.path.join(root, "absent")), {})
+
+    def test_manifest_lists_hoc_kinds(self):
+        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
+            touch(assets, "hocs/1/card.webp", "hocs/2/card.webp")
+            touch(art, "hocs/1/full.webp")
+            manifest = build_manifest.build_v3(assets, art)
+        self.assertEqual(manifest["hocs"], {"1": ["card", "full"], "2": ["card"]})
+
+    def test_manifest_has_no_hocs_when_the_folder_is_absent(self):
+        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
+            manifest = build_manifest.build_v3(assets, art)
+        self.assertEqual(manifest["hocs"], {})
+
+
 if __name__ == "__main__":
     unittest.main()
