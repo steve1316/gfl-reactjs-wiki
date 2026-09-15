@@ -105,6 +105,7 @@ export default memo(function EquipmentCard({ equipment, typeLabel, level, highli
 	const match = useMemo(() => findNameMatch(equipment.name, highlight), [equipment.name, highlight]);
 	const statKeys = useMemo(() => Object.keys(equipment.stats).slice(0, STAT_ROWS), [equipment.stats]);
 	const summary = useMemo(() => usableSummary(equipment.usable), [equipment.usable]);
+	const dollNames = useMemo(() => equipment.dolls.map(equipmentDollName).join(", "), [equipment.dolls]);
 	const handleOpen = useCallback(() => onOpen(equipment.id), [onOpen, equipment.id]);
 	const name = equipment.name;
 
@@ -178,7 +179,7 @@ export default memo(function EquipmentCard({ equipment, typeLabel, level, highli
 					<Box sx={styles.footer}>
 						{equipment.dolls.length > 0 ? (
 							<Box component="span" sx={styles.footerText}>
-								For {equipment.dolls.map(equipmentDollName).join(", ")}
+								For {dollNames}
 							</Box>
 						) : summary !== null ? (
 							<Box component="span" sx={styles.footerText}>
