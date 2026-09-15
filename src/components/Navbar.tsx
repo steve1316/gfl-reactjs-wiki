@@ -20,7 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { uiUrl } from "../lib/assets";
-import { hocSearchIndex, searchIndex } from "../lib/data";
+import { fairySearchIndex, hocSearchIndex, searchIndex } from "../lib/data";
 import { matchesAnyName, normaliseName } from "../lib/nameSearch";
 
 const HomeIcon = uiUrl("home_icon.png");
@@ -52,7 +52,8 @@ interface SearchOption {
  */
 const options: SearchOption[] = [
 	...searchIndex.map((entry) => ({ path: `/tdoll/${entry.id}`, name: entry.name, keys: [entry.name, ...(entry.aliases ?? [])].map(normaliseName) })),
-	...hocSearchIndex.map((entry) => ({ path: `/hoc/${entry.id}`, tag: "HOC", name: entry.name, keys: [normaliseName(entry.name)] }))
+	...hocSearchIndex.map((entry) => ({ path: `/hoc/${entry.id}`, tag: "HOC", name: entry.name, keys: [normaliseName(entry.name)] })),
+	...fairySearchIndex.map((entry) => ({ path: `/fairy/${entry.id}`, tag: "Fairy", name: entry.name, keys: [normaliseName(entry.name)] }))
 ]
 	.map((option) => {
 		const firstLetter = option.name.charAt(0).toUpperCase();
