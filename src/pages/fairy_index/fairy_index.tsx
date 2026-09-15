@@ -292,7 +292,7 @@ export default function FairyIndex() {
 
 				<Grid container spacing={4}>
 					{sorted.map((fairy) => (
-						<Grid key={fairy.id} size={{ xs: 6, sm: 4, md: 3, lg: 2.4 }}>
+						<Grid key={fairy.id} size={{ xs: 6, sm: 4, md: 3 }}>
 							<FairyCard id={fairy.id} name={fairy.name} typeName={fairy.typeName} stats={fairy.maxStats} highlight={deferredQuery} />
 						</Grid>
 					))}
