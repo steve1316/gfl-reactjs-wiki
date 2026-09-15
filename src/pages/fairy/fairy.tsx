@@ -20,7 +20,7 @@ import FairyTalentsPopover from "./FairyTalentsPopover";
 import { containArtSx } from "../../lib/artLayout";
 import { fairyFormUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
-import { FAIRY_MAX_STARS, fairyForm } from "../../lib/fairyStats";
+import { FAIRY_MAX_STARS, fairyForm, fairyFormLabel } from "../../lib/fairyStats";
 import { hasFairyForm } from "../../lib/processData";
 import { useFairies } from "../../lib/useFairies";
 import type { Fairy, FairyConstants, FairyTalent } from "../../types/fairy";
@@ -50,16 +50,6 @@ const styles = {
 	name: { fontWeight: 700 },
 	infoRow: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } }
 } satisfies Record<string, SxProps<Theme>>;
-
-/**
- * The form toggle's label for a group of star ranks, such as "1-2 stars" or "5 stars".
- *
- * @param ranks The star ranks the form covers, in ascending order.
- * @returns The lowest and highest rank joined by a dash, or just the rank when the form covers only one.
- */
-function formLabel(ranks: number[]): string {
-	return ranks.length > 1 ? `${ranks[0]}-${ranks[ranks.length - 1]}★` : `${ranks[0]}★`;
-}
 
 /** Props for FairyDetail. */
 interface FairyDetailProps {
@@ -127,8 +117,8 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 								<Box sx={styles.facts}>
 									<ToggleButtonGroup value={form} exclusive onChange={handleForm} size="small" sx={styles.forms} aria-label="Fairy form">
 										{constants.forms.map((ranks, index) => (
-											<ToggleButton key={index} value={index + 1} aria-label={formLabel(ranks)}>
-												{formLabel(ranks)}
+											<ToggleButton key={index} value={index + 1} aria-label={fairyFormLabel(ranks)}>
+												{fairyFormLabel(ranks)}
 											</ToggleButton>
 										))}
 									</ToggleButtonGroup>
