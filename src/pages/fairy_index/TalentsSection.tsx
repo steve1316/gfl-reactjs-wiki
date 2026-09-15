@@ -11,10 +11,11 @@ import type { FairyTalent } from "../../types/fairy";
 // Configuration
 
 /** The talent groups, in display order. `rank` matches `FairyTalent.rank`: 0 is Special, 1 is Tier I, 2 is Tier II. */
-const TALENT_GROUPS: { rank: number; label: string }[] = [
+const TALENT_GROUPS: { rank: number; label: string; note?: string }[] = [
 	{ rank: 1, label: "Tier I" },
 	{ rank: 2, label: "Tier II" },
-	{ rank: 0, label: "Special" }
+	// The game only gives these talents a line of flavour text, so the page says so rather than passing it off as an effect.
+	{ rank: 0, label: "Special", note: "Each belongs to one fairy. The game describes these with flavour text rather than their effect." }
 ];
 
 const styles = {
@@ -22,6 +23,7 @@ const styles = {
 	heading: { mb: 1.5 },
 	group: { mt: 2, "&:first-of-type": { mt: 0 } },
 	groupHeading: { mb: 1 },
+	groupNote: { mt: -0.5, mb: 1 },
 	talent: { py: 1, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0, pb: 0 } },
 	name: { fontWeight: 700 },
 	description: { mt: 0.25 }
@@ -37,7 +39,7 @@ const styles = {
  * @param talents Every talent, in table order.
  * @returns Each group with a label and its talents, only for groups that have at least one.
  */
-function groupTalents(talents: FairyTalent[]): { rank: number; label: string; talents: FairyTalent[] }[] {
+function groupTalents(talents: FairyTalent[]): { rank: number; label: string; note?: string; talents: FairyTalent[] }[] {
 	return TALENT_GROUPS.map((group) => ({ ...group, talents: talents.filter((talent) => talent.rank === group.rank) })).filter((group) => group.talents.length > 0);
 }
 
@@ -66,6 +68,11 @@ export default memo(function TalentsSection({ talents }: TalentsSectionProps) {
 					<Typography variant="subtitle1" component="h3" sx={styles.groupHeading}>
 						{group.label}
 					</Typography>
+					{group.note && (
+						<Typography variant="caption" component="p" color="text.secondary" sx={styles.groupNote}>
+							{group.note}
+						</Typography>
+					)}
 					{group.talents.map((talent) => (
 						<Box key={talent.id} sx={styles.talent}>
 							<Typography component="div" sx={styles.name}>
