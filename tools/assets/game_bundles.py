@@ -79,7 +79,7 @@ EQUIP_BUNDLE = "resource_icon_equip"
 UI_BUNDLES = ("atlasclips_listequipment",)
 
 # Tiers in report order.
-TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon", "hoc_art", "hoc_spine")
+TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon", "hoc_art", "hoc_spine", "fairy_art")
 
 # Each role is `(name, filename alternatives, required)`. `{stem}` is the codename, with `_<skinId>` for skins.
 ART_ROLES = (
@@ -110,6 +110,18 @@ HOC_ART_ROLES = (
     ("left_alpha", ("{stem}_Left_Alpha.png",), True),
     ("right", ("{stem}_Right.png",), True),
     ("right_alpha", ("{stem}_Right_Alpha.png",), True),
+)
+
+# Fairy pictures all live in one bundle, three forms each with a plain and an alpha-masked copy. The `Pics/Fairy/` prefix keeps the templates
+# from matching the same-named files under `Pics/Fairy/Battle/`.
+FAIRY_ART_BUNDLE = "resource_fairy"
+FAIRY_ART_ROLES = (
+    ("form1", ("Pics/Fairy/{stem}_1.png",), True),
+    ("form1_alpha", ("Pics/Fairy/{stem}_1_Alpha.png",), True),
+    ("form2", ("Pics/Fairy/{stem}_2.png",), True),
+    ("form2_alpha", ("Pics/Fairy/{stem}_2_Alpha.png",), True),
+    ("form3", ("Pics/Fairy/{stem}_3.png",), True),
+    ("form3_alpha", ("Pics/Fairy/{stem}_3_Alpha.png",), True),
 )
 
 # Skill codes with no icon anywhere in `sprites_ui`, confirmed by the research pass.
@@ -177,15 +189,30 @@ def normalise_file_hash(file_hash):
     return digest if re.fullmatch(r"[0-9a-f]{40}", digest) else None
 
 
-def load_site(site_dir):
-    """Read the dolls, equipment ids and HOCs the site shows.
+def load_records(path, key="id"):
+    """Read a `{"items": [...]}` site file into `{"id", "code"}` records sorted by id.
 
     Args:
-        site_dir: Directory holding `dolls-*.json`, `equipment.json` and, when HOCs are hosted, `hocs.json`.
+        path: Path to the site file, such as `hocs.json` or `fairies.json`.
+        key: Field name each record is sorted by.
 
     Returns:
-        A `(dolls, equipment_ids, hocs)` triple. Dolls are sorted by id, ids are sorted and deduplicated, and `hocs` is a list of
-        `{"id": int, "code": str}` sorted by id, empty when `hocs.json` is absent.
+        A list of `{"id": int, "code": str}` dicts, empty when the file is absent.
+    """
+    if not os.path.isfile(path):
+        return []
+    return sorted(({"id": item["id"], "code": item["code"]} for item in read_json(path)["items"]), key=lambda record: record[key])
+
+
+def load_site(site_dir):
+    """Read the dolls, equipment ids, HOCs and fairies the site shows.
+
+    Args:
+        site_dir: Directory holding `dolls-*.json`, `equipment.json` and, when hosted, `hocs.json` and `fairies.json`.
+
+    Returns:
+        A `(dolls, equipment_ids, hocs, fairies)` quadruple. Dolls are sorted by id, ids are sorted and deduplicated, and `hocs` and `fairies`
+        are lists of `{"id": int, "code": str}` sorted by id, empty when their site file is absent.
     """
     dolls = []
     for path in sorted(glob.glob(os.path.join(site_dir, "dolls-*.json"))):
@@ -193,9 +220,9 @@ def load_site(site_dir):
     dolls.sort(key=lambda doll: doll["normal"]["id"])
     items = read_json(os.path.join(site_dir, "equipment.json"))["items"]
     equipment_ids = sorted({item["id"] for group in items.values() for item in group})
-    hocs_path = os.path.join(site_dir, "hocs.json")
-    hocs = sorted(({"id": item["id"], "code": item["code"]} for item in read_json(hocs_path)["items"]), key=lambda hoc: hoc["id"]) if os.path.isfile(hocs_path) else []
-    return dolls, equipment_ids, hocs
+    hocs = load_records(os.path.join(site_dir, "hocs.json"))
+    fairies = load_records(os.path.join(site_dir, "fairies.json"))
+    return dolls, equipment_ids, hocs, fairies
 
 
 def load_tables(gf_data_dir):
@@ -511,20 +538,37 @@ def hoc_items(index, hoc):
     return [art, rig]
 
 
-def new_targets(dolls, equipment_ids, manifest, hocs=()):
-    """Work out which dolls, Mods, skins, equipment and HOCs the committed manifest does not list yet.
+def fairy_items(index, fairy):
+    """Resolve the art item for one fairy.
+
+    Args:
+        index: The bundle index from `load_index`.
+        fairy: One `{id, code}` record from `fairies.json`.
+
+    Returns:
+        The `fairy_art` item dict.
+    """
+    fairy_id, code = fairy["id"], fairy["code"]
+    return resolve_item(index, "fairy_art", f"fairy_art:{fairy_id}", code, [FAIRY_ART_BUNDLE], FAIRY_ART_ROLES, fairy_id=fairy_id, code=code)
+
+
+def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=()):
+    """Work out which dolls, Mods, skins, equipment, HOCs and fairies the committed manifest does not list yet.
 
     A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed. A HOC counts as hosted
-    once the manifest lists its art, so a rig added for that HOC later is not picked up as a new target on its own.
+    once the manifest lists its art, so a rig added for that HOC later is not picked up as a new target on its own. A fairy counts as hosted
+    the same way, once the manifest lists its art.
 
     Args:
         dolls: Site doll records.
         equipment_ids: Equipment ids from the site data.
         manifest: The committed version 3 manifest.
         hocs: HOC records from `load_site`, each `{"id", "code"}`.
+        fairies: Fairy records from `load_site`, each `{"id", "code"}`.
 
     Returns:
-        A dict of `dolls`, `mods`, `equipment` and `hocs` id sets and a `skins` set of `(doll_id, skin_id)` pairs. Only numeric skin ids count.
+        A dict of `dolls`, `mods`, `equipment`, `hocs` and `fairies` id sets and a `skins` set of `(doll_id, skin_id)` pairs. Only numeric skin
+        ids count.
     """
     listed = manifest["dolls"]
     targets = {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()}
@@ -543,6 +587,8 @@ def new_targets(dolls, equipment_ids, manifest, hocs=()):
     targets["equipment"] = {equip_id for equip_id in equipment_ids if equip_id not in hosted_equipment}
     listed_hocs = manifest.get("hocs", {})
     targets["hocs"] = {hoc["id"] for hoc in hocs if str(hoc["id"]) not in listed_hocs}
+    listed_fairies = manifest.get("fairies", {})
+    targets["fairies"] = {fairy["id"] for fairy in fairies if str(fairy["id"]) not in listed_fairies}
     return targets
 
 
@@ -579,6 +625,8 @@ def select_new_items(items, targets):
             keep = item.get("equip_id") in targets["equipment"]
         elif tier in ("hoc_art", "hoc_spine"):
             keep = item.get("hoc_id") in targets.get("hocs", set())
+        elif tier == "fairy_art":
+            keep = item.get("fairy_id") in targets.get("fairies", set())
         else:
             keep = False
         if keep:
@@ -645,7 +693,7 @@ def summarise(items, index, include_ui=True):
     return summary, bundles
 
 
-def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=()):
+def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=()):
     """Resolve every wanted asset against the ResData manifest.
 
     Args:
@@ -657,6 +705,7 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         equip_codes: Equipment codename by id.
         select: Optional callable narrowing the item list before bundles are collected. The UI bundles are then added only for equipment icons.
         hocs: HOC records from `load_site`, each `{"id", "code"}`.
+        fairies: Fairy records from `load_site`, each `{"id", "code"}`.
 
     Returns:
         The inventory dict with `resVersion`, `resUrl`, `summary`, `bundles` and `items`.
@@ -670,6 +719,8 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
     items.extend(equip_items(index, equipment_ids, equip_codes))
     for hoc in hocs:
         items.extend(hoc_items(index, hoc))
+    for fairy in fairies:
+        items.append(fairy_items(index, fairy))
     if select is not None:
         items = select(items)
     include_ui = select is None or any(item["tier"] == "equip_icon" for item in items)
@@ -683,19 +734,19 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
     Args:
         resdata_path: Path to `resdata_no_hash.json`.
         gf_data_dir: The `gf-data-us` checkout.
-        site_dir: Directory holding the site's `dolls-*.json`, `equipment.json` and, when hosted, `hocs.json`.
+        site_dir: Directory holding the site's `dolls-*.json`, `equipment.json` and, when hosted, `hocs.json` and `fairies.json`.
         manifest_path: The committed manifest. When given, only items for targets it does not list are kept and the inventory is flagged
             `onlyMissing`.
 
     Returns:
         The inventory dict from `build_inventory`.
     """
-    dolls, equipment_ids, hocs = load_site(site_dir)
+    dolls, equipment_ids, hocs, fairies = load_site(site_dir)
     if manifest_path is None:
-        return build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs)
-    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs)
+        return build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs, fairies=fairies)
+    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies)
     inventory = build_inventory(
-        read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), select=lambda items: select_new_items(items, targets), hocs=hocs
+        read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), select=lambda items: select_new_items(items, targets), hocs=hocs, fairies=fairies
     )
     inventory["onlyMissing"] = True
     return inventory
