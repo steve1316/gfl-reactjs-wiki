@@ -1,5 +1,5 @@
 /**
- * Builds asset URLs against the published asset hosts.
+ * Builds asset URLs against the published asset host.
  *
  * This replaces the dynamic template-literal `require()` calls that used to live in
  * `processData.js` and `equipments.js`. Webpack turned each of those into a context module that
@@ -14,7 +14,7 @@ import type { CardKind, ImageKind } from "../types/manifest";
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
-// Hosts
+// Host
 
 /** Cards, skill icons, equipment, UI and Spine data. */
 const ASSET_BASE = import.meta.env.VITE_ASSET_BASE_URL;
@@ -67,7 +67,7 @@ export function skinKeyOf(form: string): string | null {
 }
 
 /**
- * Folder holding one form's portraits, relative to either host.
+ * Folder holding one form's portraits, relative to the asset host.
  *
  * @param id Doll id.
  * @param form Form key: `normal`, `mod` or a `skinFormKey`.
