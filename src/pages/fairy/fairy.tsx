@@ -106,7 +106,14 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 									{hosted ? (
 										<>
 											<CardMedia component="img" image={fairyFormUrl(fairy.id, form)} alt="" sx={containArtSx} />
-											<Fab color="primary" component={Link} to={`/fairy/${fairy.id}/art?form=${form}`} sx={styles.fabExpand} aria-label="view full art">
+											<Fab
+												color="primary"
+												component={Link}
+												to={`/fairy/${fairy.id}/art?form=${form}`}
+												state={{ fromFairyPage: true }}
+												sx={styles.fabExpand}
+												aria-label="view full art"
+											>
 												<ZoomOutMapIcon />
 											</Fab>
 										</>
