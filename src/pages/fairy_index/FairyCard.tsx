@@ -7,7 +7,7 @@ import type { SxProps, Theme } from "@mui/material";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import HighlightedName from "../../components/HighlightedName";
-import { FAIRY_STAT_KEYS, FAIRY_STAT_LABELS } from "../../lib/fairyStats";
+import { FAIRY_STAT_KEYS, FAIRY_STAT_LABELS, formatFairyStat } from "../../lib/fairyStats";
 import { findNameMatch } from "../../lib/nameSearch";
 import type { FairyStatValues } from "../../types/fairy";
 
@@ -35,20 +35,6 @@ const styles = {
 	statLabel: { fontSize: SMALL_TEXT, color: "text.secondary" },
 	statValue: { fontSize: SMALL_TEXT, fontWeight: 650 }
 } satisfies Record<string, SxProps<Theme>>;
-
-// //////////////////////////////////////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////////////////////////////////////
-// Helpers
-
-/**
- * Format a fairy stat as a percentage, dropping a trailing ".0" so a whole number reads as "25%" rather than "25.0%".
- *
- * @param value The stat value, already rounded to two decimals by `fairyStats`.
- * @returns The value with a `%` suffix, such as "25%" or "4.8%".
- */
-function formatFairyStat(value: number): string {
-	return `${Number(value.toFixed(2))}%`;
-}
 
 /** Props for FairyCard. */
 interface FairyCardProps {
