@@ -256,9 +256,9 @@ export default memo(function FilterPanel({
 					size="small"
 					fullWidth
 					error={buildTimeInvalid}
-					helperText={buildTimeInvalid ? "Type a time like 3:55 or 3:55:00" : undefined}
+					helperText={buildTimeInvalid ? "Type a time like 3:55, 3:55:00 or 355" : undefined}
 					slotProps={{
-						htmlInput: { "aria-label": "Search T-Dolls by build time", inputMode: "numeric" },
+						htmlInput: { "aria-label": "Search T-Dolls by build time" },
 						input: {
 							startAdornment: (
 								<InputAdornment position="start">

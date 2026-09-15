@@ -195,9 +195,9 @@ export default function EquipmentIndex() {
 					placeholder="Build time, e.g. 0:45"
 					size="small"
 					error={buildTimeInvalid}
-					helperText={buildTimeInvalid ? "Type a time like 0:45 or 0:45:00" : undefined}
+					helperText={buildTimeInvalid ? "Type a time like 0:45, 0:45:00 or 045" : undefined}
 					sx={styles.buildTimeSearch}
-					slotProps={{ htmlInput: { "aria-label": "Search equipment by build time", inputMode: "numeric" } }}
+					slotProps={{ htmlInput: { "aria-label": "Search equipment by build time" } }}
 				/>
 			</Container>
 
