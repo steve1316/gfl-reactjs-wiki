@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MouseEvent } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 // MaterialUI imports
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
-import { Box, Button, CardMedia, Chip, Container, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
+import { Box, Button, CardMedia, Chip, Container, Fab, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
@@ -16,6 +17,7 @@ import FairySkillPanel from "./FairySkillPanel";
 import FairyStatsPanel from "./FairyStatsPanel";
 import FairyTalentsPopover from "./FairyTalentsPopover";
 
+import { containArtSx } from "../../lib/artLayout";
 import { fairyFormUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
 import { FAIRY_MAX_STARS, fairyForm } from "../../lib/fairyStats";
@@ -27,9 +29,22 @@ const styles = {
 	page: { pt: 2, pb: 3, maxWidth: 1200, mx: "auto" },
 	section: { p: { xs: 2, md: 2.5 }, height: "100%" },
 	sectionHeading: { mb: 1.5 },
-	hero: { display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: { xs: 2, md: 3 } },
-	art: { width: { xs: 160, sm: 220 }, aspectRatio: "1 / 1", flex: "none", borderRadius: "8px", overflow: "hidden", objectFit: "contain", bgcolor: "action.hover" },
-	facts: { display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
+	hero: { display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: { xs: "stretch", md: "flex-start" }, gap: { xs: 2, md: 3 } },
+	// The art is the largest the game has at 512x512, so it leads the hero at close to its own size.
+	artBox: {
+		position: "relative",
+		width: { xs: "100%", md: 460 },
+		maxWidth: 512,
+		mx: { xs: "auto", md: 0 },
+		flex: "none",
+		aspectRatio: "1 / 1",
+		borderRadius: "8px",
+		overflow: "hidden",
+		bgcolor: "action.hover"
+	},
+	placeholder: { position: "absolute", inset: 0, aspectRatio: "auto", height: "100%" },
+	fabExpand: { position: "absolute", right: 8, bottom: 8, height: 40, width: 40, opacity: 0.85 },
+	facts: { display: "flex", flexDirection: "column", gap: 1, minWidth: 0, flex: 1 },
 	forms: { alignSelf: "flex-start" },
 	chips: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 },
 	name: { fontWeight: 700 },
@@ -70,6 +85,7 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 	const [talentsAnchor, setTalentsAnchor] = useState<HTMLElement | null>(null);
 	const form = fairyForm(constants, stars);
 	const talentsOpen = talentsAnchor !== null;
+	const hosted = hasFairyForm(fairy.id, form);
 
 	const handleForm = useCallback(
 		(_event: MouseEvent<HTMLElement>, value: number | null) => {
@@ -96,11 +112,18 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 					<Grid size={12}>
 						<Paper sx={styles.section} variant="outlined">
 							<Box sx={styles.hero}>
-								{hasFairyForm(fairy.id, form) ? (
-									<CardMedia component="img" image={fairyFormUrl(fairy.id, form)} alt="" sx={styles.art} />
-								) : (
-									<ArtPlaceholder name={fairy.name} sx={styles.art} />
-								)}
+								<Box sx={styles.artBox}>
+									{hosted ? (
+										<>
+											<CardMedia component="img" image={fairyFormUrl(fairy.id, form)} alt="" sx={containArtSx} />
+											<Fab color="primary" component={Link} to={`/fairy/${fairy.id}/art?form=${form}`} sx={styles.fabExpand} aria-label="view full art">
+												<ZoomOutMapIcon />
+											</Fab>
+										</>
+									) : (
+										<ArtPlaceholder name={fairy.name} sx={styles.placeholder} />
+									)}
+								</Box>
 								<Box sx={styles.facts}>
 									<ToggleButtonGroup value={form} exclusive onChange={handleForm} size="small" sx={styles.forms} aria-label="Fairy form">
 										{constants.forms.map((ranks, index) => (
