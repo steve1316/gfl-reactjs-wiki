@@ -129,7 +129,7 @@ function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 										<Button variant="outlined" size="small" startIcon={<AutoAwesomeOutlinedIcon />} onClick={handleOpenTalents} aria-haspopup="true" aria-expanded={talentsOpen}>
 											Talents
 										</Button>
-										<FairyTalentsPopover anchorEl={talentsAnchor} open={talentsOpen} onClose={handleCloseTalents} talents={talents} specialTalentId={fairy.specialTalent} />
+										<FairyTalentsPopover anchorEl={talentsAnchor} open={talentsOpen} onClose={handleCloseTalents} talents={talents} />
 									</Box>
 									<Typography variant="body2" color="text.secondary">
 										{fairy.tagline}
