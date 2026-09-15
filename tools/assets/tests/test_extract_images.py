@@ -324,8 +324,8 @@ class LegacySkinTests(unittest.TestCase):
             result = extract.extract_legacy_skin(self.EXTRA, assets, art, staging)
             self.assertEqual(result["missing"], [])
             self.assertEqual(result["nonstandard"], [])
-            self.assertEqual(sorted(row[1] for row in result["files"]), sorted(["tdolls/103/skins/legacy-winter-journey/" + name for name in ("card.webp", "card_d.webp", "full.webp", "full_d.webp")]))
-            self.assertEqual({row[3] for row in result["files"]}, {"skin_card", "skin_full"})
+            self.assertEqual(sorted(row[0] for row in result["files"]), sorted(["tdolls/103/skins/legacy-winter-journey/" + name for name in ("card.webp", "card_d.webp", "full.webp", "full_d.webp")]))
+            self.assertEqual({row[2] for row in result["files"]}, {"skin_card", "skin_full"})
             with Image.open(os.path.join(staging, "assets/tdolls/103/skins/legacy-winter-journey/card.webp")) as card:
                 self.assertEqual((card.format, card.size), ("WEBP", (256, 512)))
             with Image.open(os.path.join(staging, "assets/tdolls/103/skins/legacy-winter-journey/full.webp")) as full:
@@ -371,7 +371,7 @@ class LegacySkillIconTests(unittest.TestCase):
             assets, staging = os.path.join(tmp, "assets"), os.path.join(tmp, "staging")
             save_png(assets, "tdolls/1003/1003_skill1.png", (100, 100), "RGBA")
             result = extract.extract_legacy_skill_icons([self.ITEM, other], assets, staging)
-            self.assertEqual([row[1:] for row in result["files"]], [["tdolls/1003/skill1.png", result["files"][0][2], "skill_icon"]])
+            self.assertEqual(result["files"], [["tdolls/1003/skill1.png", result["files"][0][1], "skill_icon"]])
             with Image.open(os.path.join(staging, "assets/tdolls/1003/skill1.png")) as icon:
                 self.assertEqual((icon.format, icon.size, icon.mode), ("PNG", (100, 100), "RGBA"))
         self.assertEqual([(row["key"], row["role"]) for row in result["missing"]], [("skill_icon:doll:1004:skill1", "icon")])
@@ -643,7 +643,7 @@ class HocCardTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as staging:
             result = extract.extract_hoc_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
             self.assertEqual(result["missing"], [])
-            self.assertEqual(sorted((row[0], row[1], row[3]) for row in result["files"]), [("assets", "hocs/7/card.webp", "hoc_card"), ("assets", "hocs/7/full.webp", "hoc_full")])
+            self.assertEqual(sorted((row[0], row[2]) for row in result["files"]), [("hocs/7/card.webp", "hoc_card"), ("hocs/7/full.webp", "hoc_full")])
             with Image.open(os.path.join(staging, "assets", "hocs", "7", "card.webp")) as card:
                 self.assertEqual(card.size, extract.HOC_CARD_SIZE)
             with Image.open(os.path.join(staging, "assets", "hocs", "7", "full.webp")) as full:
@@ -670,7 +670,7 @@ class HocCardTests(unittest.TestCase):
             result = extract.extract_hoc_art_items(items, "", staging, loader=lambda path: opened.append(path) or FakeEnv(container))
         self.assertEqual(len(opened), 1)
         self.assertEqual(result["missing"], [])
-        self.assertEqual(sorted(row[1] for row in result["files"]), ["hocs/1/card.webp", "hocs/1/full.webp", "hocs/2/card.webp", "hocs/2/full.webp"])
+        self.assertEqual(sorted(row[0] for row in result["files"]), ["hocs/1/card.webp", "hocs/1/full.webp", "hocs/2/card.webp", "hocs/2/full.webp"])
 
     def test_worker_marks_every_item_missing_when_the_bundle_fails_to_load(self):
         """A bundle load error gives one `*` missing row per item."""
@@ -750,8 +750,8 @@ class FairyArtTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as staging:
             result = extract.extract_fairy_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
             self.assertEqual(result["missing"], [])
-            expected = [("assets", f"fairies/1/form{form}.webp", "fairy_art") for form in (1, 2, 3)]
-            self.assertEqual(sorted((row[0], row[1], row[3]) for row in result["files"]), expected)
+            expected = [(f"fairies/1/form{form}.webp", "fairy_art") for form in (1, 2, 3)]
+            self.assertEqual(sorted((row[0], row[2]) for row in result["files"]), expected)
             with Image.open(os.path.join(staging, "assets", "fairies", "1", "form1.webp")) as form1:
                 self.assertEqual(form1.size, (8, 8))
                 rgba = form1.convert("RGBA")
@@ -766,7 +766,7 @@ class FairyArtTests(unittest.TestCase):
         item = {"key": "fairy_art:2", "tier": "fairy_art", "fairy_id": 2, "code": "X", "bundles": [bundle], "assets": assets}
         with tempfile.TemporaryDirectory() as staging:
             result = extract.extract_fairy_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
-        self.assertEqual([row[1] for row in result["files"]], ["fairies/2/form1.webp"])
+        self.assertEqual([row[0] for row in result["files"]], ["fairies/2/form1.webp"])
         self.assertEqual(sorted(row["role"] for row in result["missing"]), ["form2", "form2_alpha"])
 
     def test_worker_ignores_textures_in_the_fairy_bundle(self):

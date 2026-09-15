@@ -683,7 +683,7 @@ def write_file(staging, rel, data, tier, result):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as handle:
         handle.write(data)
-    result["files"].append([TREE, rel, len(data), tier])
+    result["files"].append([rel, len(data), tier])
 
 
 def extract_art_item(item, cache_dir, staging):
@@ -1562,14 +1562,14 @@ def tier_counts(files):
     """Total the written files and bytes per report tier.
 
     Args:
-        files: Worker `files` rows of `(tree, path, bytes, tier)`.
+        files: Worker `files` rows of `(path, bytes, tier)`.
 
     Returns:
         An ordered dict of tier to `{tree, files, bytes}`, tiers sorted by name.
     """
     counts = collections.OrderedDict()
-    for tree, _rel, size, tier in sorted(files, key=lambda row: (row[3], row[1])):
-        entry = counts.setdefault(tier, {"tree": tree, "files": 0, "bytes": 0})
+    for _rel, size, tier in sorted(files, key=lambda row: (row[2], row[0])):
+        entry = counts.setdefault(tier, {"tree": TREE, "files": 0, "bytes": 0})
         entry["files"] += 1
         entry["bytes"] += size
     return counts

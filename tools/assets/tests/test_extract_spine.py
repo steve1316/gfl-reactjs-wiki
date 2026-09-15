@@ -219,7 +219,7 @@ class RigExtractionTests(unittest.TestCase):
         ]
         result, staging, tmp = self.extract_with(item, container)
         with tmp:
-            written = sorted(row[1] for row in result["files"])
+            written = sorted(row[0] for row in result["files"])
             self.assertEqual(written, [f"spine/65/{name}" for name in ("HK416.atlas", "HK416.png", "HK416.skel", "RHK416.atlas", "RHK416.png", "RHK416.skel")])
             with open(os.path.join(staging, "assets/spine/65/HK416.skel"), "rb") as handle:
                 self.assertEqual(handle.read(), b"\x00skel\x80")
@@ -251,7 +251,7 @@ class RigExtractionTests(unittest.TestCase):
         ]
         result, _staging, tmp = self.extract_with(item, container)
         with tmp:
-            self.assertEqual(sorted(row[1] for row in result["files"]), ["spine/13/mod/92typeMod.atlas", "spine/13/mod/92typeMod.png", "spine/13/mod/92typeMod.skel", "spine/13/mod/R92typeMod.skel"])
+            self.assertEqual(sorted(row[0] for row in result["files"]), ["spine/13/mod/92typeMod.atlas", "spine/13/mod/92typeMod.png", "spine/13/mod/92typeMod.skel", "spine/13/mod/R92typeMod.skel"])
             self.assertEqual(result["rigs"][0]["shared_atlas"], True)
             self.assertEqual(result["missing"], [])
 
@@ -270,7 +270,7 @@ class RigExtractionTests(unittest.TestCase):
         container = [text(base + "x.skel.bytes", "X.skel", "c"), text(base + "x.atlas.txt", "X.atlas", ATLAS_TWO_PAGES), texture(base + "x.png", "X"), texture(base + "x2.png", "X2")]
         result, staging, tmp = self.extract_with(item, container)
         with tmp:
-            self.assertIn("spine/1/skins/805/X2.png", [row[1] for row in result["files"]])
+            self.assertIn("spine/1/skins/805/X2.png", [row[0] for row in result["files"]])
             with open(os.path.join(staging, "assets/spine/1/skins/805/X.atlas"), encoding="utf-8") as handle:
                 self.assertIn("\nX2.png\n", handle.read())
             self.assertEqual(result["rigs"][0]["pages"], 2)
@@ -353,7 +353,7 @@ class HocRigExtractionTests(unittest.TestCase):
         with tmp:
             expected = ["MK153.atlas", "MK153.png", "MK153.skel", "RMK153A.skel", "RMK153B.atlas", "RMK153B.png", "RMK153B.skel"]
             self.assertEqual(sorted(os.listdir(os.path.join(staging, "assets", "hoc-spine", "7"))), expected)
-            self.assertEqual({row[3] for row in result["files"]}, {"hoc_spine_rig"})
+            self.assertEqual({row[2] for row in result["files"]}, {"hoc_spine_rig"})
         self.assertEqual(result["missing"], [])
         self.assertIs(result["rigs"][0]["shared_atlas"], True)
         self.assertEqual(result["rigs"], [{"key": "hoc_spine:7", "tier": "hoc_spine", "dorm": False, "shared_atlas": True, "pages": 2}])
