@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import type { MouseEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 // MaterialUI imports
-import { Box, CardMedia, Chip, Container, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
+import { Box, Button, CardMedia, Chip, Container, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
@@ -13,17 +14,16 @@ import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
 import FairySkillPanel from "./FairySkillPanel";
 import FairyStatsPanel from "./FairyStatsPanel";
+import FairyTalentsPopover from "./FairyTalentsPopover";
 
 import { fairyFormUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
 import { FAIRY_MAX_STARS, fairyForm } from "../../lib/fairyStats";
 import { hasFairyForm } from "../../lib/processData";
 import { useFairies } from "../../lib/useFairies";
-import type { Fairy, FairyConstants } from "../../types/fairy";
+import type { Fairy, FairyConstants, FairyTalent } from "../../types/fairy";
 
 const styles = {
-	// Themed like the other in-page links, since a bare anchor draws in the browser's default blue.
-	talentsLink: { color: "primary.main", textDecorationColor: "inherit", "&:hover": { textDecorationThickness: 2 } },
 	page: { pt: 2, pb: 3, maxWidth: 1200, mx: "auto" },
 	section: { p: { xs: 2, md: 2.5 }, height: "100%" },
 	sectionHeading: { mb: 1.5 },
@@ -31,6 +31,7 @@ const styles = {
 	art: { width: { xs: 160, sm: 220 }, aspectRatio: "1 / 1", flex: "none", borderRadius: "8px", overflow: "hidden", objectFit: "contain", bgcolor: "action.hover" },
 	facts: { display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
 	forms: { alignSelf: "flex-start" },
+	chips: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 },
 	name: { fontWeight: 700 },
 	infoRow: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } }
 } satisfies Record<string, SxProps<Theme>>;
@@ -51,10 +52,12 @@ interface FairyDetailProps {
 	fairy: Fairy;
 	/** The shared stat constants. */
 	constants: FairyConstants;
+	/** Every fairy talent, for the talents popover. */
+	talents: FairyTalent[];
 }
 
 /**
- * One loaded fairy's content: hero art and form picker, stats, info and skill.
+ * One loaded fairy's content: hero art and form picker, talents popover, stats, info and skill.
  *
  * Owns the chosen star rank itself and is keyed by the fairy's id from `FairyPage`, so switching to a different
  * fairy remounts this component and starts back at the highest star rank instead of carrying the old one over.
@@ -62,9 +65,11 @@ interface FairyDetailProps {
  * @param props Component props.
  * @returns The fairy's content.
  */
-function FairyDetail({ fairy, constants }: FairyDetailProps) {
+function FairyDetail({ fairy, constants, talents }: FairyDetailProps) {
 	const [stars, setStars] = useState(FAIRY_MAX_STARS);
+	const [talentsAnchor, setTalentsAnchor] = useState<HTMLElement | null>(null);
 	const form = fairyForm(constants, stars);
+	const talentsOpen = talentsAnchor !== null;
 
 	const handleForm = useCallback(
 		(_event: MouseEvent<HTMLElement>, value: number | null) => {
@@ -77,6 +82,10 @@ function FairyDetail({ fairy, constants }: FairyDetailProps) {
 		},
 		[constants]
 	);
+
+	const handleOpenTalents = useCallback((event: MouseEvent<HTMLElement>) => setTalentsAnchor(event.currentTarget), []);
+
+	const handleCloseTalents = useCallback(() => setTalentsAnchor(null), []);
 
 	return (
 		<main>
@@ -103,8 +112,12 @@ function FairyDetail({ fairy, constants }: FairyDetailProps) {
 									<Typography component="h1" variant="h4" sx={styles.name}>
 										{fairy.name}
 									</Typography>
-									<Box>
+									<Box sx={styles.chips}>
 										<Chip label={fairy.typeName} color="primary" variant="outlined" size="small" />
+										<Button variant="outlined" size="small" startIcon={<AutoAwesomeOutlinedIcon />} onClick={handleOpenTalents} aria-haspopup="true" aria-expanded={talentsOpen}>
+											Talents
+										</Button>
+										<FairyTalentsPopover anchorEl={talentsAnchor} open={talentsOpen} onClose={handleCloseTalents} talents={talents} specialTalentId={fairy.specialTalent} />
 									</Box>
 									<Typography variant="body2" color="text.secondary">
 										{fairy.tagline}
@@ -160,14 +173,6 @@ function FairyDetail({ fairy, constants }: FairyDetailProps) {
 							<FairySkillPanel skill={fairy.skill} strategy={fairy.strategy} />
 						</Paper>
 					</Grid>
-
-					<Grid size={12}>
-						<Typography variant="body2" color="text.secondary">
-							<Box component={Link} to="/fairy-index#talents" sx={styles.talentsLink}>
-								See every fairy talent on the Fairy Index.
-							</Box>
-						</Typography>
-					</Grid>
 				</Grid>
 			</Container>
 		</main>
@@ -207,5 +212,5 @@ export default function FairyPage() {
 	}
 
 	// Keyed by fairy so switching to another fairy remounts this and resets its star rank to the highest.
-	return <FairyDetail key={fairy.id} fairy={fairy} constants={data.constants} />;
+	return <FairyDetail key={fairy.id} fairy={fairy} constants={data.constants} talents={data.talents} />;
 }
