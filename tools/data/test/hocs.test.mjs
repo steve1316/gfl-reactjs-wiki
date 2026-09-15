@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildHocs } from "../lib/hocs.mjs";
+import { buildHocs, findHocArtGaps } from "../lib/hocs.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 import { hocChipStats, hocStats } from "../../../src/lib/hocStats.ts";
 
@@ -115,4 +115,14 @@ test("every HOC carries the game code its asset bundles are named after", () => 
 		built.items.map((hoc) => hoc.code),
 		["TOW", "AGS30", "2B14", "M2", "AT4", "QLZ04", "MK153", "PP93", "MK47", "RPG29", "L9A1"]
 	);
+});
+
+test("HOC art gaps are only reported once the manifest lists any HOC", () => {
+	const hocs = [
+		{ id: 1, name: "BGM-71" },
+		{ id: 2, name: "AGS-30" }
+	];
+	assert.deepEqual(findHocArtGaps(hocs, { dolls: {} }), []);
+	assert.deepEqual(findHocArtGaps(hocs, { hocs: {} }), []);
+	assert.deepEqual(findHocArtGaps(hocs, { hocs: { 1: ["card", "full"], 2: ["card"] } }), ["AGS-30"]);
 });

@@ -13,6 +13,7 @@ import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
 import { normaliseWithPositions } from "./lib/mentions.mjs";
 import { SHARDS } from "./lib/shards.mjs";
+import { findHocArtGaps } from "./lib/hocs.mjs";
 import { findSkinArtGaps } from "./lib/skins.mjs";
 import { findSpineIndexProblems } from "./lib/spineIndex.mjs";
 
@@ -294,6 +295,11 @@ async function main() {
 			}
 			for (const label of artGaps.artWithoutCard) {
 				fail(`skin art ${label} is in the manifest without a card`);
+			}
+			const hocs = JSON.parse(fs.readFileSync("src/data/hocs.json", "utf8")).items;
+			const hocGaps = findHocArtGaps(hocs, manifest);
+			if (hocGaps.length > 0) {
+				fail(`HOCs without art: ${hocGaps.join(", ")}`);
 			}
 		}
 	}
