@@ -8,7 +8,7 @@ import type { SxProps, Theme } from "@mui/material";
 import FilterChip from "../../components/FilterChip";
 import SpineAnimation from "../../components/SpineAnimation";
 import { hocSpineImageBase, hocSpineUrl } from "../../lib/assets";
-import { animationTabs } from "../../lib/spine";
+import { animationTabs, nextAnimationValue } from "../../lib/spine";
 import type { HocSpineEntry, SpineRig } from "../../types/spine";
 
 /** The animation a rig opens on, when it defines one. */
@@ -97,10 +97,9 @@ export default function HocAnimationsPanel({ hocId, entry }: HocAnimationsPanelP
 	const handleChipToggle = useCallback((value?: string | number) => setAnimation(String(value)), []);
 	// Walks the same tab list the pills render, so clicking the stage and clicking a pill agree on what comes next.
 	const handleStageClick = useCallback(() => {
-		const currentIndex = tabs.findIndex((tab) => tab.value === animation);
-		const next = tabs[currentIndex === -1 || currentIndex + 1 >= tabs.length ? 0 : currentIndex + 1];
+		const next = nextAnimationValue(tabs, animation);
 		if (next) {
-			setAnimation(next.value);
+			setAnimation(next);
 		}
 	}, [tabs, animation]);
 

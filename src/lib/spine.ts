@@ -211,6 +211,19 @@ export function animationTabs(available: readonly string[]): AnimationTab[] {
 		}));
 }
 
+/**
+ * The animation after the current one in a tab list, wrapping back to the first. Shared by the doll and HOC players, whose stage
+ * advances on click in the same order the pills are drawn.
+ *
+ * @param tabs The tabs, in display order.
+ * @param current The animation playing now.
+ * @returns The next tab's animation, or undefined when there are no tabs.
+ */
+export function nextAnimationValue(tabs: readonly AnimationTab[], current: string): string | undefined {
+	const index = tabs.findIndex((tab) => tab.value === current);
+	return tabs[index === -1 || index + 1 >= tabs.length ? 0 : index + 1]?.value;
+}
+
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Player

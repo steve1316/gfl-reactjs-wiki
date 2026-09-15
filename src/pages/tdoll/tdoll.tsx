@@ -19,7 +19,7 @@ import type { SxProps, Theme } from "@mui/material";
 
 import { skinFormKey } from "../../lib/assets";
 import { loadDollDetails, loadSpineRigs } from "../../lib/data";
-import { animationTabs } from "../../lib/spine";
+import { animationTabs, nextAnimationValue } from "../../lib/spine";
 import type { SpineDollEntry } from "../../types/spine";
 import type { TDoll as TDollData, TDollForm, TDollWithDetails } from "../../types/tdoll";
 
@@ -463,11 +463,9 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 	// Switch the animation playing to the next one when the chibi is clicked. Walks the same spineTabs
 	// list the pills render, so clicking the stage and clicking a pill always agree on what comes next.
 	const playerSwitchAnimations = useCallback(() => {
-		const currentIndex = spineTabs.findIndex((tab) => tab.value === spineAnimationName);
-		const nextIndex = currentIndex === -1 || currentIndex + 1 >= spineTabs.length ? 0 : currentIndex + 1;
-		const next = spineTabs[nextIndex];
+		const next = nextAnimationValue(spineTabs, spineAnimationName);
 		if (next) {
-			switchAnimations(next.value);
+			switchAnimations(next);
 		}
 	}, [spineTabs, spineAnimationName, switchAnimations]);
 
