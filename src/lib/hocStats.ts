@@ -10,6 +10,12 @@ import type { Hoc, HocConstants, HocStatKey, HocStatValues } from "../types/hoc"
 /** The HOC stat keys in display order. */
 export const HOC_STAT_KEYS: readonly HocStatKey[] = ["lethality", "pierce", "precision", "reload"];
 
+/** Each stat's name as the game shows it. */
+export const HOC_STAT_LABELS: Record<HocStatKey, string> = { lethality: "Lethality", pierce: "Pierce", precision: "Precision", reload: "Reload" };
+
+/** How many star ranks a HOC has. */
+export const HOC_MAX_STARS = 5;
+
 /**
  * Round up after trimming float noise past seven decimals, as the game does.
  *
