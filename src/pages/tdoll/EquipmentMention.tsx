@@ -48,7 +48,7 @@ interface EquipmentMentionProps {
  */
 export default memo(function EquipmentMention({ item, children }: EquipmentMentionProps) {
 	return (
-		<Tooltip title={<ExclusiveEquipmentRow item={item} />} enterTouchDelay={0} leaveTouchDelay={TOUCH_OPEN_MS} slotProps={{ tooltip: { sx: styles.tooltip } }}>
+		<Tooltip title={<ExclusiveEquipmentRow item={item} />} describeChild enterTouchDelay={0} leaveTouchDelay={TOUCH_OPEN_MS} slotProps={{ tooltip: { sx: styles.tooltip } }}>
 			<Box component="span" tabIndex={0} sx={styles.mention}>
 				{children}
 			</Box>

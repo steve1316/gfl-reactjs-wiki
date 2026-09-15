@@ -60,6 +60,7 @@ const styles = {
 		marginTop: "10px",
 		marginBottom: "25px"
 	},
+	buildTimeRow: { display: "flex", justifyContent: "center" },
 	buildTimeSearch: { mt: 2, width: { xs: "100%", sm: 260 } }
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -189,16 +190,18 @@ export default function EquipmentIndex() {
 					</li>
 				</Box>
 
-				<TextField
-					value={buildTimeText}
-					onChange={handleBuildTimeInput}
-					placeholder="Build time, e.g. 0:45"
-					size="small"
-					error={buildTimeInvalid}
-					helperText={buildTimeInvalid ? "Type a time like 0:45, 0:45:00 or 045" : undefined}
-					sx={styles.buildTimeSearch}
-					slotProps={{ htmlInput: { "aria-label": "Search equipment by build time" } }}
-				/>
+				<Box sx={styles.buildTimeRow}>
+					<TextField
+						value={buildTimeText}
+						onChange={handleBuildTimeInput}
+						placeholder="Build time, e.g. 0:45"
+						size="small"
+						error={buildTimeInvalid}
+						helperText={buildTimeInvalid ? "Type a time like 0:45, 0:45:00 or 045" : undefined}
+						sx={styles.buildTimeSearch}
+						slotProps={{ htmlInput: { "aria-label": "Search equipment by build time" } }}
+					/>
+				</Box>
 			</Container>
 
 			<Box sx={{ display: "flex", width: "80%", m: "auto", marginTop: 5 }}>
