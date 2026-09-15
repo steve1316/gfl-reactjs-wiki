@@ -161,11 +161,15 @@ jobs:
           S="$RUNNER_TEMP/staging"
           node tools/assets/fix_atlas_pages.mjs --spine "$S/assets/spine"
           python3 tools/assets/build_manifest.py --assets "$S/assets" --art "$S/art" --out "$S/manifest.partial.json"
-          python3 tools/assets/build_spine_index.py --spine "$S/assets/spine" --out "$S/spine-index.partial.json"
+          python3 tools/assets/build_spine_index.py --spine "$S/assets/spine" --out "$S/spine-index.partial.json" --hoc-spine "$S/assets/hoc-spine" --hoc-out "$S/hoc-spine-index.partial.json"
+          if [ -d "$S/assets/hoc-spine" ]; then
+            node tools/assets/fix_atlas_pages.mjs --spine "$S/assets/hoc-spine"
+            node tools/assets/add_spine_animations.mjs --spine "$S/assets/hoc-spine" --index "$S/hoc-spine-index.partial.json" --hoc
+          fi
           node tools/assets/add_spine_animations.mjs --spine "$S/assets/spine" --index "$S/spine-index.partial.json"
 
       - name: Merge into the committed indexes
-        run: python3 tools/assets/merge_indexes.py --manifest-partial "$RUNNER_TEMP/staging/manifest.partial.json" --spine-partial "$RUNNER_TEMP/staging/spine-index.partial.json"
+        run: python3 tools/assets/merge_indexes.py --manifest-partial "$RUNNER_TEMP/staging/manifest.partial.json" --spine-partial "$RUNNER_TEMP/staging/spine-index.partial.json" --hoc-spine-partial "$RUNNER_TEMP/staging/hoc-spine-index.partial.json"
 
       # A stale equipment alias fails this step. Unblock it by updating or removing that alias in tools/data/equipment-aliases.json.
       - name: Check the data
