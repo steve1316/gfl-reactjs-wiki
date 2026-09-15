@@ -331,6 +331,20 @@ class LegacySkinTests(unittest.TestCase):
             with Image.open(os.path.join(staging, "assets/tdolls/103/skins/legacy-winter-journey/full.webp")) as full:
                 self.assertEqual((full.format, full.size, full.mode), ("WEBP", (1024, 1024), "RGBA"))
 
+    def test_damaged_card_keeps_card_encoding(self):
+        """The damaged card half is still checked against CARD_SIZE like the normal card, not treated as full art."""
+        with tempfile.TemporaryDirectory() as tmp:
+            assets, art, staging = (os.path.join(tmp, name) for name in ("assets", "art", "staging"))
+            save_png(assets, "tdolls/103/103_skin3_card.png", (256, 512))
+            save_png(assets, "tdolls/103/103_skin3_card_d.png", (200, 400))
+            save_png(art, "tdolls/103/103_skin3_full.png", (1024, 1024), "RGBA")
+            save_png(art, "tdolls/103/103_skin3_full_d.png", (1024, 1024), "RGBA")
+            result = extract.extract_legacy_skin(self.EXTRA, assets, art, staging)
+            self.assertEqual(result["missing"], [])
+            self.assertEqual([row["role"] for row in result["nonstandard"]], ["card_d"])
+            with Image.open(os.path.join(staging, "assets/tdolls/103/skins/legacy-winter-journey/card_d.webp")) as card_d:
+                self.assertEqual((card_d.format, card_d.mode), ("WEBP", "RGB"))
+
     def test_missing_required_files_are_reported(self):
         """A missing card or full art is a missing entry keyed `legacy_skin:<doll>:<key>`, and an odd card size is non-standard."""
         with tempfile.TemporaryDirectory() as tmp:
