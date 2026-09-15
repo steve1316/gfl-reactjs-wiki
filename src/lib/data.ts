@@ -14,7 +14,7 @@ import hocSearchIndexJson from "../data/hoc-search-index.json";
 import searchIndexJson from "../data/search-index.json";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { HocData } from "../types/hoc";
-import type { SpineDollEntry, SpineIndex } from "../types/spine";
+import type { HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
 import { equipmentIconUrl } from "./assets";
 import { hasDollArt, hasEquipmentIcon, processDoll, processDolls } from "./processData";
@@ -66,11 +66,14 @@ export const searchIndex: SearchEntry[] = searchIndexJson as SearchEntry[];
 export const hocSearchIndex: HocSearchEntry[] = hocSearchIndexJson as HocSearchEntry[];
 
 /** Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are bundled. */
-const DATA_URLS = import.meta.glob<string>(["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json", "../data/hocs.json"], {
-	query: "?url",
-	import: "default",
-	eager: true
-});
+const DATA_URLS = import.meta.glob<string>(
+	["../data/dolls-*.json", "../data/profiles-*.json", "../data/spine-index.json", "../data/equipment.json", "../data/hocs.json", "../data/hoc-spine-index.json"],
+	{
+		query: "?url",
+		import: "default",
+		eager: true
+	}
+);
 
 /**
  * The generated data shards, in id order. This table mirrors `tools/data/lib/shards.mjs`.
@@ -100,6 +103,9 @@ const equipmentCache = new Map<0, Promise<{ types: EquipmentType[]; items: Recor
 
 /** Cache of the in-flight or loaded HOCs, under the single key `0`. A failed load is dropped so it can be retried. */
 const hocCache = new Map<0, Promise<HocData>>();
+
+/** Cache of the in-flight or loaded HOC Spine index, under the single key `0`. A failed load is dropped so it can be retried. */
+const hocSpineIndexCache = new Map<0, Promise<HocSpineIndex>>();
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,4 +329,16 @@ export async function loadEquipment(): Promise<{ types: EquipmentType[]; items: 
  */
 export function loadHocs(): Promise<HocData> {
 	return hocCache.get(0) ?? cacheUntilFailure(hocCache, 0, fetchData<HocData>("hocs"));
+}
+
+/**
+ * Look up a HOC's Spine rigs.
+ *
+ * @param id HOC id.
+ * @returns The HOC's combat and crew rigs, or undefined when nothing was published for it.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadHocSpineRigs(id: number): Promise<HocSpineEntry | undefined> {
+	const index = await (hocSpineIndexCache.get(0) ?? cacheUntilFailure(hocSpineIndexCache, 0, fetchData<HocSpineIndex>("hoc-spine-index")));
+	return index[String(id)];
 }

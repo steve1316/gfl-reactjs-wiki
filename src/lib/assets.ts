@@ -169,3 +169,46 @@ export function equipmentIconUrl(id: number): string {
 export function uiUrl(name: string): string {
 	return join(ASSET_BASE, name);
 }
+
+/**
+ * URL for a HOC's card art.
+ *
+ * @param id HOC id.
+ * @returns An absolute URL.
+ */
+export function hocCardUrl(id: number): string {
+	return join(ASSET_BASE, `hocs/${id}/card.webp`);
+}
+
+/**
+ * URL for a HOC's full art.
+ *
+ * @param id HOC id.
+ * @returns An absolute URL.
+ */
+export function hocFullArtUrl(id: number): string {
+	return join(ART_BASE, `hocs/${id}/full.webp`);
+}
+
+/**
+ * URL for one file inside a HOC's Spine bundle.
+ *
+ * @param id HOC id.
+ * @param rigPath Rig basename from the HOC Spine index, such as `QLZ04 A`. `join` percent-encodes each path segment, so a space in the name
+ *   is carried through safely without any extra handling here.
+ * @param extension File extension without the dot, one of `skel`, `atlas` or `png`.
+ * @returns An absolute URL.
+ */
+export function hocSpineUrl(id: number, rigPath: string, extension: string): string {
+	return join(ASSET_BASE, `hoc-spine/${id}/${rigPath}.${extension}`);
+}
+
+/**
+ * Directory holding a HOC's Spine atlas page images, with a trailing slash.
+ *
+ * @param id HOC id.
+ * @returns An absolute URL ending in a slash.
+ */
+export function hocSpineImageBase(id: number): string {
+	return `${join(ASSET_BASE, `hoc-spine/${id}`)}/`;
+}

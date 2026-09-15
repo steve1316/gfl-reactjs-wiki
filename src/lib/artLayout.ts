@@ -13,6 +13,9 @@ import type { SxProps, Theme } from "@mui/material";
  */
 export const CARD_ASPECT = "1 / 2";
 
+/** HOC cards are 224x399. */
+export const HOC_CARD_ASPECT = "224 / 399";
+
 /**
  * Full art draws from the very top of its canvas.
  *

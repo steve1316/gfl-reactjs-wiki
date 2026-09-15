@@ -11,7 +11,7 @@
  */
 
 import manifestJson from "../../assets-manifest.json";
-import type { AssetsManifest, ManifestDoll, ManifestForm, ManifestSkin } from "../types/manifest";
+import type { AssetsManifest, HocImageKind, ManifestDoll, ManifestForm, ManifestSkin } from "../types/manifest";
 import type { FormAssets, RawForm, RawTDoll, TDoll, TDollForm } from "../types/tdoll";
 import { imageUrl, modSkinCardUrl, skillImageUrl, skinFormKey } from "./assets";
 
@@ -129,4 +129,15 @@ export function hasDollArt(id: number): boolean {
  */
 export function hasEquipmentIcon(id: number): boolean {
 	return equipmentWithIcons.has(id);
+}
+
+/**
+ * Whether a HOC has a hosted image of the given kind.
+ *
+ * @param id HOC id.
+ * @param kind Which portrait kind to check for.
+ * @returns True when the manifest lists that kind for the HOC.
+ */
+export function hasHocArt(id: number, kind: HocImageKind): boolean {
+	return manifest.hocs?.[String(id)]?.includes(kind) ?? false;
 }
