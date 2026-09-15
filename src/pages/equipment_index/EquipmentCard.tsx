@@ -23,6 +23,9 @@ import type { Equipment } from "../../types/equipment";
 /** How many stat rows every tile reserves. No item has more, and reserving them all keeps every tile the same height. */
 const STAT_ROWS = 4;
 
+/** Height of one stat row in pixels. */
+const STAT_ROW_HEIGHT = 20;
+
 /** Text about 11.5px, the smallest size used on the tiles so they stay readable on a phone. */
 const SMALL_TEXT = "0.72rem";
 
@@ -65,8 +68,9 @@ const styles = {
 	nameWhileMatching: { fontWeight: 400, color: "text.secondary" },
 	subRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, mt: 0.25 },
 	type: { fontSize: SMALL_TEXT, color: "text.secondary", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-	stats: { mt: 0.75 },
-	statRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, height: 20 },
+	// Room for every row is reserved even when an item has fewer stats.
+	stats: { mt: 0.75, minHeight: STAT_ROWS * STAT_ROW_HEIGHT },
+	statRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, height: STAT_ROW_HEIGHT },
 	statLabel: { fontSize: SMALL_TEXT, color: "text.secondary", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
 	statValue: { fontSize: SMALL_TEXT, fontWeight: 650, whiteSpace: "nowrap" },
 	footer: { mt: "auto", pt: 1, borderTop: 1, borderColor: "divider", display: "flex", alignItems: "center", gap: 0.5, minHeight: 31, overflow: "hidden", whiteSpace: "nowrap" },
@@ -143,11 +147,7 @@ export default memo(function EquipmentCard({ equipment, typeLabel, level, highli
 					</Box>
 
 					<Box sx={styles.stats}>
-						{Array.from({ length: STAT_ROWS }, (_value, index) => {
-							const key = statKeys[index];
-							if (key === undefined) {
-								return <Box key={`empty-${index}`} sx={styles.statRow} />;
-							}
+						{statKeys.map((key) => {
 							const values = equipment.stats[key] ?? [];
 							// Values run from level 0 to 10, so the level is the index.
 							const atLevel = values[level];
