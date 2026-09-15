@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 // MaterialUI imports
@@ -7,17 +7,21 @@ import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
 import ArtPlaceholder from "../../components/ArtPlaceholder";
+import LazySection from "../../components/LazySection";
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
+import HocAnimationsPanel from "./HocAnimationsPanel";
 import HocSkillsPanel from "./HocSkillsPanel";
 import HocStatsPanel from "./HocStatsPanel";
 
 import { HOC_CARD_ASPECT } from "../../lib/artLayout";
 import { hocCardUrl, hocFullArtUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
+import { loadHocSpineRigs } from "../../lib/data";
 import { hasHocArt } from "../../lib/processData";
 import { useHocs } from "../../lib/useHocs";
+import type { HocSpineEntry } from "../../types/spine";
 
 const styles = {
 	page: { pt: 2, pb: 3, maxWidth: 1200, mx: "auto" },
@@ -32,16 +36,20 @@ const styles = {
 } satisfies Record<string, SxProps<Theme>>;
 
 /**
- * One HOC's page: its crew description, stats at any level and star rank, facts and skills.
+ * One HOC's page: its crew description, stats at any level and star rank, facts, skills and animations.
  *
  * @returns The HOC page, a loading state, a retry notice, or the 404 page for an unknown id.
  */
 export default function HOCPage() {
 	const { id: rawId } = useParams<{ id: string }>();
 	const { data, loadFailed, retry } = useHocs();
+	// Tagged with the HOC it belongs to, so moving to another HOC never renders the previous one's rigs against the new id.
+	const [spineRigs, setSpineRigs] = useState<{ hocId: number; entry: HocSpineEntry } | undefined>();
 
 	const hoc = data?.items.find((entry) => String(entry.id) === rawId);
 	const hasFullArt = hoc !== undefined && hasHocArt(hoc.id, "full");
+	const hocId = hoc?.id;
+	const spineEntry = spineRigs !== undefined && spineRigs.hocId === hocId ? spineRigs.entry : undefined;
 
 	useEffect(() => {
 		if (hoc) {
@@ -49,6 +57,24 @@ export default function HOCPage() {
 			document.querySelector('meta[name="description"]')?.setAttribute("content", `${hoc.name}, a ${hoc.className} Heavy Ordnance Corps unit`);
 		}
 	}, [hoc]);
+
+	// The rig index is fetched on its own, so a HOC page renders without waiting on it. A failed fetch just leaves the section out.
+	useEffect(() => {
+		if (hocId === undefined) {
+			return;
+		}
+		let active = true;
+		loadHocSpineRigs(hocId)
+			.then((entry) => {
+				if (active && entry) {
+					setSpineRigs({ hocId, entry });
+				}
+			})
+			.catch(() => {});
+		return () => {
+			active = false;
+		};
+	}, [hocId]);
 
 	if (loadFailed) {
 		return (
@@ -149,6 +175,20 @@ export default function HOCPage() {
 							<HocSkillsPanel key={hoc.id} skills={hoc.skills} />
 						</Paper>
 					</Grid>
+
+					{spineEntry ? (
+						<Grid size={12}>
+							<Paper sx={styles.section} variant="outlined">
+								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+									Animations
+								</Typography>
+								{/* Mounted only once scrolled near, since the rigs cost a network round trip most readers never scroll to. */}
+								<LazySection minHeight={420}>
+									<HocAnimationsPanel key={hoc.id} hocId={hoc.id} entry={spineEntry} />
+								</LazySection>
+							</Paper>
+						</Grid>
+					) : null}
 				</Grid>
 			</Container>
 		</main>
