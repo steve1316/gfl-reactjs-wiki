@@ -627,15 +627,15 @@ def join_numbers(label, values):
 
 
 def commit_message(paths):
-    """Describe the dolls, skins and equipment an add commit holds.
+    """Describe the dolls, skins, equipment and HOCs an add commit holds.
 
     Args:
-        paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel` or `equipment/301.png`.
+        paths: Staged relative paths, such as `tdolls/424/card.webp`, `spine/65/skins/9001/a.skel`, `equipment/301.png` or `hocs/6/card.webp`.
 
     Returns:
-        A subject line such as `Add art for dolls 424, 425, skin 65:9001 and equipment 301`.
+        A subject line such as `Add art for dolls 424, 425, skin 65:9001, equipment 301 and hoc 6`.
     """
-    dolls, skins, equipment = set(), set(), set()
+    dolls, skins, equipment, hocs = set(), set(), set(), set()
     for rel in paths:
         parts = rel.split("/")
         if parts[0] == "equipment" and len(parts) == 2 and parts[1][:-4].isdigit():
@@ -645,6 +645,8 @@ def commit_message(paths):
                 skins.add((int(parts[1]), parts[3]))
             else:
                 dolls.add(int(parts[1]))
+        elif parts[0] in ("hocs", "hoc-spine") and len(parts) > 2 and parts[1].isdigit():
+            hocs.add(int(parts[1]))
     groups = []
     if dolls:
         groups.append(join_numbers("doll", [str(doll_id) for doll_id in sorted(dolls)]))
@@ -653,6 +655,8 @@ def commit_message(paths):
         groups.append(join_numbers("skin", [f"{doll_id}:{skin_id}" for doll_id, skin_id in ordered]))
     if equipment:
         groups.append(join_numbers("equipment", [str(equip_id) for equip_id in sorted(equipment)]))
+    if hocs:
+        groups.append(join_numbers("hoc", [str(hoc_id) for hoc_id in sorted(hocs)]))
     if not groups:
         return "Add assets"
     return f"Add art for {groups[0] if len(groups) == 1 else ', '.join(groups[:-1]) + ' and ' + groups[-1]}"
