@@ -2,8 +2,8 @@
 /**
  * Generate the site's doll and equipment data from gf-data-us.
  *
- * Writes the doll shards, their profile side files, equipment.json, hocs.json, upstream.json and the search index under src/data. Output is deterministic
- * for a given upstream commit and set of released dolls, so a scheduled run only commits when something really changed.
+ * Writes the doll shards, their profile side files, equipment.json, hocs.json, fairies.json, upstream.json and the search index under src/data.
+ * Output is deterministic for a given upstream commit and set of released dolls, so a scheduled run only commits when something really changed.
  * The search index keeps the pre-2026-09-13 wiki names from `tools/data/name-aliases.json` as aliases for renamed dolls.
  * The run date only selects which dolls are released and is not written out, so an unchanged import produces no diff.
  * Doll profiles come from IOPWiki, with Wikidata filling empty makers and countries and gf-data-ch spotting copied CN dates.
@@ -21,6 +21,7 @@ import fs from "node:fs";
 import { loadCnGuns } from "./lib/cnData.mjs";
 import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
 import { buildEquipment, exclusivesByDoll } from "./lib/equipment.mjs";
+import { buildFairies } from "./lib/fairies.mjs";
 import { buildHocs } from "./lib/hocs.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
 import { findEquipmentMentions } from "./lib/mentions.mjs";
@@ -168,9 +169,17 @@ async function main() {
 	writeJson(`${OUT_DIR}/equipment.json`, equipment);
 	const hocs = buildHocs(upstream, cutoff);
 	writeJson(`${OUT_DIR}/hocs.json`, hocs);
+	const fairies = buildFairies(upstream);
+	writeJson(`${OUT_DIR}/fairies.json`, fairies);
 
 	const { repo, sha } = readLock();
-	const counts = { dolls: dolls.length, mods: dolls.filter((doll) => doll.mod).length, equipment: Object.values(equipment.items).flat().length, hocs: hocs.items.length };
+	const counts = {
+		dolls: dolls.length,
+		mods: dolls.filter((doll) => doll.mod).length,
+		equipment: Object.values(equipment.items).flat().length,
+		hocs: hocs.items.length,
+		fairies: fairies.items.length
+	};
 	writeJson(`${OUT_DIR}/upstream.json`, { repo, sha, counts });
 
 	execFileSync("node", ["tools/data/build_search_index.mjs"], { stdio: "inherit" });
@@ -178,7 +187,7 @@ async function main() {
 	for (const warning of ctx.warnings) {
 		console.warn(`warning: ${warning}`);
 	}
-	console.log(`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, skill text fallbacks ${ctx.warnings.length}`);
+	console.log(`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, fairies ${counts.fairies}, skill text fallbacks ${ctx.warnings.length}`);
 	console.log(`profiles: ${profiles.joined} joined an IOPWiki page, ${profiles.wikidata} filled from Wikidata`);
 }
 
