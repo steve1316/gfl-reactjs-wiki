@@ -125,7 +125,14 @@ export function buildFairies(upstream) {
 			const strategy = String(row.skill_id).startsWith("*");
 			const skill = strategy ? buildMissionSkill(upstream, Number(String(row.skill_id).slice(1))) : buildSkill(upstream, Number(row.skill_id), []);
 			const inProduction = String(row.obtain_ids).split(",").includes("39");
-			const source = inProduction ? "Production" : row.id >= 1000 ? "Collab" : "Event";
+			let source;
+			if (inProduction) {
+				source = "Production";
+			} else if (row.id >= 1000) {
+				source = "Collab";
+			} else {
+				source = "Event";
+			}
 			return {
 				id: row.id,
 				name,
