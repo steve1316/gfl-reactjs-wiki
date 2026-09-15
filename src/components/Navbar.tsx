@@ -167,7 +167,7 @@ const filterByName = (list: SearchOption[], state: FilterOptionsState<SearchOpti
  * @param value The selected value.
  * @returns True when both open the same page.
  */
-const sameDoll = (option: SearchOption, value: SearchOption) => option.path === value.path;
+const sameOption = (option: SearchOption, value: SearchOption) => option.path === value.path;
 
 /**
  * One row of the search dropdown, with the typed text in bold.
@@ -344,7 +344,7 @@ export default function Navbar() {
 				inputValue={searchValue}
 				onInputChange={handleInputChange}
 				onChange={handleOptionChange}
-				isOptionEqualToValue={sameDoll}
+				isOptionEqualToValue={sameOption}
 				// MUI swallows the first Enter to select the highlighted row, so without a row highlighted
 				// the reader had to press Enter twice before the form ever saw it.
 				autoHighlight
