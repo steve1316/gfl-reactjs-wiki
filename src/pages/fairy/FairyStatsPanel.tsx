@@ -1,19 +1,15 @@
-import { memo, useCallback, useMemo, useState } from "react";
-import type { MouseEvent } from "react";
+import { memo, useMemo, useState } from "react";
 
 // MaterialUI imports
-import { Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import LevelSlider from "../../components/LevelSlider";
+import StarRankPicker from "../../components/StarRankPicker";
 import { FAIRY_MAX_STARS, FAIRY_STAT_KEYS, FAIRY_STAT_LABELS, effectiveStars, fairyStats, formatFairyStat } from "../../lib/fairyStats";
 import type { Fairy, FairyConstants } from "../../types/fairy";
 
-/** The star picker's buttons, 1 to 5. */
-const STAR_RANKS = Array.from({ length: FAIRY_MAX_STARS }, (_v, index) => index + 1);
-
 const styles = {
-	stars: { width: "100%", "& .MuiToggleButton-root": { flex: 1, py: 0.5 } },
 	level: { pt: 1.5 },
 	row: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } },
 	value: { textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 700 },
@@ -47,25 +43,9 @@ export default memo(function FairyStatsPanel({ fairy, constants, stars, onStarsC
 	const stats = useMemo(() => fairyStats(fairy, constants, level, stars), [fairy, constants, level, stars]);
 	const actualStars = effectiveStars(constants, level, stars);
 
-	const handleStars = useCallback(
-		(_event: MouseEvent<HTMLElement>, value: number | null) => {
-			// Clicking the selected button again reports null. Keep the current rank rather than having none.
-			if (value !== null) {
-				onStarsChange(value);
-			}
-		},
-		[onStarsChange]
-	);
-
 	return (
 		<Box>
-			<ToggleButtonGroup value={stars} exclusive onChange={handleStars} size="small" sx={styles.stars} aria-label="Star rank">
-				{STAR_RANKS.map((rank) => (
-					<ToggleButton key={rank} value={rank} aria-label={`${rank} star${rank === 1 ? "" : "s"}`}>
-						{rank}★
-					</ToggleButton>
-				))}
-			</ToggleButtonGroup>
+			<StarRankPicker value={stars} max={FAIRY_MAX_STARS} onChange={onStarsChange} />
 
 			<LevelSlider id="fairy-level-label" label="Level" value={level} max={constants.maxLevel} onChange={setLevel} sx={styles.level} />
 
