@@ -6,7 +6,7 @@ import { Box, LinearProgress, ToggleButton, ToggleButtonGroup, Typography } from
 import type { SxProps, Theme } from "@mui/material";
 
 import { HOC_MAX_STARS, HOC_STAT_KEYS, HOC_STAT_LABELS, hocChipStats, hocStats } from "../../lib/hocStats";
-import type { Hoc, HocConstants, HocStatValues } from "../../types/hoc";
+import type { Hoc, HocConstants } from "../../types/hoc";
 import LevelSlider from "./LevelSlider";
 
 /** The star picker's buttons, 1 to 5. */
@@ -27,8 +27,6 @@ const styles = {
 interface HocStatsPanelProps {
 	/** The HOC whose stats are shown. */
 	hoc: Hoc;
-	/** Every HOC, so each bar can be scaled to the best HOC at the same level. */
-	allHocs: Hoc[];
 	/** The shared stat constants. */
 	constants: HocConstants;
 }
@@ -37,21 +35,19 @@ interface HocStatsPanelProps {
  * A HOC's stats at a chosen level, with the most its chip board can add at a chosen star rank.
  *
  * Stars do not change a HOC's base stats in the game, only how much its chip board can hold, so the star picker drives the chip column alone.
+ * Each bar shows how far a stat is from its own value at the highest level, so every bar is full at that level and grows with the slider.
  *
  * @param props Component props.
  * @returns The panel.
  */
-export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStatsPanelProps) {
+export default memo(function HocStatsPanel({ hoc, constants }: HocStatsPanelProps) {
 	const [stars, setStars] = useState(HOC_MAX_STARS);
 	const [level, setLevel] = useState(constants.maxLevel);
 
 	const base = useMemo(() => hocStats(hoc, constants, level), [hoc, constants, level]);
 	const chips = useMemo(() => hocChipStats(hoc, constants, level, stars), [hoc, constants, level, stars]);
-	// The highest base value any HOC has for each stat at this level, which is a full bar.
-	const best = useMemo(() => {
-		const all = allHocs.map((entry) => hocStats(entry, constants, level));
-		return Object.fromEntries(HOC_STAT_KEYS.map((key) => [key, Math.max(...all.map((stats) => stats[key]))])) as HocStatValues;
-	}, [allHocs, constants, level]);
+	// Each stat at the highest level, which is a full bar.
+	const levelMax = useMemo(() => hocStats(hoc, constants, constants.maxLevel), [hoc, constants]);
 
 	const handleStars = useCallback((_event: MouseEvent<HTMLElement>, value: number | null) => {
 		// Clicking the selected button again reports null. Keep the current rank rather than having none.
@@ -97,7 +93,12 @@ export default memo(function HocStatsPanel({ hoc, allHocs, constants }: HocStats
 							+{chips[key]}
 						</Typography>
 					</Box>
-					<LinearProgress variant="determinate" value={best[key] > 0 ? (base[key] / best[key]) * 100 : 0} sx={styles.bar} aria-label={`${HOC_STAT_LABELS[key]} compared with the best HOC`} />
+					<LinearProgress
+						variant="determinate"
+						value={levelMax[key] > 0 ? (base[key] / levelMax[key]) * 100 : 0}
+						sx={styles.bar}
+						aria-label={`${HOC_STAT_LABELS[key]} compared with its level ${constants.maxLevel} value`}
+					/>
 				</Box>
 			))}
 		</Box>

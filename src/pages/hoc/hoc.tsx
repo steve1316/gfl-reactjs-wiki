@@ -132,7 +132,7 @@ export default function HOCPage() {
 								Stats
 							</Typography>
 							{/* Keyed by HOC so moving to another HOC starts again at the highest level and rank. */}
-							<HocStatsPanel key={hoc.id} hoc={hoc} allHocs={data.items} constants={data.constants} />
+							<HocStatsPanel key={hoc.id} hoc={hoc} constants={data.constants} />
 						</Paper>
 					</Grid>
 
