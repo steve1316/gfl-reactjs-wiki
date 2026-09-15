@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Box, Button, CardMedia, Dialog, DialogActions, DialogContent, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import { rarityColour } from "../../components/DollBadges";
 import { formatBuildTime } from "../../lib/buildTime";
 import { equipmentDollName, equipmentRarityName } from "../../lib/equipmentDisplay";
 import { statName } from "../../lib/equipmentStats";
@@ -91,10 +92,7 @@ export default memo(function EquipmentDialog({ open, equipment, typeLabel, level
 									{equipment.name}
 								</Typography>
 								<Typography variant="body2" color="text.secondary">
-									<Box
-										component="span"
-										sx={[styles.rarity, (theme) => ({ color: theme.palette.rarity[equipment.rarity as keyof typeof theme.palette.rarity] ?? theme.palette.text.secondary })]}
-									>
+									<Box component="span" sx={[styles.rarity, (theme) => ({ color: rarityColour(theme, equipment.rarity, false) })]}>
 										{equipment.rarity}★ {equipmentRarityName(equipment.rarity)}
 									</Box>
 									{` · ${typeLabel}`}
