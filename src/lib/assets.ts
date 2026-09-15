@@ -19,9 +19,6 @@ import type { CardKind, ImageKind } from "../types/manifest";
 /** Cards, skill icons, equipment, UI and Spine data. */
 const ASSET_BASE = import.meta.env.VITE_ASSET_BASE_URL;
 
-/** Full art, split onto its own host to stay under the 1 GB per-site GitHub Pages cap. */
-const ART_BASE = import.meta.env.VITE_ART_BASE_URL;
-
 /** Filenames for each portrait kind inside a form folder. */
 const IMAGE_FILE: Record<ImageKind, string> = {
 	card: "card.webp",
@@ -29,9 +26,6 @@ const IMAGE_FILE: Record<ImageKind, string> = {
 	full: "full.webp",
 	full_damaged: "full_d.webp"
 };
-
-/** Full art lives on a different host from everything else. */
-const ART_KINDS: ReadonlySet<string> = new Set<ImageKind>(["full", "full_damaged"]);
 
 /** Prefix of a skin's form key, as in `skin-805` or `skin-legacy-marching-band`. */
 const SKIN_FORM_PREFIX = "skin-";
@@ -93,11 +87,10 @@ function formFolder(id: number, form: string): string {
  * @param id Doll id.
  * @param form Form key: `normal`, `mod` or a `skinFormKey`.
  * @param kind Which portrait to build.
- * @returns An absolute URL on whichever host serves that kind.
+ * @returns An absolute URL on the asset host.
  */
 export function imageUrl(id: number, form: string, kind: ImageKind): string {
-	const base = ART_KINDS.has(kind) ? ART_BASE : ASSET_BASE;
-	return join(base, `${formFolder(id, form)}/${IMAGE_FILE[kind]}`);
+	return join(ASSET_BASE, `${formFolder(id, form)}/${IMAGE_FILE[kind]}`);
 }
 
 /**
@@ -187,7 +180,7 @@ export function hocCardUrl(id: number): string {
  * @returns An absolute URL.
  */
 export function hocFullArtUrl(id: number): string {
-	return join(ART_BASE, `hocs/${id}/full.webp`);
+	return join(ASSET_BASE, `hocs/${id}/full.webp`);
 }
 
 /**
