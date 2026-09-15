@@ -539,6 +539,9 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 										modSkill2Description={tdoll.mod?.skill2?.description}
 										dollId={tdoll.selected.id}
 										skillImages={tdoll.skillImages}
+										normalSkillMentions={tdoll.normal.skill.equipmentMentions}
+										modSkill2Mentions={tdoll.mod?.skill2?.equipmentMentions}
+										exclusiveEquipment={tdoll.exclusiveEquipment}
 									/>
 								</Box>
 								<Box sx={[styles.abilityPart, { flex: { lg: "0 0 300px" } }]}>

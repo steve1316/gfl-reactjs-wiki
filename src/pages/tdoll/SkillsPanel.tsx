@@ -1,13 +1,18 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
-import parse from "html-react-parser"; // This is needed to parse the span tags inserted into the skill description strings.
+// The bare "html-react-parser" specifier only type-checks its default export under this repo's TS config, so the named
+// exports come from its "lib/index" subpath instead. Both specifiers resolve to the same module at runtime.
+import parse, { Element, domToReact } from "html-react-parser/lib/index";
+import type { DOMNode, HTMLReactParserOptions } from "html-react-parser/lib/index";
 
 // MaterialUI imports
 import { Avatar, Box, Card, CardContent, CardHeader, Divider, FormControl, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import EquipmentMention from "./EquipmentMention";
+import { wrapMentions } from "../../lib/equipmentMentions";
 import { INGREDIENT_COLOURS } from "../../theme";
-import type { RawSkill } from "../../types/tdoll";
+import type { ExclusiveEquipment, RawSkill, SkillEquipmentMention } from "../../types/tdoll";
 
 /** Shifts the level drop-down to the right of its field. A module constant, so the Select is not handed a new object each render. */
 const LEVEL_MENU_PROPS = {
@@ -104,6 +109,12 @@ interface SkillsPanelProps {
 	dollId: number;
 	/** Skill icon URLs, keyed `skill1` and `skill2`. */
 	skillImages: Partial<Record<"skill1" | "skill2", string>>;
+	/** Where the Normal form's Skill 1 description names exclusive equipment, matching `normalSkillDescription`. */
+	normalSkillMentions: SkillEquipmentMention[];
+	/** Where the Mod's Skill 2 description names exclusive equipment, matching `modSkill2Description`. */
+	modSkill2Mentions: SkillEquipmentMention[] | undefined;
+	/** The doll's exclusive equipment, which the tooltips show. */
+	exclusiveEquipment: ExclusiveEquipment[];
 }
 
 /**
@@ -123,7 +134,10 @@ export default memo(function SkillsPanel({
 	normalSkillDescription,
 	modSkill2Description,
 	dollId,
-	skillImages
+	skillImages,
+	normalSkillMentions,
+	modSkill2Mentions,
+	exclusiveEquipment
 }: SkillsPanelProps) {
 	const handleSkillToggle = useCallback(
 		(_event: MouseEvent<HTMLElement>, newValue: number | null) => {
@@ -230,6 +244,22 @@ export default memo(function SkillsPanel({
 		}
 	}, [skill, skill2, normalSkillDescription, modSkill2Description, showModSkill, skillLevel, dollId]);
 
+	// Turns the marker spans wrapMentions inserts into tooltips. A marker whose item is missing renders as its plain text.
+	const parserOptions = useMemo<HTMLReactParserOptions>(() => {
+		const byId = new Map(exclusiveEquipment.map((item) => [item.id, item]));
+		const options: HTMLReactParserOptions = {
+			replace(node) {
+				if (!(node instanceof Element) || node.name !== "span" || node.attribs["data-equipment-id"] === undefined) {
+					return undefined;
+				}
+				const children = domToReact(node.children as DOMNode[], options);
+				const item = byId.get(Number(node.attribs["data-equipment-id"]));
+				return item ? <EquipmentMention item={item}>{children}</EquipmentMention> : <>{children}</>;
+			}
+		};
+		return options;
+	}, [exclusiveEquipment]);
+
 	return (
 		<>
 			{/************** T-Doll's skill information **************/}
@@ -270,7 +300,9 @@ export default memo(function SkillsPanel({
 
 					{/************** This will render the span tags inserted into the skill description and will color the numbers. **************/}
 					<Typography sx={styles.title} color="textSecondary" gutterBottom>
-						{selectedSkill === 1 && showModSkill ? parse(skillDescription2) : parse(skillDescription1)}
+						{selectedSkill === 1 && showModSkill
+							? parse(wrapMentions(skillDescription2, modSkill2Mentions ?? []), parserOptions)
+							: parse(wrapMentions(skillDescription1, normalSkillMentions), parserOptions)}
 					</Typography>
 					{selectedSkill === 0 && skill.initial_cooldown !== "Passive" ? (
 						<>
