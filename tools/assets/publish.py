@@ -84,6 +84,9 @@ USER_AGENT = "gfl-reactjs-wiki-refresh/1.0 (fan wiki asset pipeline; https://git
 LIVE_TIMEOUT_SECONDS = 20 * 60
 LIVE_INTERVAL_SECONDS = 30
 
+# Commit message labels whose plural is not the singular plus a trailing `s`.
+IRREGULAR_PLURALS = {"fairy": "fairies"}
+
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -620,9 +623,13 @@ def join_numbers(label, values):
         values: The ids as strings, already in order.
 
     Returns:
-        The group text, pluralised with an `s` when there is more than one id and the label is not `equipment`.
+        The group text, pluralised when there is more than one id and the label is not `equipment`: an `s` is appended unless
+        the label is in `IRREGULAR_PLURALS`, which spells the plural out instead.
     """
-    plural = label if len(values) == 1 or label == "equipment" else f"{label}s"
+    if len(values) == 1 or label == "equipment":
+        plural = label
+    else:
+        plural = IRREGULAR_PLURALS.get(label, f"{label}s")
     return f"{plural} {', '.join(values)}"
 
 

@@ -539,6 +539,11 @@ class CommitMessageTests(unittest.TestCase):
         paths = ["fairies/6/form1.webp", "fairies/6/form2.webp", "fairies/6/form3.webp"]
         self.assertEqual(publish.commit_message(paths), "Add art for fairy 6")
 
+    def test_multiple_fairies_are_pluralised_irregularly(self):
+        """Two fairies read as `fairies`, not `fairys`."""
+        paths = ["fairies/9/form1.webp", "fairies/10/form1.webp"]
+        self.assertEqual(publish.commit_message(paths), "Add art for fairies 9, 10")
+
 
 class PlannedTreeTests(unittest.TestCase):
     """Combining hosted and staged sizes for the Pages limit."""
