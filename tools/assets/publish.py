@@ -436,12 +436,15 @@ def verify_staging(assets_root, manifest_path, spine_index_path):
         sys.exit(difference)
     print(f"manifest: regenerated from the staging tree, byte-identical to {manifest_path} ({len(regenerated)} bytes)")
 
+    # The HOC Spine index sits next to the doll Spine index. Resolving it that way, rather than trusting the audit's own
+    # default, keeps this working regardless of the caller's working directory.
+    hoc_spine_index_path = os.path.join(os.path.dirname(spine_index_path), "hoc-spine-index.json")
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as handle:
         handle.write(regenerated)
         regenerated_path = handle.name
     try:
         command = ["node", os.path.join(TOOLS_DIR, "audit_assets.mjs"), "--assets", assets_root]
-        command += ["--manifest", regenerated_path, "--spine-index", spine_index_path]
+        command += ["--manifest", regenerated_path, "--spine-index", spine_index_path, "--hoc-spine-index", hoc_spine_index_path]
         result = subprocess.run(command, capture_output=True, text=True)
     finally:
         os.unlink(regenerated_path)
