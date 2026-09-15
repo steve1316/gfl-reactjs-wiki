@@ -22,6 +22,8 @@ import { useFairies } from "../../lib/useFairies";
 import type { Fairy, FairyConstants } from "../../types/fairy";
 
 const styles = {
+	// Themed like the other in-page links, since a bare anchor draws in the browser's default blue.
+	talentsLink: { color: "primary.main", textDecorationColor: "inherit", "&:hover": { textDecorationThickness: 2 } },
 	page: { pt: 2, pb: 3, maxWidth: 1200, mx: "auto" },
 	section: { p: { xs: 2, md: 2.5 }, height: "100%" },
 	sectionHeading: { mb: 1.5 },
@@ -161,7 +163,9 @@ function FairyDetail({ fairy, constants }: FairyDetailProps) {
 
 					<Grid size={12}>
 						<Typography variant="body2" color="text.secondary">
-							<Link to="/fairy-index#talents">Talents are rolled at random. See all talents on the Fairy Index.</Link>
+							<Box component={Link} to="/fairy-index#talents" sx={styles.talentsLink}>
+								See every fairy talent on the Fairy Index.
+							</Box>
 						</Typography>
 					</Grid>
 				</Grid>
