@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 // MaterialUI imports
-import { Box, Chip, Container, Grid, Paper, Typography } from "@mui/material";
+import { Box, CardMedia, Chip, Container, Grid, Paper, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
@@ -13,7 +13,10 @@ import NotFound404 from "../../not_found_404";
 import HocSkillsPanel from "./HocSkillsPanel";
 import HocStatsPanel from "./HocStatsPanel";
 
+import { HOC_CARD_ASPECT } from "../../lib/artLayout";
+import { hocCardUrl, hocFullArtUrl } from "../../lib/assets";
 import { formatBuildTime } from "../../lib/buildTime";
+import { hasHocArt } from "../../lib/processData";
 import { useHocs } from "../../lib/useHocs";
 
 const styles = {
@@ -21,8 +24,8 @@ const styles = {
 	section: { p: { xs: 2, md: 2.5 }, height: "100%" },
 	sectionHeading: { mb: 1.5 },
 	hero: { display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: { xs: 2, md: 3 } },
-	// HOC art is square, unlike doll card art.
-	art: { width: { xs: 160, sm: 220 }, aspectRatio: "1 / 1", flex: "none", borderRadius: "8px", overflow: "hidden" },
+	fullArt: { width: "100%", aspectRatio: "2 / 1", objectFit: "cover", borderRadius: "8px", display: "block", mb: 2 },
+	art: { width: { xs: 160, sm: 220 }, aspectRatio: HOC_CARD_ASPECT, flex: "none", borderRadius: "8px", overflow: "hidden" },
 	name: { fontWeight: 700 },
 	facts: { display: "flex", flexDirection: "column", gap: 1, minWidth: 0 },
 	infoRow: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } }
@@ -38,6 +41,7 @@ export default function HOCPage() {
 	const { data, loadFailed, retry } = useHocs();
 
 	const hoc = data?.items.find((entry) => String(entry.id) === rawId);
+	const hasFullArt = hoc !== undefined && hasHocArt(hoc.id, "full");
 
 	useEffect(() => {
 		if (hoc) {
@@ -68,8 +72,13 @@ export default function HOCPage() {
 					{/* Art, name, class and the crew description */}
 					<Grid size={12}>
 						<Paper sx={styles.section} variant="outlined">
+							{hasFullArt ? <CardMedia component="img" image={hocFullArtUrl(hoc.id)} alt={`${hoc.name} artwork`} sx={styles.fullArt} /> : null}
 							<Box sx={styles.hero}>
-								<ArtPlaceholder name={hoc.name} sx={styles.art} />
+								{hasFullArt ? null : hasHocArt(hoc.id, "card") ? (
+									<CardMedia component="img" image={hocCardUrl(hoc.id)} alt="" loading="lazy" sx={styles.art} />
+								) : (
+									<ArtPlaceholder name={hoc.name} sx={styles.art} />
+								)}
 								<Box sx={styles.facts}>
 									<Typography component="h1" variant="h4" sx={styles.name}>
 										{hoc.name}
