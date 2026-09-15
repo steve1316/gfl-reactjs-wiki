@@ -13,6 +13,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import LoadError from "../../components/LoadError";
+import { useArtPanBounds, useCloseOnEscape } from "../../hooks/useArtViewer";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { containArtSx } from "../../lib/artLayout";
 import { fairyFormUrl } from "../../lib/assets";
@@ -75,18 +76,7 @@ export default function FairyArt() {
 	// The art element fills the stage, so its box is the stage's size and its natural size gives the drawn picture's shape.
 	const artRef = useRef<HTMLImageElement | null>(null);
 
-	// Zoomed past the stage, the art's edge may be dragged to the middle of the screen. Fitted, its centre may reach the screen's edge.
-	const panBounds = useCallback((scale: number) => {
-		const art = artRef.current;
-		if (!art) {
-			return { x: 0, y: 0 };
-		}
-		// Before the art loads its natural size is 0, so it is treated as a square until then.
-		const fit = Math.min(art.clientWidth / (art.naturalWidth || 1), art.clientHeight / (art.naturalHeight || 1));
-		const width = (art.naturalWidth || 1) * fit * scale;
-		const height = (art.naturalHeight || 1) * fit * scale;
-		return { x: Math.max(width, art.clientWidth) / 2, y: Math.max(height, art.clientHeight) / 2 };
-	}, []);
+	const panBounds = useArtPanBounds(artRef);
 
 	const zoom = useZoomPan<HTMLDivElement>({ minScale: 1, maxScale: 6, doubleScale: 2.5, panBounds });
 
@@ -104,15 +94,7 @@ export default function FairyArt() {
 		void navigate(`/fairy/${id ?? ""}`, { replace: true });
 	}, [fromFairyPage, location.key, navigate, id]);
 
-	useEffect(() => {
-		const onKey = (event: KeyboardEvent) => {
-			if (event.key === "Escape") {
-				close();
-			}
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, [close]);
+	useCloseOnEscape(close);
 
 	useEffect(() => {
 		if (fairy) {
