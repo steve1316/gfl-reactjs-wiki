@@ -167,6 +167,7 @@ jobs:
       - name: Merge into the committed indexes
         run: python3 tools/assets/merge_indexes.py --manifest-partial "$RUNNER_TEMP/staging/manifest.partial.json" --spine-partial "$RUNNER_TEMP/staging/spine-index.partial.json"
 
+      # A stale equipment alias fails this step. Unblock it by updating or removing that alias in tools/data/equipment-aliases.json.
       - name: Check the data
         run: node tools/data/check.mjs
 
