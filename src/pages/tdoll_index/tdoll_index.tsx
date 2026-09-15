@@ -15,7 +15,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 import { loadAllDolls, searchIndex } from "../../lib/data";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
-import { formatBuildTimeQuery, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
+import { formatBuildTimeQuery, isIncompleteBuildTime, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
@@ -206,8 +206,8 @@ export default function TDoll_Index() {
 
 	// Parsed once per keystroke rather than per doll, since every doll in `matches` reads the same parsed query.
 	const buildTimeQuery = useMemo(() => parseBuildTime(buildTimeText), [buildTimeText]);
-	// True once the reader has typed something that does not parse as a build time, so the field can show a hint instead of filtering.
-	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null;
+	// True once the typed text cannot become a build time, so the field shows a hint. A time still being typed, such as `3:5`, is left unflagged.
+	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null && !isIncompleteBuildTime(buildTimeText);
 
 	// Every doll's searchable names, normalised once per load rather than on every keystroke.
 	const searchKeys = useMemo(

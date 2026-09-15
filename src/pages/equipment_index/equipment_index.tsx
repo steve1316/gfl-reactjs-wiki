@@ -12,7 +12,7 @@ import FilterChip from "../../components/FilterChip";
 import EquipmentCard from "./EquipmentCard";
 
 import { loadEquipment } from "../../lib/data";
-import { matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
+import { isIncompleteBuildTime, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
 import type { Equipment, EquipmentType } from "../../types/equipment";
 
 /** Labels under the level slider: the ends spelled out, the steps between as bare numbers. Static, so built once here. */
@@ -88,8 +88,8 @@ export default function EquipmentIndex() {
 	const [buildTimeText, setBuildTimeText] = useState("");
 	// Parsed once per keystroke rather than per item, since every item in the results reads the same parsed query.
 	const buildTimeQuery = useMemo(() => parseBuildTime(buildTimeText), [buildTimeText]);
-	// True once the reader has typed something that does not parse as a build time, so the field can show a hint instead of filtering.
-	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null;
+	// True once the typed text cannot become a build time, so the field shows a hint. A time still being typed, such as `3:5`, is left unflagged.
+	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null && !isIncompleteBuildTime(buildTimeText);
 
 	const [currentLevel, setCurrentLevel] = useState(1);
 
