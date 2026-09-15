@@ -71,7 +71,7 @@ def git_verify(repo, ref):
 
 
 def make_fixture(root):
-    """Build a tiny pair of staging trees, their manifest, a Spine index, and a clone tracking a local origin.
+    """Build a tiny staging tree, its manifest, a Spine index, and a clone tracking a local origin.
 
     The clone is built with `remote add` + `fetch`, the same way the real asset-repo clones came to be, rather than
     `git clone` -- that leaves `refs/remotes/origin/HEAD` unset locally, reproducing the exact condition
@@ -83,7 +83,7 @@ def make_fixture(root):
     Returns:
         A dict of the paths the tests pass to `prepare`, plus `origin`.
     """
-    assets, art, origin, clone = (os.path.join(root, name) for name in ("assets", "art", "origin", "clone"))
+    assets, origin, clone = (os.path.join(root, name) for name in ("assets", "origin", "clone"))
     write(assets, "tdolls/1/card.webp")
     write(assets, "tdolls/1/card_d.webp")
     write(assets, "tdolls/1/skill1.png")
@@ -95,9 +95,6 @@ def make_fixture(root):
     write(assets, "assets-manifest.json", b"stale copy that must not be published")
     write(assets, "tdolls/1/full.webp", b"full")
     write(assets, "tdolls/1/full_d.webp", b"full_d")
-    # `art` still gets the same files, since `prepare("art")` still reads from it until Task 5.
-    write(art, "tdolls/1/full.webp", b"full")
-    write(art, "tdolls/1/full_d.webp", b"full_d")
 
     manifest = os.path.join(root, "assets-manifest.json")
     with open(manifest, "w", encoding="utf-8") as handle:
@@ -119,7 +116,7 @@ def make_fixture(root):
     run_git(clone, "remote", "add", "origin", origin)
     run_git(clone, "fetch", "--quiet", "origin")
     run_git(clone, "checkout", "--quiet", "-b", "main", "origin/main")
-    return {"assets_root": assets, "art_root": art, "manifest_path": manifest, "spine_index_path": spine_index, "clone": clone, "origin": origin}
+    return {"assets_root": assets, "manifest_path": manifest, "spine_index_path": spine_index, "clone": clone, "origin": origin}
 
 
 def quiet(function, *args, **kwargs):
@@ -154,18 +151,13 @@ class CheckSizesTests(unittest.TestCase):
         self.assertEqual(stats["warnings"], [])
         self.assertEqual((stats["count"], stats["total"], stats["largest"]), (3, 60, ("b/c.webp", 30)))
 
-    def test_total_over_900_mb_warns(self):
-        """A tree just over 900 MB warns without failing."""
-        stats = publish.check_sizes([(f"f{i}", 45 * MB) for i in range(20)] + [("one-more-byte", 1)])
-        self.assertEqual(stats["errors"], [])
-        self.assertEqual(len(stats["warnings"]), 1)
-
-    def test_total_at_1000_mb_is_refused(self):
-        """A tree of exactly 1,000 MB is refused."""
-        stats = publish.check_sizes([(f"f{i}", 40 * MB) for i in range(25)])
-        self.assertEqual(stats["warnings"], [])
-        self.assertEqual(len(stats["errors"]), 1)
-        self.assertIn("1000 MB", stats["errors"][0])
+    def test_check_sizes_follows_github_limits(self):
+        """A tree warns past 4,000 MB and is refused at 5,000 MB."""
+        at_warn_line = [(f"f{i}", 40 * MB) for i in range(100)]
+        self.assertEqual(publish.check_sizes(at_warn_line)["errors"], [])
+        self.assertEqual(len(publish.check_sizes(at_warn_line + [("g", 1)])["warnings"]), 1)
+        at_refuse_line = [(f"f{i}", 50 * MB) for i in range(100)]
+        self.assertIn("5000 MB limit", publish.check_sizes(at_refuse_line)["errors"][0])
 
     def test_file_over_50_mb_is_refused(self):
         """A file of 50 MB passes and one byte more is refused."""
@@ -213,8 +205,8 @@ class NamingTests(unittest.TestCase):
 
     def test_readme_names_source_and_rights(self):
         """The README names the repo, the ResData version and the rights holder."""
-        text = publish.readme_text("art", "2026082516")
-        self.assertIn("gfl-wiki-assets-art", text)
+        text = publish.readme_text("2026082516")
+        self.assertIn("gfl-wiki-assets", text)
         self.assertIn("2026082516", text)
         self.assertIn("© Sunborn/MICA Team, mirrored for fan-wiki use", text)
 
@@ -237,63 +229,52 @@ class PrepareTests(unittest.TestCase):
         """Remove the fixture."""
         self.tmp.cleanup()
 
-    def prepare(self, repo, **overrides):
+    def prepare(self, **overrides):
         """Run `prepare` on the fixture with its output swallowed.
 
         Args:
-            repo: Either `assets` or `art`.
             **overrides: Arguments to replace.
 
         Returns:
             The captured output.
         """
         args = {key: value for key, value in self.paths.items() if key != "origin"}
-        args.update(repo=repo, res_version="2026082516", replace_branch=False)
+        args.update(res_version="2026082516", replace_branch=False)
         args.update(overrides)
         return quiet(publish.prepare, **args)[1]
 
     def test_assets_repo_gets_orphan_commit_with_kept_files_and_fresh_manifest(self):
-        """The asset repo gets one parentless commit with CNAME, .nojekyll, a README and the committed manifest, and the old files are gone."""
-        output = self.prepare("assets")
+        """The repo gets one parentless commit with CNAME, a README and the committed manifest, and the old files are gone."""
+        output = self.prepare()
         clone = self.paths["clone"]
         self.assertEqual(run_git(clone, "rev-parse", "--abbrev-ref", "HEAD"), "rebuild")
         self.assertEqual(run_git(clone, "rev-list", "--count", "HEAD"), "1")
         self.assertEqual(run_git(clone, "log", "-1", "--format=%s"), "Rebuild assets from game data (2026082516)")
         files = set(run_git(clone, "ls-tree", "-r", "--name-only", "HEAD").splitlines())
         self.assertNotIn("old/110_card.png", files)
-        self.assertTrue({"CNAME", ".nojekyll", "README.md", "assets-manifest.json", "spine/1/A.png", "logo.png"} <= files)
+        self.assertTrue({"CNAME", "README.md", "assets-manifest.json", "spine/1/A.png", "logo.png"} <= files)
         with open(self.paths["manifest_path"], encoding="utf-8") as handle:
             self.assertEqual(run_git(clone, "show", "HEAD:assets-manifest.json") + "\n", handle.read())
         self.assertEqual(run_git(clone, "show", "HEAD:CNAME"), "assets.example.com")
         lease = run_git(self.paths["origin"], "rev-parse", "main")
         self.assertIn(f"git -C {clone} push --force-with-lease=main:{lease} origin rebuild:main", output)
         self.assertNotIn("push --force origin", output)
-        self.assertLess(output.index("gfl-wiki-assets with"), output.index("gfl-wiki-assets-art with"))
-        self.assertLess(output.index("gfl-wiki-assets-art with"), output.index("site's master immediately"))
+        self.assertLess(output.index("gfl-wiki-assets with"), output.index("site's master immediately"))
         self.assertIn("verify_live_assets.mjs", output)
+        self.assertNotIn("gfl-wiki-assets-art", output)
         self.assertEqual(run_git(clone, "status", "--porcelain"), "")
 
-    def test_nojekyll_is_written_when_the_clone_has_none(self):
-        """A clone without `.nojekyll` still gets an empty one, so Pages skips its Jekyll build."""
-        run_git(self.paths["origin"], "rm", "--quiet", ".nojekyll")
-        run_git(self.paths["origin"], "commit", "--quiet", "-m", "Drop nojekyll")
-        run_git(self.paths["clone"], "pull", "--quiet", "--ff-only", "origin", "main")
-        self.prepare("art")
+    def test_nojekyll_is_not_kept(self):
+        """The rebuilt tree never carries `.nojekyll`, even when the clone had one, since the asset repo is no longer served through Pages."""
+        self.prepare()
         files = set(run_git(self.paths["clone"], "ls-tree", "-r", "--name-only", "HEAD").splitlines())
-        self.assertIn(".nojekyll", files)
-        self.assertEqual(run_git(self.paths["clone"], "cat-file", "-s", "HEAD:.nojekyll"), "0")
-
-    def test_art_repo_holds_only_art(self):
-        """The art repo holds only the art tree plus the kept files and README."""
-        self.prepare("art")
-        files = set(run_git(self.paths["clone"], "ls-tree", "-r", "--name-only", "HEAD").splitlines())
-        self.assertEqual(files, {"CNAME", ".nojekyll", "README.md", "tdolls/1/full.webp", "tdolls/1/full_d.webp"})
+        self.assertNotIn(".nojekyll", files)
 
     def test_manifest_mismatch_stops_before_touching_the_clone(self):
         """A staging tree that no longer matches the committed manifest stops before any git change."""
         write(self.paths["assets_root"], "tdolls/2/full.webp")
         with self.assertRaises(SystemExit) as caught:
-            self.prepare("assets")
+            self.prepare()
         self.assertIn("differs", str(caught.exception.code))
         self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
 
@@ -301,17 +282,17 @@ class PrepareTests(unittest.TestCase):
         """A missing atlas page fails the audit before any git change."""
         os.remove(os.path.join(self.paths["assets_root"], "spine/1/A.png"))
         with self.assertRaises(SystemExit) as caught:
-            self.prepare("assets")
+            self.prepare()
         self.assertIn("audit failed", str(caught.exception.code))
         self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
 
     def test_existing_rebuild_branch_needs_replace_flag(self):
         """An existing rebuild branch is only replaced when asked."""
-        self.prepare("art")
+        self.prepare()
         run_git(self.paths["clone"], "checkout", "--quiet", "main")
         with self.assertRaises(SystemExit):
-            self.prepare("art")
-        self.prepare("art", replace_branch=True)
+            self.prepare()
+        self.prepare(replace_branch=True)
         self.assertEqual(run_git(self.paths["clone"], "rev-list", "--count", "rebuild"), "1")
 
     def test_clone_behind_origin_stops_before_touching_the_clone(self):
@@ -321,7 +302,7 @@ class PrepareTests(unittest.TestCase):
         run_git(origin, "add", "--all")
         run_git(origin, "commit", "--quiet", "-m", "Upstream moves on")
         with self.assertRaises(SystemExit) as caught:
-            self.prepare("assets")
+            self.prepare()
         self.assertIn("behind", str(caught.exception.code))
         self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
         self.assertFalse(git_verify(self.paths["clone"], f"refs/heads/{publish.BRANCH}"))
@@ -332,7 +313,7 @@ class PrepareTests(unittest.TestCase):
         run_git(self.paths["clone"], "add", "--all")
         run_git(self.paths["clone"], "commit", "--quiet", "-m", "Local-only commit")
         with self.assertRaises(SystemExit) as caught:
-            self.prepare("assets")
+            self.prepare()
         self.assertIn("ahead", str(caught.exception.code))
         self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
         self.assertFalse(git_verify(self.paths["clone"], f"refs/heads/{publish.BRANCH}"))
@@ -341,7 +322,7 @@ class PrepareTests(unittest.TestCase):
         """A planned tree over the size limit refuses before any git change, like the manifest and audit stops."""
         with mock.patch.object(publish, "REFUSE_TOTAL_BYTES", 10):
             with self.assertRaises(SystemExit) as caught:
-                self.prepare("assets")
+                self.prepare()
         self.assertIn("MB", str(caught.exception.code))
         self.assertEqual(run_git(self.paths["clone"], "rev-parse", "--abbrev-ref", "HEAD"), "main")
         self.assertFalse(git_verify(self.paths["clone"], f"refs/heads/{publish.BRANCH}"))
@@ -567,7 +548,7 @@ class AddTests(unittest.TestCase):
             tree = os.path.join(scratch, "staging", "assets")
             stage(tree, {"tdolls/424/card.webp": b"new card", "tdolls/424/card_d.webp": b"damaged"})
             with contextlib.redirect_stdout(io.StringIO()):
-                paths = publish.add("assets", tree, remote, sizes=no_sizes)
+                paths = publish.add(tree, remote, sizes=no_sizes)
             self.assertEqual(paths, ["tdolls/424/card.webp", "tdolls/424/card_d.webp"])
             self.assertEqual(git_in(bare, "log", "-1", "--format=%s", "main"), "Add art for doll 424")
             self.assertEqual(
@@ -582,10 +563,10 @@ class AddTests(unittest.TestCase):
             tree = os.path.join(scratch, "staging", "assets")
             stage(tree, {"tdolls/424/card.webp": b"fresh"})
             with contextlib.redirect_stdout(io.StringIO()):
-                publish.add("assets", tree, remote, sizes=no_sizes)
+                publish.add(tree, remote, sizes=no_sizes)
                 head = git_in(bare, "rev-parse", "main")
                 self.assertEqual(git_in(bare, "show", "main:tdolls/424/card.webp"), "fresh")
-                publish.add("assets", tree, remote, sizes=no_sizes)
+                publish.add(tree, remote, sizes=no_sizes)
             self.assertEqual(git_in(bare, "rev-parse", "main"), head)
 
     def test_dry_run_does_not_push(self):
@@ -593,27 +574,27 @@ class AddTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as scratch:
             remote, bare = make_remote(scratch, {".nojekyll": b""})
             head = git_in(bare, "rev-parse", "main")
-            tree = os.path.join(scratch, "staging", "art")
+            tree = os.path.join(scratch, "staging", "assets")
             stage(tree, {"tdolls/424/full.webp": b"art"})
             with contextlib.redirect_stdout(io.StringIO()):
-                publish.add("art", tree, remote, dry_run=True, sizes=no_sizes)
+                publish.add(tree, remote, dry_run=True, sizes=no_sizes)
             self.assertEqual(git_in(bare, "rev-parse", "main"), head)
 
     def test_oversized_tree_is_refused_before_cloning(self):
-        """A tree that would pass the Pages limit stops before anything is cloned or pushed."""
+        """A tree that would break GitHub's size guidance stops before anything is cloned or pushed."""
         with tempfile.TemporaryDirectory() as scratch:
             remote, bare = make_remote(scratch, {".nojekyll": b""})
             head = git_in(bare, "rev-parse", "main")
-            tree = os.path.join(scratch, "staging", "art")
+            tree = os.path.join(scratch, "staging", "assets")
             stage(tree, {"tdolls/424/full.webp": b"art"})
             with self.assertRaises(SystemExit), contextlib.redirect_stdout(io.StringIO()):
-                publish.add("art", tree, remote, sizes=lambda _title, _branch: {"huge.bin": 1000 * MB})
+                publish.add(tree, remote, sizes=lambda _title, _branch: {"huge.bin": 5000 * MB})
             self.assertEqual(git_in(bare, "rev-parse", "main"), head)
 
     def test_nothing_staged(self):
         """A missing or empty staging tree returns no paths without touching the remote."""
         with tempfile.TemporaryDirectory() as scratch, contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(publish.add("assets", os.path.join(scratch, "missing"), "file:///nowhere", sizes=no_sizes), [])
+            self.assertEqual(publish.add(os.path.join(scratch, "missing"), "file:///nowhere", sizes=no_sizes), [])
 
 
 class WaitLiveTests(unittest.TestCase):

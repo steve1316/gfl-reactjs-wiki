@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""Back up an asset repo clone and prepare its rebuilt tree for a force-push, without pushing.
+"""Back up the asset repo clone and prepare its rebuilt tree for a force-push, without pushing.
 
 `backup` writes a `git bundle` of every ref in a clone and proves it restores. `prepare` resolves the repo's default branch straight
 from origin (never from local state), requires the clone's copy of that branch to be exactly in sync with origin, regenerates the
-version 3 manifest from the staging trees, requires it to match the repo-root `assets-manifest.json` byte for byte, runs the v3
-audit, checks the Pages size limits, and then commits the staging tree onto an orphan branch in the clone with a `.nojekyll` file.
+version 3 manifest from the staging tree, requires it to match the repo-root `assets-manifest.json` byte for byte, runs the v3
+audit, checks the tree against GitHub's size guidance, and then commits the staging tree onto an orphan branch in the clone.
 It prints a push command leased to the origin commit it checked, plus the publish runbook, for a person to run, and never runs
 them. Pass `--replace-branch` to delete and recreate an existing local `rebuild` branch when re-running prepare; the default branch
 itself is never touched.
 
 `add` commits the files of an incremental staging tree onto the asset repo's branch through a shallow, blobless, sparse clone and pushes them
-normally. It is what the scheduled refresh runs. `wait-live` polls those files' Pages URLs until every one returns 200.
+normally. It is what the scheduled refresh runs. `wait-live` polls those files' raw URLs until every one returns 200.
 
 Usage:
     python3 tools/assets/publish.py backup --clone <path> --out <dir>
-    python3 tools/assets/publish.py prepare --repo assets|art --clone <path>
-    python3 tools/assets/publish.py prepare --repo assets|art --clone <path> --replace-branch
-    python3 tools/assets/publish.py add --repo assets|art --staging <tree> --remote <url> --list <file> [--dry-run]
+    python3 tools/assets/publish.py prepare --clone <path>
+    python3 tools/assets/publish.py prepare --clone <path> --replace-branch
+    python3 tools/assets/publish.py add --staging <tree> --remote <url> --list <file> [--dry-run]
     python3 tools/assets/publish.py wait-live --base <url> --list <file>
 """
 
@@ -47,33 +47,27 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 BYTES_PER_MB = 1000 * 1000
 
-# GitHub Pages caps a site at 1 GB. Decimal megabytes keep the check on the strict side.
-REFUSE_TOTAL_BYTES = 1000 * BYTES_PER_MB
-WARN_TOTAL_BYTES = 900 * BYTES_PER_MB
+# GitHub warns a repo past 4,000 MB and refuses one at or over 5,000 MB. Decimal megabytes keep the check on the strict side.
+REFUSE_TOTAL_BYTES = 5000 * BYTES_PER_MB
+WARN_TOTAL_BYTES = 4000 * BYTES_PER_MB
 
 # GitHub warns above 50 MB per file and rejects above 100 MB.
 MAX_FILE_BYTES = 50 * BYTES_PER_MB
 
-# Files a Pages repo may carry that the staging tree does not produce, kept when present in the clone.
-KEEP_FILES = ("CNAME", ".nojekyll")
-
-# Written into every rebuilt tree so Pages serves the files as they are, without a Jekyll build.
-NOJEKYLL = ".nojekyll"
+# Files the repo may carry that the staging tree does not produce, kept when present in the clone.
+KEEP_FILES = ("CNAME",)
 
 MANIFEST_NAME = "assets-manifest.json"
 
 BRANCH = "rebuild"
 
-STAGING_TREES = {"assets": "tools/assets/.staging/assets", "art": "tools/assets/.staging/art"}
+STAGING_TREE = "tools/assets/.staging/assets"
 
-REPO_TITLES = {"assets": "gfl-wiki-assets", "art": "gfl-wiki-assets-art"}
+REPO_TITLE = "gfl-wiki-assets"
 
-REPO_CONTENTS = {
-    "assets": "Cards, skill icons, equipment icons, UI images and Spine chibis",
-    "art": "Full art (normal and damaged) for every doll, Mod and skin",
-}
+REPO_CONTENT = "Cards, full art, skill icons, equipment icons, HOC and fairy art, UI images and Spine chibis"
 
-# Owner of both asset repos, for the Git Trees API.
+# Owner of the asset repo, for the Git Trees API.
 OWNER = "steve1316"
 
 GITHUB_API = "https://api.github.com"
@@ -94,7 +88,7 @@ IRREGULAR_PLURALS = {"fairy": "fairies"}
 
 
 def check_sizes(files):
-    """Check a planned tree against the Pages size limits.
+    """Check a planned tree against GitHub's repo and file size guidance.
 
     Args:
         files: `(rel_path, size_bytes)` pairs for every file in the tree.
@@ -194,28 +188,26 @@ def runbook_text():
     return "\n".join(
         (
             "Publish runbook (back to back, only with explicit confirmation):",
-            f"  1. Push {REPO_TITLES['assets']} with its printed command.",
-            f"  2. Push {REPO_TITLES['art']} with its printed command.",
-            "  3. Push the site's master immediately after, so the new site and the new asset layout go live together.",
-            "  4. Wait for all three Pages deploys to finish (`gh api repos/<owner>/<repo>/pages/builds/latest` for each).",
-            "  5. Run `node tools/assets/verify_live_assets.mjs <assets base URL> <art base URL>` against the live hosts.",
+            f"  1. Push {REPO_TITLE} with its printed command.",
+            "  2. Push the site's master immediately after, so the new site and the new asset layout go live together.",
+            "  3. Wait for the site's Pages deploy to finish (`gh api repos/<owner>/<repo>/pages/builds/latest`).",
+            "  4. Run `node tools/assets/verify_live_assets.mjs <asset base URL>` against the live host.",
         )
     )
 
 
-def readme_text(repo, res_version):
+def readme_text(res_version):
     """Build the README written into a rebuilt asset repo.
 
     Args:
-        repo: Either `assets` or `art`.
         res_version: The game ResData version the tree was extracted from.
 
     Returns:
         The README contents.
     """
     return (
-        f"# {REPO_TITLES[repo]}\n\n"
-        f"{REPO_CONTENTS[repo]} for [gfl-reactjs-wiki](https://github.com/steve1316/gfl-reactjs-wiki), served over GitHub Pages.\n\n"
+        f"# {REPO_TITLE}\n\n"
+        f"{REPO_CONTENT} for [gfl-reactjs-wiki](https://github.com/steve1316/gfl-reactjs-wiki), served over raw.githubusercontent.com.\n\n"
         f"Extracted from the Girls' Frontline game asset bundles (ResData version {res_version}) by `tools/assets/` in the wiki repository.\n\n"
         "© Sunborn/MICA Team, mirrored for fan-wiki use. These assets are **not** covered by the licence of the wiki's source code.\n"
     )
@@ -468,14 +460,12 @@ def print_stats(label, stats):
     print(summary)
 
 
-def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path, res_version, replace_branch):
+def prepare(clone, assets_root, manifest_path, spine_index_path, res_version, replace_branch):
     """Commit a verified staging tree onto an orphan branch in a clone and print the push command.
 
     Args:
-        repo: Either `assets` or `art`.
-        clone: The local clone of that repo.
+        clone: The local clone of the asset repo.
         assets_root: The asset staging tree.
-        art_root: The art staging tree.
         manifest_path: The committed repo-root manifest.
         spine_index_path: The Spine index the site bundles.
         res_version: The ResData version, for the commit message and README.
@@ -487,7 +477,6 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
             breach. Nothing in the clone changes before every check has passed.
     """
     clone = os.path.abspath(clone)
-    staging = assets_root if repo == "assets" else art_root
     if git(clone, "status", "--porcelain"):
         sys.exit(f"{clone} has uncommitted changes")
     base_branch = default_branch(clone)
@@ -505,12 +494,10 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
         if os.path.isfile(os.path.join(clone, name)):
             with open(os.path.join(clone, name), "rb") as handle:
                 kept[name] = handle.read()
-    kept.setdefault(NOJEKYLL, b"")
-    readme = readme_text(repo, res_version)
-    planned = list_tree(staging, skip={MANIFEST_NAME})
+    readme = readme_text(res_version)
+    planned = list_tree(assets_root, skip={MANIFEST_NAME})
     planned += [(name, len(data)) for name, data in kept.items()] + [("README.md", len(readme.encode("utf-8")))]
-    if repo == "assets":
-        planned.append((MANIFEST_NAME, len(regenerated.encode("utf-8"))))
+    planned.append((MANIFEST_NAME, len(regenerated.encode("utf-8"))))
     stats = check_sizes(planned)
     print_stats("planned tree", stats)
     for warning in stats["warnings"]:
@@ -525,8 +512,8 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
     git(clone, "rm", "-r", "-f", "--quiet", "--ignore-unmatch", ".")
     git(clone, "clean", "-f", "-d", "-x", "--quiet")
 
-    for directory, _, names in os.walk(staging):
-        rel_dir = os.path.relpath(directory, staging)
+    for directory, _, names in os.walk(assets_root):
+        rel_dir = os.path.relpath(directory, assets_root)
         os.makedirs(os.path.join(clone, rel_dir), exist_ok=True)
         for name in names:
             if rel_dir == "." and name == MANIFEST_NAME:
@@ -537,9 +524,8 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
             handle.write(data)
     with open(os.path.join(clone, "README.md"), "w", encoding="utf-8") as handle:
         handle.write(readme)
-    if repo == "assets":
-        with open(os.path.join(clone, MANIFEST_NAME), "w", encoding="utf-8") as handle:
-            handle.write(regenerated)
+    with open(os.path.join(clone, MANIFEST_NAME), "w", encoding="utf-8") as handle:
+        handle.write(regenerated)
 
     git(clone, "add", "--all")
     git(clone, "commit", "--quiet", "-m", f"Rebuild assets from game data ({res_version})")
@@ -704,16 +690,15 @@ def run_with_input(clone, args, text):
         sys.exit(f"git {' '.join(args)} failed in {clone}:\n{result.stderr.strip()}")
 
 
-def add(repo, staging_tree, remote, branch="main", dry_run=False, sizes=None, token=None):
-    """Commit an incremental staging tree onto an asset repo's branch and push it.
+def add(staging_tree, remote, branch="main", dry_run=False, sizes=None, token=None):
+    """Commit an incremental staging tree onto the asset repo's branch and push it.
 
     The clone is shallow, has no blobs and checks out only the staged paths, so nothing hosted is downloaded except an earlier failed run's
     leftovers at those paths. A leftover is overwritten: the merge step already refused anything the manifest or Spine index lists, so a hosted
     file at a staged path can only come from a run whose site commit never landed. Identical files make no commit.
 
     Args:
-        repo: `assets` or `art`.
-        staging_tree: The staging tree for that repo, such as `<staging>/assets`.
+        staging_tree: The staging tree, such as `<staging>/assets`.
         remote: The repo URL to clone and push, such as `git@github.com:steve1316/gfl-wiki-assets.git`.
         branch: The branch to commit onto.
         dry_run: Commit in the throwaway clone and print it, but do not push.
@@ -724,10 +709,10 @@ def add(repo, staging_tree, remote, branch="main", dry_run=False, sizes=None, to
         The staged relative paths, empty when nothing was staged.
 
     Raises:
-        SystemExit: When the tree would break the Pages limits or a git command fails.
+        SystemExit: When the tree would break GitHub's size guidance or a git command fails.
     """
     staged = list_tree(staging_tree) if os.path.isdir(staging_tree) else []
-    title = REPO_TITLES[repo]
+    title = REPO_TITLE
     if not staged:
         print(f"{title}: nothing staged")
         return []
@@ -739,7 +724,7 @@ def add(repo, staging_tree, remote, branch="main", dry_run=False, sizes=None, to
         sys.exit(f"{title} cannot take these files:\n  " + "\n  ".join(limits["errors"]))
 
     paths = [rel for rel, _size in staged]
-    with tempfile.TemporaryDirectory(prefix=f"{repo}-add-") as scratch:
+    with tempfile.TemporaryDirectory(prefix="add-") as scratch:
         clone = os.path.join(scratch, "clone")
         result = subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--no-checkout", "--branch", branch, remote, clone], capture_output=True, text=True)
         if result.returncode != 0:
@@ -766,10 +751,10 @@ def add(repo, staging_tree, remote, branch="main", dry_run=False, sizes=None, to
 
 
 def url_for(base, rel):
-    """Build a Pages URL for a hosted path, encoding each segment.
+    """Build a raw URL for a hosted path, encoding each segment.
 
     Args:
-        base: The Pages base URL, with or without a trailing slash.
+        base: The asset repo's raw base URL, with or without a trailing slash.
         rel: The relative path.
 
     Returns:
@@ -798,10 +783,10 @@ def http_status(url):
 
 
 def wait_live(base, paths, timeout=LIVE_TIMEOUT_SECONDS, interval=LIVE_INTERVAL_SECONDS, status=None, clock=time.monotonic, sleep=time.sleep):
-    """Poll new asset URLs until Pages serves every one, or the timeout passes.
+    """Poll new asset URLs until the raw host serves every one, or the timeout passes.
 
     Args:
-        base: The Pages base URL of the repo the paths were pushed to.
+        base: The asset repo's raw base URL the paths were pushed to.
         paths: The pushed relative paths.
         timeout: Seconds to keep polling.
         interval: Seconds between rounds.
@@ -829,7 +814,7 @@ def wait_live(base, paths, timeout=LIVE_TIMEOUT_SECONDS, interval=LIVE_INTERVAL_
 
 def main():
     """Parse arguments and run `backup`, `prepare`, `add` or `wait-live`."""
-    parser = argparse.ArgumentParser(description="Back up and prepare the GitHub Pages asset repos. Never pushes.")
+    parser = argparse.ArgumentParser(description="Back up and prepare the asset repo. Never pushes.")
     commands = parser.add_subparsers(dest="command", required=True)
 
     backup_parser = commands.add_parser("backup", help="Bundle every ref of a clone and verify the bundle.")
@@ -837,31 +822,28 @@ def main():
     backup_parser.add_argument("--out", required=True, help="Directory to write the bundle into.")
 
     prepare_parser = commands.add_parser("prepare", help="Commit the verified staging tree onto an orphan branch.")
-    prepare_parser.add_argument("--repo", required=True, choices=("assets", "art"), help="Which asset repo the clone is.")
-    prepare_parser.add_argument("--clone", required=True, help="Local clone of that repo.")
-    prepare_parser.add_argument("--assets", default=STAGING_TREES["assets"], help="The asset staging tree.")
-    prepare_parser.add_argument("--art", default=STAGING_TREES["art"], help="The art staging tree.")
+    prepare_parser.add_argument("--clone", required=True, help="Local clone of the asset repo.")
+    prepare_parser.add_argument("--assets", default=STAGING_TREE, help="The asset staging tree.")
     prepare_parser.add_argument("--manifest", default=MANIFEST_NAME, help="The committed repo-root manifest the regenerated one must match.")
     prepare_parser.add_argument("--spine-index", default="src/data/spine-index.json", help="The Spine index the audit checks.")
     prepare_parser.add_argument("--res-version", help="ResData version. Defaults to the one in tools/assets/.cache/inventory.json.")
     prepare_parser.add_argument("--replace-branch", action="store_true", help="Delete an existing rebuild branch first.")
 
-    add_parser = commands.add_parser("add", help="Commit an incremental staging tree onto an asset repo and push it.")
-    add_parser.add_argument("--repo", required=True, choices=("assets", "art"), help="Which asset repo the staging tree belongs to.")
-    add_parser.add_argument("--staging", required=True, help="The staging tree for that repo, such as <staging>/assets.")
+    add_parser = commands.add_parser("add", help="Commit an incremental staging tree onto the asset repo and push it.")
+    add_parser.add_argument("--staging", required=True, help="The staging tree, such as <staging>/assets.")
     add_parser.add_argument("--remote", required=True, help="The repo URL to clone and push.")
     add_parser.add_argument("--branch", default="main", help="The branch to commit onto.")
     add_parser.add_argument("--list", required=True, help="Where to write the staged paths as JSON, for wait-live.")
     add_parser.add_argument("--dry-run", action="store_true", help="Commit in a throwaway clone but do not push.")
 
-    wait_parser = commands.add_parser("wait-live", help="Poll pushed asset URLs until Pages serves them.")
-    wait_parser.add_argument("--base", required=True, help="The Pages base URL of the repo.")
+    wait_parser = commands.add_parser("wait-live", help="Poll pushed asset URLs until the raw host serves them.")
+    wait_parser.add_argument("--base", required=True, help="The asset repo's raw base URL.")
     wait_parser.add_argument("--list", required=True, help="The JSON path list written by add.")
     wait_parser.add_argument("--timeout", type=int, default=LIVE_TIMEOUT_SECONDS, help="Seconds to keep polling.")
     args = parser.parse_args()
 
     if args.command == "add":
-        paths = add(args.repo, args.staging, args.remote, args.branch, args.dry_run, token=os.environ.get("GITHUB_TOKEN"))
+        paths = add(args.staging, args.remote, args.branch, args.dry_run, token=os.environ.get("GITHUB_TOKEN"))
         with open(args.list, "w", encoding="utf-8") as handle:
             json.dump(paths, handle)
         return
@@ -880,10 +862,9 @@ def main():
         backup(args.clone, args.out)
         return
 
-    for tree in (args.assets, args.art):
-        if not os.path.isdir(tree):
-            sys.exit(f"no such staging tree: {tree}")
-    prepare(args.repo, args.clone, args.assets, args.art, args.manifest, args.spine_index, resolve_res_version(args.res_version), args.replace_branch)
+    if not os.path.isdir(args.assets):
+        sys.exit(f"no such staging tree: {args.assets}")
+    prepare(args.clone, args.assets, args.manifest, args.spine_index, resolve_res_version(args.res_version), args.replace_branch)
 
 
 if __name__ == "__main__":
