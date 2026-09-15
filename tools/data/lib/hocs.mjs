@@ -69,6 +69,7 @@ export function buildHocs(upstream, cutoff) {
 			return {
 				id: row.id,
 				name,
+				code: row.code,
 				className,
 				description,
 				released: row.launch_time.slice(0, 10),

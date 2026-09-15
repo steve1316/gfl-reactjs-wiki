@@ -42,6 +42,8 @@ export interface Hoc {
 	id: number;
 	/** Official English name, such as "BGM-71". */
 	name: string;
+	/** The game's unit code, such as "TOW", which names its asset bundles. */
+	code: string;
 	/** Class name, such as "Anti-Tank Weapon". */
 	className: string;
 	/** Flavour text about the unit's crew. */
