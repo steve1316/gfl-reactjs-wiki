@@ -340,7 +340,11 @@ export default function EquipmentIndex() {
 			sortDescending,
 			level: currentLevel
 		};
-		sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+		try {
+			sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+		} catch {
+			// Storage can be blocked, such as in a locked-down browser. The view is just not remembered then.
+		}
 	}, [selectedRarities, selectedTypes, exclusiveOnly, nameQuery, buildTimeText, sortKey, sortDescending, currentLevel]);
 
 	// Every handler below is stable across renders, so the memoised panel, rows and tiles skip renders they have no part in.
