@@ -162,7 +162,7 @@ jobs:
         run: |
           S="$RUNNER_TEMP/staging"
           node tools/assets/fix_atlas_pages.mjs --spine "$S/assets/spine"
-          python3 tools/assets/build_manifest.py --assets "$S/assets" --art "$S/art" --out "$S/manifest.partial.json"
+          python3 tools/assets/build_manifest.py --assets "$S/assets" --out "$S/manifest.partial.json"
           python3 tools/assets/build_spine_index.py --spine "$S/assets/spine" --out "$S/spine-index.partial.json" --hoc-spine "$S/assets/hoc-spine" --hoc-out "$S/hoc-spine-index.partial.json"
           if [ -d "$S/assets/hoc-spine" ]; then
             node tools/assets/fix_atlas_pages.mjs --spine "$S/assets/hoc-spine"
@@ -177,27 +177,14 @@ jobs:
       - name: Check the data
         run: node tools/data/check.mjs
 
-      - name: Load the asset repo deploy keys
+      - name: Load the asset repo deploy key
         env:
           ASSETS_KEY: ${{ secrets.ASSETS_DEPLOY_KEY }}
-          ART_KEY: ${{ secrets.ART_DEPLOY_KEY }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$ASSETS_KEY" > ~/.ssh/assets_key
-          printf '%s\n' "$ART_KEY" > ~/.ssh/art_key
-          chmod 600 ~/.ssh/assets_key ~/.ssh/art_key
+          chmod 600 ~/.ssh/assets_key
           ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
-
-      # The art repo is the one near its size limit, so it goes first. A refusal there then stops the run before anything is pushed.
-      - name: Publish to gfl-wiki-assets-art
-        env:
-          GIT_SSH_COMMAND: ssh -i ~/.ssh/art_key -o IdentitiesOnly=yes
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          flags=()
-          if [ "$DRY_RUN" = true ]; then flags+=(--dry-run); fi
-          python3 tools/assets/publish.py add --repo art --staging "$RUNNER_TEMP/staging/art" \
-            --remote git@github.com:steve1316/gfl-wiki-assets-art.git --list "$RUNNER_TEMP/art-paths.json" "${flags[@]}"
 
       - name: Publish to gfl-wiki-assets
         env:
@@ -206,14 +193,13 @@ jobs:
         run: |
           flags=()
           if [ "$DRY_RUN" = true ]; then flags+=(--dry-run); fi
-          python3 tools/assets/publish.py add --repo assets --staging "$RUNNER_TEMP/staging/assets" \
+          python3 tools/assets/publish.py add --staging "$RUNNER_TEMP/staging/assets" \
             --remote git@github.com:steve1316/gfl-wiki-assets.git --list "$RUNNER_TEMP/assets-paths.json" "${flags[@]}"
 
       - name: Wait for the new assets to go live
         if: env.DRY_RUN != 'true'
         run: |
           python3 tools/assets/publish.py wait-live --base "$(grep '^VITE_ASSET_BASE_URL=' .env | cut -d= -f2-)" --list "$RUNNER_TEMP/assets-paths.json"
-          python3 tools/assets/publish.py wait-live --base "$(grep '^VITE_ART_BASE_URL=' .env | cut -d= -f2-)" --list "$RUNNER_TEMP/art-paths.json"
 
       # The checkouts keep no token, so the push below is the only step that authenticates to this repo. upstream.json is committed but never
       # read by the site, so it alone does not deploy.
