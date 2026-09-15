@@ -64,8 +64,7 @@ interface EquipmentDialogProps {
 }
 
 /**
- * An equipment item's full details: icon, rarity and type, who can equip it with links to each doll, build time, stats at the page's
- * level, and description.
+ * An equipment item's full details: icon, rarity and type, who can equip it with links to each doll, build time, stats at the page's level, and description.
  *
  * @param props Component props.
  * @returns The dialog.

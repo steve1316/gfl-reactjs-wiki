@@ -22,7 +22,7 @@ import type { Equipment } from "../../types/equipment";
 /** How many stat rows every tile reserves. No item has more, and reserving them all keeps every tile the same height. */
 const STAT_ROWS = 4;
 
-/** Text a little under 11.5px, the smallest size used on the tiles so they stay readable on a phone. */
+/** Text about 11.5px, the smallest size used on the tiles so they stay readable on a phone. */
 const SMALL_TEXT = "0.72rem";
 
 const styles = {
@@ -94,8 +94,9 @@ interface EquipmentCardProps {
 /**
  * One piece of equipment as a fixed-size tile: icon and build time, name, type and rarity, up to four stats, and who can equip it.
  *
- * Every tile reserves the same rows, so a grid of them lines up whatever each item holds. The description and doll links live in the
- * details dialog the tile opens. Memoised, so moving the level slider only re-renders tiles whose shown values change props.
+ * Every tile reserves the same rows, so a grid of them lines up whatever each item holds. The description and doll links live in the details dialog
+ * the tile opens. Memoised, so a tile skips rendering when its own props are unchanged, such as when filters change which tiles are visible or the
+ * dialog opens. A level step still re-renders every visible tile, which the deferred level keeps behind the slider thumb.
  *
  * @param props Component props.
  * @returns The tile.
