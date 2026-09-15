@@ -20,10 +20,10 @@ import { hasFairyForm } from "../../lib/processData";
 import { useFairies } from "../../lib/useFairies";
 import NotFound404 from "../../not_found_404";
 
-/** The form shown when the address names none or an invalid one, the fairy's highest rank. */
+/** The form shown when the address names none or an invalid one, the fairy's highest rank. Mirrors `FairyConstants.forms.length`. */
 const DEFAULT_FORM = 3;
 
-/** How many art forms a fairy has, used to check the address before the data loads. */
+/** How many art forms a fairy has. Mirrors `FairyConstants.forms.length`, since the address is checked before the data loads. */
 const FORM_COUNT = 3;
 
 const styles = {
