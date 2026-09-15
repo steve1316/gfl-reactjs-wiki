@@ -26,7 +26,7 @@ export interface FairyTalent {
 	id: number;
 	/** Official English name. */
 	name: string;
-	/** 0 for Special, 1 for Tier I, 2 for Tier II. */
+	/** 1 for Tier I, 2 for Tier II. */
 	rank: number;
 	/** The effect text at its lowest level. */
 	description: string;
@@ -78,8 +78,6 @@ export interface Fairy {
 	proportion: number[];
 	/** Its one skill, battle or strategy. */
 	skill: FairySkill;
-	/** The id of its own Special talent, from `tools/data/fairy-special-talents.json`, or null when it has none. */
-	specialTalent: number | null;
 }
 
 /** The generated `fairies.json`. */
