@@ -26,12 +26,6 @@ const DEFAULT_FORM = 3;
 /** How many art forms a fairy has, used to check the address before the data loads. */
 const FORM_COUNT = 3;
 
-/** Router state the fairy page puts on its link here, so closing knows going back returns to it. */
-interface FairyArtState {
-	/** True when opened from the fairy page's full art button. */
-	fromFairyPage?: boolean;
-}
-
 const styles = {
 	root: { position: "fixed", inset: 0, bgcolor: "common.black", zIndex: (theme: Theme) => theme.zIndex.modal, display: "flex", flexDirection: "column" },
 	header: { display: "flex", alignItems: "center", gap: 1, p: 1, color: "common.white" },
@@ -81,16 +75,15 @@ export default function FairyArt() {
 	const fairy = data?.items.find((entry) => String(entry.id) === id);
 	const form = parseForm(searchParams.get("form"));
 	const hosted = fairy !== undefined && hasFairyForm(fairy.id, form);
-	const fromFairyPage = (location.state as FairyArtState | null)?.fromFairyPage === true;
 
 	// Opened from the fairy page, going back returns to it. Opened from a pasted link there is nothing to go back to, so the fairy page opens instead.
 	const close = useCallback(() => {
-		if (fromFairyPage && location.key !== "default") {
+		if (location.key !== "default") {
 			void navigate(-1);
 			return;
 		}
 		void navigate(`/fairy/${id ?? ""}`, { replace: true });
-	}, [fromFairyPage, location.key, navigate, id]);
+	}, [location.key, navigate, id]);
 
 	useCloseOnEscape(close);
 
@@ -101,14 +94,14 @@ export default function FairyArt() {
 	}, [fairy]);
 
 	// Stable handlers, in step with the rest of the site.
-	// Replaces rather than pushes, so Back still closes the viewer in one step. The router state rides along so closing still knows where it came from.
+	// Replaces rather than pushes, so Back still closes the viewer in one step.
 	const handleFormChange = useCallback(
 		(_event: unknown, value: number | null) => {
 			if (value !== null) {
-				setSearchParams({ form: String(value) }, { replace: true, state: location.state });
+				setSearchParams({ form: String(value) }, { replace: true });
 			}
 		},
-		[setSearchParams, location.state]
+		[setSearchParams]
 	);
 
 	if (data !== null && fairy === undefined) {
