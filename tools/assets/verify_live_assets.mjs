@@ -7,7 +7,8 @@
  * each sampled atlas are fetched too. Any response other than 200 fails the run.
  *
  * Usage:
- *     node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>] [--manifest <file>] [--spine-index <file>] [--src <dir>]
+ *     node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>] [--manifest <file>] [--spine-index <file>]
+ *         [--hoc-spine-index <file>] [--src <dir>]
  *
  * The seed is printed, so a failing sample can be fetched again with `--seed`.
  */
@@ -20,8 +21,15 @@ import { pathToFileURL } from "node:url";
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // Constants
 
-/** Default inputs: the manifest and Spine index the site bundles. */
-const DEFAULTS = { sample: 200, manifest: "assets-manifest.json", spineIndex: "src/data/spine-index.json", src: "src", concurrency: 4 };
+/** Default inputs: the manifest, Spine index and HOC Spine index the site bundles. */
+const DEFAULTS = {
+	sample: 200,
+	manifest: "assets-manifest.json",
+	spineIndex: "src/data/spine-index.json",
+	hocSpineIndex: "src/data/hoc-spine-index.json",
+	src: "src",
+	concurrency: 4
+};
 
 /** A `uiUrl("<name>")` call in the site source, capturing the file name. */
 const UI_URL_CALL = /\buiUrl\(\s*["']([^"']+)["']\s*\)/g;
@@ -37,6 +45,9 @@ const IMAGE_FILES = { card: ["assets", "card.webp"], card_damaged: ["assets", "c
 
 /** v3 Mod-skin card kind -> filename inside a skin folder. */
 const MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
+
+/** HOC image kind -> host and filename inside a HOC folder, as in `hocCardUrl` / `hocFullArtUrl` in `src/lib/assets.ts`. */
+const HOC_IMAGE_FILES = { card: ["assets", "card.webp"], full: ["art", "full.webp"] };
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,10 +91,11 @@ export function uiImageNames(srcDir) {
  * @param {string} assetsBase Base URL of the asset host.
  * @param {string} artBase Base URL of the art host.
  * @param {string[]} [uiNames] Top-level UI image names, as `uiImageNames` finds them.
+ * @param {object} [hocSpineIndex] The HOC Spine index, id -> `{combat, crew}` rigs.
  * @returns {Record<string, string[]>} Tier name -> URLs. Tiers are `manifest`, `ui`, `cards`, `modCards`, `full`, `skills`, `equipment`,
- *     `spineSkel` and `spineAtlas`.
+ *     `spineSkel`, `spineAtlas`, `hocCards`, `hocFull`, `hocSpineSkel` and `hocSpineAtlas`.
  */
-export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames = []) {
+export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames = [], hocSpineIndex = {}) {
 	const bases = { assets: assetsBase, art: artBase };
 	const tiers = {
 		manifest: [join(assetsBase, "assets-manifest.json")],
@@ -94,7 +106,11 @@ export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames
 		skills: [],
 		equipment: [],
 		spineSkel: [],
-		spineAtlas: []
+		spineAtlas: [],
+		hocCards: [],
+		hocFull: [],
+		hocSpineSkel: [],
+		hocSpineAtlas: []
 	};
 	for (const [id, doll] of Object.entries(manifest.dolls ?? {})) {
 		const forms = [[`tdolls/${id}`, doll.normal], [`tdolls/${id}/mod`, doll.mod], ...Object.entries(doll.skins ?? {}).map(([skinId, skin]) => [`tdolls/${id}/skins/${skinId}`, skin])];
@@ -125,6 +141,23 @@ export function candidateUrls(manifest, spineIndex, assetsBase, artBase, uiNames
 		}
 		tiers.spineSkel.push(...skels);
 		tiers.spineAtlas.push(...atlases);
+	}
+	for (const [id, kinds] of Object.entries(manifest.hocs ?? {})) {
+		for (const kind of kinds) {
+			const [host, name] = HOC_IMAGE_FILES[kind];
+			tiers[host === "art" ? "hocFull" : "hocCards"].push(join(bases[host], `hocs/${id}/${name}`));
+		}
+	}
+	for (const [id, entry] of Object.entries(hocSpineIndex)) {
+		const rigs = [entry.combat, ...(entry.crew ?? [])].filter(Boolean);
+		const skels = new Set();
+		const atlases = new Set();
+		for (const rig of rigs) {
+			skels.add(join(assetsBase, `hoc-spine/${id}/${rig.skel}.skel`));
+			atlases.add(join(assetsBase, `hoc-spine/${id}/${rig.atlas}.atlas`));
+		}
+		tiers.hocSpineSkel.push(...skels);
+		tiers.hocSpineAtlas.push(...atlases);
 	}
 	return tiers;
 }
@@ -270,7 +303,7 @@ const option = (args, name, fallback) => (args.includes(name) ? args[args.indexO
  * @param {string[]} args Command-line arguments.
  */
 async function main(args) {
-	const valued = new Set(["--sample", "--seed", "--manifest", "--spine-index", "--src", "--concurrency"]);
+	const valued = new Set(["--sample", "--seed", "--manifest", "--spine-index", "--hoc-spine-index", "--src", "--concurrency"]);
 	const positional = args.filter((arg, i) => !arg.startsWith("--") && !valued.has(args[i - 1]));
 	if (positional.length !== 2) {
 		console.error("usage: node tools/assets/verify_live_assets.mjs <assetsBase> <artBase> [--sample 200] [--seed <n>]");
@@ -283,8 +316,9 @@ async function main(args) {
 	const concurrency = Number(option(args, "--concurrency", DEFAULTS.concurrency));
 	const manifest = JSON.parse(fs.readFileSync(option(args, "--manifest", DEFAULTS.manifest), "utf8"));
 	const spineIndex = JSON.parse(fs.readFileSync(option(args, "--spine-index", DEFAULTS.spineIndex), "utf8"));
+	const hocSpineIndex = JSON.parse(fs.readFileSync(option(args, "--hoc-spine-index", DEFAULTS.hocSpineIndex), "utf8"));
 
-	const tiers = candidateUrls(manifest, spineIndex, assetsBase, artBase, uiImageNames(option(args, "--src", DEFAULTS.src)));
+	const tiers = candidateUrls(manifest, spineIndex, assetsBase, artBase, uiImageNames(option(args, "--src", DEFAULTS.src)), hocSpineIndex);
 	const sample = sampleByTier(tiers, size, seed);
 	console.log(`assets ${assetsBase}`);
 	console.log(`art    ${artBase}`);

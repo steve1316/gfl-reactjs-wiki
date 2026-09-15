@@ -19,10 +19,13 @@ const manifest = {
 			skins: { 805: { images: ["card", "full_damaged"], modImages: ["card_damaged"] }, "legacy-band": { images: ["full"] } },
 			skills: ["skill1", "skill2"]
 		}
-	}
+	},
+	hocs: { 6: ["card", "full"] }
 };
 
 const spineIndex = { 65: { combat: rig("HK416"), dorm: rig("RHK416", "HK416"), mod: { combat: rig("mod/HK416Mod") }, skins: { 805: { combat: rig("skins/805/HK416_805") } } } };
+
+const hocSpineIndex = { 6: { combat: rig("QLZ04"), crew: [rig("QLZ04 A"), rig("QLZ04 B")] } };
 
 test("URLs are derived per tier on the right host", () => {
 	const tiers = candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art");
@@ -36,6 +39,22 @@ test("URLs are derived per tier on the right host", () => {
 	assert.deepEqual(tiers.equipment, ["https://a.test/assets/equipment/5.png", "https://a.test/assets/equipment/12.png"]);
 	assert.equal(tiers.spineSkel.length, 4);
 	assert.deepEqual(tiers.spineAtlas, ["https://a.test/assets/spine/65/HK416.atlas", "https://a.test/assets/spine/65/mod/HK416Mod.atlas", "https://a.test/assets/spine/65/skins/805/HK416_805.atlas"]);
+	assert.deepEqual(tiers.hocCards, ["https://a.test/assets/hocs/6/card.webp"]);
+	assert.deepEqual(tiers.hocFull, ["https://b.test/art/hocs/6/full.webp"]);
+});
+
+test("HOC Spine URLs are derived on the asset host, with rig names URL-encoded", () => {
+	const tiers = candidateUrls(manifest, spineIndex, "https://a.test/assets/", "https://b.test/art", [], hocSpineIndex);
+	assert.deepEqual(tiers.hocSpineSkel.sort(), [
+		"https://a.test/assets/hoc-spine/6/QLZ04%20A.skel",
+		"https://a.test/assets/hoc-spine/6/QLZ04%20B.skel",
+		"https://a.test/assets/hoc-spine/6/QLZ04.skel"
+	]);
+	assert.deepEqual(tiers.hocSpineAtlas.sort(), [
+		"https://a.test/assets/hoc-spine/6/QLZ04%20A.atlas",
+		"https://a.test/assets/hoc-spine/6/QLZ04%20B.atlas",
+		"https://a.test/assets/hoc-spine/6/QLZ04.atlas"
+	]);
 });
 
 test("UI images are read from uiUrl calls and sampled on the asset host", () => {
