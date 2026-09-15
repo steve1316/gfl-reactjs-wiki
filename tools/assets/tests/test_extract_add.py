@@ -66,12 +66,12 @@ class LegacyFreeExtractionTests(unittest.TestCase):
     """`run_extraction` runs with no legacy snapshot, no UI images and no workers for empty lists."""
 
     def test_empty_inventory_writes_empty_trees(self):
-        """An empty inventory produces both trees, no UI files and no failures."""
+        """An empty inventory produces the one asset tree, no `art` tree, no UI files and no failures."""
         with tempfile.TemporaryDirectory() as scratch:
             staging = os.path.join(scratch, "staging")
             report = extract.run_extraction(EMPTY_INVENTORY, None, [], SITE_DATA, os.path.join(scratch, "bundles"), staging, 1)
             self.assertTrue(os.path.isdir(os.path.join(staging, "assets")))
-            self.assertTrue(os.path.isdir(os.path.join(staging, "art")))
+            self.assertFalse(os.path.isdir(os.path.join(staging, "art")))
             self.assertEqual(report["tiers"]["ui"]["files"], 0)
             self.assertEqual(extract.failure_reasons(report), [])
 

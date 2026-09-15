@@ -122,14 +122,14 @@ class PathTests(unittest.TestCase):
     """Output file naming in the skin-id layout."""
 
     def test_base_art_outputs(self):
-        """Base cards go to the asset tree and full art to the art tree, both under `tdolls/<id>/`."""
+        """Cards and full art both land under `tdolls/<id>/`, in the one asset tree."""
         item = {"tier": "art", "doll_id": 65, "assets": {"card": {}, "full": {}, "full_d": {}}}
         self.assertEqual(
             extract.art_outputs(item),
             [
-                ("card", "assets", ["tdolls/65/card.webp", "tdolls/65/card_d.webp"]),
-                ("full", "art", ["tdolls/65/full.webp"]),
-                ("full_d", "art", ["tdolls/65/full_d.webp"]),
+                ("card", ["tdolls/65/card.webp", "tdolls/65/card_d.webp"]),
+                ("full", ["tdolls/65/full.webp"]),
+                ("full_d", ["tdolls/65/full_d.webp"]),
             ],
         )
 
@@ -138,7 +138,7 @@ class PathTests(unittest.TestCase):
         item = {"tier": "mod_art", "doll_id": 65, "assets": {"card": {}, "full": {}}}
         self.assertEqual(
             extract.art_outputs(item),
-            [("card", "assets", ["tdolls/65/mod/card.webp", "tdolls/65/mod/card_d.webp"]), ("full", "art", ["tdolls/65/mod/full.webp"])],
+            [("card", ["tdolls/65/mod/card.webp", "tdolls/65/mod/card_d.webp"]), ("full", ["tdolls/65/mod/full.webp"])],
         )
 
     def test_skin_outputs_include_mod_card(self):
@@ -147,9 +147,9 @@ class PathTests(unittest.TestCase):
         self.assertEqual(
             extract.art_outputs(item),
             [
-                ("card", "assets", ["tdolls/65/skins/30033/card.webp", "tdolls/65/skins/30033/card_d.webp"]),
-                ("mod_card", "assets", ["tdolls/65/skins/30033/mod_card.webp", "tdolls/65/skins/30033/mod_card_d.webp"]),
-                ("full_d", "art", ["tdolls/65/skins/30033/full_d.webp"]),
+                ("card", ["tdolls/65/skins/30033/card.webp", "tdolls/65/skins/30033/card_d.webp"]),
+                ("mod_card", ["tdolls/65/skins/30033/mod_card.webp", "tdolls/65/skins/30033/mod_card_d.webp"]),
+                ("full_d", ["tdolls/65/skins/30033/full_d.webp"]),
             ],
         )
 
@@ -211,12 +211,12 @@ class EncodingTests(unittest.TestCase):
         self.assertEqual(first, extract.encode_png(image.copy()))
         self.assertEqual(list(Image.open(io.BytesIO(first)).getdata()), list(image.getdata()))
 
-    def test_tree_limit(self):
-        """Trees warn above 900 MB and fail above 1,000 MB."""
-        mb = 1048576
-        self.assertEqual(extract.tree_limit_status(899 * mb), "ok")
-        self.assertEqual(extract.tree_limit_status(950 * mb), "warn")
-        self.assertEqual(extract.tree_limit_status(1001 * mb), "over")
+    def test_tree_limit_status_follows_github_limits(self):
+        """Trees warn past 4,000 MB and are over at 5,000 MB."""
+        mb = extract.BYTES_PER_MB
+        self.assertEqual(extract.tree_limit_status(4000 * mb), "ok")
+        self.assertEqual(extract.tree_limit_status(4000 * mb + 1), "warn")
+        self.assertEqual(extract.tree_limit_status(5000 * mb), "over")
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ class ExitDecisionTests(unittest.TestCase):
         self.assertEqual(extract.failure_reasons(clean), [])
         self.assertEqual(len(extract.failure_reasons({**clean, "unexpected_missing": [{"key": "art:65"}]})), 1)
         self.assertIn("assets/spine/1/X.png", extract.failure_reasons({**clean, "oversized": ["assets/spine/1/X.png"]})[0])
-        self.assertEqual(len(extract.failure_reasons({**clean, "trees": {"art": {"status": "over"}}})), 1)
+        self.assertEqual(len(extract.failure_reasons({**clean, "trees": {"assets": {"status": "over"}}})), 1)
 
     def test_icon_worker_reports_bundle_load_failure_per_item(self):
         """A bundle that fails to load marks every icon item missing instead of crashing the pool."""
@@ -299,17 +299,17 @@ class LegacySkinTests(unittest.TestCase):
             self.assertEqual([extra["key"] for extra in extract.load_legacy_skins(path)], ["legacy-b", "legacy-a"])
 
     def test_sources_map_old_slot_files_to_the_skin_key_folder(self):
-        """Cards, Mod cards and full art in slot N land under `skins/<key>/` in their trees."""
+        """Cards, Mod cards and full art in slot N land under `skins/<key>/` in the one asset tree."""
         rows = extract.legacy_outputs(self.EXTRA, "/assets", "/art")
         self.assertEqual(
             rows,
             [
-                ("card", "/assets/tdolls/103/103_skin3_card.png", "assets", "tdolls/103/skins/legacy-winter-journey/card.webp", True),
-                ("card_d", "/assets/tdolls/103/103_skin3_card_d.png", "assets", "tdolls/103/skins/legacy-winter-journey/card_d.webp", True),
-                ("mod_card", "/assets/tdolls/103/103_mod_skin3_card.png", "assets", "tdolls/103/skins/legacy-winter-journey/mod_card.webp", False),
-                ("mod_card_d", "/assets/tdolls/103/103_mod_skin3_card_d.png", "assets", "tdolls/103/skins/legacy-winter-journey/mod_card_d.webp", False),
-                ("full", "/art/tdolls/103/103_skin3_full.png", "art", "tdolls/103/skins/legacy-winter-journey/full.webp", True),
-                ("full_d", "/art/tdolls/103/103_skin3_full_d.png", "art", "tdolls/103/skins/legacy-winter-journey/full_d.webp", True),
+                ("card", "/assets/tdolls/103/103_skin3_card.png", "tdolls/103/skins/legacy-winter-journey/card.webp", True),
+                ("card_d", "/assets/tdolls/103/103_skin3_card_d.png", "tdolls/103/skins/legacy-winter-journey/card_d.webp", True),
+                ("mod_card", "/assets/tdolls/103/103_mod_skin3_card.png", "tdolls/103/skins/legacy-winter-journey/mod_card.webp", False),
+                ("mod_card_d", "/assets/tdolls/103/103_mod_skin3_card_d.png", "tdolls/103/skins/legacy-winter-journey/mod_card_d.webp", False),
+                ("full", "/art/tdolls/103/103_skin3_full.png", "tdolls/103/skins/legacy-winter-journey/full.webp", True),
+                ("full_d", "/art/tdolls/103/103_skin3_full_d.png", "tdolls/103/skins/legacy-winter-journey/full_d.webp", True),
             ],
         )
 
@@ -328,7 +328,7 @@ class LegacySkinTests(unittest.TestCase):
             self.assertEqual({row[3] for row in result["files"]}, {"skin_card", "skin_full"})
             with Image.open(os.path.join(staging, "assets/tdolls/103/skins/legacy-winter-journey/card.webp")) as card:
                 self.assertEqual((card.format, card.size), ("WEBP", (256, 512)))
-            with Image.open(os.path.join(staging, "art/tdolls/103/skins/legacy-winter-journey/full.webp")) as full:
+            with Image.open(os.path.join(staging, "assets/tdolls/103/skins/legacy-winter-journey/full.webp")) as full:
                 self.assertEqual((full.format, full.size, full.mode), ("WEBP", (1024, 1024), "RGBA"))
 
     def test_missing_required_files_are_reported(self):
@@ -518,16 +518,16 @@ class FileSizeTests(unittest.TestCase):
 
     def test_limit_names_the_offending_path(self):
         """A file over 50 MB raises with its tree and path, one at the limit passes."""
-        extract.check_file_size("assets", "spine/1/X.png", 50 * 1048576)
+        extract.check_file_size("spine/1/X.png", 50 * 1048576)
         with self.assertRaises(ValueError) as caught:
-            extract.check_file_size("art", "tdolls/1/full.webp", 50 * 1048576 + 1)
-        self.assertIn("art/tdolls/1/full.webp", str(caught.exception))
+            extract.check_file_size("tdolls/1/full.webp", 50 * 1048576 + 1)
+        self.assertIn("assets/tdolls/1/full.webp", str(caught.exception))
 
     def test_write_file_refuses_oversized_data(self):
         """`write_file` checks the size before writing anything."""
         with tempfile.TemporaryDirectory() as staging:
             with self.assertRaises(ValueError):
-                extract.write_file(staging, "assets", "big.bin", bytearray(50 * 1048576 + 1), "x", extract.new_result())
+                extract.write_file(staging, "big.bin", bytearray(50 * 1048576 + 1), "x", extract.new_result())
             self.assertFalse(os.path.exists(os.path.join(staging, "assets", "big.bin")))
 
     def test_oversized_files_scan(self):
@@ -629,10 +629,10 @@ class HocCardTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as staging:
             result = extract.extract_hoc_art_items([item], "", staging, loader=lambda _file: FakeEnv(container))
             self.assertEqual(result["missing"], [])
-            self.assertEqual(sorted((row[0], row[1], row[3]) for row in result["files"]), [("art", "hocs/7/full.webp", "hoc_full"), ("assets", "hocs/7/card.webp", "hoc_card")])
+            self.assertEqual(sorted((row[0], row[1], row[3]) for row in result["files"]), [("assets", "hocs/7/card.webp", "hoc_card"), ("assets", "hocs/7/full.webp", "hoc_full")])
             with Image.open(os.path.join(staging, "assets", "hocs", "7", "card.webp")) as card:
                 self.assertEqual(card.size, extract.HOC_CARD_SIZE)
-            with Image.open(os.path.join(staging, "art", "hocs", "7", "full.webp")) as full:
+            with Image.open(os.path.join(staging, "assets", "hocs", "7", "full.webp")) as full:
                 self.assertEqual(full.size, (16, 8))
         rows = {row["role"]: row for row in result["nonstandard"]}
         self.assertEqual(rows["card"], {"key": "hoc_art:7", "role": "card", "size": "derived", "expected": list(extract.HOC_CARD_SIZE)})
