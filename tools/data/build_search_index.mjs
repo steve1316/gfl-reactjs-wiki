@@ -9,6 +9,9 @@
  * Entries also carry `aliases` from `tools/data/name-aliases.json`: the names the wiki used before the 2026-09-13
  * upstream import renamed dolls (HK416 is now "416"), so readers can still find a doll by its old name.
  *
+ * HOCs go to their own small `hoc-search-index.json`, because doll and HOC ids overlap and every doll-keyed reader of the main index would
+ * otherwise have to skip them.
+ *
  * Usage:
  *     node tools/data/build_search_index.mjs [--data src/data] [--out src/data/search-index.json]
  */
@@ -32,7 +35,7 @@ function readShard(file) {
 }
 
 /**
- * Build the search index from every generated doll shard and write it to disk.
+ * Build the search indexes from the generated doll shards and HOCs, and write them to disk.
  */
 function main() {
 	const args = process.argv.slice(2);
@@ -52,6 +55,11 @@ function main() {
 
 	fs.writeFileSync(out, `${JSON.stringify(entries)}\n`);
 	console.log(`wrote ${out} (${(fs.statSync(out).size / 1024).toFixed(1)} KB, ${entries.length} dolls)`);
+
+	const hocs = JSON.parse(fs.readFileSync(path.join(dataDir, "hocs.json"), "utf8")).items.map((hoc) => ({ id: hoc.id, name: hoc.name }));
+	const hocOut = path.join(path.dirname(out), "hoc-search-index.json");
+	fs.writeFileSync(hocOut, `${JSON.stringify(hocs)}\n`);
+	console.log(`wrote ${hocOut} (${hocs.length} HOCs)`);
 }
 
 main();
