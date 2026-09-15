@@ -79,7 +79,7 @@ function growPair(upstream, field) {
  * Look up a fairy's type name, matching its `typeId` against the `fairy_type` table.
  *
  * @param {Map<number, string>} types Type names by `fairy_type` id.
- * @param {{ id: number, typeId: number }} item A fairy record, before its `typeName` is set.
+ * @param {{ id: number, typeId: number }} item The fairy's id and its upstream `fairy_type` id.
  * @returns {string} The matching type name.
  * @throws {Error} When the type id has no matching `fairy_type` name.
  */
@@ -109,6 +109,8 @@ export function buildFairies(upstream) {
 		forms: parseForms(configValue(upstream, "fairy_image_type"))
 	};
 
+	const types = new Map(upstream.stc("fairy_type").map((row) => [row.id, cleanName(upstream.t(row.name))]));
+
 	const items = upstream
 		.stc("fairy")
 		.filter((row) => row.id < 90000 && upstream.t(row.name).trim() !== "")
@@ -128,8 +130,7 @@ export function buildFairies(upstream) {
 				id: row.id,
 				name,
 				code: row.code,
-				typeName: "",
-				typeId: row.type,
+				typeName: typeNameFor(types, { id: row.id, typeId: row.type }),
 				strategy,
 				tagline,
 				introduce,
@@ -146,11 +147,6 @@ export function buildFairies(upstream) {
 		throw new Error(`expected at least 47 obtainable fairies, found ${items.length}`);
 	}
 
-	const types = new Map(upstream.stc("fairy_type").map((row) => [row.id, cleanName(upstream.t(row.name))]));
-	for (const item of items) {
-		item.typeName = typeNameFor(types, item);
-		delete item.typeId;
-	}
 	const typeNames = Array.from(types.keys())
 		.sort((a, b) => a - b)
 		.map((id) => types.get(id))
