@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { Route, Routes } from "react-router-dom";
 
@@ -6,7 +8,6 @@ import NotFound404 from "./not_found_404";
 import EquipmentIndex from "./pages/equipment_index/equipment_index";
 import FairyIndex from "./pages/fairy_index/fairy_index";
 import FormationSimulator from "./pages/formation_simulator/formation_simulator";
-import HOCIndex from "./pages/hoc_index/hoc_index";
 import Home from "./pages/home/home";
 import TDoll from "./pages/tdoll/tdoll";
 import TDollArt from "./pages/tdoll_art/tdoll_art";
@@ -15,6 +16,10 @@ import TDollIndex from "./pages/tdoll_index/tdoll_index";
 import { theme } from "./theme";
 
 import "./styles.css";
+
+/** The HOC pages load on first visit, since few readers open them and they would otherwise add ~4.5 KB gzip to every route. */
+const HOCIndex = lazy(() => import("./pages/hoc_index/hoc_index"));
+const HOCPage = lazy(() => import("./pages/hoc/hoc"));
 
 /**
  * The application shell: theme, navigation and routes.
@@ -31,7 +36,22 @@ export default function App() {
 					<Route path="/" element={<Home />} />
 					<Route path="/index" element={<TDollIndex />} />
 					<Route path="/equipment-index" element={<EquipmentIndex />} />
-					<Route path="/hoc-index" element={<HOCIndex />} />
+					<Route
+						path="/hoc-index"
+						element={
+							<Suspense>
+								<HOCIndex />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/hoc/:id"
+						element={
+							<Suspense>
+								<HOCPage />
+							</Suspense>
+						}
+					/>
 					<Route path="/fairy-index" element={<FairyIndex />} />
 					<Route path="/formation" element={<FormationSimulator />} />
 					<Route path="/tdoll/:id/art" element={<TDollArt />} />
