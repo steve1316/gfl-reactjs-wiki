@@ -15,6 +15,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 import { loadAllDolls, searchIndex } from "../../lib/data";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
+import { formatBuildTimeQuery, matchesBuildTime, parseBuildTime } from "../../lib/buildTime";
 import type { TDoll, TDollForm } from "../../types/tdoll";
 
 /** How many dolls one page of results holds. */
@@ -24,14 +25,15 @@ const PAGE_SIZE = 30;
 const ALIASES_BY_ID = new Map(searchIndex.map((entry) => [entry.id, entry.aliases ?? []]));
 
 /** What the results can be sorted by. */
-type SortKey = "id" | "name" | "rarity" | "release";
+type SortKey = "id" | "name" | "rarity" | "release" | "buildTime";
 
 /** The sort menu's entries, in menu order. */
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 	{ value: "id", label: "ID" },
 	{ value: "name", label: "Name" },
 	{ value: "rarity", label: "Rarity" },
-	{ value: "release", label: "Global release" }
+	{ value: "release", label: "Global release" },
+	{ value: "buildTime", label: "Build time" }
 ];
 
 /** Compares names so digits order by value, putting "9A-91" before "43M", and case is ignored. Built once rather than per comparison. */
@@ -54,7 +56,8 @@ function isSortKey(value: unknown): value is SortKey {
 }
 
 /**
- * Sort the matching dolls. Ties fall back to ascending id, and dolls with no known Global release date stay last in either direction.
+ * Sort the matching dolls. Ties fall back to ascending id, and dolls with no known Global release date or build time stay last in
+ * either direction.
  *
  * @param entries The matching dolls, left unchanged.
  * @param key What to sort by. Name and rarity come from the shown form, so a Mod counts as 6 stars while the Mod filter is on.
@@ -86,6 +89,15 @@ function sortEntries(entries: IndexEntry[], key: SortKey, descending: boolean): 
 				const aDate = a.release.date ?? "";
 				const bDate = b.release.date ?? "";
 				order = aDate < bDate ? -1 : aDate > bDate ? 1 : 0;
+				break;
+			}
+			case "buildTime": {
+				// Decided before the direction applies, so dolls production never gives stay last either way.
+				const missing = Number(a.production === null) - Number(b.production === null);
+				if (missing !== 0) {
+					return missing;
+				}
+				order = (a.production?.seconds ?? 0) - (b.production?.seconds ?? 0);
 				break;
 			}
 			case "id":
@@ -186,9 +198,16 @@ export default function TDoll_Index() {
 	 */
 	/** What the reader has typed into the name search. */
 	const [nameQuery, setNameQuery] = useState("");
+	/** What the reader has typed into the build time search. */
+	const [buildTimeText, setBuildTimeText] = useState("");
 
 	// The list re-filters from a deferred copy, so typing stays responsive while a few hundred cards re-render.
 	const deferredQuery = useDeferredValue(nameQuery);
+
+	// Parsed once per keystroke rather than per doll, since every doll in `matches` reads the same parsed query.
+	const buildTimeQuery = useMemo(() => parseBuildTime(buildTimeText), [buildTimeText]);
+	// True once the reader has typed something that does not parse as a build time, so the field can show a hint instead of filtering.
+	const buildTimeInvalid = buildTimeText.trim() !== "" && buildTimeQuery === null;
 
 	// Every doll's searchable names, normalised once per load rather than on every keystroke.
 	const searchKeys = useMemo(
@@ -206,6 +225,9 @@ export default function TDoll_Index() {
 			// The name search narrows every other filter. Both forms' names and any old names count, so "m4sopmod" finds the doll
 			// whichever form the Mod filter is showing, and "hk416" still finds 416.
 			if (!matchesAnyName(searchKeys.get(data.normal.id) ?? [], query)) {
+				return [];
+			}
+			if (buildTimeQuery && !(data.production && matchesBuildTime(data.production.seconds, buildTimeQuery))) {
 				return [];
 			}
 			if (!typeOn && !rarityOn && !modOn) {
@@ -232,7 +254,7 @@ export default function TDoll_Index() {
 			}
 			return (typeOn ? matchesType : matchesRarity) ? entry : [];
 		});
-	}, [allDolls, searchKeys, typeFilter, rarityFilter, modFilter, deferredQuery]);
+	}, [allDolls, searchKeys, typeFilter, rarityFilter, modFilter, deferredQuery, buildTimeQuery]);
 
 	const sorted = useMemo(() => sortEntries(matches, sortKey, sortDescending), [matches, sortKey, sortDescending]);
 
@@ -272,6 +294,8 @@ export default function TDoll_Index() {
 			setModFilter(temp.modFilter);
 			// Absent from filters saved before the name search existed.
 			setNameQuery(typeof temp.nameQuery === "string" ? temp.nameQuery : "");
+			// Absent from filters saved before build time search existed.
+			setBuildTimeText(typeof temp.buildTime === "string" ? temp.buildTime : "");
 			// Absent from filters saved before sorting existed.
 			setSortKey(isSortKey(temp.sortKey) ? temp.sortKey : "id");
 			setSortDescending(temp.sortDescending === true);
@@ -288,11 +312,12 @@ export default function TDoll_Index() {
 			typeFilter: typeFilter,
 			modFilter: modFilter,
 			nameQuery: nameQuery,
+			buildTime: buildTimeText,
 			sortKey: sortKey,
 			sortDescending: sortDescending
 		};
 		sessionStorage.setItem("filters", JSON.stringify(tempFilters));
-	}, [modFilter, rarityFilter, typeFilter, nameQuery, sortKey, sortDescending]);
+	}, [modFilter, rarityFilter, typeFilter, nameQuery, buildTimeText, sortKey, sortDescending]);
 
 	// Every handler below is stable across renders and toggles from the current state rather than a captured copy,
 	// so the memoised FilterPanel, its chips and the result cards can all skip renders they have no part in.
@@ -309,6 +334,8 @@ export default function TDoll_Index() {
 	}, []);
 
 	const handleClearName = useCallback(() => setNameQuery(""), []);
+
+	const handleClearBuildTime = useCallback(() => setBuildTimeText(""), []);
 
 	const handleSortKeyChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
 		if (isSortKey(event.target.value)) {
@@ -328,6 +355,7 @@ export default function TDoll_Index() {
 		setTypeFilter((types) => types.map((type) => ({ ...type, selected: false })));
 		setModFilter((mod) => ({ ...mod, selected: false }));
 		setNameQuery("");
+		setBuildTimeText("");
 	}, []);
 
 	// The currently active filters, flattened into one list the summary bar can render as removable chips.
@@ -337,9 +365,10 @@ export default function TDoll_Index() {
 			...rarityFilter.filter((rarity) => rarity.selected).map((rarity) => ({ id: `rarity-${rarity.key}`, label: rarity.label, onDelete: () => handleToggleRarity(rarity.key) })),
 			...typeFilter.filter((type) => type.selected).map((type) => ({ id: `type-${type.key}`, label: type.label, onDelete: () => handleToggleType(type.key) })),
 			...(modFilter.selected ? [{ id: "mod", label: modFilter.label, onDelete: handleToggleMod }] : []),
-			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : [])
+			...(nameQuery.trim() ? [{ id: "name", label: `"${nameQuery.trim()}"`, onDelete: handleClearName }] : []),
+			...(buildTimeQuery ? [{ id: "build-time", label: formatBuildTimeQuery(buildTimeQuery), onDelete: handleClearBuildTime }] : [])
 		],
-		[rarityFilter, typeFilter, modFilter, nameQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName]
+		[rarityFilter, typeFilter, modFilter, nameQuery, buildTimeQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName, handleClearBuildTime]
 	);
 
 	return (
@@ -355,6 +384,9 @@ export default function TDoll_Index() {
 					activeCount={activeFilters.length}
 					nameQuery={nameQuery}
 					onNameQueryChange={setNameQuery}
+					buildTimeQuery={buildTimeText}
+					onBuildTimeQueryChange={setBuildTimeText}
+					buildTimeInvalid={buildTimeInvalid}
 					onToggleRarity={handleToggleRarity}
 					onToggleType={handleToggleType}
 					onToggleMod={handleToggleMod}
