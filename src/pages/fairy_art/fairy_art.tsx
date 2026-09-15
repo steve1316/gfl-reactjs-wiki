@@ -65,6 +65,9 @@ export default function FairyArt() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const { data, loadFailed, retry } = useFairies();
 
+	// Captured at open, since the form picker's replace gives the location a new key and would hide a pasted link's `default` key.
+	const openedKey = useRef(location.key);
+
 	// The art element fills the stage, so its box is the stage's size and its natural size gives the drawn picture's shape.
 	const artRef = useRef<HTMLImageElement | null>(null);
 
@@ -78,12 +81,12 @@ export default function FairyArt() {
 
 	// Opened from the fairy page, going back returns to it. Opened from a pasted link there is nothing to go back to, so the fairy page opens instead.
 	const close = useCallback(() => {
-		if (location.key !== "default") {
+		if (openedKey.current !== "default") {
 			void navigate(-1);
 			return;
 		}
 		void navigate(`/fairy/${id ?? ""}`, { replace: true });
-	}, [location.key, navigate, id]);
+	}, [navigate, id]);
 
 	useCloseOnEscape(close);
 
