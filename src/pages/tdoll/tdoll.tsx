@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 
 // Component imports
+import LazySection from "../../components/LazySection";
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
 import ChibiPanel from "./ChibiPanel";
 import DollHero from "./DollHero";
-import LazySection from "./LazySection";
 import PageBackdrop from "./PageBackdrop";
 import SkillsPanel from "./SkillsPanel";
 import StatsPanel from "./StatsPanel";
