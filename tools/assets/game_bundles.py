@@ -79,7 +79,7 @@ EQUIP_BUNDLE = "resource_icon_equip"
 UI_BUNDLES = ("atlasclips_listequipment",)
 
 # Tiers in report order.
-TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon")
+TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon", "hoc_art", "hoc_spine")
 
 # Each role is `(name, filename alternatives, required)`. `{stem}` is the codename, with `_<skinId>` for skins.
 ART_ROLES = (
@@ -98,6 +98,18 @@ SPINE_ROLES = (
 )
 SKILL_ROLES = (("icon", ("SkillIcon/{stem}.png",), True),)
 EQUIP_ROLES = (("icon", ("Equip/{stem}.png",), True), ("alpha", ("Equip/{stem}_Alpha.png",), False))
+
+# HOC pictures all live in one bundle. The card path keeps its folder, since L9A1 also has a root-level `L9A1_Vertical.png`.
+HOC_ART_BUNDLE = "resource_squads"
+HOC_ART_ROLES = (
+    ("card", ("Squads_Vertical/{stem}_Vertical.png",), True),
+    ("bgl", ("{stem}_BGL.jpg",), True),
+    ("bgr", ("{stem}_BGR.jpg",), True),
+    ("left", ("{stem}_Left.png",), True),
+    ("left_alpha", ("{stem}_Left_Alpha.png",), True),
+    ("right", ("{stem}_Right.png",), True),
+    ("right_alpha", ("{stem}_Right_Alpha.png",), True),
+)
 
 # Skill codes with no icon anywhere in `sprites_ui`, confirmed by the research pass.
 EXPECTED_MISSING_SKILL_CODES = frozenset(code.lower() for code in ("ma", "mg4", "rmb", "xm3", "m2wnl", "TaeSkill"))
@@ -165,13 +177,14 @@ def normalise_file_hash(file_hash):
 
 
 def load_site(site_dir):
-    """Read the dolls and equipment ids the site shows.
+    """Read the dolls, equipment ids and HOCs the site shows.
 
     Args:
-        site_dir: Directory holding `dolls-*.json` and `equipment.json`.
+        site_dir: Directory holding `dolls-*.json`, `equipment.json` and, when HOCs are hosted, `hocs.json`.
 
     Returns:
-        A `(dolls, equipment_ids)` pair, dolls sorted by id and ids sorted and deduplicated.
+        A `(dolls, equipment_ids, hocs)` triple. Dolls are sorted by id, ids are sorted and deduplicated, and `hocs` is a list of
+        `{"id": int, "code": str}` sorted by id, empty when `hocs.json` is absent.
     """
     dolls = []
     for path in sorted(glob.glob(os.path.join(site_dir, "dolls-*.json"))):
@@ -179,7 +192,9 @@ def load_site(site_dir):
     dolls.sort(key=lambda doll: doll["normal"]["id"])
     items = read_json(os.path.join(site_dir, "equipment.json"))["items"]
     equipment_ids = sorted({item["id"] for group in items.values() for item in group})
-    return dolls, equipment_ids
+    hocs_path = os.path.join(site_dir, "hocs.json")
+    hocs = sorted(({"id": item["id"], "code": item["code"]} for item in read_json(hocs_path)["items"]), key=lambda hoc: hoc["id"]) if os.path.isfile(hocs_path) else []
+    return dolls, equipment_ids, hocs
 
 
 def load_tables(gf_data_dir):
@@ -462,8 +477,41 @@ def equip_items(index, equipment_ids, equip_codes):
     return items
 
 
-def new_targets(dolls, equipment_ids, manifest):
-    """Work out which dolls, Mods, skins and equipment the committed manifest does not list yet.
+def hoc_items(index, hoc):
+    """Resolve the art and Spine items for one HOC.
+
+    The rig bundle holds one combat skeleton named after the code and a few crew skeletons with irregular names, such as `RTOWA`, `QLZ04 A`
+    or `R_PP93_M1`. A crew skeleton either ships its own atlas and page or uses the combat atlas, so its atlas roles are optional.
+
+    Args:
+        index: The bundle index from `load_index`.
+        hoc: One `{id, code}` record from `hocs.json`.
+
+    Returns:
+        A `[hoc_art item, hoc_spine item]` list.
+    """
+    hoc_id, code = hoc["id"], hoc["code"]
+    art = resolve_item(index, "hoc_art", f"hoc_art:{hoc_id}", code, [HOC_ART_BUNDLE], HOC_ART_ROLES, hoc_id=hoc_id, code=code)
+    rig_bundle = f"character_{code.lower()}_spine"
+    skeletons = []
+    for name in bundle_candidates([rig_bundle]):
+        bundle = index.get(name)
+        if bundle:
+            skeletons = sorted({path.rsplit("/", 1)[-1].split(".skel")[0] for lowered, path in bundle["files"] if lowered.endswith((".skel", ".skel.bytes"))}, key=str.lower)
+            break
+    crew = [stem for stem in skeletons if stem.lower() != code.lower()]
+    roles = list(SPINE_ROLES[:3])
+    for number, stem in enumerate(crew, start=1):
+        # Crew stems are written into the templates, since `resolve_item` fills `{stem}` with the combat code.
+        roles.append((f"crew{number}_skel", (f"{stem}.skel.bytes", f"{stem}.skel"), True))
+        roles.append((f"crew{number}_atlas", (f"{stem}.atlas.txt", f"{stem}.atlas"), False))
+        roles.append((f"crew{number}_texture", (f"{stem}.png",), False))
+    rig = resolve_item(index, "hoc_spine", f"hoc_spine:{hoc_id}", code, [rig_bundle], roles, hoc_id=hoc_id, code=code, crew=len(crew))
+    return [art, rig]
+
+
+def new_targets(dolls, equipment_ids, manifest, hocs=()):
+    """Work out which dolls, Mods, skins, equipment and HOCs the committed manifest does not list yet.
 
     A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed.
 
@@ -471,9 +519,10 @@ def new_targets(dolls, equipment_ids, manifest):
         dolls: Site doll records.
         equipment_ids: Equipment ids from the site data.
         manifest: The committed version 3 manifest.
+        hocs: HOC records from `load_site`, each `{"id", "code"}`.
 
     Returns:
-        A dict of `dolls`, `mods` and `equipment` id sets and a `skins` set of `(doll_id, skin_id)` pairs. Only numeric skin ids count.
+        A dict of `dolls`, `mods`, `equipment` and `hocs` id sets and a `skins` set of `(doll_id, skin_id)` pairs. Only numeric skin ids count.
     """
     listed = manifest["dolls"]
     targets = {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()}
@@ -490,6 +539,8 @@ def new_targets(dolls, equipment_ids, manifest):
                 targets["skins"].add((doll_id, skin_id))
     hosted_equipment = set(manifest["equipment"])
     targets["equipment"] = {equip_id for equip_id in equipment_ids if equip_id not in hosted_equipment}
+    listed_hocs = manifest.get("hocs", {})
+    targets["hocs"] = {hoc["id"] for hoc in hocs if str(hoc["id"]) not in listed_hocs}
     return targets
 
 
@@ -524,6 +575,8 @@ def select_new_items(items, targets):
             keep = (item.get("doll_id"), item.get("skin_id")) in targets["skins"]
         elif tier == "equip_icon":
             keep = item.get("equip_id") in targets["equipment"]
+        elif tier in ("hoc_art", "hoc_spine"):
+            keep = item.get("hoc_id") in targets.get("hocs", set())
         else:
             keep = False
         if keep:
@@ -590,7 +643,7 @@ def summarise(items, index, include_ui=True):
     return summary, bundles
 
 
-def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None):
+def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=()):
     """Resolve every wanted asset against the ResData manifest.
 
     Args:
@@ -601,6 +654,7 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         skill_codes: Skill codename by skill group id.
         equip_codes: Equipment codename by id.
         select: Optional callable narrowing the item list before bundles are collected. The UI bundles are then added only for equipment icons.
+        hocs: HOC records from `load_site`, each `{"id", "code"}`.
 
     Returns:
         The inventory dict with `resVersion`, `resUrl`, `summary`, `bundles` and `items`.
@@ -612,6 +666,8 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         items.extend(doll_items(index, doll, codes))
     items.extend(skill_items(index, dolls, guns, skill_codes))
     items.extend(equip_items(index, equipment_ids, equip_codes))
+    for hoc in hocs:
+        items.extend(hoc_items(index, hoc))
     if select is not None:
         items = select(items)
     include_ui = select is None or any(item["tier"] == "equip_icon" for item in items)
@@ -625,18 +681,20 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
     Args:
         resdata_path: Path to `resdata_no_hash.json`.
         gf_data_dir: The `gf-data-us` checkout.
-        site_dir: Directory holding the site's `dolls-*.json` and `equipment.json`.
+        site_dir: Directory holding the site's `dolls-*.json`, `equipment.json` and, when hosted, `hocs.json`.
         manifest_path: The committed manifest. When given, only items for targets it does not list are kept and the inventory is flagged
             `onlyMissing`.
 
     Returns:
         The inventory dict from `build_inventory`.
     """
-    dolls, equipment_ids = load_site(site_dir)
+    dolls, equipment_ids, hocs = load_site(site_dir)
     if manifest_path is None:
-        return build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir))
-    targets = new_targets(dolls, equipment_ids, read_json(manifest_path))
-    inventory = build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), select=lambda items: select_new_items(items, targets))
+        return build_inventory(read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs)
+    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs)
+    inventory = build_inventory(
+        read_json(resdata_path), dolls, equipment_ids, *load_tables(gf_data_dir), select=lambda items: select_new_items(items, targets), hocs=hocs
+    )
     inventory["onlyMissing"] = True
     return inventory
 
