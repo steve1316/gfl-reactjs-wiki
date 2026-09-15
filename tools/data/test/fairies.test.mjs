@@ -55,10 +55,12 @@ test("builds battle and strategy skills", () => {
 	assert.equal(warrior.strategy, false);
 	assert.equal(warrior.skill.name, "Combat Efficiency");
 	assert.equal(warrior.skill.stat1[9], "20%");
+	assert.equal(warrior.skill.initial_cooldown, "1s");
 	const reinforce = built.items.find((f) => f.id === 10);
 	assert.equal(reinforce.strategy, true);
 	assert.match(reinforce.skill.description, /dummy/);
 	assert.equal(reinforce.skill.cost.length, 10);
+	assert.equal(reinforce.skill.initial_cooldown, undefined);
 });
 
 test("lists every talent with its effect", () => {

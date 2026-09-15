@@ -117,7 +117,8 @@ function missionSkillGroups(upstream) {
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @param {number} group The skill group id from a fairy's `skill_id`, with the leading `*` stripped.
- * @returns {object} The skill in the site's raw shape, with `cost` per level instead of a battle skill's cooldown-driven fields.
+ * @returns {object} The skill in the site's raw shape, with `cost` per level instead of a battle skill's cooldown-driven fields. Has no
+ * `initial_cooldown`, since `mission_skill_config` carries no field for it.
  */
 export function buildMissionSkill(upstream, group) {
 	const rows = missionSkillGroups(upstream).get(group) ?? [];
@@ -132,7 +133,6 @@ export function buildMissionSkill(upstream, group) {
 
 	const skill = {
 		name: upstream.t(top.name).trim(),
-		initial_cooldown: top.start_cd_time !== undefined ? `${top.start_cd_time ?? 0} turns` : "0 turns",
 		cooldown: rows.map((row) => row.cd_time),
 		cost: rows.map((row) => row.consumption),
 		description,

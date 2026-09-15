@@ -36,8 +36,8 @@ export interface FairyTalent {
 export interface FairySkill {
 	/** Official English skill name. */
 	name: string;
-	/** "Passive", or the cooldown before the first use, such as "1s" or "0 turns" for a strategy skill. */
-	initial_cooldown: string;
+	/** "Passive", or the cooldown before the first use, such as "1s". Battle skills only: `mission_skill_config` has no matching field. */
+	initial_cooldown?: string;
 	/** Cooldown at each level, absent on passive battle skills. Turns for a strategy skill. */
 	cooldown?: StatArray;
 	/** Command point cost at each level, strategy skills only. */

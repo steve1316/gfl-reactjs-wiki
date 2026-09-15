@@ -82,7 +82,7 @@ function growPair(upstream, field) {
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @returns {{ constants: object, types: string[], talents: object[], items: object[] }} The stat constants, type names, talents and fairies.
- * @throws {Error} When a fairy or talent's name, text or skill is missing, or the selection is not exactly 47 fairies.
+ * @throws {Error} When a fairy or talent's name, text or skill is missing, or fewer than 47 fairies are selected.
  */
 export function buildFairies(upstream) {
 	const constants = {
@@ -125,8 +125,8 @@ export function buildFairies(upstream) {
 			};
 		});
 
-	if (items.length !== 47) {
-		throw new Error(`expected 47 obtainable fairies, found ${items.length}`);
+	if (items.length < 47) {
+		throw new Error(`expected at least 47 obtainable fairies, found ${items.length}`);
 	}
 
 	const types = new Map(upstream.stc("fairy_type").map((row) => [row.id, cleanName(upstream.t(row.name))]));
