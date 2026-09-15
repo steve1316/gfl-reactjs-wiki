@@ -33,7 +33,7 @@ const styles = {
 } satisfies Record<string, SxProps<Theme>>;
 
 /**
- * The form toggle's label for a group of star ranks, such as "1-2★" or "5★".
+ * The form toggle's label for a group of star ranks, such as "1-2 stars" or "5 stars".
  *
  * @param ranks The star ranks the form covers, in ascending order.
  * @returns The lowest and highest rank joined by a dash, or just the rank when the form covers only one.
