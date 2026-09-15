@@ -1,5 +1,4 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 // MaterialUI imports
 import { Box, Container, Divider, Grid } from "@mui/material";
@@ -14,7 +13,6 @@ import type { ActiveFilter, SortOption } from "../../components/IndexSummaryBar"
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import FairyCard from "./FairyCard";
-import TalentsSection from "./TalentsSection";
 
 import { FAIRY_MAX_STARS, FAIRY_STAT_KEYS, FAIRY_STAT_LABELS, fairyStats } from "../../lib/fairyStats";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
@@ -147,13 +145,12 @@ function sortEntries(entries: IndexFairy[], key: SortKey, descending: boolean): 
 // Page
 
 /**
- * The Fairy index: every Fairy, filterable by type and source and sortable by any stat, followed by the talent list.
+ * The Fairy index: every Fairy, filterable by type and source and sortable by any stat.
  *
  * @returns The Fairy index page.
  */
 export default function FairyIndex() {
 	const { data, loadFailed, retry: handleRetryLoad } = useFairies();
-	const location = useLocation();
 
 	// Read once, on the first render, so a restored visit never flashes the defaults.
 	const [saved] = useState(readSavedFilters);
@@ -200,13 +197,6 @@ export default function FairyIndex() {
 		document.title = "Fairy Index";
 		document.querySelector('meta[name="description"]')?.setAttribute("content", "Index of Fairies");
 	}, []);
-
-	// The talents section only exists once the data loads, so a link to #talents needs its own scroll once that happens.
-	useEffect(() => {
-		if (data !== null && location.hash === "#talents") {
-			document.getElementById("talents")?.scrollIntoView();
-		}
-	}, [data, location.hash]);
 
 	// Remember everything for the rest of the tab, so coming back from a Fairy page restores the view.
 	useEffect(() => {
@@ -307,8 +297,6 @@ export default function FairyIndex() {
 						</Grid>
 					))}
 				</Grid>
-
-				{data !== null && <TalentsSection talents={data.talents} />}
 			</Container>
 		</Box>
 	);
