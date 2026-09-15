@@ -76,13 +76,30 @@ function growPair(upstream, field) {
 }
 
 /**
+ * Look up a fairy's type name, matching its `typeId` against the `fairy_type` table.
+ *
+ * @param {Map<number, string>} types Type names by `fairy_type` id.
+ * @param {{ id: number, typeId: number }} item A fairy record, before its `typeName` is set.
+ * @returns {string} The matching type name.
+ * @throws {Error} When the type id has no matching `fairy_type` name.
+ */
+export function typeNameFor(types, item) {
+	const typeName = types.get(item.typeId);
+	if (typeName === undefined) {
+		throw new Error(`fairy ${item.id} has no fairy_type name for type id ${item.typeId}`);
+	}
+	return typeName;
+}
+
+/**
  * Build every obtainable fairy, its talents and the constants its stats are worked out from.
  *
  * Stats ship as the game's inputs rather than as numbers, and `src/lib/fairyStats.ts` turns them into a stat at any level and star rank.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @returns {{ constants: object, types: string[], talents: object[], items: object[] }} The stat constants, type names, talents and fairies.
- * @throws {Error} When a fairy or talent's name, text or skill is missing, or fewer than 47 fairies are selected.
+ * @throws {Error} When a fairy or talent's name, text or skill is missing, fewer than 47 fairies are selected, or a fairy's type id has no
+ * matching `fairy_type` name.
  */
 export function buildFairies(upstream) {
 	const constants = {
@@ -131,7 +148,7 @@ export function buildFairies(upstream) {
 
 	const types = new Map(upstream.stc("fairy_type").map((row) => [row.id, cleanName(upstream.t(row.name))]));
 	for (const item of items) {
-		item.typeName = types.get(item.typeId);
+		item.typeName = typeNameFor(types, item);
 		delete item.typeId;
 	}
 	const typeNames = Array.from(types.keys())
