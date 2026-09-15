@@ -121,32 +121,37 @@ class ManifestV3Tests(unittest.TestCase):
     """The skin-id keyed asset manifest."""
 
     def test_manifest_shape(self):
-        """Images come from both trees, Mod-skin cards become `modImages`, skills and equipment ids are listed."""
+        """Cards and full art come from the one tree, Mod-skin cards become `modImages`, skills and equipment ids are listed."""
         with tempfile.TemporaryDirectory() as tmp:
-            assets, art = os.path.join(tmp, "assets"), os.path.join(tmp, "art")
+            assets = os.path.join(tmp, "assets")
             touch(
                 assets,
                 "tdolls/65/card.webp",
                 "tdolls/65/card_d.webp",
+                "tdolls/65/full.webp",
+                "tdolls/65/full_d.webp",
                 "tdolls/65/skill1.png",
                 "tdolls/65/skill2.png",
                 "tdolls/65/mod/card.webp",
+                "tdolls/65/mod/full.webp",
                 "tdolls/65/skins/805/card.webp",
                 "tdolls/65/skins/805/card_d.webp",
+                "tdolls/65/skins/805/full.webp",
                 "tdolls/65/skins/805/mod_card.webp",
                 "tdolls/65/skins/805/mod_card_d.webp",
                 "tdolls/65/skins/30033/card.webp",
                 "tdolls/65/skins/legacy-b/card.webp",
                 "tdolls/65/skins/legacy-a/card.webp",
+                "tdolls/65/skins/legacy-a/full.webp",
                 "tdolls/65/skins/notes/card.webp",
                 "tdolls/100/card.webp",
+                "tdolls/9/full.webp",
                 "equipment/120.png",
                 "equipment/3.png",
                 "equipment/readme.txt",
                 "spine/65/HK416.skel",
             )
-            touch(art, "tdolls/65/full.webp", "tdolls/65/full_d.webp", "tdolls/65/mod/full.webp", "tdolls/65/skins/805/full.webp", "tdolls/65/skins/legacy-a/full.webp", "tdolls/9/full.webp")
-            manifest = build_manifest.build_v3(assets, art)
+            manifest = build_manifest.build_v3(assets)
         self.assertEqual(manifest["version"], 3)
         self.assertEqual(manifest["imageKinds"], ["card", "card_damaged", "full", "full_damaged"])
         self.assertEqual(manifest["equipment"], [3, 120])
@@ -168,6 +173,13 @@ class ManifestV3Tests(unittest.TestCase):
         self.assertEqual(list(manifest["dolls"]["65"]["skins"]), ["805", "30033", "legacy-a", "legacy-b"])
         self.assertEqual(manifest["dolls"]["9"], {"normal": {"images": ["full"]}, "skills": []})
 
+    def test_full_art_is_read_from_the_assets_tree(self):
+        """A doll's full art next to its card lists both kinds."""
+        with tempfile.TemporaryDirectory() as scratch:
+            assets = os.path.join(scratch, "assets")
+            for name in ("card.webp", "full.webp"):
+                touch(assets, os.path.join("tdolls", "7", name))
+            self.assertEqual(build_manifest.build_v3(assets)["dolls"]["7"]["normal"], {"images": ["card", "full"]})
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,15 +215,14 @@ class HocIndexTests(unittest.TestCase):
             self.assertEqual(build_spine_index.build_hoc_index(os.path.join(root, "absent")), {})
 
     def test_manifest_lists_hoc_kinds(self):
-        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
-            touch(assets, "hocs/1/card.webp", "hocs/2/card.webp")
-            touch(art, "hocs/1/full.webp")
-            manifest = build_manifest.build_v3(assets, art)
+        with tempfile.TemporaryDirectory() as assets:
+            touch(assets, "hocs/1/card.webp", "hocs/2/card.webp", "hocs/1/full.webp")
+            manifest = build_manifest.build_v3(assets)
         self.assertEqual(manifest["hocs"], {"1": ["card", "full"], "2": ["card"]})
 
     def test_manifest_has_no_hocs_when_the_folder_is_absent(self):
-        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
-            manifest = build_manifest.build_v3(assets, art)
+        with tempfile.TemporaryDirectory() as assets:
+            manifest = build_manifest.build_v3(assets)
         self.assertEqual(manifest["hocs"], {})
 
 
@@ -221,17 +232,17 @@ class HocIndexTests(unittest.TestCase):
 
 
 class FairyIndexTests(unittest.TestCase):
-    """Fairy art lands in the manifest. Fairies have no Spine rigs and no art-tree files, only the three forms in the asset tree."""
+    """Fairy art lands in the manifest. Fairies have no Spine rigs, only the three forms in the asset tree."""
 
     def test_manifest_lists_fairy_forms(self):
-        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
+        with tempfile.TemporaryDirectory() as assets:
             touch(assets, "fairies/1/form1.webp", "fairies/1/form2.webp", "fairies/2/form1.webp")
-            manifest = build_manifest.build_v3(assets, art)
+            manifest = build_manifest.build_v3(assets)
         self.assertEqual(manifest["fairies"], {"1": ["form1", "form2"], "2": ["form1"]})
 
     def test_manifest_has_no_fairies_when_the_folder_is_absent(self):
-        with tempfile.TemporaryDirectory() as assets, tempfile.TemporaryDirectory() as art:
-            manifest = build_manifest.build_v3(assets, art)
+        with tempfile.TemporaryDirectory() as assets:
+            manifest = build_manifest.build_v3(assets)
         self.assertEqual(manifest["fairies"], {})
 
 

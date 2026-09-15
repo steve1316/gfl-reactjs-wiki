@@ -414,12 +414,11 @@ def resolve_res_version(explicit):
     sys.exit("no ResData version found in tools/assets/.cache/inventory.json. Pass --res-version")
 
 
-def verify_staging(assets_root, art_root, manifest_path, spine_index_path):
+def verify_staging(assets_root, manifest_path, spine_index_path):
     """Regenerate the manifest, require it to match the committed copy, and run the v3 audit.
 
     Args:
         assets_root: The asset staging tree.
-        art_root: The art staging tree.
         manifest_path: The committed repo-root manifest.
         spine_index_path: The Spine index the site bundles.
 
@@ -429,19 +428,19 @@ def verify_staging(assets_root, art_root, manifest_path, spine_index_path):
     Raises:
         SystemExit: When the manifests differ or the audit fails.
     """
-    regenerated = build_manifest.dumps(build_manifest.build_v3(assets_root, art_root))
+    regenerated = build_manifest.dumps(build_manifest.build_v3(assets_root))
     with open(manifest_path, encoding="utf-8") as handle:
         committed = handle.read()
     difference = compare_manifests(regenerated, committed)
     if difference:
         sys.exit(difference)
-    print(f"manifest: regenerated from the staging trees, byte-identical to {manifest_path} ({len(regenerated)} bytes)")
+    print(f"manifest: regenerated from the staging tree, byte-identical to {manifest_path} ({len(regenerated)} bytes)")
 
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as handle:
         handle.write(regenerated)
         regenerated_path = handle.name
     try:
-        command = ["node", os.path.join(TOOLS_DIR, "audit_assets.mjs"), "--assets", assets_root, "--art", art_root]
+        command = ["node", os.path.join(TOOLS_DIR, "audit_assets.mjs"), "--assets", assets_root]
         command += ["--manifest", regenerated_path, "--spine-index", spine_index_path]
         result = subprocess.run(command, capture_output=True, text=True)
     finally:
@@ -496,7 +495,7 @@ def prepare(repo, clone, assets_root, art_root, manifest_path, spine_index_path,
     if git(clone, "rev-parse", "--verify", "--quiet", f"refs/heads/{BRANCH}", check=False) and not replace_branch:
         sys.exit(f"{clone} already has a {BRANCH} branch. Pass --replace-branch to rebuild it")
 
-    regenerated = verify_staging(assets_root, art_root, manifest_path, spine_index_path)
+    regenerated = verify_staging(assets_root, manifest_path, spine_index_path)
 
     kept = {}
     for name in KEEP_FILES:

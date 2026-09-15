@@ -11,12 +11,11 @@
  * index, which `add_spine_animations.mjs` fills with the same `skb.js` the browser uses.
  *
  * Usage:
- *     node tools/assets/audit_assets.mjs [--assets <dir>] [--art <dir>] [--manifest <file>] [--spine-index <file>] [--hoc-spine-index <file>]
+ *     node tools/assets/audit_assets.mjs [--assets <dir>] [--manifest <file>] [--spine-index <file>] [--hoc-spine-index <file>]
  *
- * Audits the skin-id layout on disk: every file the version 3 manifest and Spine index reference must exist in the staging trees. `--v3`
+ * Audits the skin-id layout on disk: every file the version 3 manifest and Spine index reference must exist in the staging tree. `--v3`
  * is still accepted from before the version 2 audit of the live hosts was removed. HOC art and rigs are audited too, the HOC Spine index
- * only when its file exists, since a repo may not have any HOC rigs published yet. Fairy art is audited the same way, from the asset tree
- * only, since fairies have no full art or Spine rigs.
+ * only when its file exists, since a repo may not have any HOC rigs published yet. Fairy art is audited the same way.
  *
  * Exits non-zero when anything is missing, so it can gate a deploy.
  */
@@ -24,23 +23,22 @@
 import fs from "node:fs";
 import path from "node:path";
 
-/** Default inputs: the staging trees, and the manifest and Spine index the site bundles. */
+/** Default inputs: the staging tree, and the manifest and Spine index the site bundles. */
 const V3_DEFAULTS = {
 	assets: "tools/assets/.staging/assets",
-	art: "tools/assets/.staging/art",
 	manifest: "assets-manifest.json",
 	spineIndex: "src/data/spine-index.json",
 	hocSpineIndex: "src/data/hoc-spine-index.json"
 };
 
-/** v3 image kind -> tree and filename inside a form folder. */
-const V3_IMAGE_FILES = { card: ["assets", "card.webp"], card_damaged: ["assets", "card_d.webp"], full: ["art", "full.webp"], full_damaged: ["art", "full_d.webp"] };
+/** v3 image kind -> filename inside a form folder. */
+const V3_IMAGE_FILES = { card: "card.webp", card_damaged: "card_d.webp", full: "full.webp", full_damaged: "full_d.webp" };
 
-/** HOC image kind -> tree and filename inside a HOC's `hocs/<id>/` folder. */
-const HOC_IMAGE_FILES = { card: ["assets", "card.webp"], full: ["art", "full.webp"] };
+/** HOC image kind -> filename inside a HOC's `hocs/<id>/` folder. */
+const HOC_IMAGE_FILES = { card: "card.webp", full: "full.webp" };
 
-/** Fairy image kind -> tree and filename inside a fairy's `fairies/<id>/` folder. Fairy art lives only in the asset tree. */
-const FAIRY_IMAGE_FILES = { form1: ["assets", "form1.webp"], form2: ["assets", "form2.webp"], form3: ["assets", "form3.webp"] };
+/** Fairy image kind -> filename inside a fairy's `fairies/<id>/` folder. */
+const FAIRY_IMAGE_FILES = { form1: "form1.webp", form2: "form2.webp", form3: "form3.webp" };
 
 /** v3 Mod-skin card kind -> filename inside a skin folder. */
 const V3_MOD_CARD_FILES = { card: "mod_card.webp", card_damaged: "mod_card_d.webp" };
@@ -120,7 +118,7 @@ function v3Rigs(rigs) {
  * @param {string[]} args Command-line arguments.
  */
 function auditV3(args) {
-	const roots = { assets: option(args, "--assets", V3_DEFAULTS.assets), art: option(args, "--art", V3_DEFAULTS.art) };
+	const root = option(args, "--assets", V3_DEFAULTS.assets);
 	const manifest = JSON.parse(fs.readFileSync(option(args, "--manifest", V3_DEFAULTS.manifest), "utf8"));
 	const spineIndex = JSON.parse(fs.readFileSync(option(args, "--spine-index", V3_DEFAULTS.spineIndex), "utf8"));
 	const hocSpineIndexPath = option(args, "--hoc-spine-index", V3_DEFAULTS.hocSpineIndex);
@@ -130,11 +128,11 @@ function auditV3(args) {
 	const notes = [];
 	let checked = 0;
 
-	/** Record one required file, relative to a tree root. */
-	const need = (tree, rel, why) => {
+	/** Record one required file, relative to the tree root. */
+	const need = (rel, why) => {
 		checked++;
-		if (!fs.existsSync(path.join(roots[tree], rel))) {
-			missing.push(`${tree}/${rel} (${why})`);
+		if (!fs.existsSync(path.join(root, rel))) {
+			missing.push(`${rel} (${why})`);
 		}
 	};
 
@@ -148,16 +146,16 @@ function auditV3(args) {
 	 */
 	const auditRigs = (label, folder, rigs) => {
 		for (const [kind, rig] of rigs) {
-			need("assets", `${folder}/${rig.skel}.skel`, `${label} ${kind} skeleton`);
+			need(`${folder}/${rig.skel}.skel`, `${label} ${kind} skeleton`);
 			const atlasRel = `${folder}/${rig.atlas}.atlas`;
-			need("assets", atlasRel, `${label} ${kind} atlas`);
-			const atlasFile = path.join(roots.assets, atlasRel);
+			need(atlasRel, `${label} ${kind} atlas`);
+			const atlasFile = path.join(root, atlasRel);
 			if (fs.existsSync(atlasFile)) {
 				// Page images resolve against the atlas's own folder, exactly as `spineImageBase` builds the URL.
 				for (const line of fs.readFileSync(atlasFile, "utf8").split("\n")) {
 					const name = line.trim();
 					if (name.toLowerCase().endsWith(".png")) {
-						need("assets", `${path.posix.dirname(atlasRel)}/${name}`, `${label} ${kind} atlas page`);
+						need(`${path.posix.dirname(atlasRel)}/${name}`, `${label} ${kind} atlas page`);
 					}
 				}
 			}
@@ -188,15 +186,14 @@ function auditV3(args) {
 		for (const [label, folder, form] of forms) {
 			if (!form) continue;
 			for (const kind of form.images) {
-				const [tree, name] = V3_IMAGE_FILES[kind];
-				need(tree, `${folder}/${name}`, `doll ${id} ${label} ${kind}`);
+				need(`${folder}/${V3_IMAGE_FILES[kind]}`, `doll ${id} ${label} ${kind}`);
 			}
 			for (const kind of form.modImages ?? []) {
-				need("assets", `${folder}/${V3_MOD_CARD_FILES[kind]}`, `doll ${id} ${label} Mod ${kind}`);
+				need(`${folder}/${V3_MOD_CARD_FILES[kind]}`, `doll ${id} ${label} Mod ${kind}`);
 			}
 		}
 		for (const skill of doll.skills) {
-			need("assets", `tdolls/${id}/${skill}.png`, `doll ${id} ${skill}`);
+			need(`tdolls/${id}/${skill}.png`, `doll ${id} ${skill}`);
 		}
 
 		const rigs = spineIndex[id];
@@ -222,20 +219,18 @@ function auditV3(args) {
 	}
 
 	for (const equipId of manifest.equipment) {
-		need("assets", `equipment/${equipId}.png`, `equipment ${equipId}`);
+		need(`equipment/${equipId}.png`, `equipment ${equipId}`);
 	}
 
 	for (const [id, kinds] of Object.entries(manifest.hocs ?? {})) {
 		for (const kind of kinds) {
-			const [tree, name] = HOC_IMAGE_FILES[kind];
-			need(tree, `hocs/${id}/${name}`, `hoc ${id} ${kind}`);
+			need(`hocs/${id}/${HOC_IMAGE_FILES[kind]}`, `hoc ${id} ${kind}`);
 		}
 	}
 
 	for (const [id, kinds] of Object.entries(manifest.fairies ?? {})) {
 		for (const kind of kinds) {
-			const [tree, name] = FAIRY_IMAGE_FILES[kind];
-			need(tree, `fairies/${id}/${name}`, `fairy ${id} ${kind}`);
+			need(`fairies/${id}/${FAIRY_IMAGE_FILES[kind]}`, `fairy ${id} ${kind}`);
 		}
 	}
 

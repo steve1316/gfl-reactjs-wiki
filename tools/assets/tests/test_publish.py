@@ -93,12 +93,15 @@ def make_fixture(root):
     write(assets, "equipment/5.png")
     write(assets, "logo.png")
     write(assets, "assets-manifest.json", b"stale copy that must not be published")
+    write(assets, "tdolls/1/full.webp", b"full")
+    write(assets, "tdolls/1/full_d.webp", b"full_d")
+    # `art` still gets the same files, since `prepare("art")` still reads from it until Task 5.
     write(art, "tdolls/1/full.webp", b"full")
     write(art, "tdolls/1/full_d.webp", b"full_d")
 
     manifest = os.path.join(root, "assets-manifest.json")
     with open(manifest, "w", encoding="utf-8") as handle:
-        handle.write(build_manifest.dumps(build_manifest.build_v3(assets, art)))
+        handle.write(build_manifest.dumps(build_manifest.build_v3(assets)))
     spine_index = os.path.join(root, "spine-index.json")
     with open(spine_index, "w", encoding="utf-8") as handle:
         json.dump({"1": {"combat": {"skel": "A", "atlas": "A", "anims": ["wait"]}}}, handle)
@@ -288,7 +291,7 @@ class PrepareTests(unittest.TestCase):
 
     def test_manifest_mismatch_stops_before_touching_the_clone(self):
         """A staging tree that no longer matches the committed manifest stops before any git change."""
-        write(self.paths["art_root"], "tdolls/2/full.webp")
+        write(self.paths["assets_root"], "tdolls/2/full.webp")
         with self.assertRaises(SystemExit) as caught:
             self.prepare("assets")
         self.assertIn("differs", str(caught.exception.code))
