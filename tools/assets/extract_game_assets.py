@@ -106,8 +106,8 @@ ROLE_OUTPUTS = (
     ("full", ("full.webp",)),
     ("full_d", ("full_d.webp",)),
 )
-# Roles encoded as split card atlases. Every other art role is full art.
-CARD_ROLES = ("card", "mod_card")
+# Roles encoded as card halves. Every other art role is full art.
+CARD_ROLES = ("card", "card_d", "mod_card", "mod_card_d")
 ART_TIERS = ("art", "mod_art", "skin_art")
 SPINE_TIERS = ("spine", "mod_spine", "skin_spine")
 # HOC scene roles in `compose_hoc_full` argument order. The masks are not size checked, since the game ships them at half size.
@@ -142,8 +142,6 @@ LEGACY_FILES = (
     ("full_d", "art", "{id}_skin{slot}_full_d.png", "full_d.webp", True, "skin_full"),
 )
 LEGACY_TIERS = {role: tier for role, _clone, _template, _name, _required, tier in LEGACY_FILES}
-# Legacy roles read from the old asset repo's card half, kept at CARD_SIZE and CARD_QUALITY. The rest (full, full_d) are full art.
-LEGACY_CARD_ROLES = tuple(role for role, clone, _template, _name, _required, _tier in LEGACY_FILES if clone == "assets")
 CARD_SIZE = (256, 512)
 
 # Old path of a collaboration doll's skill icon in the old asset repo. `{slot}` is `skill1` or `skill2`.
@@ -1192,7 +1190,7 @@ def extract_legacy_skin(extra, assets_root, art_root, staging):
             continue
         try:
             with Image.open(source) as image:
-                if role in LEGACY_CARD_ROLES:
+                if role in CARD_ROLES:
                     if image.size != CARD_SIZE:
                         result["nonstandard"].append({"key": key, "role": role, "size": list(image.size), "expected": list(CARD_SIZE)})
                     data = encode_webp(image.convert("RGB"), CARD_QUALITY)
