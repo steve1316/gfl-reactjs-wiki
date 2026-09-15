@@ -6,6 +6,7 @@ import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import FilterPanel from "../../components/FilterPanel";
 import DollCard from "../../components/DollCard";
+import DollFilterRows from "./DollFilterRows";
 
 // MaterialUI imports
 import { Box, Container, Grid, Chip, Divider, Typography, Button, IconButton, MenuItem, TextField, Tooltip } from "@mui/material";
@@ -370,6 +371,21 @@ export default function TDoll_Index() {
 		[rarityFilter, typeFilter, modFilter, nameQuery, buildTimeQuery, handleToggleRarity, handleToggleType, handleToggleMod, handleClearName, handleClearBuildTime]
 	);
 
+	// Built once per filter change rather than per render, so the memoised panel skips renders that only touch the results.
+	const filterRows = useMemo(
+		() => (
+			<DollFilterRows
+				rarityFilter={rarityFilter}
+				typeFilter={typeFilter}
+				modFilter={modFilter}
+				onToggleRarity={handleToggleRarity}
+				onToggleType={handleToggleType}
+				onToggleMod={handleToggleMod}
+			/>
+		),
+		[rarityFilter, typeFilter, modFilter, handleToggleRarity, handleToggleType, handleToggleMod]
+	);
+
 	return (
 		<Box component="main" sx={styles.root}>
 			<ScrollToTop />
@@ -377,20 +393,19 @@ export default function TDoll_Index() {
 			{/* Filters and summary bar */}
 			<Container maxWidth="lg" sx={styles.summaryContainer}>
 				<FilterPanel
-					rarityFilter={rarityFilter}
-					typeFilter={typeFilter}
-					modFilter={modFilter}
 					activeCount={activeFilters.length}
+					onClear={handleClearAll}
 					nameQuery={nameQuery}
 					onNameQueryChange={setNameQuery}
+					nameLabel="Search T-Dolls by name"
 					buildTimeQuery={buildTimeText}
 					onBuildTimeQueryChange={setBuildTimeText}
 					buildTimeInvalid={buildTimeInvalid}
-					onToggleRarity={handleToggleRarity}
-					onToggleType={handleToggleType}
-					onToggleMod={handleToggleMod}
-					onClear={handleClearAll}
-				/>
+					buildTimeExample="3:55"
+					buildTimeLabel="Search T-Dolls by build time"
+				>
+					{filterRows}
+				</FilterPanel>
 
 				<Box sx={styles.summaryRow}>
 					<Box sx={styles.summaryStart}>
