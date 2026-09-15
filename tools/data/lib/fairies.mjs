@@ -157,3 +157,19 @@ export function buildFairies(upstream) {
 
 	return { constants, types: typeNames, talents, items };
 }
+
+/**
+ * Compare the fairies with the v3 asset manifest's `fairies` key. An absent or empty `fairies` key means the manifest has not
+ * been extended for fairy art yet, so nothing is reported.
+ *
+ * @param {{ id: number, name: string }[]} fairies Generated fairy records.
+ * @param {{ fairies?: Record<string, string[]> }} manifest The v3 asset manifest.
+ * @returns {string[]} Names of fairies missing any of the three forms, once the manifest lists any fairy.
+ */
+export function findFairyArtGaps(fairies, manifest) {
+	const entries = manifest.fairies ?? {};
+	if (Object.keys(entries).length === 0) {
+		return [];
+	}
+	return fairies.filter((fairy) => !["form1", "form2", "form3"].every((kind) => (entries[String(fairy.id)] ?? []).includes(kind))).map((fairy) => fairy.name);
+}
