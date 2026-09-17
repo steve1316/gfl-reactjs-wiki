@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildAssimilation, buildEnemies, canonicalStatRow, findEnemyArtGaps, toSimulationEnemies } from "../lib/enemies.mjs";
+import { buildAssimilation, buildEnemies, canonicalStatRow, findEnemyArtGaps } from "../lib/enemies.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 
 const upstream = loadUpstream(resolveUpstreamDir());
@@ -124,15 +124,6 @@ test("canonicalStatRow prefers the lowest-numbered row at the archive level", ()
 	assert.equal(canonicalStatRow([]), null);
 });
 
-test("the simulation extract keeps only enemies that have stats", () => {
-	const simulation = toSimulationEnemies(built);
-	assert.equal(simulation.length, built.items.length - 6);
-	assert.deepEqual(
-		simulation.find((entry) => entry.id === 2001),
-		{ id: 2001, name: "Prowler", faction: "Sangvis Ferri", boss: false, stats: built.details[2001].baseStats, level: 100 }
-	);
-});
-
 test("enemy art gaps are only reported once the manifest lists any enemy", () => {
 	const enemies = [
 		{ id: 2001, name: "Prowler" },
@@ -163,6 +154,12 @@ test("display-only sangvis rows are left out", () => {
 	assert.ok(assimilation.units.every((unit) => unit.id < 9000));
 	// Every unit that ships has at least one skill, which the dropped rows did not.
 	assert.ok(assimilation.units.every((unit) => unit.skills.length > 0));
+});
+
+test("a class's skill levels keep the zeros that mark a slot it does not have", () => {
+	assert.deepEqual(assimilation.constants.classes.Ringleader.skillLevels, [10, 10, 5, 5]);
+	assert.deepEqual(assimilation.constants.classes.Elite.skillLevels, [0, 0, 5, 5]);
+	assert.deepEqual(assimilation.constants.classes.Basic.skillLevels, [0, 0, 0, 5]);
 });
 
 test("classes carry the capture rates the game shows", () => {
@@ -231,7 +228,8 @@ test("a class only has the skill slots its skills_max_lv gives it", () => {
 });
 
 test("everything upstream has no text for is reported rather than shipped empty", () => {
-	assert.equal(assimilationWarnings.length, 2);
 	assert.ok(assimilationWarnings.some((warning) => /6 Protocol Assimilation skill slots have no text/.test(warning)));
 	assert.ok(assimilationWarnings.some((warning) => /1 strategic chips have no text: 4001/.test(warning)));
+	// The skill builder's own warnings reach the caller rather than being dropped into a throwaway array.
+	assert.ok(assimilationWarnings.some((warning) => /levels have a different count of numbers/.test(warning)));
 });

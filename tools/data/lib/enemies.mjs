@@ -1,5 +1,6 @@
-import { buildMissionSkill, buildSkill } from "./skills.mjs";
+import { buildMissionSkill, buildSkill, skillRowsExist } from "./skills.mjs";
 import { cleanName, stripMarkup } from "./text.mjs";
+import { configValue } from "./upstream.mjs";
 
 /** Faction names by `enemy_illustration.forces`, in the order the index lists them. Anything with no faction is grouped as Other. */
 const FACTIONS = [
@@ -207,19 +208,6 @@ export function buildEnemies(upstream, warnings) {
 }
 
 /**
- * Reduce the enemies to what a battle simulation needs. Kept here so the `enemy_illustration` to `enemy_character_type` join is
- * written once, rather than again by whatever consumes it.
- *
- * @param {{ items: object[], details: Record<string, object> }} enemies The built enemies.
- * @returns {object[]} One entry per enemy that has stats, with its name, faction and canonical stat block.
- */
-export function toSimulationEnemies(enemies) {
-	return enemies.items
-		.filter((item) => enemies.details[item.id].baseStats !== null)
-		.map((item) => ({ id: item.id, name: item.name, faction: item.faction, boss: item.boss, stats: enemies.details[item.id].baseStats, level: enemies.details[item.id].baseStatsLevel }));
-}
-
-/**
  * Compare the enemies with the v3 asset manifest's `enemies` key. An absent or empty `enemies` key means the manifest has not
  * been extended for enemy art yet, so nothing is reported.
  *
@@ -262,14 +250,19 @@ export function buildAssimilation(upstream, warnings) {
 			warnings.push(`sangvis_type ${row.id} (${row.name}) has no class name`);
 			continue;
 		}
+		const skillLevels = String(row.skills_max_lv)
+			.split(",")
+			.map(Number)
+			.map((level) => (Number.isFinite(level) ? level : 0));
 		classes[name] = {
 			baseRates: { hp: row.basic_hp, damage: row.basic_pow, accuracy: row.basic_hit, evasion: row.basic_dodge, rateOfFire: row.basic_rate, armor: row.basic_armor },
 			// Upstream stores both rates per ten thousand, so 2500 is the 25% the game shows for a Ringleader.
 			captureRate: row.daily_successr / 100,
 			guaranteedRate: row.author_successr / 100,
-			skillLevels: splitIds(row.skills_max_lv)
+			// Kept with its zeros, since a zero is what lines the array up against `SKILL_FIELDS` and marks a slot the class lacks.
+			skillLevels
 		};
-		skillLevelsByType.set(row.id, String(row.skills_max_lv).split(",").map(Number));
+		skillLevelsByType.set(row.id, skillLevels);
 	}
 	for (const name of Object.values(ASSIMILATION_CLASSES)) {
 		if (!classes[name]) {
@@ -279,8 +272,8 @@ export function buildAssimilation(upstream, warnings) {
 
 	const advance = upstream.stc("sangvis_advance").sort((a, b) => a.lv - b.lv);
 	const constants = {
-		maxLevel: Number(configuredValue(upstream, "sangvis_lv_max")),
-		baseLevel: Number(configuredValue(upstream, "sangvis_base_lv")),
+		maxLevel: Number(configValue(upstream, "sangvis_lv_max")),
+		baseLevel: Number(configValue(upstream, "sangvis_base_lv")),
 		starUnlockLevels: advance.map((row) => row.unlock_lv),
 		starRates: advance.map((row) => ({
 			hp: row.advance_hp,
@@ -335,7 +328,7 @@ export function buildAssimilation(upstream, warnings) {
 				apCost: row.ap_cost,
 				// Ringleaders are the only class with strategic chip slots, and each slot takes its own set of chip types.
 				chipSlots: className === "Ringleader" ? [splitIds(row.type_chip1), splitIds(row.type_chip2), splitIds(row.type_chip3)].filter((slot) => slot.length > 0) : [],
-				skills: SKILL_FIELDS.map((field, slot) => skillOrNull(upstream, row, field, skillLevelsByType.get(row.type)?.[slot] ?? 0, unresolvedSkills)).filter((skill) => skill !== null)
+				skills: SKILL_FIELDS.map((field, slot) => skillOrNull(upstream, row, field, skillLevelsByType.get(row.type)?.[slot] ?? 0, unresolvedSkills, warnings)).filter((skill) => skill !== null)
 			};
 		});
 
@@ -373,51 +366,34 @@ function splitIds(value) {
 }
 
 /**
- * Read one `game_config_info` value's raw string.
- *
- * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
- * @param {string} name The parameter name, such as `sangvis_lv_max`.
- * @returns {string} The raw `parameter_value`.
- * @throws {Error} When the parameter is missing.
- */
-function configuredValue(upstream, name) {
-	const row = upstream.catchdata("game_config_info").find((entry) => entry.parameter_name === name);
-	if (!row) {
-		throw new Error(`game_config_info has no ${name}`);
-	}
-	return row.parameter_value;
-}
-
-/**
- * Build one of a unit's skills. A slot the unit's class does not have is skipped, and anything that does not build is warned
- * about rather than failing the import.
+ * Build one of a unit's skills. A slot the unit's class does not have, or one whose skill has no rows upstream, is recorded as
+ * unresolved rather than failing the import.
  *
  * `skill2` is the odd one out: when `skill2_type` is 2 it is a mission skill rather than a battle skill, the same split the
- * strategy fairies have.
+ * strategy fairies have. When it is 3 it points at an id no skill table holds text for, which is what the check below catches.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @param {object} row The `sangvis` row.
  * @param {string} field The skill field to read.
  * @param {number} levelCount How many level rows this slot has for the unit's class, or 0 when the class has no such slot.
- * @param {string[]} unresolved Slots that could not be built, appended to in place as `id field`.
+ * @param {string[]} unresolved Slots with no skill text, appended to in place as `id field`.
+ * @param {string[]} warnings Collected warnings, appended to in place.
  * @returns {object | null} The skill, or null when the slot is empty or the skill has no text.
  */
-function skillOrNull(upstream, row, field, levelCount, unresolved) {
+function skillOrNull(upstream, row, field, levelCount, unresolved, warnings) {
 	const id = Number(row[field]);
 	if (levelCount <= 0 || !Number.isInteger(id) || id <= 0) {
 		return null;
 	}
-	try {
-		// A `skill2_type` of 2 is a mission skill, the same split the strategy fairies have. A 3 points at ids that no skill table
-		// holds text for, so those six slots fall through to the unresolved list.
-		const skill = field === "skill2" && row.skill2_type === 2 ? buildMissionSkill(upstream, id) : buildSkill(upstream, id, [], levelCount);
-		if (skill.name === "") {
-			unresolved.push(`${row.id} ${field}`);
-			return null;
-		}
-		return { slot: field, ...skill };
-	} catch {
+	const mission = field === "skill2" && row.skill2_type === 2;
+	if (!mission && !skillRowsExist(upstream, id, levelCount)) {
 		unresolved.push(`${row.id} ${field}`);
 		return null;
 	}
+	const skill = mission ? buildMissionSkill(upstream, id) : buildSkill(upstream, id, warnings, levelCount);
+	if (skill.name === "") {
+		unresolved.push(`${row.id} ${field}`);
+		return null;
+	}
+	return { slot: field, ...skill };
 }

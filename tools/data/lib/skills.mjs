@@ -145,6 +145,20 @@ export function buildMissionSkill(upstream, group) {
 }
 
 /**
+ * Whether every level row a skill needs is present. Lets a caller tell "this slot has no skill" apart from a real failure,
+ * rather than calling `buildSkill` and catching its throw.
+ *
+ * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
+ * @param {number} groupId The skill id.
+ * @param {number} levelCount How many level rows the skill should have.
+ * @returns {boolean} True when every row exists.
+ */
+export function skillRowsExist(upstream, groupId, levelCount) {
+	const byId = skillRows(upstream);
+	return Array.from({ length: levelCount }, (_v, index) => byId.get(groupId * 100 + index + 1)).every((row) => row !== undefined);
+}
+
+/**
  * Build one skill from its level rows. Doll skills have ten. Protocol Assimilation units also have five-level skills, and
  * `sangvis_type.skills_max_lv` is what says how many a given slot has.
  *

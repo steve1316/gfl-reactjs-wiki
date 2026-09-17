@@ -243,8 +243,9 @@ async function main() {
 			fail(`enemy ${enemy.id} ${enemy.name} has no details entry`);
 		}
 	}
+	const enemyIds = new Set(enemies.items.map((item) => String(item.id)));
 	for (const id of Object.keys(enemyDetails)) {
-		if (!enemies.items.some((item) => String(item.id) === id)) {
+		if (!enemyIds.has(id)) {
 			fail(`enemy details ${id} has no matching enemy record`);
 		}
 	}
@@ -362,8 +363,7 @@ async function main() {
 			if (fairyGaps.length > 0) {
 				fail(`fairies without art: ${fairyGaps.join(", ")}`);
 			}
-			const enemies = JSON.parse(fs.readFileSync("src/data/enemies.json", "utf8")).items;
-			const enemyGaps = findEnemyArtGaps(enemies, manifest);
+			const enemyGaps = findEnemyArtGaps(enemies.items, manifest);
 			if (enemyGaps.length > 0) {
 				fail(`enemies without art: ${enemyGaps.join(", ")}`);
 			}
