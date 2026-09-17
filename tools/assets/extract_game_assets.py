@@ -132,7 +132,14 @@ REPORT_TIERS = {
     ("hoc_art", "card"): "hoc_card",
     ("hoc_art", "full"): "hoc_full",
     ("fairy_art", "form"): "fairy_art",
+    ("enemy_art", "card"): "enemy_card",
+    ("enemy_art", "full"): "enemy_full",
 }
+
+# Enemy portraits are square, unlike the dolls' 256x512 cards: the small one is a single 512 image rather than a two-half atlas. The large
+# one comes at either 1024 or 2048, both of which the game ships, so both are standard. A handful of cards ship their alpha as a separate mask.
+ENEMY_CARD_SIZES = ((512, 512),)
+ENEMY_FULL_SIZES = ((1024, 1024), (2048, 2048))
 
 # Legacy skin files: `(role, clone, old file name template, output name, required, report tier)`. `{id}` is the doll id, `{slot}` the old slot.
 LEGACY_FILES = (
@@ -725,6 +732,75 @@ def extract_art_item(item, cache_dir, staging):
                 write_file(staging, paths[0], encode_webp(full, FULL_QUALITY), tier, result)
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": role, "reason": f"encode or write failed: {exc}"})
+    return result
+
+
+def build_enemy_art(textures, item, staging):
+    """Extract one enemy's card and, when the game ships one, its full art from already loaded textures.
+
+    Args:
+        textures: Textures loaded from the enemy's bundle.
+        item: An `enemy_art` inventory item.
+        staging: The staging root.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    folder = f"enemies/{item['enemy_id']}"
+    for role, name, quality, expected in (("card", "card.webp", CARD_QUALITY, ENEMY_CARD_SIZES), ("full", "full.webp", FULL_QUALITY, ENEMY_FULL_SIZES)):
+        asset = item["assets"].get(role)
+        if asset is None:
+            continue
+        try:
+            image = decode(textures, asset)
+        except Exception as exc:
+            result["missing"].append({"key": item["key"], "role": role, "reason": f"decode failed: {exc!r}"})
+            continue
+        if image.size not in expected:
+            result["nonstandard"].append({"key": item["key"], "role": role, "size": list(image.size), "expected": [list(size) for size in expected]})
+        try:
+            # Only a few cards carry a separate mask. The rest already hold their own alpha.
+            mask = item["assets"].get("card_alpha") if role == "card" else None
+            if mask is not None:
+                image = merge_alpha(image, decode(textures, mask))
+            write_file(staging, f"{folder}/{name}", encode_webp(image.convert("RGBA"), quality), REPORT_TIERS[("enemy_art", role)], result)
+        except Exception as exc:
+            result["missing"].append({"key": item["key"], "role": role, "reason": f"encode or write failed: {exc}"})
+    return result
+
+
+def extract_enemy_art_items(items, cache_dir, staging, loader=unity_load):
+    """Extract every enemy's portraits, loading each bundle once.
+
+    Args:
+        items: Resolved `enemy_art` inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result.
+    """
+    return extract_grouped_items(items, cache_dir, staging, build_enemy_art, loader)
+
+
+def extract_enemy_spine_item(item, cache_dir, staging, loader=unity_load):
+    """Extract one enemy rig: its skeleton, atlas and atlas pages. An enemy has no dorm rig and no crew.
+
+    Args:
+        item: An `enemy_spine` inventory item.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result with an extra `rigs` list holding one record when the rig was written.
+    """
+    result, _names, pages_written = write_rig_files(item, [("skel", ".skel"), ("atlas", ".atlas")], f"enemy-spine/{item['enemy_id']}", "enemy_spine_rig", cache_dir, staging, loader)
+    if result["missing"]:
+        return result
+    result["rigs"].append({"key": item["key"], "tier": "enemy_spine", "dorm": False, "shared_atlas": False, "pages": len(pages_written)})
     return result
 
 
@@ -1538,7 +1614,7 @@ def reset_staging(staging):
     Args:
         staging: The staging root.
     """
-    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies", "assets/live2d"):
+    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies", "assets/enemies", "assets/live2d"):
         shutil.rmtree(os.path.join(staging, rel), ignore_errors=True)
     os.makedirs(os.path.join(staging, TREE), exist_ok=True)
 
@@ -1620,9 +1696,9 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
     ui_files = copy_ui(legacy_assets, staging) if legacy_dir else []
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
-    art_items, hoc_items, fairy_items, skill_items, equip_items, live2d_items, legacy_skill_items = [], [], [], [], [], [], []
+    art_items, hoc_items, fairy_items, enemy_items, skill_items, equip_items, live2d_items, legacy_skill_items = [], [], [], [], [], [], [], []
     for item in inventory["items"]:
-        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art", "live2d")
+        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art", "enemy_art", "live2d")
         if not wanted:
             continue
         if item["tier"] == "skill_icon" and item.get("source") == "legacy":
@@ -1632,7 +1708,7 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
             continue
         report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
-        buckets = {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items, "live2d": live2d_items}
+        buckets = {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items, "enemy_art": enemy_items, "live2d": live2d_items}
         buckets.get(item["tier"], art_items).append(item)
 
     # Imported here, not at module scope, since `extract_live2d` imports back from this module - a top-level import would be circular.
@@ -1651,6 +1727,9 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             futures[pool.submit(extract_hoc_art_items, hoc_items, cache_dir, staging)] = "worker:hoc_art"
         if fairy_items:
             futures[pool.submit(extract_fairy_art_items, fairy_items, cache_dir, staging)] = "worker:fairy_art"
+        # Split into chunks so 350 enemies spread over the pool instead of queueing behind one worker.
+        for start in range(0, len(enemy_items), 40):
+            futures[pool.submit(extract_enemy_art_items, enemy_items[start : start + 40], cache_dir, staging)] = f"worker:enemy_art:{start}"
         # One future per Live2D item, so the models convert in parallel. The report sorts its rows, so completion order never shows.
         futures.update({pool.submit(extract_live2d_items, [item], cache_dir, staging): item["key"] for item in live2d_items})
         for future in concurrent.futures.as_completed(futures):
@@ -1737,14 +1816,14 @@ def run_spine(inventory, cache_dir, staging, workers):
         The report dict.
     """
     started = time.monotonic()
-    for folder in ("spine", "hoc-spine"):
+    for folder in ("spine", "hoc-spine", "enemy-spine"):
         shutil.rmtree(os.path.join(staging, "assets", folder), ignore_errors=True)
     os.makedirs(os.path.join(staging, "assets", "spine"))
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
     items = []
     for item in inventory["items"]:
-        if item["tier"] not in SPINE_TIERS and item["tier"] != "hoc_spine":
+        if item["tier"] not in SPINE_TIERS and item["tier"] not in ("hoc_spine", "enemy_spine"):
             continue
         if not item["assets"]:
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
@@ -1754,7 +1833,8 @@ def run_spine(inventory, cache_dir, staging, workers):
 
     files, rigs = [], []
     with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(extract_hoc_spine_item if item["tier"] == "hoc_spine" else extract_spine_item, item, cache_dir, staging): item["key"] for item in items}
+        workers_by_tier = {"hoc_spine": extract_hoc_spine_item, "enemy_spine": extract_enemy_spine_item}
+        futures = {pool.submit(workers_by_tier.get(item["tier"], extract_spine_item), item, cache_dir, staging): item["key"] for item in items}
         for done, future in enumerate(concurrent.futures.as_completed(futures), start=1):
             try:
                 result = future.result()

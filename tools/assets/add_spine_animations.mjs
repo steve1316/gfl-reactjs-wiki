@@ -9,12 +9,13 @@
  *
  * Uses the same `skb.js` the browser does, so the names here are exactly what the runtime will find.
  *
- * `--hoc` switches to the HOC Spine index: each entry there is a `combat` rig plus a flat `crew` list, instead of a doll's combat, dorm,
- * Mod and skin rigs, so each entry flattens to a different rig list.
+ * `--hoc` and `--enemy` switch to the flat indexes: an entry there is a `combat` rig plus, for a HOC, a `crew` list, instead of a doll's
+ * combat, dorm, Mod and skin rigs, so each entry flattens to a different rig list.
  *
  * Usage:
  *     node tools/assets/add_spine_animations.mjs --spine <dir> [--index src/data/spine-index.json]
  *     node tools/assets/add_spine_animations.mjs --spine <hoc-spine dir> --hoc [--index src/data/hoc-spine-index.json]
+ *     node tools/assets/add_spine_animations.mjs --spine <enemy-spine dir> --enemy [--index src/data/enemy-spine-index.json]
  */
 
 import fs from "node:fs";
@@ -49,9 +50,14 @@ function main() {
 	const args = process.argv.slice(2);
 	const spineDir = args[args.indexOf("--spine") + 1];
 	const isHoc = args.includes("--hoc");
-	const indexPath = args.includes("--index") ? args[args.indexOf("--index") + 1] : isHoc ? "src/data/hoc-spine-index.json" : "src/data/spine-index.json";
+	const isEnemy = args.includes("--enemy");
+	// HOC and enemy entries are both flat: one combat rig, plus a crew list only a HOC has.
+	const isFlat = isHoc || isEnemy;
+	const defaultIndex = isHoc ? "src/data/hoc-spine-index.json" : isEnemy ? "src/data/enemy-spine-index.json" : "src/data/spine-index.json";
+	const indexPath = args.includes("--index") ? args[args.indexOf("--index") + 1] : defaultIndex;
 	if (!spineDir || !fs.existsSync(spineDir)) {
-		console.error(isHoc ? "pass --spine <dir> pointing at the published hoc-spine/<id>/ tree" : "pass --spine <dir> pointing at the published spine/<id>/ tree");
+		const tree = isHoc ? "hoc-spine/<id>/" : isEnemy ? "enemy-spine/<id>/" : "spine/<id>/";
+		console.error(`pass --spine <dir> pointing at the published ${tree} tree`);
 		process.exit(1);
 	}
 
@@ -72,9 +78,9 @@ function main() {
 		rigs++;
 	};
 	for (const [id, entry] of Object.entries(index)) {
-		// A HOC has a combat rig and a flat crew list. A doll has its own rigs, then the Mod's, which is a separate chibi with its own animation
-		// set, then each skin's combat rig and, usually, a dorm one.
-		const entryRigs = isHoc
+		// A HOC has a combat rig and a flat crew list, and an enemy just the combat rig. A doll has its own rigs, then the Mod's, which is a
+		// separate chibi with its own animation set, then each skin's combat rig and, usually, a dorm one.
+		const entryRigs = isFlat
 			? [entry.combat, ...(entry.crew ?? [])]
 			: [entry.combat, entry.dorm, entry.mod?.combat, entry.mod?.dorm, ...Object.values(entry.skins ?? {}).flatMap((skin) => Object.values(skin))];
 		entryRigs.filter(Boolean).forEach((rig) => annotate(rig, id));

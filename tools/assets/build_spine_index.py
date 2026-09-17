@@ -118,9 +118,61 @@ def build_v3(spine_root):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
-# HOC layout
+# Flat layouts
 
-# A HOC's rigs live flat in `<id>/`, with no dorm, Mod or skin nesting the way a doll's do.
+# HOC and enemy rigs live flat in `<id>/`, with no dorm, Mod or skin nesting the way a doll's do.
+
+
+def flat_combat_rig(folder):
+    """Find the combat rig in a flat rig folder.
+
+    The combat rig is, among the skeletons that have a same-stem atlas (case-insensitive), the one with the shortest stem, ties broken by
+    name.
+
+    Args:
+        folder: A folder holding one unit's rig files.
+
+    Returns:
+        A `(combat stem, combat atlas stem, skeletons, atlases)` tuple, or `(None, None, {}, {})` when the folder holds no usable rig.
+    """
+    skeletons, atlases = scan_rig_files(folder)
+    combats = [stem for lowered, stem in skeletons.items() if lowered in atlases]
+    if not combats:
+        return None, None, {}, {}
+    combat = min(combats, key=lambda stem: (len(stem), stem))
+    return combat, atlases[combat.lower()], skeletons, atlases
+
+
+def flat_id_dirs(root):
+    """List the numeric id folders of a flat rig tree, in numeric order.
+
+    Args:
+        root: Directory holding `<id>/` subdirectories, or absent.
+
+    Returns:
+        The id folder names, or an empty list when `root` does not exist.
+    """
+    if not os.path.isdir(root):
+        return []
+    return [name for name in sorted((name for name in os.listdir(root) if name.isdigit()), key=int) if os.path.isdir(os.path.join(root, name))]
+
+
+def build_enemy_index(enemy_spine_root):
+    """Index an enemy Spine tree by enemy id: one combat rig each, with no dorm twin and no crew.
+
+    Args:
+        enemy_spine_root: Directory holding `<id>/` subdirectories, or absent.
+
+    Returns:
+        The index dict, `{"<id>": {"combat": rig}}` in numeric id order. A folder with no combat rig is skipped, and `{}` is returned when
+        `enemy_spine_root` does not exist.
+    """
+    index = {}
+    for enemy_id in flat_id_dirs(enemy_spine_root):
+        combat, combat_atlas, _skeletons, _atlases = flat_combat_rig(os.path.join(enemy_spine_root, enemy_id))
+        if combat:
+            index[enemy_id] = {"combat": rig_entry("", combat, combat_atlas)}
+    return index
 
 
 def build_hoc_index(hoc_spine_root):
@@ -137,31 +189,26 @@ def build_hoc_index(hoc_spine_root):
         The index dict, `{"<id>": {"combat": rig, "crew": [rig, ...]}}` in numeric id order. A folder with no combat rig is skipped, and
         `{}` is returned when `hoc_spine_root` does not exist.
     """
-    if not os.path.isdir(hoc_spine_root):
-        return {}
     index = {}
-    for hoc_id in sorted((name for name in os.listdir(hoc_spine_root) if name.isdigit()), key=int):
+    for hoc_id in flat_id_dirs(hoc_spine_root):
         folder = os.path.join(hoc_spine_root, hoc_id)
-        if not os.path.isdir(folder):
+        combat, combat_atlas, skeletons, atlases = flat_combat_rig(folder)
+        if not combat:
             continue
-        skeletons, atlases = scan_rig_files(folder)
-        combats = [stem for lowered, stem in skeletons.items() if lowered in atlases]
-        if not combats:
-            continue
-        combat = min(combats, key=lambda stem: (len(stem), stem))
-        combat_atlas = atlases[combat.lower()]
         crew = sorted((stem for lowered, stem in skeletons.items() if stem != combat), key=str.lower)
         index[hoc_id] = {"combat": rig_entry("", combat, combat_atlas), "crew": [rig_entry("", stem, atlases.get(stem.lower(), combat_atlas)) for stem in crew]}
     return index
 
 
 def main():
-    """Scan the Spine tree and write the index, and the HOC Spine tree and its index when `--hoc-spine` is passed."""
-    parser = argparse.ArgumentParser(description="Index the skin-id Spine tree by doll id, and optionally the HOC Spine tree by HOC id.")
+    """Scan the Spine tree and write the index, plus the HOC and enemy trees and their indexes when their flags are passed."""
+    parser = argparse.ArgumentParser(description="Index the skin-id Spine tree by doll id, and optionally the HOC and enemy Spine trees by their own ids.")
     parser.add_argument("--spine", required=True, help="Directory holding spine/<id>/ subdirectories.")
     parser.add_argument("--out", default="src/data/spine-index.json", help="Where to write the index. Defaults to the one the site bundles.")
     parser.add_argument("--hoc-spine", help="Directory holding hoc-spine/<id>/ subdirectories. Omit to skip the HOC index.")
     parser.add_argument("--hoc-out", default="src/data/hoc-spine-index.json", help="Where to write the HOC index. Defaults to the one the site bundles.")
+    parser.add_argument("--enemy-spine", help="Directory holding enemy-spine/<id>/ subdirectories. Omit to skip the enemy index.")
+    parser.add_argument("--enemy-out", default="src/data/enemy-spine-index.json", help="Where to write the enemy index. Defaults to the one the site bundles.")
     parser.add_argument("--v3", action="store_true", help="Ignored. The skin-id layout is the only format.")
     args = parser.parse_args()
 
@@ -187,6 +234,14 @@ def main():
         print(f"wrote {args.hoc_out} ({os.path.getsize(args.hoc_out) / 1024:.0f} KB)")
         print(f"  hocs         {len(hoc_index)}")
         print(f"  crew rigs    {sum(len(entry.get('crew', [])) for entry in hoc_index.values())}")
+
+    if args.enemy_spine:
+        enemy_index = build_enemy_index(args.enemy_spine)
+        with open(args.enemy_out, "w", encoding="utf-8") as handle:
+            json.dump(enemy_index, handle)
+            handle.write("\n")
+        print(f"wrote {args.enemy_out} ({os.path.getsize(args.enemy_out) / 1024:.0f} KB)")
+        print(f"  enemies      {len(enemy_index)}")
 
 
 if __name__ == "__main__":

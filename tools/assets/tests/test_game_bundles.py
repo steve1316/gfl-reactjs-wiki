@@ -839,7 +839,8 @@ class NewTargetTests(unittest.TestCase):
     def test_targets(self):
         """A missing doll, a missing Mod, a missing numeric skin and a missing equipment id are the targets."""
         self.assertEqual(
-            self.targets, {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set(), "live2d": set(), "skin": set()}
+            self.targets,
+            {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set(), "enemies": set(), "live2d": set(), "skin": set()},
         )
 
     def test_selects_forms_of_new_targets(self):
@@ -854,6 +855,7 @@ class NewTargetTests(unittest.TestCase):
             {"key": "skin_spine:95:1809", "tier": "skin_spine", "doll_id": 95, "skin_id": 1809},
             {"key": "equip_icon:3", "tier": "equip_icon", "equip_id": 3},
             {"key": "equip_icon:1", "tier": "equip_icon", "equip_id": 1},
+            {"key": "enemy_art:2001", "tier": "enemy_art", "enemy_id": 2001},
             {"key": "skill_icon:doll:1005:skill1", "tier": "skill_icon", "source": "legacy", "users": [[424, "skill1"]]},
         ]
         keys = [item["key"] for item in game_bundles.select_new_items(items, self.targets)]
@@ -905,7 +907,7 @@ class NewTargetTests(unittest.TestCase):
             self.assertTrue(inventory["onlyMissing"])
             self.assertTrue(any(item["tier"] == "art" for item in inventory["items"]))
 
-            dolls, equipment_ids, _hocs, _fairies = game_bundles.load_site(SITE_DATA)
+            dolls, equipment_ids, _hocs, _fairies, _enemies = game_bundles.load_site(SITE_DATA)
             full = {"equipment": equipment_ids, "dolls": {}}
             for doll in dolls:
                 skins = {str(skin_id): {"images": ["card"]} for skin_id in ((doll.get("skins") or {}).get("skin_ids") or []) if isinstance(skin_id, int)}
@@ -920,21 +922,36 @@ class NewTargetTests(unittest.TestCase):
 
     def test_committed_data_has_no_new_targets(self):
         """The committed site data and manifest agree on dolls, equipment, HOCs and fairies: every one already has a published art asset, so
-        there are no pending targets left. Fairies and HOCs with published Live2D models are excluded from targets; any unpublished ones are
+        there are no pending targets left. Enemies are the exception until their art is published. Fairies and HOCs with published Live2D models are excluded from targets; any unpublished ones are
         still targets. `live2d_models` is left at its default here: unlike fairies and HOCs, which this repo enumerates in committed site
         data, the full set of T-Doll skin Live2D models only exists in the external `stc/live2d.json` table (fetched into the gitignored
         gf-data-us checkout, not committed), so there is no committed source to check the real manifest's `skin` targets against here. The
         wiring that resolves and threads real skin models through `new_targets` is covered end to end instead, on a scratch tree, by
         `test_inventory_from_paths_only_missing_threads_skin_live2d_models_into_new_targets`."""
-        dolls, equipment_ids, hocs, fairies = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
+        dolls, equipment_ids, hocs, fairies, enemies = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
         manifest = game_bundles.read_json(game_bundles.MANIFEST_PATH)
-        targets = game_bundles.new_targets(dolls, equipment_ids, manifest, hocs=hocs, fairies=fairies)
+        targets = game_bundles.new_targets(dolls, equipment_ids, manifest, hocs=hocs, fairies=fairies, enemies=enemies)
         published_live2d = manifest.get("live2d", {})
         published_fairy_ids = set(int(fid) for fid in published_live2d.get("fairies", {}))
         published_hoc_ids = set(int(hid) for hid in published_live2d.get("hocs", {}))
         expected_live2d = {("fairy", fairy["id"]) for fairy in fairies if fairy["id"] not in published_fairy_ids} | {("hoc", hoc["id"]) for hoc in hocs if hoc["id"] not in published_hoc_ids}
+        # Enemies are targets until their art is published, the same way an unpublished Live2D model is. This set empties itself once the
+        # manifest grows an `enemies` block.
+        published_enemy_ids = set(int(eid) for eid in manifest.get("enemies", {}))
+        expected_enemies = {enemy["id"] for enemy in enemies if enemy["id"] not in published_enemy_ids}
         self.assertEqual(
-            targets, {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "hocs": set(), "fairies": set(), "live2d": expected_live2d, "skin": set()}
+            targets,
+            {
+                "dolls": set(),
+                "mods": set(),
+                "skins": set(),
+                "equipment": set(),
+                "hocs": set(),
+                "fairies": set(),
+                "enemies": expected_enemies,
+                "live2d": expected_live2d,
+                "skin": set(),
+            },
         )
 
 

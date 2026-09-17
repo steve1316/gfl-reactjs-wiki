@@ -80,7 +80,22 @@ EQUIP_BUNDLE = "resource_icon_equip"
 UI_BUNDLES = ("atlasclips_listequipment",)
 
 # Tiers in report order.
-TIERS = ("art", "mod_art", "skin_art", "spine", "mod_spine", "skin_spine", "skill_icon", "equip_icon", "hoc_art", "hoc_spine", "fairy_art", "live2d")
+TIERS = (
+    "art",
+    "mod_art",
+    "skin_art",
+    "spine",
+    "mod_spine",
+    "skin_spine",
+    "skill_icon",
+    "equip_icon",
+    "hoc_art",
+    "hoc_spine",
+    "fairy_art",
+    "enemy_art",
+    "enemy_spine",
+    "live2d",
+)
 
 # Each role is `(name, filename alternatives, required)`. `{stem}` is the codename, with `_<skinId>` for skins.
 ART_ROLES = (
@@ -99,6 +114,18 @@ SPINE_ROLES = (
 )
 SKILL_ROLES = (("icon", ("SkillIcon/{stem}.png",), True),)
 EQUIP_ROLES = (("icon", ("Equip/{stem}.png",), True), ("alpha", ("Equip/{stem}_Alpha.png",), False))
+
+# Enemy portraits sit in the unit's own bundle under a different naming scheme from the dolls': `_SS` is the small card, which every enemy
+# has, and `_LL` the large art, which only about three in five do. A handful also ship a separate alpha mask for the card.
+ENEMY_ART_ROLES = (
+    ("card", ("pic_{stem}_SS.png",), True),
+    ("full", ("pic_{stem}_LL.png",), False),
+    ("card_alpha", ("pic_{stem}_SS_Alpha.png",), False),
+)
+
+# An enemy has one combat rig and no dorm rig, so only the first three Spine roles apply.
+ENEMY_SPINE_ROLES = SPINE_ROLES[:3]
+
 
 # HOC pictures all live in one bundle. The card path keeps its folder, since L9A1 also has a root-level `L9A1_Vertical.png`.
 HOC_ART_BUNDLE = "resource_squads"
@@ -153,8 +180,25 @@ HOC_LIVE2D_ROLES = (
 # Skill codes with no icon anywhere in `sprites_ui`, confirmed by the research pass.
 EXPECTED_MISSING_SKILL_CODES = frozenset(code.lower() for code in ("ma", "mg4", "rmb", "xm3", "m2wnl", "TaeSkill"))
 
-# Skin rigs the game does not ship at all. Anything else missing fails the Spine pass.
-EXPECTED_MISSING_RIGS = frozenset(("skin_spine:95:1809",))
+# Rigs the game does not ship at all. Anything else missing fails the Spine pass. The three enemies are Tareus, Erma's Dummy and the
+# Theresa apocalypse variant, none of which has a skeleton anywhere in ResData.
+EXPECTED_MISSING_RIGS = frozenset(
+    (
+        "skin_spine:95:1809",
+        # Tareus, Erma's Dummy and the Theresa apocalypse variant have no skeleton anywhere in ResData.
+        "enemy_spine:176001",
+        "enemy_spine:232001",
+        "enemy_spine:100017001",
+        # Ladon and the two Isomer bosses ship a skeleton and an atlas but no atlas page. The only same-named PNG in the game is a 128x128
+        # icon in `resource_icon_enemy`, and their atlases call for a 1024x512 page, so there is nothing to render them with.
+        "enemy_spine:204001",
+        "enemy_spine:224001",
+        "enemy_spine:225001",
+    )
+)
+
+# Art the game does not ship at all. Erma's Dummy is a training target with no portrait bundle of its own.
+EXPECTED_MISSING_ART = frozenset(("enemy_art:232001",))
 
 # Skill codes whose icon file carries another name. `c93G` was checked pixel-identical to the hosted C93 skill icon.
 SKILL_ICON_ALIASES = {"c93": "c93G"}
@@ -239,8 +283,8 @@ def load_site(site_dir):
         site_dir: Directory holding `dolls-*.json`, `equipment.json` and, when hosted, `hocs.json` and `fairies.json`.
 
     Returns:
-        A `(dolls, equipment_ids, hocs, fairies)` quadruple. Dolls are sorted by id, ids are sorted and deduplicated, and `hocs` and `fairies`
-        are lists of `{"id": int, "code": str, "name": str}` sorted by id, empty when their site file is absent.
+        A `(dolls, equipment_ids, hocs, fairies, enemies)` tuple. Dolls are sorted by id, ids are sorted and deduplicated, and `hocs`,
+        `fairies` and `enemies` are lists of `{"id": int, "code": str, "name": str}` sorted by id, empty when their site file is absent.
     """
     dolls = []
     for path in sorted(glob.glob(os.path.join(site_dir, "dolls-*.json"))):
@@ -250,7 +294,8 @@ def load_site(site_dir):
     equipment_ids = sorted({item["id"] for group in items.values() for item in group})
     hocs = load_records(os.path.join(site_dir, "hocs.json"))
     fairies = load_records(os.path.join(site_dir, "fairies.json"))
-    return dolls, equipment_ids, hocs, fairies
+    enemies = load_records(os.path.join(site_dir, "enemies.json"))
+    return dolls, equipment_ids, hocs, fairies, enemies
 
 
 def load_tables(gf_data_dir):
@@ -600,6 +645,97 @@ def hoc_items(index, hoc):
     return [art, rig]
 
 
+def skeleton_index(index):
+    """Index every Spine skeleton in ResData by its lowercased name.
+
+    Args:
+        index: The bundle index from `load_index`.
+
+    Returns:
+        A dict of lowercased skeleton name to a list of `(bundle name, stem as written)` pairs.
+    """
+    skeletons = {}
+    for name, bundle in index.items():
+        for lowered, path in bundle["files"]:
+            if lowered.endswith((".skel", ".skel.bytes")):
+                stem = path.rsplit("/", 1)[-1].split(".skel")[0]
+                skeletons.setdefault(stem.lower(), []).append((name, stem))
+    return skeletons
+
+
+def enemy_rig(index, skeletons, code):
+    """Find the bundle and stem holding one enemy's Spine rig.
+
+    Enemy rigs are named far less predictably than doll rigs, so the skeleton is looked up by name before any bundle name is guessed.
+    An Elite variant lives inside the base unit's bundle (`HunterElite` in `character_bosshunter_spine`), a KCCO variant inside its
+    family's (`Cyclops_SG` in `character_cyclops_spine`), and a Paradeus unit inside a shared one (`Strelet` in
+    `character_mercenary_spine`). Only when no skeleton carries the code does the bundle name get tried, which is what finds the few
+    Ringleaders whose skeleton is named `Boss8` or `Boss9` after nothing at all.
+
+    Args:
+        index: The bundle index from `load_index`.
+        skeletons: The skeleton index from `skeleton_index`.
+        code: The enemy's codename.
+
+    Returns:
+        A `(bundle name, stem)` pair, or `(None, None)` when ResData holds no skeleton for the code.
+    """
+    lowered = code.lower()
+    for candidate in (lowered, re.sub(r"^boss", "", lowered)):
+        homes = skeletons.get(candidate)
+        if not homes:
+            continue
+        # A name can sit in more than one bundle, so the unit's own bundle wins over a shared one.
+        for bundle, stem in homes:
+            if lowered in bundle:
+                return bundle, stem
+        return homes[0]
+    for name in (f"character_{lowered}_spine", f"character_boss{lowered}_spine", f"character_{re.sub(r'_[0-9]+$', '', lowered)}_spine"):
+        bundle = index.get(name)
+        if not bundle:
+            continue
+        stems = sorted({path.rsplit("/", 1)[-1].split(".skel")[0] for low, path in bundle["files"] if low.endswith((".skel", ".skel.bytes"))}, key=str.lower)
+        if stems:
+            return name, stems[0]
+    return None, None
+
+
+def enemy_items(index, skeletons, enemy):
+    """Resolve the art and Spine items for one enemy.
+
+    Args:
+        index: The bundle index from `load_index`.
+        skeletons: The skeleton index from `skeleton_index`.
+        enemy: One `{id, code}` record from `enemies.json`.
+
+    Returns:
+        An `[enemy_art item, enemy_spine item]` list.
+    """
+    enemy_id, code = enemy["id"], enemy["code"]
+    art = resolve_item(index, "enemy_art", f"enemy_art:{enemy_id}", code, [f"character_{code.lower()}"], ENEMY_ART_ROLES, enemy_id=enemy_id, code=code)
+    bundle, stem = enemy_rig(index, skeletons, code)
+    if bundle is None:
+        rig = {
+            "key": f"enemy_spine:{enemy_id}",
+            "tier": "enemy_spine",
+            "enemy_id": enemy_id,
+            "code": code,
+            "status": "unresolved",
+            "bundles": [],
+            "assets": {},
+            "missing": ["skel"],
+            "sizeOriginal": 0,
+            "reason": "ResData holds no skeleton for this code",
+        }
+    else:
+        rig = resolve_item(index, "enemy_spine", f"enemy_spine:{enemy_id}", stem, [bundle], ENEMY_SPINE_ROLES, enemy_id=enemy_id, code=code, rig_stem=stem)
+        if rig["status"] == "partial":
+            # A rig needs its skeleton, its atlas and its atlas page together to draw anything, so a missing one makes the whole rig
+            # absent rather than partial. Three enemies ship a skeleton and an atlas with no page anywhere in the game.
+            rig = {**rig, "status": "unresolved", "assets": {}, "bundles": [], "sizeOriginal": 0, "reason": f"the game ships no {', '.join(rig['missing'])} for this rig"}
+    return [art, rig]
+
+
 def fairy_items(index, fairy):
     """Resolve the art item for one fairy.
 
@@ -805,7 +941,7 @@ def skin_live2d_items(index, models):
     return [item for item in (skin_live2d_item(index, model) for model in models) if item is not None]
 
 
-def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), live2d_models=()):
+def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(), live2d_models=()):
     """Work out which dolls, Mods, skins, equipment, HOCs and fairies the committed manifest does not list yet.
 
     A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed. A HOC counts as hosted
@@ -820,10 +956,11 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), live2d_mode
         manifest: The committed version 3 manifest.
         hocs: HOC records from `load_site`, each `{"id", "code", "name"}`.
         fairies: Fairy records from `load_site`, each `{"id", "code", "name"}`.
+        enemies: Enemy records from `load_site`, each `{"id", "code", "name"}`.
         live2d_models: Records from `skin_live2d_table.skin_live2d_models`.
 
     Returns:
-        A dict of `dolls`, `mods`, `equipment`, `hocs` and `fairies` id sets, a `skins` set of `(doll_id, skin_id)` pairs (only numeric skin
+        A dict of `dolls`, `mods`, `equipment`, `hocs`, `fairies` and `enemies` id sets, a `skins` set of `(doll_id, skin_id)` pairs (only numeric skin
         ids count), a `live2d` set of `(kind, id)` pairs where `kind` is `"fairy"` or `"hoc"`, and a `skin` set of `(doll_id, form, skin_key)`
         triples for T-Doll skin Live2D models the manifest does not list.
     """
@@ -846,6 +983,8 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), live2d_mode
     targets["hocs"] = {hoc["id"] for hoc in hocs if str(hoc["id"]) not in listed_hocs}
     listed_fairies = manifest.get("fairies", {})
     targets["fairies"] = {fairy["id"] for fairy in fairies if str(fairy["id"]) not in listed_fairies}
+    listed_enemies = manifest.get("enemies", {})
+    targets["enemies"] = {enemy["id"] for enemy in enemies if str(enemy["id"]) not in listed_enemies}
     listed_live2d = manifest.get("live2d", {})
     listed_live2d_fairies = listed_live2d.get("fairies", {})
     listed_live2d_hocs = listed_live2d.get("hocs", {})
@@ -896,6 +1035,8 @@ def select_new_items(items, targets):
             keep = item.get("hoc_id") in targets.get("hocs", set())
         elif tier == "fairy_art":
             keep = item.get("fairy_id") in targets.get("fairies", set())
+        elif tier in ("enemy_art", "enemy_spine"):
+            keep = item.get("enemy_id") in targets.get("enemies", set())
         elif tier == "live2d":
             if item.get("kind") == "skin":
                 keep = (item.get("id"), item.get("form"), item.get("skin")) in targets.get("skin", set())
@@ -930,9 +1071,9 @@ def is_expected_gap(item):
         item: An unresolved item dict.
 
     Returns:
-        True for the skill codes with no icon anywhere in the game and for the skin rigs the game does not ship.
+        True for the skill codes with no icon anywhere in the game, and for the rigs and art the game does not ship.
     """
-    return item["key"] in EXPECTED_MISSING_RIGS or (item["tier"] == "skill_icon" and item.get("code", "").lower() in EXPECTED_MISSING_SKILL_CODES)
+    return item["key"] in EXPECTED_MISSING_RIGS or item["key"] in EXPECTED_MISSING_ART or (item["tier"] == "skill_icon" and item.get("code", "").lower() in EXPECTED_MISSING_SKILL_CODES)
 
 
 def summarise(items, index, include_ui=True):
@@ -967,7 +1108,7 @@ def summarise(items, index, include_ui=True):
     return summary, bundles
 
 
-def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=(), live2d_rows=(), doll_ids=None):
+def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=(), enemies=(), live2d_rows=(), doll_ids=None):
     """Resolve every wanted asset against the ResData manifest.
 
     Args:
@@ -980,6 +1121,7 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         select: Optional callable narrowing the item list before bundles are collected. The UI bundles are then added only for equipment icons.
         hocs: HOC records from `load_site`, each `{"id", "code"}`.
         fairies: Fairy records from `load_site`, each `{"id", "code"}`.
+        enemies: Enemy records from `load_site`, each `{"id", "code"}`.
         live2d_rows: Rows from `stc/live2d.json`, used to resolve T-Doll skin Live2D models. Empty when the checkout has none.
         doll_ids: Doll ids the wiki hosts, used to filter `live2d_rows`. Defaults to every id in `dolls` when not given.
 
@@ -997,6 +1139,11 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         items.extend(hoc_items(index, hoc))
     for fairy in fairies:
         items.append(fairy_items(index, fairy))
+    if enemies:
+        # Built once for the whole run, since resolving an enemy rig searches every skeleton in ResData by name.
+        skeletons = skeleton_index(index)
+        for enemy in enemies:
+            items.extend(enemy_items(index, skeletons, enemy))
     items.extend(live2d_items(index, fairies, hocs))
     known_dolls = doll_ids if doll_ids is not None else {doll["normal"]["id"] for doll in dolls}
     items.extend(skin_live2d_items(index, skin_live2d_models(live2d_rows, set(index), known_dolls)))
@@ -1020,17 +1167,17 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
     Returns:
         The inventory dict from `build_inventory`.
     """
-    dolls, equipment_ids, hocs, fairies = load_site(site_dir)
+    dolls, equipment_ids, hocs, fairies, enemies = load_site(site_dir)
     live2d_rows = load_live2d_table(gf_data_dir)
     resdata = read_json(resdata_path)
     if manifest_path is None:
-        return build_inventory(resdata, dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs, fairies=fairies, live2d_rows=live2d_rows)
+        return build_inventory(resdata, dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs, fairies=fairies, enemies=enemies, live2d_rows=live2d_rows)
     # `new_targets` needs the resolved skin Live2D models, the same ones `build_inventory` resolves below, or `targets["skin"]` stays empty
     # and `select_new_items` drops every skin item regardless of what the manifest lists.
     index, _res_url = load_index(resdata)
     known_dolls = {doll["normal"]["id"] for doll in dolls}
     live2d_models = skin_live2d_models(live2d_rows, set(index), known_dolls)
-    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies, live2d_models=live2d_models)
+    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies, enemies=enemies, live2d_models=live2d_models)
     inventory = build_inventory(
         resdata,
         dolls,
@@ -1039,6 +1186,7 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
         select=lambda items: select_new_items(items, targets),
         hocs=hocs,
         fairies=fairies,
+        enemies=enemies,
         live2d_rows=live2d_rows,
     )
     inventory["onlyMissing"] = True

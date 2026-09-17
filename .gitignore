@@ -40,6 +40,7 @@ tools/data/.cache/
 # asset rebuild bundle cache and staging trees
 tools/assets/.cache/
 tools/assets/.staging/
+tools/assets/.staging-*/
 
 # superpowers brainstorming session files
 .superpowers/
