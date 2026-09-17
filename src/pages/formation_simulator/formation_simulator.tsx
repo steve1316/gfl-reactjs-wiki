@@ -5,8 +5,10 @@ import { Box, CircularProgress, Container, Typography } from "@mui/material";
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import { loadFormationData } from "../../lib/data";
-import { placedForms, placedSources } from "../../lib/formation/pipeline";
+import { effectiveEchelon, placedForms, placedSources } from "../../lib/formation/pipeline";
 import type { FormationData } from "../../types/formation";
+import DollModal from "./DollModal";
+import { dollName } from "./dollNames";
 import FormationStage from "./FormationStage";
 import { useFormationState } from "./useFormationState";
 
@@ -25,6 +27,7 @@ export default function FormationSimulator() {
 	// Worked out once here and shared, so the stage, the modal and the results do not each redo it.
 	const placed = useMemo(() => (data ? placedForms(formation.setups, data.forms) : []), [data, formation.setups]);
 	const sources = useMemo(() => (data ? placedSources(placed, data.constants) : []), [data, placed]);
+	const results = useMemo(() => (data ? effectiveEchelon(formation.setups, data.forms, data.constants, sources) : []), [data, formation.setups, sources]);
 
 	useEffect(() => {
 		document.title = "Formation Simulator";
@@ -56,6 +59,11 @@ export default function FormationSimulator() {
 		[formation.moveDoll]
 	);
 	const cancelMove = useCallback(() => setMoveFrom(null), []);
+	const closeModal = useCallback(() => setSelectedCell(null), []);
+	const startMove = useCallback((cell: number) => {
+		setSelectedCell(null);
+		setMoveFrom(cell);
+	}, []);
 
 	return (
 		<Box component="main" sx={{ py: 3 }}>
@@ -71,16 +79,33 @@ export default function FormationSimulator() {
 						<CircularProgress aria-label="Loading formation data" />
 					</Box>
 				) : (
-					<FormationStage
-						placed={placed}
-						sources={sources}
-						constants={data.constants}
-						selectedCell={selectedCell}
-						moveFrom={moveFrom}
-						onTileClick={handleTileClick}
-						onMove={handleMove}
-						onCancelMove={cancelMove}
-					/>
+					<>
+						<FormationStage
+							placed={placed}
+							sources={sources}
+							constants={data.constants}
+							selectedCell={selectedCell}
+							moveFrom={moveFrom}
+							onTileClick={handleTileClick}
+							onMove={handleMove}
+							onCancelMove={cancelMove}
+						/>
+						{moveFrom !== null && (
+							<Typography role="status" color="primary" sx={{ mt: 1 }}>
+								Tap the tile to move {dollName(formation.setups.find((setup) => setup.cell === moveFrom)?.dollId ?? 0, 0)} to.
+							</Typography>
+						)}
+						<DollModal
+							open={selectedCell !== null}
+							cell={selectedCell}
+							data={data}
+							formation={formation}
+							results={results}
+							sources={sources}
+							onClose={closeModal}
+							onStartMove={startMove}
+						/>
+					</>
 				)}
 			</Container>
 		</Box>
