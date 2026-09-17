@@ -66,6 +66,15 @@ export default defineConfig({
 	plugins: [react(), spaFallback(), baseTrailingSlash()],
 	build: {
 		outDir: "build",
-		sourcemap: true
+		sourcemap: true,
+		rolldownOptions: {
+			output: {
+				codeSplitting: {
+					// The Spine and Live2D runtime helpers are shared by eager pages and lazy routes. Left alone, Rolldown splits them apart
+					// differently whenever a new route imports one, which shuffles unrelated chunks, so keep them together in one chunk.
+					groups: [{ name: "pixi-runtime", test: /src\/lib\/(spine|pixiRuntimeLock|live2dPreload)\.ts$/ }]
+				}
+			}
+		}
 	}
 });
