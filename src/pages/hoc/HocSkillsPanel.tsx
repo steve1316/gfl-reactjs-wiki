@@ -5,6 +5,7 @@ import { Box, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import LevelSlider from "../../components/LevelSlider";
+import { describeSkill } from "../../lib/skillText";
 import type { HocSkill } from "../../types/hoc";
 
 /** The highest skill level. */
@@ -16,29 +17,8 @@ const styles = {
 	nameRow: { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 2, flexWrap: "wrap" },
 	name: { fontWeight: 700 },
 	// Keeps the line breaks the game puts in longer skill text.
-	description: { mt: 0.5, whiteSpace: "pre-line" },
-	value: { color: "primary.main", fontWeight: 700 }
+	description: { mt: 0.5, whiteSpace: "pre-line" }
 } satisfies Record<string, SxProps<Theme>>;
-
-/**
- * A skill's description with each `#N` placeholder replaced by its value at a level.
- *
- * @param skill The skill.
- * @param level The skill level, 1 to 10.
- * @returns The description as text and highlighted values.
- */
-function describe(skill: HocSkill, level: number) {
-	return skill.description.split(/#(\d+)/).map((part, index) =>
-		// Split with a capture group puts the placeholder numbers at odd indexes.
-		index % 2 === 1 ? (
-			<Box component="span" key={index} sx={styles.value}>
-				{skill[`stat${Number(part)}`]?.[level - 1] ?? ""}
-			</Box>
-		) : (
-			part
-		)
-	);
-}
 
 /**
  * The cooldown line for a skill at a level.
@@ -85,7 +65,7 @@ export default memo(function HocSkillsPanel({ skills }: HocSkillsPanelProps) {
 						</Typography>
 					</Box>
 					<Typography variant="body2" sx={styles.description}>
-						{describe(skill, level)}
+						{describeSkill(skill, level)}
 					</Typography>
 				</Box>
 			))}
