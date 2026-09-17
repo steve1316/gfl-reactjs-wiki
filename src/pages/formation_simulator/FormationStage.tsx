@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { Box, Typography } from "@mui/material";
@@ -26,20 +26,27 @@ const CHIBI_SCALE_PER_TILE_PX = 1 / 170;
 /** Pixels a pointer can travel between press and release and still count as a click. */
 const DRAG_THRESHOLD = 6;
 
-/** Approximate label character width as a share of font size, for sizing the label pill. */
-const LABEL_CHAR_WIDTH = 0.6;
+/** Padding inside a label pill, each side, as a share of font size. */
+const LABEL_PILL_PADDING = 0.55;
 
 /** Label font size as a share of tile width, so labels on neighbouring tiles do not run into each other. */
-const LABEL_FONT_SHARE = 0.05;
+const LABEL_FONT_SHARE = 0.045;
+
+/** How far below a tile's centre its label sits, as a share of tile height, which keeps it clear of the doll's own body. */
+const LABEL_TILE_OFFSET = 0.36;
 
 /** Smallest label font size in CSS pixels. */
 const LABEL_MIN_FONT = 9;
 
-/** Stat totals per label line. Longer labels wrap onto more lines instead of spilling across neighbouring tiles. */
-const LABEL_STATS_PER_LINE = 2;
+/** Stat name size and opacity against its number, so the numbers read first. */
+const LABEL_NAME_SHARE = 0.9;
+const LABEL_NAME_OPACITY = 0.75;
 
-/** Label line height as a multiple of font size. */
-const LABEL_LINE_HEIGHT = 1.3;
+/** Opacity of the dot between two stats. */
+const LABEL_SEPARATOR_OPACITY = 0.35;
+
+/** Label pill height as a multiple of font size. */
+const LABEL_PILL_HEIGHT = 1.9;
 
 /** Fill opacity of the tiles the focused doll's buffs reach. */
 const REACH_OPACITY = 0.35;
@@ -111,18 +118,44 @@ interface DragCells {
 }
 
 /**
- * The label lines for one cell's totals.
+ * Measure text in the font a label draws it in.
+ *
+ * The pill used to be sized from the character count, which left a wide gap at each end, since digits and spaces are much narrower than the
+ * average character. One canvas is kept for the page's lifetime, since creating one per measurement is far more expensive than the measure.
+ *
+ * @param text The text.
+ * @param font A CSS font shorthand, such as `700 12px Roboto`.
+ * @returns The width in CSS pixels.
+ */
+const measureText = (() => {
+	const context = document.createElement("canvas").getContext("2d");
+	return (text: string, font: string) => {
+		if (!context) {
+			return text.length * 6;
+		}
+		context.font = font;
+		return context.measureText(text).width;
+	};
+})();
+
+/** One stat's total on a tile, as the label writes it. */
+interface LabelPart {
+	/** Short stat name, such as `DMG`. */
+	name: string;
+	/** Summed percentage, to one decimal place. */
+	value: number;
+}
+
+/**
+ * One tile's totals, as one line such as `DMG 50 · RoF 15`.
+ *
+ * Every tile buff is a percentage, so the labels leave the sign and the per-cent off and the hover card spells them out in full.
  *
  * @param sources Buffs on the cell to total.
- * @returns Lines of up to `LABEL_STATS_PER_LINE` totals, such as `DMG +22%  EVA +15%`.
+ * @returns One part per stat that has any buff, in display order.
  */
-function labelLines(sources: readonly TileSource[]): string[] {
-	const parts = tileTotals(sources).map(({ code, total }) => `${TILE_STAT_SHORT[code]} +${Math.round(total * 10) / 10}%`);
-	const lines: string[] = [];
-	for (let index = 0; index < parts.length; index += LABEL_STATS_PER_LINE) {
-		lines.push(parts.slice(index, index + LABEL_STATS_PER_LINE).join("  "));
-	}
-	return lines;
+function labelParts(sources: readonly TileSource[]): LabelPart[] {
+	return tileTotals(sources).map(({ code, total }) => ({ name: TILE_STAT_SHORT[code], value: Math.round(total * 10) / 10 }));
 }
 
 /**
@@ -597,6 +630,7 @@ export default memo(function FormationStage({ placed, sources, selectedCell, mov
 	);
 
 	const fontSize = Math.max(LABEL_MIN_FONT, geometry.tileWidth * LABEL_FONT_SHARE);
+	const fontFamily = theme.typography.fontFamily ?? "sans-serif";
 	const enemy = enemyAnchor(geometry);
 
 	return (
@@ -641,42 +675,58 @@ export default memo(function FormationStage({ placed, sources, selectedCell, mov
 				role="group"
 				aria-label="Formation grid"
 			>
+				{Array.from({ length: GRID_CELLS }, (_, cell) => (
+					<polygon
+						key={cell}
+						points={tilePoints(geometry, cell)}
+						fill="transparent"
+						onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredCell(cell)}
+						onPointerLeave={() => setHoveredCell((current) => (current === cell ? null : current))}
+					/>
+				))}
 				{Array.from({ length: GRID_CELLS }, (_, cell) => {
 					const here = sources[cell] ?? [];
 					const standing = occupant.get(cell);
 					const shown = standing ? here.filter((source) => appliesTo(source, standing.form.type)) : here;
-					const lines = showTotals ? labelLines(shown) : [];
+					const parts = showTotals ? labelParts(shown) : [];
+					if (parts.length === 0) {
+						return null;
+					}
+					const text = parts.reduce(
+						(total, part, index) =>
+							total +
+							(index > 0 ? measureText(" · ", `${fontSize}px ${fontFamily}`) : 0) +
+							measureText(`${part.name} `, `${fontSize * LABEL_NAME_SHARE}px ${fontFamily}`) +
+							measureText(String(part.value), `700 ${fontSize}px ${fontFamily}`),
+						0
+					);
+					const width = text + fontSize * LABEL_PILL_PADDING * 2;
 					const { x, y } = tileCentre(geometry, cell);
-					const pillWidth = Math.max(0, ...lines.map((line) => line.length)) * fontSize * LABEL_CHAR_WIDTH + fontSize;
-					const pillTop = y + geometry.tileHeight * 0.12;
+					// One line on the tile's front half, drawn over the chibis so a doll standing in front can never hide it.
+					const pillTop = y + geometry.tileHeight * LABEL_TILE_OFFSET;
 					return (
-						<g
-							key={cell}
-							onPointerEnter={(event) => event.pointerType === "mouse" && setHoveredCell(cell)}
-							onPointerLeave={() => setHoveredCell((current) => (current === cell ? null : current))}
-						>
-							<polygon points={tilePoints(geometry, cell)} fill="transparent" />
-							{lines.length > 0 && (
-								<g opacity={standing ? 1 : 0.75} pointerEvents="none">
-									<rect
-										x={x - pillWidth / 2}
-										y={pillTop}
-										width={pillWidth}
-										height={fontSize * (0.5 + lines.length * LABEL_LINE_HEIGHT)}
-										rx={fontSize * 0.85}
-										fill={theme.palette.background.default}
-										fillOpacity={0.92}
-										stroke={theme.palette.tile.buff}
-									/>
-									<text x={x} y={pillTop + fontSize * 0.25} fontSize={fontSize} textAnchor="middle" fill={theme.palette.text.primary} style={{ whiteSpace: "pre" }}>
-										{lines.map((line, index) => (
-											<tspan key={index} x={x} dy={fontSize * (index === 0 ? 1 : LABEL_LINE_HEIGHT)}>
-												{line}
-											</tspan>
-										))}
-									</text>
-								</g>
-							)}
+						<g key={cell} opacity={standing ? 1 : 0.85} pointerEvents="none">
+							<rect
+								x={x - width / 2}
+								y={pillTop}
+								width={width}
+								height={fontSize * LABEL_PILL_HEIGHT}
+								rx={fontSize * LABEL_PILL_HEIGHT * 0.5}
+								fill={theme.palette.background.default}
+								fillOpacity={0.85}
+								stroke={theme.palette.tile.buff}
+							/>
+							<text x={x} y={pillTop + fontSize * 1.32} fontSize={fontSize} textAnchor="middle" fill={theme.palette.text.primary} style={{ whiteSpace: "pre" }}>
+								{parts.map((part, index) => (
+									<Fragment key={part.name}>
+										{index > 0 && <tspan fillOpacity={LABEL_SEPARATOR_OPACITY}> · </tspan>}
+										<tspan fontSize={fontSize * LABEL_NAME_SHARE} fillOpacity={LABEL_NAME_OPACITY}>
+											{part.name}{" "}
+										</tspan>
+										<tspan fontWeight={700}>{part.value}</tspan>
+									</Fragment>
+								))}
+							</text>
 						</g>
 					);
 				})}
