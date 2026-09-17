@@ -208,19 +208,25 @@ export function buildEnemies(upstream, warnings) {
 }
 
 /**
+ * Enemy ids the game ships no portrait for at all, so the art check does not report them. Erma's Dummy is a training target that has no
+ * character bundle of its own.
+ */
+const ENEMIES_WITHOUT_ART = new Set([232001]);
+
+/**
  * Compare the enemies with the v3 asset manifest's `enemies` key. An absent or empty `enemies` key means the manifest has not
  * been extended for enemy art yet, so nothing is reported.
  *
  * @param {{ id: number, name: string }[]} enemies Generated enemy records.
  * @param {{ enemies?: Record<string, string[]> }} manifest The v3 asset manifest.
- * @returns {string[]} Names of enemies missing their card art, once the manifest lists any enemy.
+ * @returns {string[]} Names of enemies missing their card art, once the manifest lists any enemy, ignoring the ones the game ships none for.
  */
 export function findEnemyArtGaps(enemies, manifest) {
 	const entries = manifest.enemies ?? {};
 	if (Object.keys(entries).length === 0) {
 		return [];
 	}
-	return enemies.filter((enemy) => !(entries[String(enemy.id)] ?? []).includes("card")).map((enemy) => enemy.name);
+	return enemies.filter((enemy) => !ENEMIES_WITHOUT_ART.has(enemy.id) && !(entries[String(enemy.id)] ?? []).includes("card")).map((enemy) => enemy.name);
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////
