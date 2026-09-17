@@ -8,6 +8,7 @@ import type { SxProps, Theme } from "@mui/material";
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import HighlightedName from "../../components/HighlightedName";
 import RankBar from "../../components/RankBar";
+import { ENEMY_CARD_ASPECT } from "../../lib/artLayout";
 import { enemyCardUrl } from "../../lib/assets";
 import { ENEMY_CARD_RANK_KEYS, ENEMY_RANK_LABELS } from "../../lib/enemyRanks";
 import { findNameMatch } from "../../lib/nameSearch";
@@ -16,9 +17,6 @@ import type { EnemyRankValues } from "../../types/enemy";
 
 /** Text about 11.5px, the smallest size used on the tiles so they stay readable on a phone. */
 const SMALL_TEXT = "0.72rem";
-
-/** Enemy art is not published yet, so the tiles hold a square until real art settles the shape. */
-const ENEMY_CARD_ASPECT = "1 / 1";
 
 const styles = {
 	card: { height: "100%", display: "flex", flexDirection: "column" },

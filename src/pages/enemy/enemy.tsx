@@ -10,16 +10,19 @@ import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import NotFound404 from "../../not_found_404";
 import PageBackdrop from "../../components/PageBackdrop";
+import LazySection from "../../components/LazySection";
 import AssimilationPanel from "./AssimilationPanel";
+import EnemyAnimationsPanel from "./EnemyAnimationsPanel";
 import EnemyHero from "./EnemyHero";
 import EnemyRanksPanel from "./EnemyRanksPanel";
 import EnemyStatsPanel from "./EnemyStatsPanel";
 
 import { enemyCardUrl, enemyFullArtUrl } from "../../lib/assets";
-import { loadAssimilation, loadEnemyDetails } from "../../lib/data";
+import { loadAssimilation, loadEnemyDetails, loadEnemySpineRigs } from "../../lib/data";
 import { hasEnemyArt } from "../../lib/processData";
 import { useEnemies } from "../../lib/useEnemies";
 import type { AssimilationData, Enemy, EnemyDetailsData } from "../../types/enemy";
+import type { SpineRig } from "../../types/spine";
 
 const styles = {
 	page: {
@@ -87,6 +90,7 @@ interface EnemyDetailProps {
 function EnemyDetail({ enemy }: EnemyDetailProps) {
 	const [details, setDetails] = useState<EnemyDetailsData | null>(null);
 	const [assimilation, setAssimilation] = useState<AssimilationData | null>(null);
+	const [rig, setRig] = useState<SpineRig | null>(null);
 
 	const enemyDetails = details?.[String(enemy.id)];
 	// Paired so the panel only renders once both the unit and the shared chip and class data are in hand.
@@ -107,6 +111,17 @@ function EnemyDetail({ enemy }: EnemyDetailProps) {
 			active = false;
 		};
 	}, []);
+
+	// The rig index is fetched on its own, so the page renders without waiting on it. A failed fetch just leaves the section out.
+	useEffect(() => {
+		let active = true;
+		loadEnemySpineRigs(enemy.id)
+			.then((entry) => active && entry?.combat && setRig(entry.combat))
+			.catch(() => {});
+		return () => {
+			active = false;
+		};
+	}, [enemy.id]);
 
 	// Only a capturable enemy pays for this file, so an ordinary enemy's page never downloads it.
 	useEffect(() => {
@@ -159,7 +174,7 @@ function EnemyDetail({ enemy }: EnemyDetailProps) {
 
 					{/************** Stats and skills in one card. They are both what the enemy does in a fight, and apart they left
 					                the skills as a mostly empty card in a row of taller ones. Full width when nothing sits beside it. **************/}
-					<Grid size={capturable ? { xs: 12, md: 7, lg: 8 } : { xs: 12 }}>
+					<Grid size={capturable || rig !== null ? { xs: 12, md: 7, lg: 8 } : { xs: 12 }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Combat
@@ -197,6 +212,20 @@ function EnemyDetail({ enemy }: EnemyDetailProps) {
 							</Box>
 						</Paper>
 					</Grid>
+
+					{/************** The enemy's chibi, with one pill per animation its skeleton defines **************/}
+					{rig !== null ? (
+						<Grid size={{ xs: 12, md: 5, lg: 4 }}>
+							<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
+								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
+									Animations
+								</Typography>
+								<LazySection minHeight={320}>
+									<EnemyAnimationsPanel id={enemy.id} rig={rig} />
+								</LazySection>
+							</Paper>
+						</Grid>
+					) : null}
 
 					{/************** What the enemy is like once captured, for the families Protocol Assimilation covers **************/}
 					{capturable ? (

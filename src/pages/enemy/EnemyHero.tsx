@@ -5,7 +5,7 @@ import { Alert, Box, Card, CardMedia, Chip, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import ArtPlaceholder from "../../components/ArtPlaceholder";
-import { cardArtSx } from "../../lib/artLayout";
+import { ENEMY_CARD_ASPECT } from "../../lib/artLayout";
 
 const styles = {
 	root: {
@@ -21,12 +21,21 @@ const styles = {
 		p: { xs: 2, md: 3 }
 	},
 	portrait: {
-		...cardArtSx,
-		// The same cap the doll portraits use, since enemy art will be published at the same card size.
-		width: { xs: 176, sm: 208, md: 200 },
+		width: "100%",
+		aspectRatio: ENEMY_CARD_ASPECT,
+		objectFit: "cover",
+		display: "block",
+		// Capped at the published art's own 512px rather than stretched.
+		maxWidth: { xs: 208, sm: 240, md: 256 },
 		flexShrink: 0,
 		position: "relative",
 		boxShadow: 8
+	},
+	portraitArt: {
+		width: "100%",
+		aspectRatio: ENEMY_CARD_ASPECT,
+		objectFit: "cover",
+		display: "block"
 	},
 	info: {
 		display: "flex",
@@ -99,7 +108,9 @@ export default memo(function EnemyHero({ name, id, code, subName, faction, boss,
 	return (
 		<Box data-testid="enemy-hero" sx={styles.root}>
 			<Box sx={styles.content}>
-				<Card sx={styles.portrait}>{cardImage ? <CardMedia component="img" sx={cardArtSx} image={cardImage} title={name} /> : <ArtPlaceholder name={name} />}</Card>
+				<Card sx={styles.portrait}>
+					{cardImage ? <CardMedia component="img" sx={styles.portraitArt} image={cardImage} title={name} /> : <ArtPlaceholder name={name} sx={styles.portraitArt} />}
+				</Card>
 
 				<Box sx={styles.info}>
 					<Box sx={styles.topRow}>

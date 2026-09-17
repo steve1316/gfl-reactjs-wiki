@@ -19,7 +19,7 @@ import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment"
 import type { FairyData } from "../types/fairy";
 import type { HocData } from "../types/hoc";
 import type { Live2dIndex, Live2dMotion, Live2dTdollFile } from "../types/live2d";
-import type { HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
+import type { EnemySpineEntry, EnemySpineIndex, HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
 import { equipmentIconUrl } from "./assets";
 import { hasDollArt, hasEquipmentIcon, processDoll, processDolls } from "./processData";
@@ -111,6 +111,7 @@ const EXISTING_DATA_URLS = import.meta.glob<string>(
 		"../data/enemies.json",
 		"../data/enemy-details.json",
 		"../data/assimilation.json",
+		"../data/enemy-spine-index.json",
 		"../data/live2d-index.json"
 	],
 	{
@@ -182,6 +183,9 @@ const enemyDetailsCache = new Map<0, Promise<EnemyDetailsData>>();
 
 /** Cache of the in-flight or loaded Protocol Assimilation units, under the single key `0`. A failed load is dropped so it can be retried. */
 const assimilationCache = new Map<0, Promise<AssimilationData>>();
+
+/** Cache of the in-flight or loaded enemy Spine index, under the single key `0`. A failed load is dropped so it can be retried. */
+const enemySpineIndexCache = new Map<0, Promise<EnemySpineIndex>>();
 
 /** Cache of the in-flight or loaded Live2D index, under the single key `0`. A failed load is dropped so it can be retried. */
 const live2dIndexCache = new Map<0, Promise<Live2dIndex>>();
@@ -474,6 +478,18 @@ export function loadEnemyDetails(): Promise<EnemyDetailsData> {
  */
 export function loadAssimilation(): Promise<AssimilationData> {
 	return assimilationCache.get(0) ?? cacheUntilFailure(assimilationCache, 0, fetchData<AssimilationData>("assimilation"));
+}
+
+/**
+ * Look up an enemy's Spine rig.
+ *
+ * @param id Enemy id.
+ * @returns The enemy's combat rig, or undefined when nothing was published for it.
+ * @throws When the index fails to load. The failed load is not cached, so a later call tries again.
+ */
+export async function loadEnemySpineRigs(id: number): Promise<EnemySpineEntry | undefined> {
+	const index = await (enemySpineIndexCache.get(0) ?? cacheUntilFailure(enemySpineIndexCache, 0, fetchData<EnemySpineIndex>("enemy-spine-index")));
+	return index[String(id)];
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

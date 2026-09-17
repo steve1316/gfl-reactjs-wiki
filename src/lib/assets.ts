@@ -238,6 +238,28 @@ export function hocSpineImageBase(id: number): string {
 }
 
 /**
+ * URL for one file inside an enemy's Spine bundle.
+ *
+ * @param id Enemy id, the archive's `sub_id`.
+ * @param rigPath Rig basename from the enemy Spine index, such as `Boss9`.
+ * @param extension File extension without the dot, one of `skel`, `atlas` or `png`.
+ * @returns An absolute URL.
+ */
+export function enemySpineUrl(id: number, rigPath: string, extension: string): string {
+	return join(ASSET_BASE, `enemy-spine/${id}/${rigPath}.${extension}`);
+}
+
+/**
+ * Directory holding an enemy's Spine atlas page images, with a trailing slash.
+ *
+ * @param id Enemy id, the archive's `sub_id`.
+ * @returns An absolute URL ending in a slash.
+ */
+export function enemySpineImageBase(id: number): string {
+	return `${join(ASSET_BASE, `enemy-spine/${id}`)}/`;
+}
+
+/**
  * URL for a fairy's Live2D `model3.json` at one of its three forms. Textures and motions live alongside it and are
  * referenced by relative path inside the file, so nothing else needs to be built.
  *

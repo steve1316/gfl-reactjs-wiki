@@ -23,6 +23,15 @@ export interface SpineRigPair {
 	dorm?: SpineRig;
 }
 
+/** Everything published for one enemy. Rig paths are relative to `enemy-spine/<id>/`. An enemy has one rig, with no dorm twin and no crew. */
+export interface EnemySpineEntry {
+	/** The combat rig, absent only when no atlas could be paired with the skeleton. */
+	combat?: SpineRig;
+}
+
+/** The generated `enemy-spine-index.json`, keyed by stringified enemy id. */
+export type EnemySpineIndex = Record<string, EnemySpineEntry>;
+
 /** Everything published for one doll. Rig paths are relative to `spine/<id>/`. */
 export interface SpineDollEntry {
 	/** The combat rig: attack, move, victory and so on. */

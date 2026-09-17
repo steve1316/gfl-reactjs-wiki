@@ -16,6 +16,9 @@ export const CARD_ASPECT = "1 / 2";
 /** HOC cards are 224x399. */
 export const HOC_CARD_ASPECT = "224 / 399";
 
+/** Enemy cards are square: the game ships them as a single 512x512 image rather than the dolls' two-half 256x512 atlas. */
+export const ENEMY_CARD_ASPECT = "1 / 1";
+
 /**
  * Full art draws from the very top of its canvas.
  *
