@@ -20,6 +20,7 @@ import fs from "node:fs";
 
 import { loadCnGuns } from "./lib/cnData.mjs";
 import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
+import { buildEnemies } from "./lib/enemies.mjs";
 import { buildEquipment, exclusivesByDoll } from "./lib/equipment.mjs";
 import { buildFairies } from "./lib/fairies.mjs";
 import { buildHocs } from "./lib/hocs.mjs";
@@ -171,6 +172,10 @@ async function main() {
 	writeJson(`${OUT_DIR}/hocs.json`, hocs);
 	const fairies = buildFairies(upstream);
 	writeJson(`${OUT_DIR}/fairies.json`, fairies);
+	const enemies = buildEnemies(upstream, ctx.warnings);
+	// The index reads the records, and only an enemy's own page downloads the lore, skills and stats.
+	writeJson(`${OUT_DIR}/enemies.json`, { factions: enemies.factions, items: enemies.items });
+	writeJson(`${OUT_DIR}/enemy-details.json`, enemies.details);
 
 	const { repo, sha } = readLock();
 	const counts = {
@@ -178,7 +183,8 @@ async function main() {
 		mods: dolls.filter((doll) => doll.mod).length,
 		equipment: Object.values(equipment.items).flat().length,
 		hocs: hocs.items.length,
-		fairies: fairies.items.length
+		fairies: fairies.items.length,
+		enemies: enemies.items.length
 	};
 	writeJson(`${OUT_DIR}/upstream.json`, { repo, sha, counts });
 
@@ -187,7 +193,9 @@ async function main() {
 	for (const warning of ctx.warnings) {
 		console.warn(`warning: ${warning}`);
 	}
-	console.log(`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, fairies ${counts.fairies}, skill text fallbacks ${ctx.warnings.length}`);
+	console.log(
+		`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, fairies ${counts.fairies}, enemies ${counts.enemies}, warnings ${ctx.warnings.length}`
+	);
 	console.log(`profiles: ${profiles.joined} joined an IOPWiki page, ${profiles.wikidata} filled from Wikidata`);
 }
 
