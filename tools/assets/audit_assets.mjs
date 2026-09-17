@@ -11,11 +11,12 @@
  * index, which `add_spine_animations.mjs` fills with the same `skb.js` the browser uses.
  *
  * Usage:
- *     node tools/assets/audit_assets.mjs [--assets <dir>] [--manifest <file>] [--spine-index <file>] [--hoc-spine-index <file>]
+ *     node tools/assets/audit_assets.mjs [--assets <dir>] [--manifest <file>] [--spine-index <file>] [--hoc-spine-index <file>] [--enemy-spine-index <file>]
  *
  * Audits the skin-id layout on disk: every file the version 3 manifest and Spine index reference must exist in the staging tree. `--v3`
  * is still accepted from before the version 2 audit of the live hosts was removed. HOC art and rigs are audited too, the HOC Spine index
- * only when its file exists, since a repo may not have any HOC rigs published yet. Fairy art is audited the same way.
+ * only when its file exists, since a repo may not have any HOC rigs published yet. Fairy art, enemy art and enemy rigs are audited the
+ * same way.
  *
  * Live2D fairy forms and HOC models are audited too: for each kind the manifest's `live2d` block lists, its `.moc3` and `.model3.json`
  * files must exist, plus the shared texture (`texture.webp` for a fairy, `texture0.webp` for a HOC) and at least one `.motion3.json`
@@ -37,7 +38,8 @@ const V3_DEFAULTS = {
 	assets: "tools/assets/.staging/assets",
 	manifest: "assets-manifest.json",
 	spineIndex: "src/data/spine-index.json",
-	hocSpineIndex: "src/data/hoc-spine-index.json"
+	hocSpineIndex: "src/data/hoc-spine-index.json",
+	enemySpineIndex: "src/data/enemy-spine-index.json"
 };
 
 /** v3 image kind -> filename inside a form folder. */
@@ -45,6 +47,9 @@ const V3_IMAGE_FILES = { card: "card.webp", card_damaged: "card_d.webp", full: "
 
 /** HOC image kind -> filename inside a HOC's `hocs/<id>/` folder. */
 const HOC_IMAGE_FILES = { card: "card.webp", full: "full.webp" };
+
+/** Enemy image kind -> filename inside an enemy's `enemies/<id>/` folder. An enemy has the same two kinds a HOC does. */
+const ENEMY_IMAGE_FILES = { card: "card.webp", full: "full.webp" };
 
 /** Fairy image kind -> filename inside a fairy's `fairies/<id>/` folder. */
 const FAIRY_IMAGE_FILES = { form1: "form1.webp", form2: "form2.webp", form3: "form3.webp" };
@@ -137,6 +142,7 @@ function auditV3(args) {
 	const manifest = JSON.parse(fs.readFileSync(option(args, "--manifest", V3_DEFAULTS.manifest), "utf8"));
 	const spineIndex = JSON.parse(fs.readFileSync(option(args, "--spine-index", V3_DEFAULTS.spineIndex), "utf8"));
 	const hocSpineIndexPath = option(args, "--hoc-spine-index", V3_DEFAULTS.hocSpineIndex);
+	const enemySpineIndexPath = option(args, "--enemy-spine-index", V3_DEFAULTS.enemySpineIndex);
 
 	const missing = [];
 	const problems = [];
@@ -159,7 +165,14 @@ function auditV3(args) {
 	 * @param {string} folder The entry's rig folder inside the assets tree, e.g. `spine/65`.
 	 * @param {Array<[string, object]>} rigs Kind label and rig pairs, absent rigs already dropped.
 	 */
-	const auditRigs = (label, folder, rigs) => {
+	/**
+	 * Check one entry's rigs: every skeleton, atlas and atlas page must exist.
+	 *
+	 * `hasSkinRigs` is only true for dolls. A doll's skin rig is named `<Code>_<skinId>`, so a base rig ending in digits means a skin
+	 * leaked into the base slot. Enemies and HOCs have no skins, and their skeletons legitimately end in digits (`Bathhouse_guest_1`),
+	 * so the check would only produce false alarms there.
+	 */
+	const auditRigs = (label, folder, rigs, hasSkinRigs = false) => {
 		for (const [kind, rig] of rigs) {
 			need(`${folder}/${rig.skel}.skel`, `${label} ${kind} skeleton`);
 			const atlasRel = `${folder}/${rig.atlas}.atlas`;
@@ -174,7 +187,7 @@ function auditV3(args) {
 					}
 				}
 			}
-			if (kind === "combat" && /_\d+$/.test(rig.skel.split("/").pop())) {
+			if (hasSkinRigs && kind === "combat" && /_\d+$/.test(rig.skel.split("/").pop())) {
 				problems.push(`${label}: default rig ${rig.skel} is a skin, not the base rig`);
 			}
 			if (!rig.anims?.length) {
@@ -230,7 +243,7 @@ function auditV3(args) {
 		if (!manifest.dolls[id]) {
 			notes.push(`doll ${id}: has rigs but no manifest entry`);
 		}
-		auditRigs(`doll ${id}`, `spine/${id}`, v3Rigs(rigs));
+		auditRigs(`doll ${id}`, `spine/${id}`, v3Rigs(rigs), true);
 	}
 
 	for (const equipId of manifest.equipment) {
@@ -246,6 +259,12 @@ function auditV3(args) {
 	for (const [id, kinds] of Object.entries(manifest.fairies ?? {})) {
 		for (const kind of kinds) {
 			need(`fairies/${id}/${FAIRY_IMAGE_FILES[kind]}`, `fairy ${id} ${kind}`);
+		}
+	}
+
+	for (const [id, kinds] of Object.entries(manifest.enemies ?? {})) {
+		for (const kind of kinds) {
+			need(`enemies/${id}/${ENEMY_IMAGE_FILES[kind]}`, `enemy ${id} ${kind}`);
 		}
 	}
 
@@ -331,6 +350,13 @@ function auditV3(args) {
 				`hoc-spine/${id}`,
 				rigs.filter(([, rig]) => rig)
 			);
+		}
+	}
+
+	if (fs.existsSync(enemySpineIndexPath)) {
+		const enemySpineIndex = JSON.parse(fs.readFileSync(enemySpineIndexPath, "utf8"));
+		for (const [id, entry] of Object.entries(enemySpineIndex)) {
+			auditRigs(`enemy ${id}`, `enemy-spine/${id}`, entry.combat ? [["combat", entry.combat]] : []);
 		}
 	}
 
