@@ -5,9 +5,9 @@ import { defineConfig } from "vite";
 import type { Connect, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Pages serves the site from /gfl-reactjs-wiki/, while Docker and local previews serve it from the
+// Pages serves the site from /gfl-archive/, while Docker and local previews serve it from the
 // root. VITE_BASE lets the same source produce both without the two configurations conflicting.
-const BASE = process.env.VITE_BASE ?? "/gfl-reactjs-wiki/";
+const BASE = process.env.VITE_BASE ?? "/gfl-archive/";
 
 /**
  * Copy the built index.html to 404.html.
@@ -31,7 +31,7 @@ function spaFallback(): Plugin {
 /**
  * Redirect the base path without its trailing slash to the base path, in the dev and preview servers.
  *
- * Vite answers `/gfl-reactjs-wiki` with a "did you mean /gfl-reactjs-wiki/" notice instead of the app, and the router writes that
+ * Vite answers `/gfl-archive` with a "did you mean /gfl-archive/" notice instead of the app, and the router writes that
  * slash-less address when it navigates home. GitHub Pages already redirects it, so this only brings the local servers in line.
  *
  * @returns The Vite plugin.

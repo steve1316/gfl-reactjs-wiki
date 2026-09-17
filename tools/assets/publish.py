@@ -76,7 +76,7 @@ OWNER = "steve1316"
 
 GITHUB_API = "https://api.github.com"
 
-USER_AGENT = "gfl-reactjs-wiki-refresh/1.0 (fan wiki asset pipeline; https://github.com/steve1316/gfl-reactjs-wiki)"
+USER_AGENT = "gfl-archive-refresh/1.0 (fan site asset pipeline; https://github.com/steve1316/gfl-archive)"
 
 # How long `wait-live` polls for new asset URLs, and how often.
 LIVE_TIMEOUT_SECONDS = 20 * 60
@@ -211,9 +211,9 @@ def readme_text(res_version):
     """
     return (
         f"# {REPO_TITLE}\n\n"
-        f"{REPO_CONTENT} for [gfl-reactjs-wiki](https://github.com/steve1316/gfl-reactjs-wiki), served over raw.githubusercontent.com.\n\n"
-        f"Extracted from the Girls' Frontline game asset bundles (ResData version {res_version}) by `tools/assets/` in the wiki repository.\n\n"
-        "© Sunborn/MICA Team, mirrored for fan-wiki use. These assets are **not** covered by the licence of the wiki's source code.\n"
+        f"{REPO_CONTENT} for [Griffin Archive](https://github.com/steve1316/gfl-archive), served over raw.githubusercontent.com.\n\n"
+        f"Extracted from the Girls' Frontline game asset bundles (ResData version {res_version}) by `tools/assets/` in the site repository.\n\n"
+        "© Sunborn/MICA Team, mirrored for fan site use. These assets are **not** covered by the licence of the site's source code.\n"
     )
 
 

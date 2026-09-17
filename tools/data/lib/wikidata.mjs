@@ -11,7 +11,7 @@ import { fetchWithRetry, sleep } from "./http.mjs";
 const API_BASE = "https://www.wikidata.org/w/api.php";
 
 /** Identifies this importer to Wikidata. */
-const USER_AGENT = "gfl-reactjs-wiki-importer/1.0 (https://github.com/steve1316/gfl-reactjs-wiki)";
+const USER_AGENT = "gfl-archive-importer/1.0 (https://github.com/steve1316/gfl-archive)";
 
 /** Minimum gap between sequential Wikidata requests, matching IOPWiki's politeness convention. */
 const REQUEST_DELAY_MS = 1000;

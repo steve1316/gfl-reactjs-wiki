@@ -9,7 +9,7 @@ import { readLock } from "./upstream.mjs";
 // Module constants
 
 /** Identifies this importer when reading raw files off GitHub. */
-const USER_AGENT = "gfl-reactjs-wiki-importer/1.0 (https://github.com/steve1316/gfl-reactjs-wiki)";
+const USER_AGENT = "gfl-archive-importer/1.0 (https://github.com/steve1316/gfl-archive)";
 
 /** Where the fetched CN gun table is cached by default, alongside the sha it was fetched at. Git-ignored. Overridable via `options.cacheDir`. */
 const DEFAULT_CACHE_DIR = path.resolve("tools/data/.cache");

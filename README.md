@@ -1,13 +1,13 @@
-# Girls' Frontline Wiki
+# Griffin Archive
 
-A fast, mobile-friendly wiki for _Girls' Frontline_, the mobile game by MICA Team. It runs entirely in the browser and is hosted on GitHub Pages.
+An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Dolls, equipment, HOCs and fairies, with their art, Spine chibis and Live2D models. It runs entirely in the browser and is hosted on GitHub Pages.
 
-**[Open the wiki](https://steve1316.github.io/gfl-reactjs-wiki/)**
+**[Open Griffin Archive](https://steve1316.github.io/gfl-archive/)**
 
-[![Deploy](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/deploy.yml/badge.svg)](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/deploy.yml)
-[![Refresh game data](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/refresh.yml/badge.svg)](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/refresh.yml)
-[![Last commit](https://img.shields.io/github/last-commit/steve1316/gfl-reactjs-wiki)](https://github.com/steve1316/gfl-reactjs-wiki/commits/master)
-[![License](https://img.shields.io/github/license/steve1316/gfl-reactjs-wiki)](LICENSE)
+[![Deploy](https://github.com/steve1316/gfl-archive/actions/workflows/deploy.yml/badge.svg)](https://github.com/steve1316/gfl-archive/actions/workflows/deploy.yml)
+[![Refresh game data](https://github.com/steve1316/gfl-archive/actions/workflows/refresh.yml/badge.svg)](https://github.com/steve1316/gfl-archive/actions/workflows/refresh.yml)
+[![Last commit](https://img.shields.io/github/last-commit/steve1316/gfl-archive)](https://github.com/steve1316/gfl-archive/commits/master)
+[![License](https://img.shields.io/github/license/steve1316/gfl-archive)](LICENSE)
 
 ![A T-Doll page playing a skin's Live2D model](https://raw.githubusercontent.com/steve1316/gfl-wiki-assets/main/readme/tdoll-page.webp)
 
@@ -37,7 +37,7 @@ You need Node 22 and pnpm, which ships with Node through corepack.
 ```sh
 corepack enable
 pnpm install
-pnpm dev          # dev server at http://localhost:5173/gfl-reactjs-wiki/
+pnpm dev          # dev server at http://localhost:5173/gfl-archive/
 pnpm typecheck    # type check only
 pnpm build        # type check, then a production build into build/
 pnpm preview      # serve the production build

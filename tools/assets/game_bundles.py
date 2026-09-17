@@ -63,7 +63,7 @@ MANIFEST_PATH = os.path.join(REPO_ROOT, "assets-manifest.json")
 # Sidecar file in the bundle cache recording the `resname`, size and SHA-1 each bundle was cached under.
 CACHE_INDEX_NAME = "cache-index.json"
 
-USER_AGENT = "gfl-reactjs-wiki-asset-rebuild/1.0 (fan wiki asset pipeline; https://github.com/steve1316/gfl-reactjs-wiki)"
+USER_AGENT = "gfl-archive-asset-rebuild/1.0 (fan site asset pipeline; https://github.com/steve1316/gfl-archive)"
 MAX_WORKERS = 4
 ATTEMPTS = 3
 BACKOFF_SECONDS = 2.0

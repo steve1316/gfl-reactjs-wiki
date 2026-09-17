@@ -12,7 +12,7 @@ import { fetchWithRetry, sleep } from "./http.mjs";
 const API_BASE = "https://iopwiki.com/api.php";
 
 /** Identifies this importer to IOPWiki, per its request for a descriptive User-Agent. */
-const USER_AGENT = "gfl-reactjs-wiki-importer/1.0 (https://github.com/steve1316/gfl-reactjs-wiki)";
+const USER_AGENT = "gfl-archive-importer/1.0 (https://github.com/steve1316/gfl-archive)";
 
 /** Minimum gap between sequential IOPWiki requests, so a 10-request bulk fetch stays polite. */
 const REQUEST_DELAY_MS = 1000;

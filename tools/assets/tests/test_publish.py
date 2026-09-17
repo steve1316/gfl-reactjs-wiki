@@ -208,7 +208,7 @@ class NamingTests(unittest.TestCase):
         text = publish.readme_text("2026082516")
         self.assertIn("gfl-wiki-assets", text)
         self.assertIn("2026082516", text)
-        self.assertIn("© Sunborn/MICA Team, mirrored for fan-wiki use", text)
+        self.assertIn("© Sunborn/MICA Team, mirrored for fan site use", text)
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
