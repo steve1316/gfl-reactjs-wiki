@@ -2,7 +2,7 @@
 /**
  * Generate the site's doll and equipment data from gf-data-us.
  *
- * Writes the doll shards, their profile side files, equipment.json, hocs.json, fairies.json, upstream.json and the search index under src/data.
+ * Writes the doll shards, their profile side files, equipment.json, hocs.json, fairies.json, the formation simulator data, upstream.json and the search index under src/data.
  * Output is deterministic for a given upstream commit and set of released dolls, so a scheduled run only commits when something really changed.
  * The search index keeps the pre-2026-09-13 wiki names from `tools/data/name-aliases.json` as aliases for renamed dolls.
  * The run date only selects which dolls are released and is not written out, so an unchanged import produces no diff.
@@ -23,6 +23,7 @@ import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
 import { buildAssimilation, buildEnemies } from "./lib/enemies.mjs";
 import { buildEquipment, exclusivesByDoll } from "./lib/equipment.mjs";
 import { buildFairies } from "./lib/fairies.mjs";
+import { buildFormation } from "./lib/formation.mjs";
 import { buildHocs } from "./lib/hocs.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
 import { findEquipmentMentions } from "./lib/mentions.mjs";
@@ -121,7 +122,8 @@ async function main() {
 	validateExtraSkins(extraSkins, upstream);
 	const ctx = { config: readStatConfig(upstream), warnings: [] };
 
-	const dolls = selectReleased(upstream, cutoff).map((gun) => buildDoll(upstream, gun, ctx));
+	const releasedGuns = selectReleased(upstream, cutoff);
+	const dolls = releasedGuns.map((gun) => buildDoll(upstream, gun, ctx));
 	for (const extra of overrides.addDolls) {
 		if (!dolls.some((doll) => doll.normal.id === extra.normal.id)) {
 			dolls.push(extra);
@@ -179,6 +181,11 @@ async function main() {
 	// Only the 57 capturable enemies use this, so an ordinary enemy's page never downloads it.
 	const assimilation = buildAssimilation(upstream, ctx.warnings);
 	writeJson(`${OUT_DIR}/assimilation.json`, assimilation);
+	// Only the formation simulator reads these, so they sit in their own folder and never load on other pages.
+	const formation = buildFormation(upstream, releasedGuns, ctx.config);
+	fs.mkdirSync(`${OUT_DIR}/formation`, { recursive: true });
+	writeJson(`${OUT_DIR}/formation/dolls.json`, formation.forms);
+	writeJson(`${OUT_DIR}/formation/constants.json`, formation.constants);
 
 	const { repo, sha } = readLock();
 	const counts = {

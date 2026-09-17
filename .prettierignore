@@ -8,7 +8,7 @@ public/vendor
 # Generated data. Fix the generator in tools/, not the output.
 src/data/*.js
 src/data/*.d.ts
-src/data/*.json
+src/data/**/*.json
 assets-manifest.json
 
 # Hand-wrapped prose. Prettier would rewrap it and lose the layout.

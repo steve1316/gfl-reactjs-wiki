@@ -4,6 +4,9 @@ export const TYPE_NAMES = { 1: "HG", 2: "SMG", 3: "RF", 4: "AR", 5: "MG", 6: "SG
 /** Upstream tile effect codes to the text the tile card shows before the value. Code 7 never occurs. */
 const EFFECT_LABELS = { 1: "Damage by ", 2: "Rate of Fire by ", 3: "Accuracy by ", 4: "Evasion by ", 5: "Critical Rate by ", 6: "Reduces Skill CD by ", 8: "Armor by " };
 
+/** The tile effect codes the game uses, as numbers. */
+export const TILE_EFFECT_CODES = new Set(Object.keys(EFFECT_LABELS).map(Number));
+
 /** Handgun tile buffs grow with dummy links. The site shows the five-link value, which is double the base. */
 const HANDGUN_LINK_MULTIPLIER = 2;
 
@@ -15,7 +18,7 @@ const HANDGUN_LINK_MULTIPLIER = 2;
  * @param {number} position Upstream position, 1 to 25.
  * @returns {[number, number]} Row index (0 is the top) and column index.
  */
-function cell(position) {
+export function tileCell(position) {
 	const column = Math.ceil(position / 5);
 	const row = position - 5 * (column - 1);
 	return [4 - row, column - 2];
@@ -58,12 +61,12 @@ export function buildTiles(gun) {
 	const center = gun.effect_grid_center;
 	const inside = ([row, column]) => row >= 0 && row < 3 && column >= 0 && column < 3;
 	for (const position of String(gun.effect_grid_pos).split(",").filter(Boolean).map(Number)) {
-		const target = cell(position - center + 13);
+		const target = tileCell(position - center + 13);
 		if (inside(target)) {
 			rows[target[0]][target[1]] = 1;
 		}
 	}
-	const self = cell(26 - center);
+	const self = tileCell(26 - center);
 	if (inside(self)) {
 		rows[self[0]][self[1]] = 2;
 	}
