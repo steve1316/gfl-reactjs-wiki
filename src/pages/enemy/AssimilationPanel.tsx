@@ -38,6 +38,8 @@ interface AssimilationPanelProps {
 	unit: AssimilationUnit;
 	/** The shared classes, constants and chips. */
 	data: AssimilationData;
+	/** The unit's own lore, or an empty string when it just repeats what the hero already shows. */
+	lore: string;
 }
 
 /**
@@ -50,7 +52,7 @@ interface AssimilationPanelProps {
  * @param props Component props.
  * @returns The Protocol Assimilation panel.
  */
-export default memo(function AssimilationPanel({ unit, data }: AssimilationPanelProps) {
+export default memo(function AssimilationPanel({ unit, data, lore }: AssimilationPanelProps) {
 	const unitClass = data.constants.classes[unit.className];
 	// The class says how many levels each slot has, and the panel quotes every skill at its top level. Zeros mark slots the class
 	// does not have, so they are dropped to line the levels up with the skills the unit actually shipped with.
@@ -69,9 +71,9 @@ export default memo(function AssimilationPanel({ unit, data }: AssimilationPanel
 				))}
 			</Box>
 
-			{unit.introduce !== "" && (
+			{lore !== "" && (
 				<Typography variant="body2" color="text.secondary" sx={styles.lore}>
-					{unit.introduce}
+					{lore}
 				</Typography>
 			)}
 
