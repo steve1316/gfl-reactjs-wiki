@@ -18,7 +18,7 @@ export interface ManifestSkin extends ManifestForm {
 	modImages?: CardKind[];
 }
 
-/** The two portrait kinds a HOC has. */
+/** The two portrait kinds a HOC has. An enemy has the same two. */
 export type HocImageKind = "card" | "full";
 
 /** What one doll has available, across all of its forms. */
@@ -55,6 +55,8 @@ export interface AssetsManifest {
 	hocs?: Record<string, HocImageKind[]>;
 	/** Which forms exist for each fairy with art, keyed by stringified id. Absent when no fairy art has been merged in yet. */
 	fairies?: Record<string, ("form1" | "form2" | "form3")[]>;
+	/** Which portrait kinds exist for each enemy with art, keyed by stringified id. Absent until enemy art is published. */
+	enemies?: Record<string, HocImageKind[]>;
 	/** Which fairies and HOCs have a published Live2D model. Absent when no Live2D asset has been merged in yet. */
 	live2d?: ManifestLive2d;
 }

@@ -143,6 +143,18 @@ export function hasHocArt(id: number, kind: HocImageKind): boolean {
 }
 
 /**
+ * Whether an enemy has a hosted image of the given kind. Nothing is published yet, so this is false for every enemy until the
+ * asset pipeline grows an enemy tier, which is what makes every tile fall back to a placeholder.
+ *
+ * @param id Enemy id, the archive's `sub_id`.
+ * @param kind Which portrait kind to check for.
+ * @returns True when the manifest lists that kind for the enemy.
+ */
+export function hasEnemyArt(id: number, kind: HocImageKind): boolean {
+	return manifest.enemies?.[String(id)]?.includes(kind) ?? false;
+}
+
+/**
  * Whether a fairy has a hosted image for the given form.
  *
  * @param id Fairy id.

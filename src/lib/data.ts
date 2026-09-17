@@ -13,6 +13,7 @@
 import fairySearchIndexJson from "../data/fairy-search-index.json";
 import hocSearchIndexJson from "../data/hoc-search-index.json";
 import searchIndexJson from "../data/search-index.json";
+import type { AssimilationData, EnemyData, EnemyDetailsData } from "../types/enemy";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { FairyData } from "../types/fairy";
 import type { HocData } from "../types/hoc";
@@ -95,6 +96,9 @@ const EXISTING_DATA_URLS = import.meta.glob<string>(
 		"../data/hocs.json",
 		"../data/hoc-spine-index.json",
 		"../data/fairies.json",
+		"../data/enemies.json",
+		"../data/enemy-details.json",
+		"../data/assimilation.json",
 		"../data/live2d-index.json"
 	],
 	{
@@ -157,6 +161,15 @@ const hocSpineIndexCache = new Map<0, Promise<HocSpineIndex>>();
 
 /** Cache of the in-flight or loaded Fairies, under the single key `0`. A failed load is dropped so it can be retried. */
 const fairyCache = new Map<0, Promise<FairyData>>();
+
+/** Cache of the in-flight or loaded enemies, under the single key `0`. A failed load is dropped so it can be retried. */
+const enemyCache = new Map<0, Promise<EnemyData>>();
+
+/** Cache of the in-flight or loaded enemy details, under the single key `0`. A failed load is dropped so it can be retried. */
+const enemyDetailsCache = new Map<0, Promise<EnemyDetailsData>>();
+
+/** Cache of the in-flight or loaded Protocol Assimilation units, under the single key `0`. A failed load is dropped so it can be retried. */
+const assimilationCache = new Map<0, Promise<AssimilationData>>();
 
 /** Cache of the in-flight or loaded Live2D index, under the single key `0`. A failed load is dropped so it can be retried. */
 const live2dIndexCache = new Map<0, Promise<Live2dIndex>>();
@@ -415,6 +428,40 @@ export async function loadHocSpineRigs(id: number): Promise<HocSpineEntry | unde
  */
 export function loadFairies(): Promise<FairyData> {
 	return fairyCache.get(0) ?? cacheUntilFailure(fairyCache, 0, fetchData<FairyData>("fairies"));
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Enemies
+
+/**
+ * Load every enemy in the archive and the faction names the index filters by.
+ *
+ * @returns The enemy records, shared by the Enemy Index and each enemy's page.
+ * @throws When the file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadEnemies(): Promise<EnemyData> {
+	return enemyCache.get(0) ?? cacheUntilFailure(enemyCache, 0, fetchData<EnemyData>("enemies"));
+}
+
+/**
+ * Load the lore, skills and stats that only an enemy's own page shows. Kept out of `enemies.json` so the index does not download it.
+ *
+ * @returns The details, keyed by stringified enemy id.
+ * @throws When the file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadEnemyDetails(): Promise<EnemyDetailsData> {
+	return enemyDetailsCache.get(0) ?? cacheUntilFailure(enemyDetailsCache, 0, fetchData<EnemyDetailsData>("enemy-details"));
+}
+
+/**
+ * Load the Protocol Assimilation units. Only the pages of capturable enemies ask for this, so an ordinary enemy never fetches it.
+ *
+ * @returns The playable units, their classes, growth constants and strategic chips.
+ * @throws When the file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadAssimilation(): Promise<AssimilationData> {
+	return assimilationCache.get(0) ?? cacheUntilFailure(assimilationCache, 0, fetchData<AssimilationData>("assimilation"));
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

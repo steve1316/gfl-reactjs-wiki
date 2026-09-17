@@ -184,6 +184,26 @@ export function hocFullArtUrl(id: number): string {
 }
 
 /**
+ * URL for an enemy's card art.
+ *
+ * @param id Enemy id, the archive's `sub_id`.
+ * @returns An absolute URL.
+ */
+export function enemyCardUrl(id: number): string {
+	return join(ASSET_BASE, `enemies/${id}/card.webp`);
+}
+
+/**
+ * URL for an enemy's full art.
+ *
+ * @param id Enemy id, the archive's `sub_id`.
+ * @returns An absolute URL.
+ */
+export function enemyFullArtUrl(id: number): string {
+	return join(ASSET_BASE, `enemies/${id}/full.webp`);
+}
+
+/**
  * URL for a fairy's art at one of its three forms.
  *
  * @param id Fairy id.
