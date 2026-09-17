@@ -14,6 +14,7 @@ import { loadCnGuns } from "./lib/cnData.mjs";
 import { findMarkup } from "./lib/markup.mjs";
 import { normaliseWithPositions } from "./lib/mentions.mjs";
 import { SHARDS } from "./lib/shards.mjs";
+import { findEnemyArtGaps } from "./lib/enemies.mjs";
 import { findHocArtGaps } from "./lib/hocs.mjs";
 import { findFairyArtGaps } from "./lib/fairies.mjs";
 import { findLive2dArtGaps, findLive2dTdollFileGaps } from "./lib/live2d.mjs";
@@ -47,6 +48,17 @@ const REFERENCE_STATS = [
 	[109, "normal", 198, 85, 27, 27, 120, 0],
 	[151, "normal", 275, 39, 12, 12, 22, 22],
 	[68, "normal", 94, 46, 43, 43, 78, 0]
+];
+
+/**
+ * Pinned enemies: [id, name, faction, boss, capturable, base HP]. One per faction, plus a Ringleader, so a bad join or a shifted
+ * faction mapping shows up rather than passing quietly.
+ */
+const REFERENCE_ENEMIES = [
+	[2001, "Prowler", "Sangvis Ferri", false, true, 397],
+	[27001, "Architect", "Sangvis Ferri", true, true, 40000],
+	[38001, "Cyclops_SG", "KCCO", false, false, 595],
+	[46001, "Strelet", "Paradeus", false, false, 1050]
 ];
 
 /** Pinned tile grids: [doll id, form, row1, row2, row3]. */
@@ -106,7 +118,7 @@ function isValidRelease({ date, precision }) {
  * A missing file at HEAD means "first run" and returns null. Git being unavailable, HEAD not resolving, or a
  * committed file that fails to parse are real failures, not a first run, and throw instead.
  *
- * @returns {{ dolls: number, mods: number, equipment: number, hocs?: number, fairies?: number } | null} Previous counts, or null on a first run.
+ * @returns {{ dolls: number, mods: number, equipment: number, hocs?: number, fairies?: number, enemies?: number } | null} Previous counts, or null on a first run.
  */
 function previousCounts() {
 	try {
@@ -192,7 +204,7 @@ async function main() {
 		fail(error.message);
 	}
 	if (previous) {
-		for (const key of ["dolls", "mods", "equipment", "hocs", "fairies"]) {
+		for (const key of ["dolls", "mods", "equipment", "hocs", "fairies", "enemies"]) {
 			// A count the previous commit did not record yet has nothing to drop from.
 			if (upstream.counts[key] < (previous[key] ?? 0)) {
 				fail(`${key} dropped from ${previous[key]} to ${upstream.counts[key]}`);
@@ -211,6 +223,29 @@ async function main() {
 		const t = byId.get(id)?.[form]?.tile_set;
 		if (JSON.stringify(t ? [t.row1, t.row2, t.row3] : null) !== JSON.stringify(rows)) {
 			fail(`tile grid ${id} ${form} differs from the pinned grid`);
+		}
+	}
+
+	const enemies = JSON.parse(fs.readFileSync("src/data/enemies.json", "utf8"));
+	const enemyDetails = JSON.parse(fs.readFileSync("src/data/enemy-details.json", "utf8"));
+	for (const [id, ...expected] of REFERENCE_ENEMIES) {
+		const enemy = enemies.items.find((item) => item.id === id);
+		const actual = enemy ? [enemy.name, enemy.faction, enemy.boss, enemy.capturable, enemyDetails[id]?.baseStats?.hp ?? null] : null;
+		if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+			fail(`enemy ${id}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+		}
+	}
+	for (const enemy of enemies.items) {
+		if (!enemy.name || !enemy.code || !enemies.factions.includes(enemy.faction)) {
+			fail(`enemy ${enemy.id} is missing a name, code or a known faction`);
+		}
+		if (!enemyDetails[enemy.id]) {
+			fail(`enemy ${enemy.id} ${enemy.name} has no details entry`);
+		}
+	}
+	for (const id of Object.keys(enemyDetails)) {
+		if (!enemies.items.some((item) => String(item.id) === id)) {
+			fail(`enemy details ${id} has no matching enemy record`);
 		}
 	}
 
@@ -314,6 +349,11 @@ async function main() {
 			const fairyGaps = findFairyArtGaps(fairies, manifest);
 			if (fairyGaps.length > 0) {
 				fail(`fairies without art: ${fairyGaps.join(", ")}`);
+			}
+			const enemies = JSON.parse(fs.readFileSync("src/data/enemies.json", "utf8")).items;
+			const enemyGaps = findEnemyArtGaps(enemies, manifest);
+			if (enemyGaps.length > 0) {
+				fail(`enemies without art: ${enemyGaps.join(", ")}`);
 			}
 			const live2dGaps = findLive2dArtGaps(manifest);
 			if (live2dGaps.length > 0) {
