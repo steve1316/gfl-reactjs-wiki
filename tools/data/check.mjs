@@ -20,6 +20,8 @@ import { findFairyArtGaps } from "./lib/fairies.mjs";
 import { findLive2dArtGaps, findLive2dTdollFileGaps } from "./lib/live2d.mjs";
 import { findSkinArtGaps } from "./lib/skins.mjs";
 import { findSpineIndexProblems } from "./lib/spineIndex.mjs";
+import { levelStats } from "../../src/lib/formation/growth.ts";
+import { renderTileGrid } from "../../src/lib/formation/tiles.ts";
 
 /** The v3 asset manifest the site bundles and the skin art check reads. */
 const MANIFEST_PATH = "assets-manifest.json";
@@ -32,6 +34,12 @@ const LIVE2D_INDEX_PATH = "src/data/live2d-index.json";
 
 /** Per-doll T-Doll skin Live2D motion files, one per doll that has any. May not exist at all when nothing has been published yet. */
 const LIVE2D_TDOLLS_DIR = "src/data/live2d-tdolls";
+
+/** The formation simulator's generated forms, keyed by gun id. */
+const FORMATION_FORMS_PATH = "src/data/formation/dolls.json";
+
+/** The formation simulator's generated constants. */
+const FORMATION_CONSTANTS_PATH = "src/data/formation/constants.json";
 
 /** Lines of combined stdout+stderr kept in the failure message when `pnpm build` fails. */
 const BUILD_FAILURE_LOG_LINES = 40;
@@ -472,6 +480,41 @@ async function main() {
 			fail(`equipment alias ${JSON.stringify(alias.text)} for doll ${alias.doll} no longer matches any of its skill descriptions; update or remove it in tools/data/equipment-aliases.json`);
 		}
 	});
+
+	// The formation simulator recomputes stats and tiles from its own numeric data, so that data must agree with what every doll page shows.
+	const formationForms = JSON.parse(fs.readFileSync(FORMATION_FORMS_PATH, "utf8"));
+	const formationConstants = JSON.parse(fs.readFileSync(FORMATION_CONSTANTS_PATH, "utf8"));
+	for (const doll of dolls.filter((entry) => !overrideIds.has(entry.normal.id))) {
+		for (const [key, offset, level] of [
+			["normal", 0, 100],
+			["mod", 20000, 120]
+		]) {
+			const shown = doll[key];
+			if (!shown) {
+				continue;
+			}
+			const form = formationForms[String(doll.normal.id + offset)];
+			if (!form) {
+				fail(`formation data has no ${key} form for doll ${doll.normal.id}`);
+				continue;
+			}
+			const stats = levelStats(form, formationConstants.stats, level);
+			if (
+				stats.hp !== shown.max_hp ||
+				stats.dmg !== shown.max_dmg ||
+				stats.acc !== shown.max_acc ||
+				stats.eva !== shown.max_eva ||
+				stats.rof !== shown.max_rof ||
+				stats.armor !== (shown.max_armor ?? 0)
+			) {
+				fail(`formation stats for doll ${doll.normal.id} ${key} differ from its page`);
+			}
+			const grid = renderTileGrid(form.tile);
+			if (JSON.stringify(grid) !== JSON.stringify([shown.tile_set.row1, shown.tile_set.row2, shown.tile_set.row3])) {
+				fail(`formation tile for doll ${doll.normal.id} ${key} differs from its page`);
+			}
+		}
+	}
 
 	if (!process.argv.includes("--skip-build")) {
 		try {
