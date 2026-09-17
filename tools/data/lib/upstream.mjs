@@ -92,6 +92,22 @@ export function resolveUpstreamDir() {
 }
 
 /**
+ * Read one `game_config_info` value's raw string.
+ *
+ * @param {ReturnType<loadUpstream>} upstream Upstream readers.
+ * @param {string} name The parameter name, such as `sangvis_lv_max`.
+ * @returns {string} The raw `parameter_value`.
+ * @throws {Error} When the parameter is missing.
+ */
+export function configValue(upstream, name) {
+	const row = upstream.catchdata("game_config_info").find((entry) => entry.parameter_name === name);
+	if (!row) {
+		throw new Error(`game_config_info has no ${name}`);
+	}
+	return row.parameter_value;
+}
+
+/**
  * Open an upstream checkout for reading. Every table is parsed at most once.
  *
  * @param {string} dir Path to the checkout.

@@ -1,5 +1,6 @@
 import { buildMissionSkill, buildSkill } from "./skills.mjs";
 import { cleanName, stripMarkup } from "./text.mjs";
+import { configValue } from "./upstream.mjs";
 
 /** Upstream fairy stat fields to the site's fairy stat keys, in display order. */
 const STAT_FIELDS = {
@@ -12,22 +13,6 @@ const STAT_FIELDS = {
 
 /** The highest level a fairy reaches. */
 const MAX_LEVEL = 100;
-
-/**
- * Read one `game_config_info` value's raw string.
- *
- * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
- * @param {string} name The parameter name, such as `fairy_pow_grow`.
- * @returns {string} The raw `parameter_value`.
- * @throws {Error} When the parameter is missing.
- */
-function configValue(upstream, name) {
-	const row = upstream.catchdata("game_config_info").find((entry) => entry.parameter_name === name);
-	if (!row) {
-		throw new Error(`game_config_info has no ${name}`);
-	}
-	return row.parameter_value;
-}
 
 /**
  * Parse a `rank:value,rank:value` string into values ordered by ascending rank.

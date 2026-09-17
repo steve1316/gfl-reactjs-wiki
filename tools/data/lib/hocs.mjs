@@ -1,5 +1,6 @@
 import { buildSkill } from "./skills.mjs";
 import { cleanName, stripMarkup } from "./text.mjs";
+import { configValue } from "./upstream.mjs";
 
 /** Upstream stat fields to the site's HOC stat keys, in display order. */
 const STAT_FIELDS = {
@@ -24,11 +25,7 @@ const STAR_RANKS = 5;
  * @throws {Error} When the parameter is missing.
  */
 function configNumber(upstream, name) {
-	const row = upstream.catchdata("game_config_info").find((entry) => entry.parameter_name === name);
-	if (!row) {
-		throw new Error(`game_config_info has no ${name}`);
-	}
-	return Number(row.parameter_value);
+	return Number(configValue(upstream, name));
 }
 
 /**
