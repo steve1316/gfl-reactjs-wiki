@@ -378,7 +378,7 @@ export default function Navbar() {
 								<HomeGlyphIcon />
 							</IconButton>
 							<Typography variant="h6" sx={styles.title} noWrap>
-								Girls' Frontline Database
+								Griffin Archive
 							</Typography>
 							{isNarrow ? (
 								<IconButton onClick={openSearch} color="inherit" aria-label="search" size="large">

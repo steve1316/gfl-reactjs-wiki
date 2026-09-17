@@ -87,7 +87,7 @@ export default function Home() {
 
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
-		document.title = "Girls' Frontline Database";
+		document.title = "Griffin Archive";
 		document.querySelector('meta[name="description"]')?.setAttribute("content", "Database for Girls' Frontline featuring T-Dolls, equipment, Fairies and HOCs");
 	}, []);
 
