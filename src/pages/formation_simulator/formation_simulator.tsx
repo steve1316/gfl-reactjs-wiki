@@ -4,6 +4,7 @@ import type { PointerEvent } from "react";
 import { Box, Button, Card, CircularProgress, Container, Fab, Typography, useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
+import FilterChip from "../../components/FilterChip";
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import { useZoomPan } from "../../hooks/useZoomPan";
@@ -33,6 +34,8 @@ export default function FormationSimulator() {
 	const formation = useFormationState(data);
 	const [selectedCell, setSelectedCell] = useState<number | null>(null);
 	const [moveFrom, setMoveFrom] = useState<number | null>(null);
+	// On by default: every buffed tile shows what it adds up to, whether or not a doll is being pointed at.
+	const [showTotals, setShowTotals] = useState(true);
 	// Worked out once here and shared, so the stage, the modal and the results do not each redo it.
 	const placed = useMemo(() => (data ? placedForms(formation.setups, data.forms) : []), [data, formation.setups]);
 	const sources = useMemo(() => (data ? placedSources(placed, data.constants) : []), [data, placed]);
@@ -106,6 +109,7 @@ export default function FormationSimulator() {
 		[formation.moveDoll, panned]
 	);
 	const cancelMove = useCallback(() => setMoveFrom(null), []);
+	const toggleTotals = useCallback(() => setShowTotals((shown) => !shown), []);
 	const handleCancelMove = useCallback(() => {
 		if (!panned()) {
 			setMoveFrom(null);
@@ -136,6 +140,9 @@ export default function FormationSimulator() {
 						{/* A plain CSS grid rather than MUI Grid: importing Grid here moved it out of the main chunk and grew every page's first load. */}
 						<Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 2fr) minmax(0, 1fr)" }, gap: 2, alignItems: "start" }}>
 							<Box>
+								<Box sx={{ mb: 1, display: "flex", justifyContent: "flex-end" }}>
+									<FilterChip label="Show tile totals" selected={showTotals} onToggle={toggleTotals} />
+								</Box>
 								<Card sx={{ p: { xs: 0.5, md: 1.5 }, overflow: "hidden", position: "relative" }}>
 									{/* Not the hook's containerRef: the hook would then attach its wheel listener, and a mouse wheel should keep scrolling the page. */}
 									<Box ref={zoomSurfaceRef} {...(phone ? zoom.handlers : {})} style={phone ? zoom.containerStyle : undefined}>
@@ -150,6 +157,7 @@ export default function FormationSimulator() {
 												onMove={handleMove}
 												onCancelMove={handleCancelMove}
 												canDrag={!phone}
+												showTotals={showTotals}
 											/>
 										</Box>
 									</Box>

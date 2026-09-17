@@ -67,6 +67,8 @@ interface FormationStageProps {
 	onCancelMove: () => void;
 	/** Whether dragging a doll picks it up, true when left out. Off on phones, where a one-finger drag pans the stage instead. */
 	canDrag?: boolean;
+	/** Whether each buffed tile shows its summed stat totals, true when left out. */
+	showTotals?: boolean;
 }
 
 /** A chibi actor and what it is showing. */
@@ -153,7 +155,7 @@ function reportStageError(what: string, error: unknown) {
  * @param props Component props.
  * @returns The stage.
  */
-export default memo(function FormationStage({ placed, sources, constants, selectedCell, moveFrom, onTileClick, onMove, onCancelMove, canDrag = true }: FormationStageProps) {
+export default memo(function FormationStage({ placed, sources, constants, selectedCell, moveFrom, onTileClick, onMove, onCancelMove, canDrag = true, showTotals = true }: FormationStageProps) {
 	const theme = useTheme();
 	const wrapperRef = useRef<HTMLDivElement | null>(null);
 	const canvasHostRef = useRef<HTMLDivElement | null>(null);
@@ -643,7 +645,7 @@ export default memo(function FormationStage({ placed, sources, constants, select
 					const here = shownSources[cell] ?? [];
 					const standing = occupant.get(cell);
 					const shown = standing ? here.filter((source) => appliesTo(source, standing.form.type)) : here;
-					const lines = labelLines(shown);
+					const lines = showTotals ? labelLines(shown) : [];
 					const { x, y } = tileCentre(geometry, cell);
 					const pillWidth = Math.max(0, ...lines.map((line) => line.length)) * fontSize * LABEL_CHAR_WIDTH + fontSize;
 					const pillTop = y + geometry.tileHeight * 0.12;
