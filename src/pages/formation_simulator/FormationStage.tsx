@@ -8,9 +8,9 @@ import { spineImageBase, spineUrl } from "../../lib/assets";
 import { loadSpineRigs } from "../../lib/data";
 import { MOD_ID_OFFSET } from "../../lib/formation/pipeline";
 import type { PlacedForm } from "../../lib/formation/pipeline";
-import { GRID_CELLS, TILE_STAT_SHORT, appliesTo, tileReach, tileSources, tileTotals } from "../../lib/formation/tiles";
+import { GRID_CELLS, TILE_STAT_SHORT, appliesTo, tileReach, tileTotals } from "../../lib/formation/tiles";
 import type { TileSource } from "../../lib/formation/tiles";
-import type { FormationConstants, FormationTile } from "../../types/formation";
+import type { FormationTile } from "../../types/formation";
 import { STAGE_DESTROYED_MESSAGE, createSpineStage } from "../../lib/spineStage";
 import type { SpineStage, StageActor } from "../../lib/spineStage";
 import type { SpineDollEntry, SpineRigPair } from "../../types/spine";
@@ -53,8 +53,8 @@ interface FormationStageProps {
 	placed: readonly PlacedForm[];
 	/** Tile buffs per cell for `placed`. */
 	sources: readonly (readonly TileSource[])[];
-	/** Formation constants, for working out the buffs a drag would land while it is still in the air. */
-	constants: FormationConstants;
+	/** A held doll moved over a tile, or was put down. The page previews the drop so every number follows the drag. */
+	onDragPreview: (preview: { from: number; over: number } | null) => void;
 	/** Cell whose modal is open, outlined. */
 	selectedCell: number | null;
 	/** Cell of a doll being moved by tapping its target, or null. */
@@ -155,7 +155,7 @@ function reportStageError(what: string, error: unknown) {
  * @param props Component props.
  * @returns The stage.
  */
-export default memo(function FormationStage({ placed, sources, constants, selectedCell, moveFrom, onTileClick, onMove, onCancelMove, canDrag = true, showTotals = true }: FormationStageProps) {
+export default memo(function FormationStage({ placed, sources, selectedCell, moveFrom, onTileClick, onMove, onCancelMove, canDrag = true, showTotals = true, onDragPreview }: FormationStageProps) {
 	const theme = useTheme();
 	const wrapperRef = useRef<HTMLDivElement | null>(null);
 	const canvasHostRef = useRef<HTMLDivElement | null>(null);
@@ -166,6 +166,8 @@ export default memo(function FormationStage({ placed, sources, constants, select
 	const pendingRef = useRef(new Map<number, number>());
 	const pressRef = useRef<{ cell: number | null; x: number; y: number } | null>(null);
 	const heldRef = useRef<HeldDoll | null>(null);
+	// The tile a held doll is over, mirrored outside state so a pointer move can tell a real change from a repeat without reading state.
+	const overRef = useRef<number | null>(null);
 	// Dolls a drop just rearranged, which stand on their new tiles at once instead of walking: the drop already placed them.
 	const droppedRef = useRef(new Set<number>());
 	// True while mounted, and set once the canvas has been requested so it is only ever created once.
@@ -180,17 +182,6 @@ export default memo(function FormationStage({ placed, sources, constants, select
 	const geometryRef = useRef(geometry);
 
 	const occupant = useMemo(() => new Map(placed.map((entry) => [entry.setup.cell, entry])), [placed]);
-	// Buffs as they would be once a held doll is dropped on the tile under the pointer, so the tiles and their totals follow the drag. The
-	// two dolls swap, the same as the drop itself does.
-	const shownSources = useMemo(() => {
-		const over = drag?.over ?? null;
-		if (!drag || over === null || over === drag.from) {
-			return sources;
-		}
-		const swapped = placed.map(({ setup, form }) => ({ cell: setup.cell === drag.from ? over : setup.cell === over ? drag.from : setup.cell, form, links: setup.links }));
-		return tileSources(swapped, constants);
-	}, [constants, drag, placed, sources]);
-
 	// The doll whose buff reach is lit, and the cell it is lit from: a held doll over its drop tile, then tap-to-move, the open modal and the
 	// hovered doll, like the game only lighting the selected doll's tiles.
 	const focus = useMemo(() => {
@@ -210,7 +201,7 @@ export default memo(function FormationStage({ placed, sources, constants, select
 		if (hoveredCell === null || drag) {
 			return null;
 		}
-		const here = shownSources[hoveredCell] ?? [];
+		const here = sources[hoveredCell] ?? [];
 		const standing = occupant.get(hoveredCell);
 		return {
 			anchor: tileCentre(geometry, hoveredCell),
@@ -223,7 +214,7 @@ export default memo(function FormationStage({ placed, sources, constants, select
 				};
 			})
 		};
-	}, [drag, geometry, hoveredCell, occupant, shownSources]);
+	}, [drag, geometry, hoveredCell, occupant, sources]);
 
 	useEffect(() => {
 		const wrapper = wrapperRef.current;
@@ -488,14 +479,17 @@ export default memo(function FormationStage({ placed, sources, constants, select
 			heldRef.current = held;
 			entry.actor.setOnTop(true);
 			entry.actor.setPosition(x, y);
-			setDrag({ from: fromCell, over: cellAt(geometry, x, y) });
+			const over = cellAt(geometry, x, y);
+			overRef.current = over;
+			setDrag({ from: fromCell, over });
+			onDragPreview(over === null ? null : { from: fromCell, over });
 			if (entry.dorm) {
 				showDorm(entry, held);
 			} else if (entry.dormState === "missing") {
 				loadDorm(dollId, entry);
 			}
 		},
-		[geometry, loadDorm, showDorm]
+		[geometry, loadDorm, onDragPreview, showDorm]
 	);
 
 	// Put a held doll down. It stands on the tile it was dropped on, or back on its own tile when the drop missed the grid.
@@ -506,7 +500,9 @@ export default memo(function FormationStage({ placed, sources, constants, select
 				return;
 			}
 			heldRef.current = null;
+			overRef.current = null;
 			setDrag(null);
+			onDragPreview(null);
 			const entry = actorsRef.current.get(held.dollId);
 			// The dorm chibi is kept for the next pick-up rather than freed, since the doll is still on the grid.
 			entry?.dorm?.setVisible(false);
@@ -520,7 +516,7 @@ export default memo(function FormationStage({ placed, sources, constants, select
 				entry.actor.setPosition(home.x, home.y);
 			}
 		},
-		[geometry, markDropped, onMove]
+		[geometry, markDropped, onDragPreview, onMove]
 	);
 
 	const handlePointerMove = useCallback(
@@ -537,7 +533,11 @@ export default memo(function FormationStage({ placed, sources, constants, select
 				const entry = actorsRef.current.get(held.dollId);
 				(entry?.dorm ?? entry?.actor)?.setPosition(x, y);
 				const over = cellAt(geometry, x, y);
-				setDrag((current) => (current && current.over !== over ? { ...current, over } : current));
+				if (overRef.current !== over) {
+					overRef.current = over;
+					setDrag((current) => (current ? { ...current, over } : current));
+					onDragPreview(over === null ? null : { from: held.fromCell, over });
+				}
 				return;
 			}
 			const standing = press.cell === null ? undefined : occupant.get(press.cell);
@@ -548,7 +548,7 @@ export default memo(function FormationStage({ placed, sources, constants, select
 			event.currentTarget.setPointerCapture(event.pointerId);
 			pickUp(standing.setup.dollId, standing.setup.cell, x, y);
 		},
-		[canDrag, geometry, moveFrom, occupant, pickUp, pointAt]
+		[canDrag, geometry, moveFrom, occupant, onDragPreview, pickUp, pointAt]
 	);
 
 	// A capture lost without a pointerup, such as a cancelled touch, puts the doll back.
@@ -642,7 +642,7 @@ export default memo(function FormationStage({ placed, sources, constants, select
 				aria-label="Formation grid"
 			>
 				{Array.from({ length: GRID_CELLS }, (_, cell) => {
-					const here = shownSources[cell] ?? [];
+					const here = sources[cell] ?? [];
 					const standing = occupant.get(cell);
 					const shown = standing ? here.filter((source) => appliesTo(source, standing.form.type)) : here;
 					const lines = showTotals ? labelLines(shown) : [];

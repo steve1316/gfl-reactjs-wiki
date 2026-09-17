@@ -36,10 +36,22 @@ export default function FormationSimulator() {
 	const [moveFrom, setMoveFrom] = useState<number | null>(null);
 	// On by default: every buffed tile shows what it adds up to, whether or not a doll is being pointed at.
 	const [showTotals, setShowTotals] = useState(true);
-	// Worked out once here and shared, so the stage, the modal and the results do not each redo it.
+	// Where a doll being dragged would land, so every number on the page follows the drag. Cleared when it is put down.
+	const [dragPreview, setDragPreview] = useState<{ from: number; over: number } | null>(null);
+	// The echelon as it would be after the drop: the dragged doll and the one on the tile under it swap, as the drop itself does.
+	const previewSetups = useMemo(() => {
+		if (!dragPreview) {
+			return formation.setups;
+		}
+		const { from, over } = dragPreview;
+		return formation.setups.map((setup) => (setup.cell === from ? { ...setup, cell: over } : setup.cell === over ? { ...setup, cell: from } : setup));
+	}, [dragPreview, formation.setups]);
+	// Worked out once here and shared, so the stage, the modal and the results do not each redo it. The chibis stand where the dolls really
+	// are, so the stage takes `placed`, while the tiles, stats and results take the previewed echelon.
 	const placed = useMemo(() => (data ? placedForms(formation.setups, data.forms) : []), [data, formation.setups]);
-	const sources = useMemo(() => (data ? placedSources(placed, data.constants) : []), [data, placed]);
-	const results = useMemo(() => (data ? effectiveEchelon(formation.setups, data.forms, data.constants, sources) : []), [data, formation.setups, sources]);
+	const previewPlaced = useMemo(() => (data ? placedForms(previewSetups, data.forms) : []), [data, previewSetups]);
+	const sources = useMemo(() => (data ? placedSources(previewPlaced, data.constants) : []), [data, previewPlaced]);
+	const results = useMemo(() => (data ? effectiveEchelon(previewSetups, data.forms, data.constants, sources) : []), [data, previewSetups, sources]);
 	// The doll being moved by tap-to-move, if any.
 	const moving = moveFrom === null ? undefined : formation.setups.find((setup) => setup.cell === moveFrom);
 	const theme = useTheme();
@@ -109,6 +121,7 @@ export default function FormationSimulator() {
 		[formation.moveDoll, panned]
 	);
 	const cancelMove = useCallback(() => setMoveFrom(null), []);
+	const previewDrag = useCallback((preview: { from: number; over: number } | null) => setDragPreview(preview), []);
 	const toggleTotals = useCallback(() => setShowTotals((shown) => !shown), []);
 	const handleCancelMove = useCallback(() => {
 		if (!panned()) {
@@ -150,7 +163,6 @@ export default function FormationSimulator() {
 											<FormationStage
 												placed={placed}
 												sources={sources}
-												constants={data.constants}
 												selectedCell={selectedCell}
 												moveFrom={moveFrom}
 												onTileClick={handleTileClick}
@@ -158,6 +170,7 @@ export default function FormationSimulator() {
 												onCancelMove={handleCancelMove}
 												canDrag={!phone}
 												showTotals={showTotals}
+												onDragPreview={previewDrag}
 											/>
 										</Box>
 									</Box>
