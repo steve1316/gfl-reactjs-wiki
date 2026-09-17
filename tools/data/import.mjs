@@ -20,7 +20,7 @@ import fs from "node:fs";
 
 import { loadCnGuns } from "./lib/cnData.mjs";
 import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
-import { buildEnemies } from "./lib/enemies.mjs";
+import { buildAssimilation, buildEnemies } from "./lib/enemies.mjs";
 import { buildEquipment, exclusivesByDoll } from "./lib/equipment.mjs";
 import { buildFairies } from "./lib/fairies.mjs";
 import { buildHocs } from "./lib/hocs.mjs";
@@ -176,6 +176,9 @@ async function main() {
 	// The index reads the records, and only an enemy's own page downloads the lore, skills and stats.
 	writeJson(`${OUT_DIR}/enemies.json`, { factions: enemies.factions, items: enemies.items });
 	writeJson(`${OUT_DIR}/enemy-details.json`, enemies.details);
+	// Only the 57 capturable enemies use this, so an ordinary enemy's page never downloads it.
+	const assimilation = buildAssimilation(upstream, ctx.warnings);
+	writeJson(`${OUT_DIR}/assimilation.json`, assimilation);
 
 	const { repo, sha } = readLock();
 	const counts = {
@@ -184,7 +187,8 @@ async function main() {
 		equipment: Object.values(equipment.items).flat().length,
 		hocs: hocs.items.length,
 		fairies: fairies.items.length,
-		enemies: enemies.items.length
+		enemies: enemies.items.length,
+		assimilation: assimilation.units.length
 	};
 	writeJson(`${OUT_DIR}/upstream.json`, { repo, sha, counts });
 
@@ -194,7 +198,7 @@ async function main() {
 		console.warn(`warning: ${warning}`);
 	}
 	console.log(
-		`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, fairies ${counts.fairies}, enemies ${counts.enemies}, warnings ${ctx.warnings.length}`
+		`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, fairies ${counts.fairies}, enemies ${counts.enemies}, assimilation ${counts.assimilation}, warnings ${ctx.warnings.length}`
 	);
 	console.log(`profiles: ${profiles.joined} joined an IOPWiki page, ${profiles.wikidata} filled from Wikidata`);
 }

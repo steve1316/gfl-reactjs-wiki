@@ -204,7 +204,7 @@ async function main() {
 		fail(error.message);
 	}
 	if (previous) {
-		for (const key of ["dolls", "mods", "equipment", "hocs", "fairies", "enemies"]) {
+		for (const key of ["dolls", "mods", "equipment", "hocs", "fairies", "enemies", "assimilation"]) {
 			// A count the previous commit did not record yet has nothing to drop from.
 			if (upstream.counts[key] < (previous[key] ?? 0)) {
 				fail(`${key} dropped from ${previous[key]} to ${upstream.counts[key]}`);
@@ -246,6 +246,18 @@ async function main() {
 	for (const id of Object.keys(enemyDetails)) {
 		if (!enemies.items.some((item) => String(item.id) === id)) {
 			fail(`enemy details ${id} has no matching enemy record`);
+		}
+	}
+
+	const assimilation = JSON.parse(fs.readFileSync("src/data/assimilation.json", "utf8"));
+	const capturableFamilies = new Set(enemies.items.filter((item) => item.capturable).map((item) => item.familyId));
+	const unitFamilies = new Set(assimilation.units.map((unit) => unit.familyId));
+	if (capturableFamilies.size !== unitFamilies.size || [...capturableFamilies].some((id) => !unitFamilies.has(id))) {
+		fail(`capturable enemies and Protocol Assimilation units cover different families: ${capturableFamilies.size} against ${unitFamilies.size}`);
+	}
+	for (const unit of assimilation.units) {
+		if (!unit.name || !assimilation.classes.includes(unit.className) || unit.skills.length === 0) {
+			fail(`assimilation unit ${unit.id} is missing a name, a known class or its skills`);
 		}
 	}
 

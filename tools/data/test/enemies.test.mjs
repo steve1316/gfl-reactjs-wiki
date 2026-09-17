@@ -1,12 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { buildEnemies, canonicalStatRow, findEnemyArtGaps, toSimulationEnemies } from "../lib/enemies.mjs";
+import { buildAssimilation, buildEnemies, canonicalStatRow, findEnemyArtGaps, toSimulationEnemies } from "../lib/enemies.mjs";
 import { loadUpstream, resolveUpstreamDir } from "../lib/upstream.mjs";
 
 const upstream = loadUpstream(resolveUpstreamDir());
 const warnings = [];
 const built = buildEnemies(upstream, warnings);
+const assimilationWarnings = [];
+const assimilation = buildAssimilation(upstream, assimilationWarnings);
 
 /** Pinned enemies: `[id, name, faction, boss, capturable]`, one per faction plus a Ringleader. */
 const PINNED = [
@@ -139,4 +141,97 @@ test("enemy art gaps are only reported once the manifest lists any enemy", () =>
 	assert.deepEqual(findEnemyArtGaps(enemies, { dolls: {} }), []);
 	assert.deepEqual(findEnemyArtGaps(enemies, { enemies: {} }), []);
 	assert.deepEqual(findEnemyArtGaps(enemies, { enemies: { 2001: ["card", "full"], 27001: ["full"] } }), ["Architect"]);
+});
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Protocol Assimilation
+
+test("one playable unit is built per capturable enemy family", () => {
+	assert.equal(assimilation.units.length, 57);
+	const families = new Set(assimilation.units.map((unit) => unit.familyId));
+	assert.equal(families.size, assimilation.units.length);
+	const capturable = new Set(built.items.filter((item) => item.capturable).map((item) => item.familyId));
+	assert.deepEqual(
+		[...families].sort((a, b) => a - b),
+		[...capturable].sort((a, b) => a - b)
+	);
+});
+
+test("display-only sangvis rows are left out", () => {
+	assert.equal(upstream.stc("sangvis").length, 67);
+	assert.ok(assimilation.units.every((unit) => unit.id < 9000));
+	// Every unit that ships has at least one skill, which the dropped rows did not.
+	assert.ok(assimilation.units.every((unit) => unit.skills.length > 0));
+});
+
+test("classes carry the capture rates the game shows", () => {
+	assert.deepEqual(assimilation.classes, ["Ringleader", "Elite", "Basic"]);
+	assert.equal(assimilation.constants.classes.Ringleader.captureRate, 25);
+	assert.equal(assimilation.constants.classes.Elite.captureRate, 50);
+	assert.equal(assimilation.constants.classes.Basic.captureRate, 100);
+	for (const name of assimilation.classes) {
+		assert.equal(assimilation.constants.classes[name].guaranteedRate, 100);
+	}
+	const counts = {};
+	for (const unit of assimilation.units) {
+		counts[unit.className] = (counts[unit.className] ?? 0) + 1;
+	}
+	assert.deepEqual(counts, { Ringleader: 30, Elite: 17, Basic: 10 });
+});
+
+test("growth inputs come from the game's own config", () => {
+	assert.equal(assimilation.constants.maxLevel, 100);
+	assert.equal(assimilation.constants.baseLevel, 40);
+	assert.deepEqual(assimilation.constants.starUnlockLevels, [1, 10, 30, 70, 90]);
+	assert.deepEqual(
+		assimilation.constants.starRates.map((rate) => rate.hp),
+		[80, 90, 100, 110, 120]
+	);
+});
+
+test("a Ringleader carries its traits, chip slots and all four skills", () => {
+	const scarecrow = assimilation.units.find((unit) => unit.name === "Scarecrow");
+	assert.equal(scarecrow.className, "Ringleader");
+	assert.equal(scarecrow.familyId, 5);
+	assert.deepEqual(scarecrow.traits, ["Unarmored", "T-Doll", "Ranged"]);
+	assert.deepEqual(scarecrow.ratios, { hp: 95, damage: 95, accuracy: 90, evasion: 120, rateOfFire: 116, armor: 0 });
+	assert.equal(scarecrow.chipSlots.length, 3);
+	assert.deepEqual(
+		scarecrow.skills.map((skill) => skill.slot),
+		["skill1", "skill2", "skill3", "skill_advance"]
+	);
+	assert.equal(scarecrow.skills[0].name, "Battlefield Purge");
+});
+
+test("only Ringleaders get strategic chip slots", () => {
+	for (const unit of assimilation.units) {
+		assert.equal(unit.chipSlots.length > 0, unit.className === "Ringleader", `${unit.name} chip slots`);
+	}
+	// One of the fourteen upstream chips has no text at all and is dropped.
+	assert.equal(assimilation.chips.length, 13);
+	for (const chip of assimilation.chips) {
+		assert.ok(chip.name !== "" && chip.description !== "");
+	}
+});
+
+test("a class only has the skill slots its skills_max_lv gives it", () => {
+	const aegis = assimilation.units.find((unit) => unit.name === "Aegis");
+	assert.equal(aegis.className, "Elite");
+	assert.deepEqual(
+		aegis.skills.map((skill) => skill.slot),
+		["skill3", "skill_advance"]
+	);
+	const prowler = assimilation.units.find((unit) => unit.name === "Prowler");
+	assert.equal(prowler.className, "Basic");
+	assert.deepEqual(
+		prowler.skills.map((skill) => skill.slot),
+		["skill_advance"]
+	);
+});
+
+test("everything upstream has no text for is reported rather than shipped empty", () => {
+	assert.equal(assimilationWarnings.length, 2);
+	assert.ok(assimilationWarnings.some((warning) => /6 Protocol Assimilation skill slots have no text/.test(warning)));
+	assert.ok(assimilationWarnings.some((warning) => /1 strategic chips have no text: 4001/.test(warning)));
 });
