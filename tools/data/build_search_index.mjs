@@ -9,8 +9,8 @@
  * Entries also carry `aliases` from `tools/data/name-aliases.json`: the names the wiki used before the 2026-09-13
  * upstream import renamed dolls (HK416 is now "416"), so readers can still find a doll by its old name.
  *
- * HOCs and Fairies go to their own small `hoc-search-index.json` and `fairy-search-index.json`, because doll, HOC and Fairy ids overlap and
- * every doll-keyed reader of the main index would otherwise have to skip them.
+ * HOCs, Fairies and enemies go to their own small `hoc-search-index.json`, `fairy-search-index.json` and `enemy-search-index.json`, because
+ * their ids overlap with doll ids and every doll-keyed reader of the main index would otherwise have to skip them.
  *
  * Usage:
  *     node tools/data/build_search_index.mjs [--data src/data] [--out src/data/search-index.json]
@@ -65,6 +65,20 @@ function main() {
 	const fairyOut = path.join(path.dirname(out), "fairy-search-index.json");
 	fs.writeFileSync(fairyOut, `${JSON.stringify(fairies)}\n`);
 	console.log(`wrote ${fairyOut} (${fairies.length} Fairies)`);
+
+	// Variants of the same enemy share a name, so only the first of each reaches the navbar. Two identical rows in the dropdown
+	// would say nothing about which one to pick, and the Enemy Index is where every variant is listed.
+	const seenEnemies = new Set();
+	const enemies = [];
+	for (const enemy of JSON.parse(fs.readFileSync(path.join(dataDir, "enemies.json"), "utf8")).items) {
+		if (!seenEnemies.has(enemy.name)) {
+			seenEnemies.add(enemy.name);
+			enemies.push({ id: enemy.id, name: enemy.name });
+		}
+	}
+	const enemyOut = path.join(path.dirname(out), "enemy-search-index.json");
+	fs.writeFileSync(enemyOut, `${JSON.stringify(enemies)}\n`);
+	console.log(`wrote ${enemyOut} (${(fs.statSync(enemyOut).size / 1024).toFixed(1)} KB, ${enemies.length} enemies)`);
 }
 
 main();

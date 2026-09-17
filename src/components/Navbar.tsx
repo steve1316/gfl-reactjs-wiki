@@ -18,9 +18,10 @@ import MenuIcon from "@mui/icons-material/Menu";
 import HomeGlyphIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import BugReportIcon from "@mui/icons-material/BugReport";
 
 import { uiUrl } from "../lib/assets";
-import { fairySearchIndex, hocSearchIndex, searchIndex } from "../lib/data";
+import { enemySearchIndex, fairySearchIndex, hocSearchIndex, searchIndex } from "../lib/data";
 import { matchesAnyName, normaliseName } from "../lib/nameSearch";
 
 const HomeIcon = uiUrl("home_icon.png");
@@ -53,7 +54,8 @@ interface SearchOption {
 const options: SearchOption[] = [
 	...searchIndex.map((entry) => ({ path: `/tdoll/${entry.id}`, name: entry.name, keys: [entry.name, ...(entry.aliases ?? [])].map(normaliseName) })),
 	...hocSearchIndex.map((entry) => ({ path: `/hoc/${entry.id}`, tag: "HOC", name: entry.name, keys: [normaliseName(entry.name)] })),
-	...fairySearchIndex.map((entry) => ({ path: `/fairy/${entry.id}`, tag: "Fairy", name: entry.name, keys: [normaliseName(entry.name)] }))
+	...fairySearchIndex.map((entry) => ({ path: `/fairy/${entry.id}`, tag: "Fairy", name: entry.name, keys: [normaliseName(entry.name)] })),
+	...enemySearchIndex.map((entry) => ({ path: `/enemy/${entry.id}`, tag: "Enemy", name: entry.name, keys: [normaliseName(entry.name)] }))
 ]
 	.map((option) => {
 		const firstLetter = option.name.charAt(0).toUpperCase();
@@ -121,6 +123,14 @@ const NAV_ITEMS = [
 		title: "Fairy Index",
 		link: "/fairy-index",
 		image: FairyIcon,
+		height: 25,
+		width: 25
+	},
+	{
+		title: "Enemy Index",
+		link: "/enemy-index",
+		// No enemy_icon.png is published to the asset repo yet, so this entry falls back to a built-in icon rather than a broken image.
+		image: null,
 		height: 25,
 		width: 25
 	},
@@ -242,9 +252,7 @@ const NavList = memo(function NavList({ onNavigate }: NavListProps) {
 					<Box component={Link} to={item.link} sx={styles.link} onClick={onNavigate}>
 						<ListItemButton>
 							<ListItemIcon>
-								<Icon>
-									<img src={item.image} height={item.height} width={item.width} alt={item.title} />
-								</Icon>
+								<Icon>{item.image === null ? <BugReportIcon /> : <img src={item.image} height={item.height} width={item.width} alt={item.title} />}</Icon>
 							</ListItemIcon>
 							<ListItemText primary={item.title} />
 						</ListItemButton>

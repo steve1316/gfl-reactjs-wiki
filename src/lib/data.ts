@@ -10,6 +10,7 @@
  * for the rest of the session, so an import that fails once on a flaky connection could never be retried without a reload.
  */
 
+import enemySearchIndexJson from "../data/enemy-search-index.json";
 import fairySearchIndexJson from "../data/fairy-search-index.json";
 import hocSearchIndexJson from "../data/hoc-search-index.json";
 import searchIndexJson from "../data/search-index.json";
@@ -57,6 +58,14 @@ export interface FairySearchEntry {
 	name: string;
 }
 
+/** One enemy in its search index. Variants share a name, so only the first of each is indexed. */
+export interface EnemySearchEntry {
+	/** Enemy id, used in its page's address. */
+	id: number;
+	/** Official English name. */
+	name: string;
+}
+
 /** One generated shard: the doll records every doll list reads, and the profile side file only the doll page reads. */
 interface Shard {
 	/** Highest doll id the shard holds. */
@@ -79,6 +88,9 @@ export const hocSearchIndex: HocSearchEntry[] = hocSearchIndexJson as HocSearchE
 
 /** Every Fairy's id and name, for the navbar search. */
 export const fairySearchIndex: FairySearchEntry[] = fairySearchIndexJson as FairySearchEntry[];
+
+/** Every distinctly named enemy's id and name, for the navbar search. */
+export const enemySearchIndex: EnemySearchEntry[] = enemySearchIndexJson as EnemySearchEntry[];
 
 /**
  * Hosted URLs of the large generated data files, keyed by their path from this module. Only the URLs are meant to be bundled, but
