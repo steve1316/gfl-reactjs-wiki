@@ -1,129 +1,76 @@
-# Girls Frontline ReactJS Wiki
+# Girls' Frontline Wiki
 
-![Girls' Frontline](/src/images/logo.png)
+A fast, mobile-friendly wiki for _Girls' Frontline_, the mobile game by MICA Team. It runs entirely in the browser and is hosted on GitHub Pages.
 
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/steve1316/gfl-database?logo=GitHub) ![GitHub last commit](https://img.shields.io/github/last-commit/steve1316/gfl-database?logo=GitHub) ![GitHub issues](https://img.shields.io/github/issues/steve1316/gfl-database?logo=GitHub) ![GitHub pull requests](https://img.shields.io/github/issues-pr/steve1316/gfl-database?logo=GitHub) ![GitHub repo size](https://img.shields.io/github/repo-size/steve1316/gfl-database?logo=GitHub) ![GitHub](https://img.shields.io/github/license/steve1316/gfl-database?logo=GitHub)
+**[Open the wiki](https://steve1316.github.io/gfl-reactjs-wiki/)**
 
-# Database last updated on January 13, 2021.
+[![Deploy](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/deploy.yml/badge.svg)](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/deploy.yml)
+[![Refresh game data](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/refresh.yml/badge.svg)](https://github.com/steve1316/gfl-reactjs-wiki/actions/workflows/refresh.yml)
+[![Last commit](https://img.shields.io/github/last-commit/steve1316/gfl-reactjs-wiki)](https://github.com/steve1316/gfl-reactjs-wiki/commits/master)
+[![License](https://img.shields.io/github/license/steve1316/gfl-reactjs-wiki)](LICENSE)
 
-This project serves to provide a mobile-friendly web application of a wiki hosted on GitHub featuring the mobile game, Girls' Frontline by Mica Team, based on the React + Material UI framework.
+![A T-Doll page playing a skin's Live2D model](https://raw.githubusercontent.com/steve1316/gfl-wiki-assets/main/readme/tdoll-page.webp)
 
-<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/55/animations/55_mod_move.gif" width=175 height=175 alt="M4A1 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/56/animations/56_mod_move.gif" width=175 height=175 alt="M4 SOPMOD II Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/57/animations/57_mod_move.gif" width=175 height=175 alt="ST AR-15 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/143/animations/143_mod_move.gif" width=175 height=175 alt="RO635 Mod">
+## Features
 
-# Table of Contents
+- **T-Doll Index** - filter by rarity, type, Mod and Live2D, search by name or build time, and sort by ID, name, rarity or Global release.
+- **T-Doll pages** - stats, skills at any level, tile buffs, profile and gun spec sheet, exclusive equipment, and every skin and Mod with a zoomable full-art viewer.
+- **Animations** - battle and dorm chibis from the game's Spine rigs, plus skin Live2D models with their motions and dialogue.
+- **HOCs and Fairies** - their own indexes and pages with stats, skills, fairy talents, art and animations, including Live2D where the game has it.
+- **Equipment Index** - filter, search and sort equipment, and see which dolls an exclusive item belongs to.
+- **Always current** - a daily job picks up new dolls, skins, equipment and art from the game data.
 
-- [Planned Features](<#features>)
-- [TODO List](<#todo-list>)
-- [Installation](#installation)
-- [How to host locally](#how-to-host-locally)
-- [How to build and deploy to your GitHub Pages](#how-to-build-and-deploy-to-your-github-pages)
-- [License](#license)
+<p>
+  <img src="https://raw.githubusercontent.com/steve1316/gfl-wiki-assets/main/readme/tdoll-index.webp" width="49%" alt="The T-Doll Index with its filters">
+  <img src="https://raw.githubusercontent.com/steve1316/gfl-wiki-assets/main/readme/hoc-page.webp" width="49%" alt="A HOC page">
+</p>
 
-# Features
+## Roadmap
 
-- [x] Stats and animations of all T-Dolls (Tactical Dolls) in the game as of January 13, 2021.
+- [ ] **Formation Simulator** - place an echelon and see tile, equipment and fairy buffs applied to each doll's stats.
+- [ ] **Story player** - read the main story and events in the browser.
 
-- [x] Information on equipment and their effects when equipped on T-Dolls.
+## Running locally
 
-- [ ] Information on Fairies.
+You need Node 22 and pnpm, which ships with Node through corepack.
 
-- [ ] Information on HOCs (Heavy Ordnance Corps).
-
-- [ ] Formation Simulator that can help you plan out your formations with tile buffs, equipment, and Fairies showing updated T-Doll stats.
-
-<sup><a href="#girls-frontline-database">Go back to top</a></sup>
-
-# TODO List
-
-<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/122/animations/122_mod_victoryloop.gif" width=175 height=175 alt="G11 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/65/animations/65_mod_wait.gif" style="transform: scaleX(-1)" width=175 height=175 alt="416 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/101/animations/101_mod_victoryloop.gif" width=175 height=175 alt="UMP9 Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/103/animations/103_mod_victoryloop.gif" width=175 height=175 alt="UMP45 Mod">
-
-- [x] ~~Mock up the pages for the app.~~
-- [x] ~~Create initial structure of JSON data object that will hold all T-Dolls.~~
-- [x] ~~Set up filters and searching functionality for T-Dolls.~~
-  - [x] ~~Finalize the Chip components.~~
-  - [x] ~~Save filters when moving to and from T-Doll Index page for persistence.~~ (Maybe have a "Clear Filters" button)
-  - [x] ~~Add 6* rarity filter to depict the Mod of 5*'s. Make it only show up by clicking on the Mod Filter Button.~~ (Did not add a 6* rarity filter but rather had the 5* rarity filter show the 6\* Mods instead)
-- [x] ~~Add T-Dolls #1 to #10 to JSON data object.~~
-- [x] ~~Add functionality to view information for each T-Doll.~~
-- [x] ~~Add images and animations.~~ (GIFs, not Spine unfortunately)
-  - [x] ~~Rework the logic such that clicking on the GIF plays the next animation and loops back around when you reach the last animation.~~
-- [x] ~~Add T-Dolls #11 to 320~~ (currently as of October 10, 2020)
-- [x] ~~Add all Special T-Dolls #1000 to 1027.~~ (currently as of October 10, 2020)
-- [x] ~~(HIGH PRIORITY) Add Pagination Component to T-Doll Index page to reduce loading time (made the algorithm already).~~ (Done as a "Load 30 more" button on the T-Doll Index)
-- [ ] ~~Redo each Normal Card image to get rid of artifacting on the left side of each image.~~ **Won't do.** (Doing so will mess up the image resolution and make it too blurry)
-- [x] ~~(HIGH PRIORITY) Finish the T-Doll rerolling component on the Home Page.~~
-  - [x] ~~Create logic for the 2 buttons below it and link it to the component.~~
-- [x] ~~Create initial structure of JSON data object that will hold all equipment.~~
-  - [x] ~~Add Special Equipment for the T-Dolls that have Mods or are farmable in-game.~~
-  - [x] ~~(HIGH PRIORITY) Create the Equipment Index page.~~
-    - [x] ~~(MEDIUM PRIORTIY) Set up filters and searching for equipment.~~
-    - [ ] (LOW PRIORITY) Add Tooltips to T-Doll skill descriptions that have a reference to Special Equipment.
-    - [x] ~~(MEDIUM PRIORITY) Add a way to go to the T-Doll from its exclusive equipment.~~
-    - [x] ~~(MEDIUM PRIORITY) Display all exclusive equipment linked to a T-Doll on its page.~~
-- [ ] (MEDIUM PRIORITY) Create data model for HOCs.
-  - [ ] (MEDIUM PRIORITY) Create the HOC Index page.
-  - [ ] (LOW PRIORITY) Add in the animations of the HOCs.
-- [ ] (LOW PRIORITY) Create the data model for Fairies.
-  - [ ] (LOW PRIORITY) Create the Fairy Index page.
-  - [ ] (LOW PRIORITY) Add in the animations of the Fairies.
-- [ ] (LOW PRIORITY) Create the Formation Simulator page.
-  - [ ] (LOW PRIORITY) Create logic to connect the T-Dolls' stats and tiles to equipments and fairies buffs.
-- [ ] (LOW PRIORITY) Add functionality to see the stats of equipped T-Dolls.
-- [ ] (LOW PRIORITY) Add build times for T-Dolls.
-- [ ] (LOW PRIORITY) Add build times for equipment.
-- [ ] (LOW PRIORITY) Add build times for Fairies.
-- [x] ~~(LOW PRIORITY) Update the database from its last updated state of October 10, 2020 to the latest.~~
-
-<sup><a href="#girls-frontline-database">Go back to top</a></sup>
-
-# Installation
-
-Use the package manager [npm](https://www.npmjs.com/get-npm) or [yarn](https://yarnpkg.com/getting-started/install) to install all dependencies that the app requires.
-
-```javascript
-npm install
-
-yarn install
+```sh
+corepack enable
+pnpm install
+pnpm dev          # dev server at http://localhost:5173/gfl-reactjs-wiki/
+pnpm typecheck    # type check only
+pnpm build        # type check, then a production build into build/
+pnpm preview      # serve the production build
+pnpm test:data    # data pipeline tests
 ```
 
-<img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/124/animations/124_mod_victory.gif" width=175 height=175 alt="Super SASS Mod"> <img src="https://raw.githubusercontent.com/steve1316/gfl-database/master/src/images/tdolls/281/animations/281_normal_victoryloop.gif" width=175 height=175 alt="CAWS">
+To serve the production build the way GitHub Pages does, but from the site root, run `docker compose up --build` and open http://localhost:8088.
 
-<sup><a href="#girls-frontline-database">Go back to top</a></sup>
+Art and animations are not in this repo. They load from [gfl-wiki-assets](https://github.com/steve1316/gfl-wiki-assets), set by `VITE_ASSET_BASE_URL` in `.env`.
 
-# How to host locally
+## How it works
 
-```javascript
-# Deploys on localhost:3000
-npm run start
+- **`src/`** - the site: React 19, TypeScript and MUI, built with Vite. Game data ships as generated JSON, and each page loads only what it needs.
+- **`tools/data/`** - imports doll, equipment, HOC and fairy data from the game's tables and checks the result.
+- **`tools/assets/`** - Python tools (UnityPy, Python 3.12) that extract art, Spine rigs and Live2D models from the game's asset bundles and publish them to the asset repo.
+- **`.github/workflows/`** - `deploy.yml` publishes the site on every push to `master`. `refresh.yml` runs daily, imports anything new, and deploys only if something changed.
 
-yarn start
-```
+## Data sources
 
-<sup><a href="#girls-frontline-database">Go back to top</a></sup>
+- **Game data** - stats, skills, profiles and release dates from [gf-data-us](https://github.com/gf-data-tools/gf-data-us), cross-checked against [gf-data-ch](https://github.com/gf-data-tools/gf-data-ch).
+- **Faction, manufacturer, country and full gun name** - [IOPWiki](https://iopwiki.com/) under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/), with gaps filled from [Wikidata](https://www.wikidata.org/) (CC0).
+- **Art and animations** - extracted from the game's own asset bundles.
 
-# How to build and deploy to your GitHub Pages
+## Credits
 
-```ssh
-# This assumes that you have GitHub Pages running properly when you forked this project.
-npm run deploy
+- **Spine 2.1 runtime** - vendored from [naganeko-tools](https://github.com/naganeko/naganeko-tools) (GPL-3.0).
+- **Live2D Cubism Core** - © Live2D Inc., redistributed under the Live2D Proprietary Software License Agreement.
+- **pixi-live2d-display** and **PixiJS** - MIT.
 
-yarn deploy
-```
+Versions and licence details are in [`public/vendor/`](public/vendor/).
 
-<sup><a href="#girls-frontline-database">Go back to top</a></sup>
+_Girls' Frontline_ and its characters, art and data are © Sunborn / MICA Team. This is an unofficial fan project and is not affiliated with or endorsed by them.
 
-## Data
+## License
 
-Doll and equipment data is generated from [gf-data-tools/gf-data-us](https://github.com/gf-data-tools/gf-data-us) by `tools/data/import.mjs`. That repository carries no licence. Game data and assets are © Sunborn / MICA Team, mirrored for fan-wiki use.
-
-- **Gun spec sheets** come from gf-data-us, which holds the game's own profile text for each doll.
-- **Global release dates** come from gf-data-us launch times, cross-checked against [gf-data-tools/gf-data-ch](https://github.com/gf-data-tools/gf-data-ch) to catch copied CN dates. Where the Global date cannot be trusted, [IOPWiki](https://iopwiki.com/) supplies the release month.
-- **Faction, manufacturer, country of origin and full gun name** come from [IOPWiki](https://iopwiki.com/), used under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Where IOPWiki gives no manufacturer or country, the gap is filled from [Wikidata](https://www.wikidata.org/), which is [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
-
-The data refreshes itself. A daily GitHub Action (`.github/workflows/refresh.yml`) moves the gf-data-us and gf-data-ch pins to their latest commits, regenerates `src/data/`, extracts art for any new doll, Mod, skin or equipment from the game's own asset bundles, and checks everything with `tools/data/check.mjs`. Only then does it publish the new art to the two asset repos, wait for it to go live, commit the data and deploy. When nothing new has been released it stops early, and when the game data moved without changing anything the site shows it commits only the new pins. A failed run leaves the site untouched, and the next day's run tries again, reusing any art it already published. It can also be started by hand from the Actions tab, with a dry run option that skips every push and the deploy.
-
-# License
-
-[GNU GPL 3.0](https://choosealicense.com/licenses/gpl-3.0/)
-
-<sup><a href="#girls-frontline-database">Go back to top</a></sup>
+The code is licensed under [GPL-3.0](LICENSE).
