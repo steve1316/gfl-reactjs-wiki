@@ -145,27 +145,30 @@ export function buildMissionSkill(upstream, group) {
 }
 
 /**
- * Build one skill from its ten level rows.
+ * Build one skill from its level rows. Doll skills have ten. Protocol Assimilation units also have five-level skills, and
+ * `sangvis_type.skills_max_lv` is what says how many a given slot has.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.
  * @param {number} groupId The skill id from `gun.skill1` or `gun.skill2`.
- * @param {string[]} warnings Collects a message for each skill that falls back to level-10 text.
+ * @param {string[]} warnings Collects a message for each skill that falls back to its top level's text.
+ * @param {number} levelCount How many level rows the skill has.
  * @returns {object} The skill in the site's raw shape.
+ * @throws {Error} When any level row is missing.
  */
-export function buildSkill(upstream, groupId, warnings) {
+export function buildSkill(upstream, groupId, warnings, levelCount = 10) {
 	const byId = skillRows(upstream);
-	const rows = Array.from({ length: 10 }, (_v, index) => byId.get(groupId * 100 + index + 1));
+	const rows = Array.from({ length: levelCount }, (_v, index) => byId.get(groupId * 100 + index + 1));
 	if (rows.some((row) => row === undefined)) {
 		throw new Error(`skill ${groupId} is missing level rows`);
 	}
-	const top = rows[9];
+	const top = rows[levelCount - 1];
 	const passive = top.type !== 1;
 	const levels = rows.map((row) => stripMarkup(upstream.t(row.description)).trim());
 	const templated = templateLevels(levels);
 	if (templated === null) {
-		warnings.push(`skill ${groupId}: levels have a different count of numbers, using level 10 text`);
+		warnings.push(`skill ${groupId}: levels have a different count of numbers, using level ${levelCount} text`);
 	}
-	const description = templated ? templated.description : levels[9];
+	const description = templated ? templated.description : levels[levelCount - 1];
 	const stats = templated ? templated.stats : [];
 
 	const skill = {
