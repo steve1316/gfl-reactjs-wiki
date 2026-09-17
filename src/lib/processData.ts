@@ -11,7 +11,7 @@
  */
 
 import manifestJson from "../../assets-manifest.json";
-import type { AssetsManifest, HocImageKind, ManifestDoll, ManifestForm, ManifestSkin } from "../types/manifest";
+import type { AssetsManifest, PortraitKind, ManifestDoll, ManifestForm, ManifestSkin } from "../types/manifest";
 import type { FormAssets, RawForm, RawTDoll, TDoll, TDollForm } from "../types/tdoll";
 import { imageUrl, modSkinCardUrl, skillImageUrl, skinFormKey } from "./assets";
 
@@ -138,7 +138,7 @@ export function hasEquipmentIcon(id: number): boolean {
  * @param kind Which portrait kind to check for.
  * @returns True when the manifest lists that kind for the HOC.
  */
-export function hasHocArt(id: number, kind: HocImageKind): boolean {
+export function hasHocArt(id: number, kind: PortraitKind): boolean {
 	return manifest.hocs?.[String(id)]?.includes(kind) ?? false;
 }
 
@@ -150,7 +150,7 @@ export function hasHocArt(id: number, kind: HocImageKind): boolean {
  * @param kind Which portrait kind to check for.
  * @returns True when the manifest lists that kind for the enemy.
  */
-export function hasEnemyArt(id: number, kind: HocImageKind): boolean {
+export function hasEnemyArt(id: number, kind: PortraitKind): boolean {
 	return manifest.enemies?.[String(id)]?.includes(kind) ?? false;
 }
 

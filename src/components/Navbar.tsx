@@ -89,58 +89,21 @@ const styles = {
 	link: { textDecoration: "none", color: "text.primary" }
 } satisfies Record<string, SxProps<Theme>>;
 
-/** The drawer's destinations. Static, so declared once here rather than rebuilt on every keystroke in the search. */
+/**
+ * The drawer's destinations. Static, so declared once here rather than rebuilt on every keystroke in the search.
+ *
+ * Each entry carries its rendered icon rather than a URL, since the Enemy Index has no published icon image and uses a built-in
+ * glyph instead. Keeping that choice in the data means the list renderer never has to know which kind an entry uses.
+ */
 const NAV_ITEMS = [
-	{
-		title: "Home",
-		link: "/",
-		image: HomeIcon,
-		height: 25,
-		width: 25
-	},
-	{
-		title: "T-Doll Index",
-		link: "/index",
-		image: IndexIcon,
-		height: 25,
-		width: 25
-	},
-	{
-		title: "Equipment Index",
-		link: "/equipment-index",
-		image: EquipmentIcon,
-		height: 25,
-		width: 25
-	},
-	{
-		title: "HOC Index",
-		link: "/hoc-index",
-		image: HOCIcon,
-		height: 25,
-		width: 24 // This is 24 because of the icon getting its right side cut off if it was set to 25 width.
-	},
-	{
-		title: "Fairy Index",
-		link: "/fairy-index",
-		image: FairyIcon,
-		height: 25,
-		width: 25
-	},
-	{
-		title: "Enemy Index",
-		link: "/enemy-index",
-		// No enemy_icon.png is published to the asset repo yet, so this entry falls back to a built-in icon rather than a broken image.
-		image: null,
-		height: 25,
-		width: 25
-	},
-	{
-		title: "Formation Simulator",
-		link: "/formation",
-		image: FormationIcon,
-		height: 25,
-		width: 25
-	}
+	{ title: "Home", link: "/", icon: <img src={HomeIcon} height={25} width={25} alt="" /> },
+	{ title: "T-Doll Index", link: "/index", icon: <img src={IndexIcon} height={25} width={25} alt="" /> },
+	{ title: "Equipment Index", link: "/equipment-index", icon: <img src={EquipmentIcon} height={25} width={25} alt="" /> },
+	// Width 24 rather than 25, because the icon's right side is cut off at 25.
+	{ title: "HOC Index", link: "/hoc-index", icon: <img src={HOCIcon} height={25} width={24} alt="" /> },
+	{ title: "Fairy Index", link: "/fairy-index", icon: <img src={FairyIcon} height={25} width={25} alt="" /> },
+	{ title: "Enemy Index", link: "/enemy-index", icon: <BugReportIcon /> },
+	{ title: "Formation Simulator", link: "/formation", icon: <img src={FormationIcon} height={25} width={25} alt="" /> }
 ];
 
 /**
@@ -252,7 +215,7 @@ const NavList = memo(function NavList({ onNavigate }: NavListProps) {
 					<Box component={Link} to={item.link} sx={styles.link} onClick={onNavigate}>
 						<ListItemButton>
 							<ListItemIcon>
-								<Icon>{item.image === null ? <BugReportIcon /> : <img src={item.image} height={item.height} width={item.width} alt={item.title} />}</Icon>
+								<Icon>{item.icon}</Icon>
 							</ListItemIcon>
 							<ListItemText primary={item.title} />
 						</ListItemButton>

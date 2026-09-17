@@ -9,7 +9,7 @@ import ArtPlaceholder from "../../components/ArtPlaceholder";
 import HighlightedName from "../../components/HighlightedName";
 import RankBar from "../../components/RankBar";
 import { enemyCardUrl } from "../../lib/assets";
-import { ENEMY_CARD_RANK_KEYS, ENEMY_MAX_RANK, ENEMY_RANK_LABELS } from "../../lib/enemyRanks";
+import { ENEMY_CARD_RANK_KEYS, ENEMY_RANK_LABELS } from "../../lib/enemyRanks";
 import { findNameMatch } from "../../lib/nameSearch";
 import { hasEnemyArt } from "../../lib/processData";
 import type { EnemyRankValues } from "../../types/enemy";
@@ -84,7 +84,7 @@ export default memo(function EnemyCard({ id, name, faction, boss, capturable, ra
 									{ENEMY_RANK_LABELS[key]}
 								</Box>
 								<Box sx={styles.rankBar}>
-									<RankBar value={ranks[key]} max={ENEMY_MAX_RANK} label={ENEMY_RANK_LABELS[key]} />
+									<RankBar value={ranks[key]} label={ENEMY_RANK_LABELS[key]} />
 								</Box>
 							</Box>
 						))}

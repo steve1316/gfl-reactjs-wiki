@@ -4,7 +4,8 @@ import { memo, useMemo } from "react";
 import { Box, Chip, Divider, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import type { AssimilationChip, AssimilationData, AssimilationSkill, AssimilationStatKey, AssimilationUnit } from "../../types/enemy";
+import { describeSkill } from "../../lib/skillText";
+import type { AssimilationChip, AssimilationData, AssimilationStatKey, AssimilationUnit } from "../../types/enemy";
 
 /** The growth percentages in display order. */
 const RATIO_KEYS: readonly AssimilationStatKey[] = ["hp", "damage", "accuracy", "evasion", "rateOfFire", "armor"];
@@ -19,31 +20,12 @@ const RATIO_LABELS: Record<AssimilationStatKey, string> = {
 	armor: "Armor"
 };
 
-/**
- * Fill a skill's `#N` placeholders with its values at the top skill level.
- *
- * Counts down rather than up, so replacing `#1` cannot eat the `#1` inside a `#10`.
- *
- * @param skill The skill.
- * @returns The description with every placeholder replaced.
- */
-function describeSkill(skill: AssimilationSkill): string {
-	let text = skill.description;
-	for (let index = skill.number_of_stats; index >= 1; index--) {
-		const values = skill[`stat${index}`];
-		const top = values?.[values.length - 1];
-		text = text.replace(`#${index}`, top === undefined ? "" : String(top));
-	}
-	return text;
-}
-
 const styles = {
 	header: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, mb: 1.5 },
 	lore: { mb: 2 },
 	subHeading: { mt: 2.5, mb: 1 },
 	row: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.6, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } },
 	chips: { display: "flex", flexWrap: "wrap", gap: 0.75 },
-	slot: { mb: 1.25 },
 	slotLabel: { mb: 0.5, display: "block" },
 	skill: { mb: 1.75, "&:last-of-type": { mb: 0 } },
 	skillName: { fontWeight: 700 },
@@ -70,11 +52,12 @@ interface AssimilationPanelProps {
  */
 export default memo(function AssimilationPanel({ unit, data }: AssimilationPanelProps) {
 	const unitClass = data.constants.classes[unit.className];
+	// The class says how many levels each slot has, and the panel quotes every skill at its top level. Zeros mark slots the class
+	// does not have, so they are dropped to line the levels up with the skills the unit actually shipped with.
+	const skillLevels = (unitClass?.skillLevels ?? []).filter((level) => level > 0);
 
-	// Each slot accepts a set of chip types. Every Ringleader currently takes the same types in all three, so an identical set is
-	// listed once rather than repeated per slot, while a unit with differing slots would still get one list each.
-	const chipsBySlot = useMemo((): AssimilationChip[][] => unit.chipSlots.map((types) => data.chips.filter((chip) => types.includes(chip.type))), [unit.chipSlots, data.chips]);
-	const slotsAlike = chipsBySlot.length > 1 && chipsBySlot.every((chips) => chips.length === chipsBySlot[0]?.length && chips.every((chip, index) => chip === chipsBySlot[0]?.[index]));
+	// Every slot takes the same chip types, so the chips are listed once rather than repeated per slot.
+	const slotChips = useMemo((): AssimilationChip[] => data.chips.filter((chip) => unit.chipSlots.some((types) => types.includes(chip.type))), [unit.chipSlots, data.chips]);
 
 	return (
 		<Box>
@@ -144,37 +127,20 @@ export default memo(function AssimilationPanel({ unit, data }: AssimilationPanel
 				Each figure is this unit&apos;s share of its class&apos;s base rate. The stat a player sees also depends on level, star rank, size and affection, so no final numbers are shown here.
 			</Typography>
 
-			{chipsBySlot.length > 0 && (
+			{slotChips.length > 0 && (
 				<>
 					<Divider sx={styles.subHeading} />
 					<Typography variant="subtitle2" component="h3" sx={styles.subHeading}>
 						Strategic chips
 					</Typography>
-					{slotsAlike ? (
-						<Box sx={styles.slot}>
-							<Typography variant="caption" color="text.secondary" sx={styles.slotLabel}>
-								Equips {chipsBySlot.length}, each chosen from any of these
-							</Typography>
-							<Box sx={styles.chips}>
-								{chipsBySlot[0]?.map((chip) => (
-									<Chip key={chip.id} label={chip.name} size="small" variant="outlined" title={chip.description} />
-								))}
-							</Box>
-						</Box>
-					) : (
-						chipsBySlot.map((chips, index) => (
-							<Box key={index} sx={styles.slot}>
-								<Typography variant="caption" color="text.secondary" sx={styles.slotLabel}>
-									Slot {index + 1}
-								</Typography>
-								<Box sx={styles.chips}>
-									{chips.map((chip) => (
-										<Chip key={chip.id} label={chip.name} size="small" variant="outlined" title={chip.description} />
-									))}
-								</Box>
-							</Box>
-						))
-					)}
+					<Typography variant="caption" color="text.secondary" sx={styles.slotLabel}>
+						Equips {unit.chipSlots.length}, each chosen from any of these
+					</Typography>
+					<Box sx={styles.chips}>
+						{slotChips.map((chip) => (
+							<Chip key={chip.id} label={chip.name} size="small" variant="outlined" title={chip.description} />
+						))}
+					</Box>
 				</>
 			)}
 
@@ -184,13 +150,13 @@ export default memo(function AssimilationPanel({ unit, data }: AssimilationPanel
 					<Typography variant="subtitle2" component="h3" sx={styles.subHeading}>
 						Skills
 					</Typography>
-					{unit.skills.map((skill) => (
+					{unit.skills.map((skill, index) => (
 						<Box key={skill.slot} sx={styles.skill}>
 							<Typography variant="body2" sx={styles.skillName}>
 								{skill.name}
 							</Typography>
 							<Typography variant="body2" color="text.secondary">
-								{describeSkill(skill)}
+								{describeSkill(skill, skillLevels[index] ?? 0)}
 							</Typography>
 						</Box>
 					))}

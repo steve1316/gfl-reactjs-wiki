@@ -18,7 +18,7 @@ import { enemyCardUrl, enemyFullArtUrl } from "../../lib/assets";
 import { loadAssimilation, loadEnemyDetails } from "../../lib/data";
 import { hasEnemyArt } from "../../lib/processData";
 import { useEnemies } from "../../lib/useEnemies";
-import type { AssimilationData, EnemyDetailsData } from "../../types/enemy";
+import type { AssimilationData, Enemy, EnemyDetailsData } from "../../types/enemy";
 
 const styles = {
 	page: { pt: 2, pb: 3, maxWidth: 1200, mx: "auto" },
@@ -34,31 +34,32 @@ const styles = {
 	skillName: { fontWeight: 700 }
 } satisfies Record<string, SxProps<Theme>>;
 
+/** Props for EnemyDetail. */
+interface EnemyDetailProps {
+	/** The enemy to show, already resolved from the route. */
+	enemy: Enemy;
+}
+
 /**
- * One enemy's page: the archive's lore, rank bars, base stats, skills and counter advice, plus what the enemy is like to
- * field when Protocol Assimilation can capture it.
+ * One enemy's page once the enemy itself is known.
  *
- * @returns The enemy page, a loading state, a retry notice, or the 404 page for an unknown id.
+ * Split from `EnemyPage` so nothing below here has to re-check that the enemy exists, the way the Fairy page is split.
+ *
+ * @param props Component props.
+ * @returns The enemy's sections.
  */
-export default function EnemyPage() {
-	const { id: rawId } = useParams<{ id: string }>();
-	const { data, loadFailed, retry } = useEnemies();
+function EnemyDetail({ enemy }: EnemyDetailProps) {
 	const [details, setDetails] = useState<EnemyDetailsData | null>(null);
 	const [assimilation, setAssimilation] = useState<AssimilationData | null>(null);
 
-	const enemy = data?.items.find((entry) => String(entry.id) === rawId);
-	const enemyDetails = enemy === undefined ? undefined : details?.[String(enemy.id)];
+	const enemyDetails = details?.[String(enemy.id)];
 	// Paired so the panel only renders once both the unit and the shared chip and class data are in hand.
-	const capturedUnit = enemy === undefined || assimilation === null ? null : (assimilation.units.find((entry) => entry.familyId === enemy.familyId) ?? null);
-	const hasFullArt = enemy !== undefined && hasEnemyArt(enemy.id, "full");
-	const capturable = enemy?.capturable ?? false;
-
-	useEffect(() => {
-		if (enemy) {
-			document.title = `${enemy.name} - Enemy`;
-			document.querySelector('meta[name="description"]')?.setAttribute("content", `${enemy.name}, a ${enemy.faction} enemy in Girls' Frontline`);
-		}
-	}, [enemy]);
+	const capturedUnit = assimilation === null ? null : (assimilation.units.find((entry) => entry.familyId === enemy.familyId) ?? null);
+	const hasFullArt = hasEnemyArt(enemy.id, "full");
+	const capturable = enemy.capturable;
+	const hasSkills = enemyDetails !== undefined && enemyDetails.skills.length > 0;
+	// The Skills and Protocol Assimilation panels share a row when both are there, and take the full width when only one is.
+	const panelSize = hasSkills && capturable ? 6 : 12;
 
 	// Fetched on its own so the page renders without waiting on it. A failed fetch just leaves the lore and stats out.
 	useEffect(() => {
@@ -84,20 +85,6 @@ export default function EnemyPage() {
 			active = false;
 		};
 	}, [capturable]);
-
-	if (loadFailed) {
-		return (
-			<Container component="main" sx={styles.page}>
-				<LoadError what="this enemy" onRetry={retry} titleComponent="h1" />
-			</Container>
-		);
-	}
-	if (data === null) {
-		return <Box component="main" />;
-	}
-	if (enemy === undefined) {
-		return <NotFound404 message={`There is no enemy with the id ${rawId ?? ""}.`} />;
-	}
 
 	return (
 		<main>
@@ -159,13 +146,7 @@ export default function EnemyPage() {
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 								Stats
 							</Typography>
-							{enemyDetails === undefined ? null : enemyDetails.baseStats === null ? (
-								<Typography variant="body2" color="text.secondary">
-									The archive records no stats for this enemy.
-								</Typography>
-							) : (
-								<EnemyStatsPanel stats={enemyDetails.baseStats} level={enemyDetails.baseStatsLevel} />
-							)}
+							{enemyDetails !== undefined && <EnemyStatsPanel stats={enemyDetails.baseStats} level={enemyDetails.baseStatsLevel} />}
 						</Paper>
 					</Grid>
 
@@ -184,8 +165,8 @@ export default function EnemyPage() {
 					) : null}
 
 					{/* Its own skills */}
-					{enemyDetails !== undefined && enemyDetails.skills.length > 0 ? (
-						<Grid size={{ xs: 12, md: capturable ? 6 : 12 }}>
+					{hasSkills && enemyDetails !== undefined ? (
+						<Grid size={{ xs: 12, md: panelSize }}>
 							<Paper sx={styles.section} variant="outlined">
 								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 									Skills
@@ -206,7 +187,7 @@ export default function EnemyPage() {
 
 					{/* What it is like once captured */}
 					{capturable ? (
-						<Grid size={{ xs: 12, md: enemyDetails !== undefined && enemyDetails.skills.length > 0 ? 6 : 12 }}>
+						<Grid size={{ xs: 12, md: panelSize }}>
 							<Paper sx={styles.section} variant="outlined">
 								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 									Protocol Assimilation
@@ -225,4 +206,41 @@ export default function EnemyPage() {
 			</Container>
 		</main>
 	);
+}
+
+/**
+ * One enemy's page: the archive's lore, rank bars, base stats, skills and counter advice, plus what the enemy is like to
+ * field when Protocol Assimilation can capture it.
+ *
+ * @returns The enemy page, a loading state, a retry notice, or the 404 page for an unknown id.
+ */
+export default function EnemyPage() {
+	const { id: rawId } = useParams<{ id: string }>();
+	const { data, loadFailed, retry } = useEnemies();
+
+	const enemy = data?.items.find((entry) => String(entry.id) === rawId);
+
+	useEffect(() => {
+		if (enemy) {
+			document.title = `${enemy.name} - Enemy`;
+			document.querySelector('meta[name="description"]')?.setAttribute("content", `${enemy.name}, a ${enemy.faction} enemy in Girls' Frontline`);
+		}
+	}, [enemy]);
+
+	if (loadFailed) {
+		return (
+			<Container component="main" sx={styles.page}>
+				<LoadError what="this enemy" onRetry={retry} titleComponent="h1" />
+			</Container>
+		);
+	}
+	if (data === null) {
+		return <Box component="main" />;
+	}
+	if (enemy === undefined) {
+		return <NotFound404 message={`There is no enemy with the id ${rawId ?? ""}.`} />;
+	}
+
+	// Keyed by enemy so switching to another one remounts this and starts its detail fetches again from scratch.
+	return <EnemyDetail key={enemy.id} enemy={enemy} />;
 }

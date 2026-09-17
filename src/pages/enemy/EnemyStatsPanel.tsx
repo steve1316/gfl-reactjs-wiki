@@ -30,8 +30,8 @@ const styles = {
 
 /** Props for EnemyStatsPanel. */
 interface EnemyStatsPanelProps {
-	/** The enemy's base deployment stats. */
-	stats: EnemyStatValues;
+	/** The enemy's base deployment stats, or null for the few enemies the archive records none for. */
+	stats: EnemyStatValues | null;
 	/** The level the stats are quoted at, or null when upstream records none. */
 	level: number | null;
 }
@@ -43,9 +43,16 @@ interface EnemyStatsPanelProps {
  * levels and scales it, so the note under the table says so rather than letting these read as final.
  *
  * @param props Component props.
- * @returns The stat table.
+ * @returns The stat table, or a note when the archive records no stats.
  */
 export default memo(function EnemyStatsPanel({ stats, level }: EnemyStatsPanelProps) {
+	if (stats === null) {
+		return (
+			<Typography variant="body2" color="text.secondary">
+				The archive records no stats for this enemy.
+			</Typography>
+		);
+	}
 	return (
 		<Box>
 			{STAT_KEYS.map((key) => (

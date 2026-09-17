@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 import RankBar from "../../components/RankBar";
-import { ENEMY_MAX_RANK, ENEMY_RANK_KEYS, ENEMY_RANK_LABELS } from "../../lib/enemyRanks";
+import { ENEMY_RANK_KEYS, ENEMY_RANK_LABELS } from "../../lib/enemyRanks";
 import type { EnemyRankValues } from "../../types/enemy";
 
 const styles = {
@@ -37,7 +37,7 @@ export default memo(function EnemyRanksPanel({ ranks }: EnemyRanksPanelProps) {
 						{ENEMY_RANK_LABELS[key]}
 					</Typography>
 					<Box sx={styles.bar}>
-						<RankBar value={ranks[key]} max={ENEMY_MAX_RANK} label={ENEMY_RANK_LABELS[key]} />
+						<RankBar value={ranks[key]} label={ENEMY_RANK_LABELS[key]} />
 					</Box>
 					<Typography variant="body2" sx={styles.value}>
 						{ranks[key]}
