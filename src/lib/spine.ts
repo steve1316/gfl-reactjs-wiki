@@ -24,14 +24,23 @@ let runtimePromise: Promise<void> | undefined;
 /**
  * The Spine runtime's own `PIXI` (v4, with `.spine` attached), captured the moment its scripts finish loading. `lib/live2d.ts`
  * loads a different major version of PixiJS onto the same `window.PIXI` global, so while its scripts are loading,
- * `window.PIXI` points at that other runtime instead. This capture lets `createSpinePlayer` re-point the global back via
- * `claimPixiGlobal` before it runs: the vendored `pixi-spine-sjzs.js` reads the bare global `PIXI` identifier inside some of
- * its own methods (such as `Spine.createMesh`), not a value closed over at load time, so a stale `window.PIXI` breaks it even
- * when this module's own calls use the captured reference directly. The claim is repeated after every `await` in
- * `createSpinePlayer`, not just once at the top, since Live2D's loader can repoint the global while this function is
- * suspended waiting on a fetch.
+ * `window.PIXI` points at that other runtime instead. This capture lets callers re-point the global back via `claimPixiGlobal`
+ * before they run: the vendored `pixi-spine-sjzs.js` reads the bare global `PIXI` identifier inside some of its own methods
+ * (such as `Spine.createMesh`), not a value closed over at load time, so a stale `window.PIXI` breaks it even when this
+ * module's own calls use the captured reference directly. The claim happens inside `loadSkeletonData`, and again after every
+ * `await` in its callers, since Live2D's loader can repoint the global while a caller is suspended waiting on a fetch.
  */
 let spinePixi: unknown;
+
+/**
+ * The Spine runtime's own `PIXI`, captured when its scripts loaded. Callers must use this rather than `window.PIXI`, which may point at Live2D's
+ * PixiJS after a Live2D page was visited in the same session.
+ *
+ * @returns The captured `PIXI`, or undefined before `loadSpineRuntime` has settled.
+ */
+export function spineRuntimePixi(): unknown {
+	return spinePixi;
+}
 
 /**
  * Inject one script and wait for it.
@@ -323,22 +332,22 @@ export interface SpinePlayerOptions {
 }
 
 /**
- * Build a Spine player and mount it.
+ * Load the runtime and parse one skeleton with its atlas.
  *
- * @param options Where to mount and what to load.
- * @returns The mounted player.
+ * @param skelUrl URL of the binary `.skel`.
+ * @param atlasUrl URL of the `.atlas`.
+ * @param imageBase Directory the atlas's page images sit in, with a trailing slash.
+ * @returns This runtime's `PIXI` and the parsed skeleton data.
  */
-export async function createSpinePlayer(options: SpinePlayerOptions): Promise<SpinePlayer> {
+export async function loadSkeletonData(skelUrl: string, atlasUrl: string, imageBase: string): Promise<{ PIXI: any; skeletonData: any }> {
 	await loadSpineRuntime();
 	// Re-point the global at this runtime's own PIXI before touching it: see `spinePixi`'s docstring for why.
 	claimPixiGlobal(spinePixi);
-
-	const size = options.size ?? 250;
 	const PIXI = spinePixi as any;
 	const SkeletonBinary = (window as unknown as { SkeletonBinary: any }).SkeletonBinary;
 	const runtime = PIXI.spine.SpineRuntime;
 
-	const [skelBuffer, atlasText] = await Promise.all([fetch(options.skelUrl).then((response) => response.arrayBuffer()), fetch(options.atlasUrl).then((response) => response.text())]);
+	const [skelBuffer, atlasText] = await Promise.all([fetch(skelUrl).then((response) => response.arrayBuffer()), fetch(atlasUrl).then((response) => response.text())]);
 	// Re-claim after the fetch await: Live2D's loader or teardown could have repointed the global while this was suspended.
 	claimPixiGlobal(spinePixi);
 
@@ -359,11 +368,32 @@ export async function createSpinePlayer(options: SpinePlayerOptions): Promise<Sp
 	//
 	// crossOrigin matters for the same reason: WebGL refuses to upload a texture from an image that was
 	// not fetched in CORS mode. The asset host sends `access-control-allow-origin: *`.
+	//
+	// Each load gets its own base texture rather than one from `Texture.fromImage`, whose cache is keyed by URL. Two players showing the
+	// same doll, such as the formation stage and its settings preview, would otherwise share one, and the first to be destroyed would
+	// destroy it under the other, which then throws on every frame.
 	const loadPage = (line: string, callback: (texture: unknown) => void) => {
-		callback(PIXI.Texture.fromImage(`${options.imageBase}${line}`, "anonymous").baseTexture);
+		const image = new Image();
+		image.crossOrigin = "anonymous";
+		image.src = `${imageBase}${line}`;
+		callback(new PIXI.BaseTexture(image));
 	};
 	const atlas = new runtime.Atlas(atlasText, loadPage, () => {});
 	const skeletonData = new runtime.SkeletonJsonParser(new runtime.AtlasAttachmentParser(atlas)).readSkeletonData(binary.json);
+	return { PIXI, skeletonData };
+}
+
+/**
+ * Build a Spine player and mount it.
+ *
+ * @param options Where to mount and what to load.
+ * @returns The mounted player.
+ */
+export async function createSpinePlayer(options: SpinePlayerOptions): Promise<SpinePlayer> {
+	const { PIXI, skeletonData } = await loadSkeletonData(options.skelUrl, options.atlasUrl, options.imageBase);
+	// Re-claim after the await: Live2D's loader or teardown could have repointed the global while this was suspended.
+	claimPixiGlobal(PIXI);
+	const size = options.size ?? 250;
 
 	// Clamped, because fill cost grows with the square of this and there is nothing to gain past 3x.
 	const resolution = Math.min(options.resolution ?? 1, 3);
