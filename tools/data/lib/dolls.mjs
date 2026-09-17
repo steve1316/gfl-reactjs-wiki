@@ -50,7 +50,7 @@ function buildForm(upstream, gun, base, ctx) {
 	const name = cleanName(upstream.t(base.name));
 	const form = {
 		id: base.id,
-		name: isMod ? `${name} Mod` : name,
+		name: isMod ? `${name} MOD` : name,
 		type: TYPE_NAMES[gun.type],
 		rarity: gun.rank_display === COLLAB_RANK_DISPLAY ? 1 : gun.rank,
 		...computeStats(gun, ctx.config, isMod ? MOD_LEVEL : BASE_LEVEL),

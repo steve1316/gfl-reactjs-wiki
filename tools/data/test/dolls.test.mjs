@@ -26,7 +26,7 @@ test("HK416 assembles with its Mod, skins in skin-id order", () => {
 	assert.equal(doll.normal.rarity, 5);
 	assert.equal(doll.mod.id, 65);
 	assert.equal(doll.mod.rarity, 6);
-	assert.equal(doll.mod.name, `${doll.normal.name} Mod`);
+	assert.equal(doll.mod.name, `${doll.normal.name} MOD`);
 	assert.equal(doll.mod.skill2.initial_cooldown, "Passive");
 	assert.deepEqual(doll.skins.skin_ids, [537, 548, 557, 581, 805, 3401, 6505, 10203, 30033]);
 	assert.equal(doll.skins.number_of_skins, doll.skins.skin_names.length);
@@ -141,11 +141,11 @@ test("splitDetails moves the profile, exclusive equipment and spec sheets out of
 	const form = (name, specs) => ({ id: 65, name, tile_set: {}, specs });
 	const sheet = [{ label: "Type", value: "Assault rifle" }];
 	const exclusiveEquipment = [{ id: 159, name: "Tactical Headwear", rarity: 5, mod: false, stats: { damage: "+25" } }];
-	const same = splitDetails({ normal: form("HK416", sheet), mod: form("HK416 Mod", [...sheet]), skins: null, profile, exclusiveEquipment });
-	assert.deepEqual(same.record, { normal: { id: 65, name: "HK416", tile_set: {} }, mod: { id: 65, name: "HK416 Mod", tile_set: {} }, skins: null, release });
+	const same = splitDetails({ normal: form("HK416", sheet), mod: form("HK416 MOD", [...sheet]), skins: null, profile, exclusiveEquipment });
+	assert.deepEqual(same.record, { normal: { id: 65, name: "HK416", tile_set: {} }, mod: { id: 65, name: "HK416 MOD", tile_set: {} }, skins: null, release });
 	assert.deepEqual(same.details, { profile, specs: { normal: sheet, mod: null }, exclusiveEquipment });
 	const modSheet = [{ label: "Type", value: "Carbine" }];
-	assert.deepEqual(splitDetails({ normal: form("A", sheet), mod: form("A Mod", modSheet), skins: null, profile, exclusiveEquipment: [] }).details.specs, { normal: sheet, mod: modSheet });
+	assert.deepEqual(splitDetails({ normal: form("A", sheet), mod: form("A MOD", modSheet), skins: null, profile, exclusiveEquipment: [] }).details.specs, { normal: sheet, mod: modSheet });
 	const noMod = splitDetails({ normal: form("B", []), mod: null, skins: null, profile, exclusiveEquipment: [] });
 	assert.equal(noMod.record.mod, null);
 	assert.deepEqual(noMod.details.specs, { normal: [], mod: null });

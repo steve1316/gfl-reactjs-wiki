@@ -41,11 +41,11 @@ export function equipmentRarityName(rarity: number): string {
  * The display name of a doll an exclusive item belongs to.
  *
  * @param doll The doll entry from the item's `dolls` list.
- * @returns The doll's current name, with " Mod" added when only the Mod can equip the item, or `#id` for an unknown doll.
+ * @returns The doll's current name, with " MOD" added when only the Mod can equip the item, or `#id` for an unknown doll.
  */
 export function equipmentDollName(doll: EquipmentDoll): string {
 	const name = DOLL_NAMES_BY_ID.get(doll.id) ?? `#${doll.id}`;
-	return doll.mod ? `${name} Mod` : name;
+	return doll.mod ? `${name} MOD` : name;
 }
 
 /**

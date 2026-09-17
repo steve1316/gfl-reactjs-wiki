@@ -104,10 +104,10 @@ function resolveSelection(forms: SkinLive2dForms, formParam: string | null, skin
  * The label for a form key.
  *
  * @param form `base` or `mod`.
- * @returns "Base" or "Mod".
+ * @returns "Base" or "MOD".
  */
 function formLabel(form: string): string {
-	return form === "mod" ? "Mod" : "Base";
+	return form === "mod" ? "MOD" : "Base";
 }
 
 /**

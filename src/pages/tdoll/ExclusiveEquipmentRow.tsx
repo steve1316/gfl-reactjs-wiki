@@ -82,7 +82,7 @@ export default memo(function ExclusiveEquipmentRow({ item, component = "div" }: 
 						{item.name}
 					</Typography>
 					<RarityStars rarity={item.rarity} isMod={false} />
-					{item.mod ? <Chip label="Mod" size="small" color="primary" variant="outlined" /> : null}
+					{item.mod ? <Chip label="MOD" size="small" color="primary" variant="outlined" /> : null}
 				</Box>
 				<Box sx={styles.stats}>
 					{Object.entries(item.stats).map(([key, value]) => (

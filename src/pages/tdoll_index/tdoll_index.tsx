@@ -152,7 +152,7 @@ export default function TDoll_Index() {
 
 	const [modFilter, setModFilter] = useState({
 		key: 0,
-		label: "Mod",
+		label: "MOD",
 		selected: false
 	});
 

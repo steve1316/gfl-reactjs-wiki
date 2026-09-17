@@ -47,7 +47,7 @@ function formLabel(key: string, skins: RawSkins | null, skinKeys: string[]): str
 		return "Base";
 	}
 	if (key === "mod") {
-		return "Mod";
+		return "MOD";
 	}
 	const skinKey = skinKeyOf(key);
 	return (skinKey === null ? undefined : skins?.skin_names[skinKeys.indexOf(skinKey)]) ?? key;
