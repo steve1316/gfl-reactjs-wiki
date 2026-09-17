@@ -3,7 +3,7 @@ import { memo } from "react";
 import { Box, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import { heroArtSx } from "../../lib/artLayout";
+import { heroArtSx } from "../lib/artLayout";
 
 const styles = {
 	// Fixed to the viewport rather than sized to the page, so the art stays behind whatever is on screen as
@@ -31,12 +31,12 @@ const styles = {
 
 /** Props for PageBackdrop. */
 interface PageBackdropProps {
-	/** URL of the full art to blur, or undefined when the doll has published none, which leaves a plain background. */
+	/** URL of the full art to blur, or undefined when none is published, which leaves a plain background. */
 	artUrl: string | undefined;
 }
 
 /**
- * The doll's full art, blurred behind the whole doll page.
+ * A subject's full art, blurred behind the whole page. Shared by the doll and enemy pages.
  *
  * This used to be confined to the hero, so the art filled the top band and stopped dead where the sections
  * began. Behind the whole page it reads as one backdrop rather than a banner.

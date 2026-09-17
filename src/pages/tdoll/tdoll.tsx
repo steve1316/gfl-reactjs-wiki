@@ -9,7 +9,7 @@ import NotFound404 from "../../not_found_404";
 import ChibiPanel from "./ChibiPanel";
 import type { ChibiMode } from "./ChibiPanel";
 import DollHero from "./DollHero";
-import PageBackdrop from "./PageBackdrop";
+import PageBackdrop from "../../components/PageBackdrop";
 import SkillsPanel from "./SkillsPanel";
 import StatsPanel from "./StatsPanel";
 import TilesPanel from "./TilesPanel";
