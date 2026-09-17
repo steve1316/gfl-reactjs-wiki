@@ -6,8 +6,35 @@ import { MAX_ECHELON, MAX_SKILL_LEVEL, MAX_LINKS, levelCap, maxModStage } from "
 import type { DollSetup } from "../../lib/formation/pipeline";
 import type { FormationData } from "../../types/formation";
 
+/**
+ * The echelon shown when no formation is in the link: the AR team down the left two columns, reading left to right and top to bottom as
+ * HK416, then M4A1 with RO635, then ST AR-15 with P22.
+ *
+ * Each doll's id with the cell it stands on. Settings come from `defaultSetup`, the same ones a freshly placed doll gets.
+ */
+const DEFAULT_ECHELON: readonly { cell: number; dollId: number }[] = [
+	{ cell: 0, dollId: 65 },
+	{ cell: 3, dollId: 55 },
+	{ cell: 4, dollId: 143 },
+	{ cell: 6, dollId: 57 },
+	{ cell: 7, dollId: 242 }
+];
+
 /** How long the echelon must stay unchanged before it is written to the URL, in milliseconds. Firefox throws once history calls come too fast. */
 const URL_WRITE_DELAY_MS = 250;
+
+/**
+ * A doll placed with everything maxed: its top form at its level cap, five links, both skills at 10 and no affection bonus.
+ *
+ * @param cell Cell the doll stands on.
+ * @param dollId Doll id.
+ * @param data The loaded formation data.
+ * @returns The setup.
+ */
+function defaultSetup(cell: number, dollId: number, data: FormationData): DollSetup {
+	const modStage = maxModStage(dollId, data.forms);
+	return { cell, dollId, modStage, level: levelCap(modStage, data.constants), links: MAX_LINKS, affection: 0, skill1: MAX_SKILL_LEVEL, skill2: MAX_SKILL_LEVEL };
+}
 
 /** The echelon and the ways to change it. */
 export interface FormationState {
@@ -38,7 +65,11 @@ export function useFormationState(data: FormationData | null): FormationState {
 
 	useEffect(() => {
 		if (data && !ready) {
-			setSetups(decodeFormation(searchParams.get(FORMATION_PARAM) ?? "", data.forms, data.constants));
+			const shared = searchParams.get(FORMATION_PARAM);
+			// A link with no formation in it opens on the default echelon. An empty one, such as after clearing the grid, stays empty.
+			const decoded = decodeFormation(shared ?? "", data.forms, data.constants);
+			const dolls = shared === null ? DEFAULT_ECHELON.filter(({ dollId }) => data.forms[String(dollId)]) : [];
+			setSetups(decoded.length > 0 ? decoded : dolls.map(({ cell, dollId }) => defaultSetup(cell, dollId, data)));
 			setReady(true);
 		}
 	}, [data, ready, searchParams]);
@@ -90,8 +121,7 @@ export function useFormationState(data: FormationData | null): FormationState {
 				if (current.length >= MAX_ECHELON || current.some((setup) => setup.cell === cell || setup.dollId === dollId)) {
 					return current;
 				}
-				const modStage = maxModStage(dollId, data.forms);
-				return [...current, { cell, dollId, modStage, level: levelCap(modStage, data.constants), links: MAX_LINKS, affection: 0, skill1: MAX_SKILL_LEVEL, skill2: MAX_SKILL_LEVEL }];
+				return [...current, defaultSetup(cell, dollId, data)];
 			});
 		},
 		[data]
