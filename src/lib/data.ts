@@ -17,6 +17,7 @@ import searchIndexJson from "../data/search-index.json";
 import type { AssimilationData, EnemyData, EnemyDetailsData } from "../types/enemy";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { FairyData } from "../types/fairy";
+import type { FormationConstants, FormationData, FormationForm } from "../types/formation";
 import type { HocData } from "../types/hoc";
 import type { Live2dIndex, Live2dMotion, Live2dTdollFile } from "../types/live2d";
 import type { EnemySpineEntry, EnemySpineIndex, HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
@@ -137,8 +138,18 @@ const TDOLL_LIVE2D_DATA_URLS = import.meta.glob<string>("../data/live2d-tdolls/*
 	eager: true
 });
 
-/** The two URL maps above, merged under one lookup key so `fetchData` and `fetchSkinLive2dTdollFile` do not need to know they differ. */
-const DATA_URLS: Record<string, string> = { ...EXISTING_DATA_URLS, ...TDOLL_LIVE2D_DATA_URLS };
+/**
+ * Hosted URLs of the formation simulator's data files. `no-inline` keeps the small constants file from being base64-inlined into this
+ * eagerly loaded module, so none of the simulator's data ships on other pages.
+ */
+const FORMATION_DATA_URLS = import.meta.glob<string>("../data/formation/*.json", {
+	query: "?url&no-inline",
+	import: "default",
+	eager: true
+});
+
+/** The URL maps above, merged under one lookup key so `fetchData` does not need to know they differ. */
+const DATA_URLS: Record<string, string> = { ...EXISTING_DATA_URLS, ...TDOLL_LIVE2D_DATA_URLS, ...FORMATION_DATA_URLS };
 
 /**
  * The generated data shards, in id order. This table mirrors `tools/data/lib/shards.mjs`.
@@ -189,6 +200,9 @@ const enemySpineIndexCache = new Map<0, Promise<EnemySpineIndex>>();
 
 /** Cache of the in-flight or loaded Live2D index, under the single key `0`. A failed load is dropped so it can be retried. */
 const live2dIndexCache = new Map<0, Promise<Live2dIndex>>();
+
+/** Cache of the in-flight or loaded formation data, under the single key `0`. A failed load is dropped so it can be retried. */
+const formationCache = new Map<0, Promise<FormationData>>();
 
 /**
  * Cache of in-flight and loaded T-Doll skin Live2D motion files, keyed by doll id. A doll with no file resolves to undefined and stays
@@ -611,4 +625,22 @@ export async function loadLive2dAvailability(): Promise<Live2dAvailability> {
 		tdollIds,
 		tdollModIds
 	};
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Formation simulator
+
+/**
+ * Load the formation simulator's forms and constants.
+ *
+ * @returns The formation data.
+ * @throws When either file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadFormationData(): Promise<FormationData> {
+	const load = async (): Promise<FormationData> => {
+		const [forms, constants] = await Promise.all([fetchData<Record<string, FormationForm>>("formation/dolls"), fetchData<FormationConstants>("formation/constants")]);
+		return { forms, constants };
+	};
+	return formationCache.get(0) ?? cacheUntilFailure(formationCache, 0, load());
 }

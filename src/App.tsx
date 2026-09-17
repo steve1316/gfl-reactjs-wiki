@@ -6,7 +6,6 @@ import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import NotFound404 from "./not_found_404";
 import EquipmentIndex from "./pages/equipment_index/equipment_index";
-import FormationSimulator from "./pages/formation_simulator/formation_simulator";
 import Home from "./pages/home/home";
 import TDoll from "./pages/tdoll/tdoll";
 import TDollArt from "./pages/tdoll_art/tdoll_art";
@@ -33,6 +32,9 @@ const EnemyArt = lazy(() => import("./pages/enemy_art/enemy_art"));
 
 /** The T-Doll skin Live2D viewer loads on first visit, since few readers open it and it would otherwise add to every T-Doll route. */
 const TDollLive2d = lazy(() => import("./pages/tdoll_live2d/tdoll_live2d"));
+
+/** The Formation Simulator loads on first visit, since it ships its own data files that no other route needs. */
+const FormationSimulator = lazy(() => import("./pages/formation_simulator/formation_simulator"));
 
 /**
  * The application shell: theme, navigation and routes.
@@ -121,7 +123,14 @@ export default function App() {
 							</Suspense>
 						}
 					/>
-					<Route path="/formation" element={<FormationSimulator />} />
+					<Route
+						path="/formation"
+						element={
+							<Suspense>
+								<FormationSimulator />
+							</Suspense>
+						}
+					/>
 					<Route path="/tdoll/:id/art" element={<TDollArt />} />
 					<Route
 						path="/tdoll/:id/live2d"
