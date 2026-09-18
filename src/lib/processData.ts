@@ -155,6 +155,16 @@ export function hasEnemyArt(id: number, kind: PortraitKind): boolean {
 }
 
 /**
+ * Whether a faction has a hosted emblem.
+ *
+ * @param faction Faction name as the enemy data spells it.
+ * @returns True when the manifest lists that faction's emblem.
+ */
+export function hasFactionEmblem(faction: string): boolean {
+	return (manifest.factions ?? []).includes(faction.toLowerCase().replaceAll(" ", "-"));
+}
+
+/**
  * Whether a fairy has a hosted image for the given form.
  *
  * @param id Fairy id.

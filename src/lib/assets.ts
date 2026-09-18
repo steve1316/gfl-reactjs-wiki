@@ -204,6 +204,16 @@ export function enemyFullArtUrl(id: number): string {
 }
 
 /**
+ * URL for a faction's emblem.
+ *
+ * @param faction Faction name as the enemy data spells it, such as `Sangvis Ferri`.
+ * @returns An absolute URL.
+ */
+export function factionEmblemUrl(faction: string): string {
+	return join(ASSET_BASE, `factions/${faction.toLowerCase().replaceAll(" ", "-")}.webp`);
+}
+
+/**
  * URL for a fairy's art at one of its three forms.
  *
  * @param id Fairy id.
