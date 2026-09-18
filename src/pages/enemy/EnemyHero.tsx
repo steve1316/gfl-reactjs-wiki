@@ -35,19 +35,31 @@ const styles = {
 		gap: { xs: 2, md: 3 },
 		p: { xs: 2, md: 3 }
 	},
+	// Beside the text the card is stretched to its row, which the Grid has already sized to the taller of the hero and the
+	// Animations card, so the two cards end level. Stacked above the text it keeps the artwork's own square shape.
+	//
+	// The width is given rather than derived from the stretched height: a row flex container resolves an item's width before its
+	// height, so an `aspect-ratio` cannot work backwards from a height that is not known yet.
 	portrait: {
-		// Enemy art is a single square image where a doll's is a 1:2 half-atlas, so a card of the doll's width would stand half as
-		// tall. These widths are the card's height too, and beside the text that is the doll card's own 400px.
-		width: { xs: 300, sm: 380, md: 420, lg: 400 },
+		aspectRatio: { xs: ENEMY_CARD_ASPECT, lg: "auto" },
+		width: { xs: 300, sm: 380, md: 420, lg: 400, xl: 440 },
+		alignSelf: { lg: "stretch" },
+		// Pulls the card back out through the hero's own vertical padding, so it spans the whole row rather than stopping 24px
+		// short of the Animations card at each end.
+		my: { lg: -3 },
+		display: "flex",
 		flexShrink: 0,
 		// Anchors the full art Fab, which is clipped by this card's inherited overflow: hidden otherwise.
 		position: "relative",
 		boxShadow: 8
 	},
+	// `contain`, not the doll page's `cover`. Enemy art is square, so a card tall enough to match the Animations card beside it is
+	// far taller than it is wide, and filling that would cut a quarter off each side. Several enemies are wide mechs whose guns and
+	// legs are the first thing such a crop would take, so the art is matted instead.
 	portraitArt: {
 		width: "100%",
-		aspectRatio: ENEMY_CARD_ASPECT,
-		objectFit: "cover",
+		height: "100%",
+		objectFit: "contain",
 		display: "block"
 	},
 	info: {

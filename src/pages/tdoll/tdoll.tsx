@@ -83,6 +83,11 @@ const styles = {
 		mb: 1,
 		fontWeight: 600
 	},
+	// The Animations card fills its row only from the width where the hero puts its art card beside the profile, since that is where
+	// the two are meant to end level.
+	animationsSection: {
+		height: { lg: "100%" }
+	},
 	// The Spine stage tracks its container, so this is what actually decides how large the chibi draws.
 	chibiColumn: {
 		maxWidth: { xs: 480, lg: 340 },
@@ -597,7 +602,7 @@ function TDollContent({ doll, spine }: TDollContentProps) {
 
 					{showAnimations ? (
 						<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4, xl: 3 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
-							<Paper sx={styles.section} variant="outlined">
+							<Paper sx={[styles.section, styles.animationsSection]} variant="outlined">
 								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 									Animations
 								</Typography>

@@ -9,7 +9,7 @@ import type { SxProps, Theme } from "@mui/material";
 // MaterialUI icon imports
 import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 
-import { FAB_EXPAND_SX, cardArtSx } from "../../lib/artLayout";
+import { ART_TOP_ANCHOR, CARD_ASPECT, FAB_EXPAND_SX, cardArtSx } from "../../lib/artLayout";
 import { uiUrl } from "../../lib/assets";
 import { RarityStars, TypeBadge } from "../../components/DollBadges";
 import ArtPlaceholder from "../../components/ArtPlaceholder";
@@ -31,15 +31,46 @@ const styles = {
 		gap: { xs: 2, md: 3 },
 		p: { xs: 2, md: 3 }
 	},
+	// From a large screen up the card is stretched to its row, which the Grid has already sized to the taller of the hero and the
+	// Animations card beside it, so the two cards end level. Below that the card keeps the artwork's own 1:2 shape: the medium hero
+	// is only about 560 wide, and a card wide enough to look right at this height left the profile beside it too narrow to read.
+	//
+	// The width is given rather than derived from the stretched height. A row flex container resolves an item's width before its
+	// height, so an `aspect-ratio` on the card cannot work backwards from a height that is not known yet: it was measured doing
+	// exactly that, sizing to the artwork's own 256px and leaving 128px of empty card underneath.
 	portrait: {
 		...cardArtSx,
-		// Capped at the artwork's own 256px rather than stretched, since upscaling a bitmap that is
-		// already undersampled at this pixel ratio only makes it softer.
-		width: { xs: 176, sm: 208, md: 200 },
+		aspectRatio: { xs: CARD_ASPECT, lg: "auto" },
+		// Near half the row's height, so the card's own shape stays close to the artwork's 1:2 and `cover` below has almost
+		// nothing to crop.
+		width: { xs: 176, sm: 208, md: 200, lg: 320 },
+		alignSelf: { lg: "stretch" },
+		// The row's height comes from the hero's own spec sheet, which on a doll with a long one runs far past what the artwork can
+		// fill. This stops the card at a shape close enough to the artwork's that the crop stays small, at the cost of the two
+		// cards not ending level on those few dolls.
+		maxHeight: { lg: 720 },
+		// Pulls the card back out through the hero's own vertical padding, so it spans the whole row rather than stopping 24px
+		// short of the Animations card at each end.
+		my: { lg: -3 },
+		display: "flex",
 		flexShrink: 0,
 		// Anchors the full art Fab, which is clipped by this card's inherited overflow: hidden otherwise.
 		position: "relative",
 		boxShadow: 8
+	},
+	// Fills whatever height the row gives the card.
+	portraitAction: {
+		flex: 1,
+		minHeight: 0
+	},
+	// `cover` with the top anchor, so the card fills rather than sitting in bands of empty space. The card's shape is kept near the
+	// artwork's own, so the crop is a few percent, and anchoring it to the top means what little goes is taken off the boots.
+	portraitArt: {
+		width: "100%",
+		height: "100%",
+		objectFit: "cover",
+		objectPosition: ART_TOP_ANCHOR,
+		display: "block"
 	},
 	info: {
 		display: "flex",
@@ -179,8 +210,8 @@ export default memo(function DollHero({
 				<Card sx={styles.portrait}>
 					{cardImage ? (
 						<>
-							<CardActionArea onClick={onCardImageClick}>
-								<CardMedia component="img" sx={cardArtSx} image={cardImage} title={name} />
+							<CardActionArea onClick={onCardImageClick} sx={styles.portraitAction}>
+								<CardMedia component="img" sx={styles.portraitArt} image={cardImage} title={name} />
 							</CardActionArea>
 
 							{/* Sibling of the action area rather than a child, or opening the full art would also flip
@@ -192,7 +223,7 @@ export default memo(function DollHero({
 							) : null}
 						</>
 					) : (
-						<ArtPlaceholder name={name} />
+						<ArtPlaceholder name={name} sx={styles.portraitArt} />
 					)}
 				</Card>
 
