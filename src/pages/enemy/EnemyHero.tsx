@@ -13,7 +13,7 @@ import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
 import ArtPlaceholder from "../../components/ArtPlaceholder";
 import FactionIcon from "../../components/FactionIcon";
 import EnemyProfilePanel from "./EnemyProfilePanel";
-import { ENEMY_CARD_ASPECT, FAB_EXPAND_SX } from "../../lib/artLayout";
+import { ENEMY_HERO_CARD_ASPECT, FAB_EXPAND_SX } from "../../lib/artLayout";
 import { factionEmblemUrl } from "../../lib/assets";
 import { hasFactionEmblem } from "../../lib/processData";
 import { FACTION_COLOURS } from "../../theme/palette";
@@ -40,39 +40,17 @@ const styles = {
 	//
 	// The width is given rather than derived from the stretched height: a row flex container resolves an item's width before its
 	// height, so an `aspect-ratio` cannot work backwards from a height that is not known yet.
-	// Beside the text the card is stretched to its row, which the Grid has already sized to the taller of the hero and the
-	// Animations card, so the two cards end level.
-	//
-	// The card takes its width from the art rather than being given one. The hero portrait is the full art trimmed to the drawing,
-	// so its shape is the drawing's own: tall for most enemies, wide for a few mechs. Letting the card follow that is what fills it
-	// at any height, where a fixed width had to matte every enemy to the square canvas the game draws them on.
+	// A little taller than the art is square, which is the shape the trimmed hero art usually comes in.
 	portrait: {
-		width: { xs: 300, sm: 380, md: 420, lg: "auto" },
-		// Room enough that a drawing of the usual shape fills the card's height outright, without leaving the text beside it too
-		// narrow to read. Only the few enemies drawn wider than tall reach the cap.
-		maxWidth: { lg: 420, xl: 560 },
-		alignSelf: { lg: "stretch" },
-		// Pulls the card back out through the hero's own vertical padding, so it spans the whole row rather than stopping 24px
-		// short of the Animations card at each end.
-		my: { lg: -3 },
-		display: "flex",
+		aspectRatio: ENEMY_HERO_CARD_ASPECT,
+		width: { xs: 300, sm: 380, md: 420, lg: 400 },
 		flexShrink: 0,
 		// Anchors the full art Fab, which is clipped by this card's inherited overflow: hidden otherwise.
 		position: "relative",
 		boxShadow: 8
 	},
-	// Fills the card's height and takes whatever width that needs, which is what lets the card shrink-wrap to the drawing. The card's
-	// `maxWidth` catches the few enemies drawn wider than they are tall: those stop at the cap and are matted top and bottom
-	// instead, rather than being cropped down their sides.
-	heroArt: {
-		height: "100%",
-		width: { xs: "100%", lg: "auto" },
-		maxWidth: "100%",
-		objectFit: "contain",
-		display: "block"
-	},
-	// The square card art, for the enemies with no full art to trim. It cannot fill a tall card without losing its sides, so it is
-	// matted.
+	// One style for both sources. `contain` rather than `cover`, since neither the trimmed hero art nor the square card art is
+	// exactly the card's shape, and several enemies are wide mechs whose guns and legs a crop would take first.
 	portraitArt: {
 		width: "100%",
 		height: "100%",
@@ -163,19 +141,6 @@ const styles = {
 		width: 18
 	}
 } satisfies Record<string, SxProps<Theme>>;
-
-/**
- * The portrait card's shape below the width where it is stretched beside the text.
- *
- * The trimmed hero art is the drawing's own shape, a median of about 3:4, so a card of that shape mattes it least. An enemy with no
- * full art falls back to the square card art, which needs a square card.
- *
- * @param hasHero Whether the trimmed hero art is what the card is showing.
- * @returns The aspect ratio to spread into the card's `sx`.
- */
-function portraitAspect(hasHero: boolean) {
-	return { aspectRatio: { xs: hasHero ? "3 / 4" : ENEMY_CARD_ASPECT, lg: "auto" } };
-}
 
 /**
  * One faction chip's colours, and the room its mark needs.
@@ -280,9 +245,9 @@ export default memo(function EnemyHero({
 			{hasFactionEmblem(faction) ? <Box component="img" src={factionEmblemUrl(faction)} alt="" sx={styles.emblem} /> : null}
 
 			<Box sx={styles.content}>
-				<Card sx={{ ...styles.portrait, ...portraitAspect(heroImage !== undefined) }}>
+				<Card sx={styles.portrait}>
 					{heroImage ? (
-						<CardMedia component="img" sx={styles.heroArt} image={heroImage} title={name} />
+						<CardMedia component="img" sx={styles.portraitArt} image={heroImage} title={name} />
 					) : cardImage ? (
 						<CardMedia component="img" sx={styles.portraitArt} image={cardImage} title={name} />
 					) : (

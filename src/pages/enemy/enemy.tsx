@@ -75,12 +75,6 @@ const styles = {
 		display: "flex",
 		flexDirection: "column",
 		alignItems: "stretch"
-	},
-	// The Animations card fills its row only from the width where the hero puts its art card beside the text, since that is where
-	// the two are meant to end level. Below it the hero stacks and runs far taller, and stretching this card to match left the
-	// chibi floating at the top of a mostly empty card.
-	animationsSection: {
-		height: { lg: "100%" }
 	}
 } satisfies Record<string, SxProps<Theme>>;
 
@@ -241,7 +235,7 @@ function EnemyDetail({ family, initialId }: EnemyDetailProps) {
 					{/************** The chibi, with the doll page's own controls **************/}
 					{rig !== null ? (
 						<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
-							<Paper sx={[styles.section, styles.animationsSection]} variant="outlined">
+							<Paper sx={styles.section} variant="outlined">
 								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 									Animations
 								</Typography>

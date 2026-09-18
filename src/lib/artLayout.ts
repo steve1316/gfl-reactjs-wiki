@@ -20,6 +20,14 @@ export const HOC_CARD_ASPECT = "224 / 399";
 export const ENEMY_CARD_ASPECT = "1 / 1";
 
 /**
+ * The enemy page's portrait card is a little taller than its art is square.
+ *
+ * Measured against the trimmed hero art, whose drawing is a median 0.84 wide for its height across all 232 that have it. A card at
+ * that shape is filled by the usual enemy and only mattes the outliers, where a square card mattes almost every one of them.
+ */
+export const ENEMY_HERO_CARD_ASPECT = "5 / 6";
+
+/**
  * Full art draws from the very top of its canvas.
  *
  * Measured across 15 dolls, the first non-transparent pixel falls between 0.1% and 4.8% down the
