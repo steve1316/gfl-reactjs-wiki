@@ -1,14 +1,19 @@
 import { memo } from "react";
 
 // MaterialUI imports
-import { Box, Typography } from "@mui/material";
+import { Avatar, Box, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+import { assimilationSkillIconUrl } from "../../lib/assets";
+import { hasAssimilationSkillIcon } from "../../lib/processData";
 import { describeSkill } from "../../lib/skillText";
 import type { AssimilationData, AssimilationUnit } from "../../types/enemy";
 
 const styles = {
-	skill: { mb: 1.75, "&:last-of-type": { mb: 0 } },
+	skill: { display: "flex", gap: 1.25, mb: 1.75, "&:last-of-type": { mb: 0 } },
+	// The game's own icons are 100 or 128 square, so this only ever shrinks them.
+	icon: { width: 40, height: 40, flexShrink: 0, mt: 0.25 },
+	text: { minWidth: 0 },
 	name: { fontWeight: 700 },
 	note: { mt: 1.5, display: "block" }
 } satisfies Record<string, SxProps<Theme>>;
@@ -43,12 +48,21 @@ export default memo(function CapturedSkillsPanel({ unit, data }: CapturedSkillsP
 		<Box>
 			{unit.skills.map((skill, index) => (
 				<Box key={skill.slot} sx={styles.skill}>
-					<Typography variant="body2" sx={styles.name}>
-						{skill.name}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-						{describeSkill(skill, skillLevels[index] ?? 0)}
-					</Typography>
+					{/* A strategic skill has no icon in the game at all, so its slot is held open rather than letting that one skill's text
+					    start further left than the rest. */}
+					{hasAssimilationSkillIcon(unit.id, skill.slot) ? (
+						<Avatar variant="rounded" alt="" src={assimilationSkillIconUrl(unit.id, skill.slot)} sx={styles.icon} />
+					) : (
+						<Box sx={styles.icon} />
+					)}
+					<Box sx={styles.text}>
+						<Typography variant="body2" sx={styles.name}>
+							{skill.name}
+						</Typography>
+						<Typography variant="body2" color="text.secondary">
+							{describeSkill(skill, skillLevels[index] ?? 0)}
+						</Typography>
+					</Box>
 				</Box>
 			))}
 			<Typography variant="caption" color="text.secondary" sx={styles.note}>

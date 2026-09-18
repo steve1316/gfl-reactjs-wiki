@@ -59,6 +59,13 @@ export interface AssetsManifest {
 	enemies?: Record<string, PortraitKind[]>;
 	/** Faction emblem slugs that have art, such as `sangvis-ferri`. Absent until the emblems are published. */
 	factions?: string[];
+	/**
+	 * Which skill slots have a published icon for each captured Protocol Assimilation unit, keyed by the unit's stringified id.
+	 *
+	 * Keyed by the unit rather than the enemy, since one captured unit stands for a whole enemy family and the enemy page can show
+	 * any variant of it. Absent until the icons are published.
+	 */
+	assimilation?: Record<string, string[]>;
 	/** Which fairies and HOCs have a published Live2D model. Absent when no Live2D asset has been merged in yet. */
 	live2d?: ManifestLive2d;
 }

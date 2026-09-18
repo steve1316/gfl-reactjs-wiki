@@ -165,6 +165,20 @@ export function hasFactionEmblem(faction: string): boolean {
 }
 
 /**
+ * Whether a captured Protocol Assimilation unit has a published icon for one of its skills.
+ *
+ * Thirteen units carry a strategic skill in their second slot, which the game draws no icon for at all, so a unit having icons does
+ * not mean it has one for every skill it shows.
+ *
+ * @param unitId The captured unit's id.
+ * @param slot The skill's slot, such as `skill1`.
+ * @returns True when the manifest lists that slot for the unit.
+ */
+export function hasAssimilationSkillIcon(unitId: number, slot: string): boolean {
+	return manifest.assimilation?.[String(unitId)]?.includes(slot) ?? false;
+}
+
+/**
  * Whether a fairy has a hosted image for the given form.
  *
  * @param id Fairy id.

@@ -224,6 +224,17 @@ export function factionEmblemUrl(faction: string): string {
 }
 
 /**
+ * URL for a captured Protocol Assimilation unit's skill icon.
+ *
+ * @param unitId The captured unit's id, which is `AssimilationUnit.id` rather than any enemy id.
+ * @param slot The skill's slot, such as `skill1` or `skill_advance`.
+ * @returns An absolute URL.
+ */
+export function assimilationSkillIconUrl(unitId: number, slot: string): string {
+	return join(ASSET_BASE, `assimilation/${unitId}/${slot}.png`);
+}
+
+/**
  * URL for a fairy's art at one of its three forms.
  *
  * @param id Fairy id.
