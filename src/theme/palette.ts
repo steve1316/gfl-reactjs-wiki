@@ -52,6 +52,19 @@ export const WEAPON_TYPE_COLOURS = {
 } as const;
 
 /**
+ * Faction colours for the enemy chips, keyed by the faction name in the enemy data.
+ *
+ * Sangvis Ferri takes the site's own amber, since it is the faction the archive is mostly about. The green is lighter than a true
+ * dark green because `FilterChip` paints an unselected chip's text in this same colour, and a darker one fails contrast against the
+ * page. Other is deliberately absent: it is a catch-all, not a faction, so it keeps the default outline.
+ */
+export const FACTION_COLOURS = {
+	"Sangvis Ferri": "#ff8a1f",
+	KCCO: "#3f9c67",
+	Paradeus: "#eceff4"
+} as const;
+
+/**
  * Ingredient colours used inside skill descriptions.
  *
  * These belong to the VA-11 Hall-A collaboration dolls, whose skill text names drink ingredients that

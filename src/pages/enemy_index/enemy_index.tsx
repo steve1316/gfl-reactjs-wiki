@@ -5,6 +5,7 @@ import { Box, Button, Container, Divider, Grid } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Component imports
+import FactionIcon from "../../components/FactionIcon";
 import FilterChip from "../../components/FilterChip";
 import FilterPanel from "../../components/FilterPanel";
 import { ChipRow, ChipRowDivider } from "../../components/FilterRows";
@@ -15,6 +16,7 @@ import ScrollToTop from "../../components/ScrollToTop";
 import EnemyCard from "./EnemyCard";
 
 import { ENEMY_RANK_LABELS } from "../../lib/enemyRanks";
+import { FACTION_COLOURS } from "../../theme/palette";
 import { matchesAnyName, normaliseName } from "../../lib/nameSearch";
 import { useEnemies } from "../../lib/useEnemies";
 import type { Enemy, EnemyRankKey } from "../../types/enemy";
@@ -187,11 +189,23 @@ export default function EnemyIndex() {
 
 	const factions = data?.factions ?? NO_FACTIONS;
 
-	// Every enemy in archive order, with its search key worked out once per load.
-	const entries = useMemo(
-		(): IndexEnemy[] => (data === null ? [] : data.items.map((enemy, order) => ({ ...enemy, order, factionOrder: data.factions.indexOf(enemy.faction), searchKey: normaliseName(enemy.name) }))),
-		[data]
-	);
+	// One card per family, in archive order. A family's extra records are the same enemy at a harder tier: they share its art and rig
+	// and differ only in stats and skills, so they are pills on its page rather than cards of their own.
+	const entries = useMemo((): IndexEnemy[] => {
+		if (data === null) {
+			return [];
+		}
+		const seen = new Set<number>();
+		return data.items
+			.filter((enemy) => {
+				if (seen.has(enemy.familyId)) {
+					return false;
+				}
+				seen.add(enemy.familyId);
+				return true;
+			})
+			.map((enemy, order) => ({ ...enemy, order, factionOrder: data.factions.indexOf(enemy.faction), searchKey: normaliseName(enemy.name) }));
+	}, [data]);
 
 	const matches = useMemo(() => {
 		const query = normaliseName(deferredQuery);
@@ -269,11 +283,22 @@ export default function EnemyIndex() {
 		() => (
 			<>
 				<ChipRow>
-					{factions.map((label) => (
-						<li key={label}>
-							<FilterChip label={label} selected={selectedFactions.has(label)} value={label} onToggle={handleToggleFaction} />
-						</li>
-					))}
+					{factions.map((label) => {
+						// Other is a catch-all rather than a faction, so it carries neither a colour nor a mark.
+						const colour = FACTION_COLOURS[label as keyof typeof FACTION_COLOURS];
+						return (
+							<li key={label}>
+								<FilterChip
+									label={label}
+									selected={selectedFactions.has(label)}
+									value={label}
+									onToggle={handleToggleFaction}
+									colour={colour}
+									avatar={colour === undefined ? undefined : <FactionIcon faction={label} />}
+								/>
+							</li>
+						);
+					})}
 				</ChipRow>
 				<ChipRowDivider />
 				<ChipRow>
