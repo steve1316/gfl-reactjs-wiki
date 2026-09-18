@@ -158,10 +158,12 @@ export function hasEnemyArt(id: number, kind: EnemyArtKind): boolean {
  * Whether a story character's art is hosted.
  *
  * @param prefab The prefab name a script refers to.
- * @returns True when the manifest lists that sprite.
+ * @param expression The expression index, 0 for the plain pose.
+ * @returns True when the manifest lists that sprite at that expression.
  */
-export function hasStorySprite(prefab: string): boolean {
-	return manifest.story?.sprites.includes(prefab.toLowerCase()) ?? false;
+export function hasStorySprite(prefab: string, expression = 0): boolean {
+	const stem = prefab.toLowerCase();
+	return manifest.story?.sprites.includes(expression > 0 ? `${stem}_${expression}` : stem) ?? false;
 }
 
 /**

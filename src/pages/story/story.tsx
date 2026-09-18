@@ -353,7 +353,14 @@ export default function Story() {
 											.filter((sprite) => sprite.side === side)
 											.map((sprite, position) =>
 												hasStorySprite(sprite.prefab) ? (
-													<Box key={`${sprite.prefab}-${position}`} component="img" src={storySpriteUrl(sprite.prefab)} alt={sprite.prefab} sx={styles.spriteArt} />
+													<Box
+														key={`${sprite.prefab}-${position}`}
+														component="img"
+														// The expression the script asked for, or the plain pose when the game ships no art for it.
+														src={storySpriteUrl(sprite.prefab, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0)}
+														alt={sprite.prefab}
+														sx={styles.spriteArt}
+													/>
 												) : (
 													<Box key={`${sprite.prefab}-${position}`} sx={styles.spriteGhost}>
 														<Typography variant="caption" sx={styles.spriteName} noWrap>

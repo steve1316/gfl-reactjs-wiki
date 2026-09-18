@@ -1021,6 +1021,24 @@ def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
                     write_file(staging, f"story/sprites/{stem}{'_d' if suffix else ''}.webp", data, REPORT_TIERS[("story_sprite", role)], result)
                 except Exception as exc:
                     result["missing"].append({"key": item["key"], "role": role, "reason": f"encode or write failed: {exc!r}"})
+            # The expressions a script actually asks this character for. A missing one is not a gap: the player falls back to the
+            # plain pose, and many of these characters keep their alternate poses in a bundle the story set does not reach.
+            for index in item.get("expressions", []):
+                if expressions is None:
+                    try:
+                        expressions = story_expression_table(bundle, cache_dir)
+                    except Exception:
+                        expressions = {}
+                order = expressions.get(prefab.lower(), [])
+                names = ([order[index]] if len(order) > index else []) + [f"pic_{prefab}_{index}", f"{prefab}_{index}"]
+                image = next((folded[name.lower()] for name in names if name.lower() in folded), None)
+                if image is None:
+                    continue
+                try:
+                    data = encode_webp(image, FULL_QUALITY)
+                    write_file(staging, f"story/sprites/{stem}_{index}.webp", data, REPORT_TIERS[("story_sprite", "full")], result)
+                except Exception as exc:
+                    result["missing"].append({"key": item["key"], "role": f"expression {index}", "reason": f"encode or write failed: {exc!r}"})
     return result
 
 

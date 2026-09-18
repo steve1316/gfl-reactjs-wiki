@@ -797,7 +797,7 @@ def story_items(index, sprites, backgrounds):
 
     Args:
         index: The bundle index from `load_index`.
-        sprites: Sprite prefab names the scripts refer to.
+        sprites: Sprite prefab names the scripts refer to, mapped to the non-zero expression indices each is asked for.
         backgrounds: Background codes the mission table names.
 
     Returns:
@@ -808,7 +808,9 @@ def story_items(index, sprites, backgrounds):
     sources = read_json(STORY_SOURCES_PATH)["sprites"] if os.path.exists(STORY_SOURCES_PATH) else {}
     by_prefab = {name.lower(): entry for name, entry in sources.items()}
     items = []
-    for prefab in sorted(sprites, key=str.lower):
+    wanted_expressions = sprites if isinstance(sprites, dict) else {name: [] for name in sprites}
+    for prefab in sorted(wanted_expressions, key=str.lower):
+        expressions = list(wanted_expressions[prefab])
         source = by_prefab.get(prefab.lower())
         if source:
             # The art sits in a character bundle under the character's own name, so the texture is what is matched, not the prefab.
@@ -822,13 +824,14 @@ def story_items(index, sprites, backgrounds):
                     STORY_SOURCE_ROLES,
                     prefab=prefab,
                     texture=source["texture"],
+                    expressions=expressions,
                 )
             )
             continue
         bundle = prefabs.get(prefab.lower())
         # Many script sprite slots carry an off-screen speaker's label rather than a character, so they have no art and are skipped.
         if bundle:
-            items.append(resolve_item(index, "story_sprite", f"story_sprite:{prefab}", prefab, [bundle], STORY_SPRITE_ROLES, prefab=prefab))
+            items.append(resolve_item(index, "story_sprite", f"story_sprite:{prefab}", prefab, [bundle], STORY_SPRITE_ROLES, prefab=prefab, expressions=expressions))
     for code in sorted(backgrounds, key=str.lower):
         bundle = scenes.get(code.lower())
         if bundle:
@@ -1267,7 +1270,13 @@ def select_new_items(items, targets):
             keep = item.get("enemy_id") in targets.get("enemies", set())
         elif tier == "faction_icon":
             keep = not targets.get("factions_hosted", False)
-        elif tier in ("story_sprite", "story_background", "story_ui"):
+        elif tier == "story_sprite":
+            # A sprite gains files in more than one pass: the plain pose first, then the expressions a script asks for. So it is kept
+            # when any one of its stems is unpublished, rather than all or nothing the way a background or the chrome is.
+            published = targets.get("story", set())
+            stem = item["prefab"].lower()
+            keep = any(name not in published for name in [f"story_sprite:{stem}"] + [f"story_sprite:{stem}_{index}" for index in item.get("expressions", [])])
+        elif tier in ("story_background", "story_ui"):
             keep = item["key"].lower() not in targets.get("story", set())
         elif tier == "live2d":
             if item.get("kind") == "skin":
@@ -1418,12 +1427,13 @@ def load_story(site_dir):
         site_dir: Directory holding the site's generated data, whose `story/` folder the story build writes.
 
     Returns:
-        A `(sprites, backgrounds)` pair of sorted name lists. Both are empty when no story data is generated yet.
+        A `(sprites, backgrounds)` pair, where `sprites` maps each prefab to the non-zero expression indices the scripts ask it for.
+        Both are empty when no story data is generated yet.
     """
     story_dir = os.path.join(site_dir, "story")
     if not os.path.isdir(story_dir):
-        return [], []
-    sprites, backgrounds = set(), set()
+        return {}, []
+    sprites, backgrounds = {}, set()
     scenes_dir = os.path.join(story_dir, "scenes")
     if os.path.isdir(scenes_dir):
         for name in os.listdir(scenes_dir):
@@ -1431,15 +1441,18 @@ def load_story(site_dir):
                 continue
             for beat in read_json(os.path.join(scenes_dir, name)).get("beats", []):
                 for sprite in beat.get("sprites", []):
-                    if sprite.get("prefab"):
-                        sprites.add(sprite["prefab"])
+                    if not sprite.get("prefab"):
+                        continue
+                    wanted = sprites.setdefault(sprite["prefab"], set())
+                    if sprite.get("expression"):
+                        wanted.add(sprite["expression"])
     for name in os.listdir(story_dir):
         if not name.startswith("chapter-") or not name.endswith(".json"):
             continue
         for mission in read_json(os.path.join(story_dir, name)).get("missions", []):
             if mission.get("background"):
                 backgrounds.add(mission["background"])
-    return sorted(sprites, key=str.lower), sorted(backgrounds, key=str.lower)
+    return {name: sorted(wanted) for name, wanted in sorted(sprites.items(), key=lambda pair: pair[0].lower())}, sorted(backgrounds, key=str.lower)
 
 
 def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None):
