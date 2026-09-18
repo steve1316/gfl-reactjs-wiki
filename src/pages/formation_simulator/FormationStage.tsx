@@ -55,6 +55,15 @@ const REACH_OPACITY = 0.35;
 /** Width changes smaller than this, in CSS pixels, are ignored so a scrollbar toggling cannot make the stage resize in a loop. */
 const MIN_WIDTH_CHANGE = 2;
 
+/**
+ * Animation a held chibi plays. Every doll's dorm rig has `pick`, but only the 58 capturable Ringleaders' rigs do - the rest of the
+ * enemies never go to the dorm, so their skeletons were never given one. Those fall back to `wait`, which every rig has.
+ */
+const HELD_ANIM = "pick";
+
+/** Animation a chibi plays while it stands on its tile. The one animation every rig in the game defines. */
+const IDLE_ANIM = "wait";
+
 /** One enemy standing on the opposing grid. */
 export interface PlacedEnemy {
 	/** Cell on the enemy grid, 0 to 8. */
@@ -89,6 +98,8 @@ interface FormationStageProps {
 	enemies: readonly PlacedEnemy[];
 	/** A tile on the opposing grid was clicked. */
 	onEnemyTileClick: (cell: number) => void;
+	/** An enemy was dragged from one cell of the opposing grid to another. */
+	onEnemyMove: (from: number, to: number) => void;
 }
 
 /** A chibi actor and what it is showing. */
@@ -124,6 +135,16 @@ interface EnemyActorEntry {
 interface HeldDoll {
 	/** Id of the held doll. */
 	dollId: number;
+	/** Cell it was picked up from. */
+	fromCell: number;
+	/** Latest pointer x, in stage pixels. */
+	x: number;
+	/** Latest pointer y, in stage pixels. */
+	y: number;
+}
+
+/** An enemy picked up and being dragged to another tile of its own grid. */
+interface HeldEnemy {
 	/** Cell it was picked up from. */
 	fromCell: number;
 	/** Latest pointer x, in stage pixels. */
@@ -223,7 +244,8 @@ export default memo(function FormationStage({
 	showTotals = true,
 	onDragPreview,
 	enemies,
-	onEnemyTileClick
+	onEnemyTileClick,
+	onEnemyMove
 }: FormationStageProps) {
 	const theme = useTheme();
 	const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -236,6 +258,8 @@ export default memo(function FormationStage({
 	const enemyActorsRef = useRef(new Map<number, EnemyActorEntry>());
 	const enemyWantedRef = useRef(new Map<number, FormationEnemy>());
 	const enemyPendingRef = useRef(new Map<number, number>());
+	const heldEnemyRef = useRef<HeldEnemy | null>(null);
+	const enemyOverRef = useRef<number | null>(null);
 	// Where a press landed, including which grid it was on, so the release can tell an enemy tap from a doll tap without testing again.
 	const pressRef = useRef<{ hit: { side: StageSide; cell: number } | null; x: number; y: number } | null>(null);
 	const heldRef = useRef<HeldDoll | null>(null);
@@ -250,6 +274,8 @@ export default memo(function FormationStage({
 	const [stageReady, setStageReady] = useState(false);
 	const [hoveredCell, setHoveredCell] = useState<number | null>(null);
 	const [drag, setDrag] = useState<DragCells | null>(null);
+	// The enemy tile a drag would drop onto. Unlike a doll drag there is no second cell to track, since the tile it came from is not marked.
+	const [enemyOver, setEnemyOver] = useState<number | null>(null);
 	const geometry = useMemo(() => stageGeometry(width), [width]);
 	// Latest geometry for actors that finish loading after a resize.
 	const geometryRef = useRef(geometry);
@@ -440,12 +466,31 @@ export default memo(function FormationStage({
 		const pending = enemyPendingRef.current;
 		const wanted = new Map(enemies.map(({ cell, enemy }) => [cell, enemy]));
 		enemyWantedRef.current = wanted;
+		// Actors already standing on the right tile keep it, so a move or a swap only re-homes the few that changed.
+		const homeless: EnemyActorEntry[] = [];
 		for (const [cell, entry] of actors) {
-			const next = wanted.get(cell);
-			if (!next || next.id !== entry.enemyId) {
-				entry.actor.destroy();
+			if (wanted.get(cell)?.id !== entry.enemyId) {
+				homeless.push(entry);
 				actors.delete(cell);
 			}
+		}
+		// A dragged enemy moves tile without its rig changing, so it is re-homed rather than destroyed and loaded again, which would
+		// flash a gap where it landed. Matching on the id also covers two enemies swapping tiles.
+		for (const [cell, enemy] of wanted) {
+			if (actors.has(cell)) {
+				continue;
+			}
+			const index = homeless.findIndex((entry) => entry.enemyId === enemy.id);
+			const entry = index === -1 ? undefined : homeless.splice(index, 1)[0];
+			if (entry) {
+				const { x, y } = tileCentre(geometryRef.current, cell, "enemy");
+				entry.actor.setPosition(x, y);
+				entry.cell = cell;
+				actors.set(cell, entry);
+			}
+		}
+		for (const entry of homeless) {
+			entry.actor.destroy();
 		}
 		for (const [cell, enemy] of wanted) {
 			if (actors.has(cell) || pending.get(cell) === enemy.id) {
@@ -662,6 +707,42 @@ export default memo(function FormationStage({
 		[geometry, markDropped, onDragPreview, onMove]
 	);
 
+	// Pick an enemy up. Its rig carries the pick animation itself when it has one, so unlike a doll there is no second chibi to load.
+	const pickUpEnemy = useCallback((cell: number, x: number, y: number) => {
+		const entry = enemyActorsRef.current.get(cell);
+		if (!entry) {
+			return;
+		}
+		heldEnemyRef.current = { fromCell: cell, x, y };
+		entry.actor.setOnTop(true);
+		entry.actor.setPosition(x, y);
+		entry.actor.play(entry.actor.animations.includes(HELD_ANIM) ? HELD_ANIM : IDLE_ANIM);
+		enemyOverRef.current = cell;
+		setEnemyOver(cell);
+	}, []);
+
+	const putDownEnemy = useCallback(
+		(dropCell: number | null) => {
+			const held = heldEnemyRef.current;
+			if (!held) {
+				return;
+			}
+			heldEnemyRef.current = null;
+			enemyOverRef.current = null;
+			setEnemyOver(null);
+			const entry = enemyActorsRef.current.get(held.fromCell);
+			entry?.actor.setOnTop(false);
+			entry?.actor.play(IDLE_ANIM);
+			if (dropCell !== null && dropCell !== held.fromCell) {
+				onEnemyMove(held.fromCell, dropCell);
+			} else if (entry) {
+				const home = tileCentre(geometry, entry.cell, "enemy");
+				entry.actor.setPosition(home.x, home.y);
+			}
+		},
+		[geometry, onEnemyMove]
+	);
+
 	const handlePointerMove = useCallback(
 		(event: PointerEvent<SVGSVGElement>) => {
 			const press = pressRef.current;
@@ -669,6 +750,18 @@ export default memo(function FormationStage({
 				return;
 			}
 			const { x, y } = pointAt(event);
+			const heldEnemy = heldEnemyRef.current;
+			if (heldEnemy) {
+				heldEnemy.x = x;
+				heldEnemy.y = y;
+				enemyActorsRef.current.get(heldEnemy.fromCell)?.actor.setPosition(x, y);
+				const over = cellAtSide(geometry, x, y, "enemy");
+				if (enemyOverRef.current !== over) {
+					enemyOverRef.current = over;
+					setEnemyOver(over);
+				}
+				return;
+			}
 			const held = heldRef.current;
 			if (held) {
 				held.x = x;
@@ -683,23 +776,32 @@ export default memo(function FormationStage({
 				}
 				return;
 			}
-			// Only a doll on the echelon's own grid can be picked up, so a press that began on the enemy side never starts a drag.
-			const standing = press.hit?.side === "player" ? occupant.get(press.hit.cell) : undefined;
-			if (!canDrag || moveFrom !== null || !standing || Math.hypot(x - press.x, y - press.y) <= DRAG_THRESHOLD) {
+			if (!canDrag || moveFrom !== null || Math.hypot(x - press.x, y - press.y) <= DRAG_THRESHOLD) {
 				return;
 			}
-			// Captured so the drop still arrives when the pointer leaves the stage.
+			// An enemy is dragged only within its own grid, the same way a doll is dragged within the echelon's.
+			if (press.hit?.side === "enemy" && enemyActorsRef.current.has(press.hit.cell)) {
+				// Captured so the drop still arrives when the pointer leaves the stage.
+				event.currentTarget.setPointerCapture(event.pointerId);
+				pickUpEnemy(press.hit.cell, x, y);
+				return;
+			}
+			const standing = press.hit?.side === "player" ? occupant.get(press.hit.cell) : undefined;
+			if (!standing) {
+				return;
+			}
 			event.currentTarget.setPointerCapture(event.pointerId);
 			pickUp(standing.setup.dollId, standing.setup.cell, x, y);
 		},
-		[canDrag, geometry, moveFrom, occupant, onDragPreview, pickUp, pointAt]
+		[canDrag, geometry, moveFrom, occupant, onDragPreview, pickUp, pickUpEnemy, pointAt]
 	);
 
 	// A capture lost without a pointerup, such as a cancelled touch, puts the doll back.
 	const handleLostCapture = useCallback(() => {
 		pressRef.current = null;
 		putDown(null);
-	}, [putDown]);
+		putDownEnemy(null);
+	}, [putDown, putDownEnemy]);
 
 	const handlePointerUp = useCallback(
 		(event: PointerEvent<SVGSVGElement>) => {
@@ -709,6 +811,10 @@ export default memo(function FormationStage({
 			const hit = cellAt(geometry, x, y);
 			// Only the echelon's own grid takes a doll, so a release anywhere else puts a held doll back.
 			const cell = hit?.side === "player" ? hit.cell : null;
+			if (heldEnemyRef.current) {
+				putDownEnemy(hit?.side === "enemy" ? hit.cell : null);
+				return;
+			}
 			if (heldRef.current) {
 				putDown(cell);
 				return;
@@ -747,7 +853,7 @@ export default memo(function FormationStage({
 				onTileClick(cell);
 			}
 		},
-		[geometry, markDropped, moveFrom, occupant, onCancelMove, onEnemyTileClick, onMove, onTileClick, pointAt, putDown]
+		[geometry, markDropped, moveFrom, occupant, onCancelMove, onEnemyTileClick, onMove, onTileClick, pointAt, putDown, putDownEnemy]
 	);
 
 	const fontSize = Math.max(LABEL_MIN_FONT, geometry.tileWidth * LABEL_FONT_SHARE);
@@ -772,16 +878,21 @@ export default memo(function FormationStage({
 				})}
 				{/* The opposing grid. Drawn in the error colour so the two sides read apart at a glance, and with no tile buffs of its
 				    own, since an enemy squad has no formation effects to show. */}
-				{Array.from({ length: GRID_CELLS }, (_, cell) => (
-					<polygon
-						key={`enemy-${cell}`}
-						points={tilePoints(geometry, cell, "enemy")}
-						fill={enemyCells.has(cell) ? theme.palette.error.dark : theme.palette.tile.empty}
-						fillOpacity={enemyCells.has(cell) ? 0.28 : 1}
-						stroke={theme.palette.tile.line}
-						strokeWidth={1.5}
-					/>
-				))}
+				{Array.from({ length: GRID_CELLS }, (_, cell) => {
+					const taken = enemyCells.has(cell);
+					// The tile a dragged enemy would land on.
+					const outlined = cell === enemyOver;
+					return (
+						<polygon
+							key={`enemy-${cell}`}
+							points={tilePoints(geometry, cell, "enemy")}
+							fill={taken ? theme.palette.error.dark : theme.palette.tile.empty}
+							fillOpacity={taken ? 0.28 : 1}
+							stroke={outlined ? theme.palette.error.main : theme.palette.tile.line}
+							strokeWidth={outlined ? 3 : 1.5}
+						/>
+					);
+				})}
 			</svg>
 			<Box ref={canvasHostRef} sx={{ position: "absolute", inset: 0, pointerEvents: "none", "& canvas": { display: "block" } }} />
 			<svg

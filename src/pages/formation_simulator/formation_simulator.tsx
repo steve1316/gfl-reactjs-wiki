@@ -227,6 +227,7 @@ export default function FormationSimulator() {
 												onDragPreview={previewDrag}
 												enemies={placedEnemies}
 												onEnemyTileClick={handleEnemyTileClick}
+												onEnemyMove={formation.moveEnemy}
 											/>
 										</Box>
 									</Box>
