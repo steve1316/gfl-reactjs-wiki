@@ -10,8 +10,15 @@ import ScrollToTop from "../../components/ScrollToTop";
 import { useZoomPan } from "../../hooks/useZoomPan";
 import { loadFormationData } from "../../lib/data";
 import { effectiveEchelon, placedForms, placedSources } from "../../lib/formation/pipeline";
+import type { FairyBuff } from "../../lib/formation/pipeline";
+import { BASE_CRIT_MULTIPLIER, estimateCombat } from "../../lib/formation/combat";
+import { fairyStats } from "../../lib/fairyStats";
+import { useFairies } from "../../lib/useFairies";
 import type { FormationData } from "../../types/formation";
+import CombatPanel from "./CombatPanel";
 import DollModal from "./DollModal";
+import EnemyModal from "./EnemyModal";
+import FairyPanel from "./FairyPanel";
 import { dollName } from "./dollNames";
 import EchelonSidebar from "./EchelonSidebar";
 import FormationStage from "./FormationStage";
@@ -29,10 +36,13 @@ const RESET_ICON_PATH =
  */
 export default function FormationSimulator() {
 	const [data, setData] = useState<FormationData | null>(null);
+	// Fetched on its own, since only the fairy panel needs it and the stage has plenty to draw without waiting on it.
+	const { data: fairyData } = useFairies();
 	const [failed, setFailed] = useState(false);
 	const [attempt, setAttempt] = useState(0);
 	const formation = useFormationState(data);
 	const [selectedCell, setSelectedCell] = useState<number | null>(null);
+	const [selectedEnemyCell, setSelectedEnemyCell] = useState<number | null>(null);
 	const [moveFrom, setMoveFrom] = useState<number | null>(null);
 	// On by default: every buffed tile shows what it adds up to, whether or not a doll is being pointed at.
 	const [showTotals, setShowTotals] = useState(true);
@@ -51,7 +61,35 @@ export default function FormationSimulator() {
 	const placed = useMemo(() => (data ? placedForms(formation.setups, data.forms) : []), [data, formation.setups]);
 	const previewPlaced = useMemo(() => (data ? placedForms(previewSetups, data.forms) : []), [data, previewSetups]);
 	const sources = useMemo(() => (data ? placedSources(previewPlaced, data.constants) : []), [data, previewPlaced]);
-	const results = useMemo(() => (data ? effectiveEchelon(previewSetups, data.forms, data.constants, sources) : []), [data, previewSetups, sources]);
+	// The fairy buffs the whole echelon, so it feeds the stat pipeline, and its crit damage feeds the damage model separately.
+	const fairyBuff = useMemo((): FairyBuff | null => {
+		if (!fairyData || !formation.fairy) {
+			return null;
+		}
+		const chosen = fairyData.items.find((entry) => entry.id === formation.fairy?.fairyId);
+		return chosen ? fairyStats(chosen, fairyData.constants, formation.fairy.level, formation.fairy.stars) : null;
+	}, [fairyData, formation.fairy]);
+	const results = useMemo(() => (data ? effectiveEchelon(previewSetups, data.forms, data.constants, sources, fairyBuff) : []), [data, previewSetups, sources, fairyBuff]);
+	// Built from the data alone, so placing an enemy does not walk all 345 records again.
+	const enemyById = useMemo(() => new Map((data?.enemies ?? []).map((enemy) => [enemy.id, enemy])), [data]);
+	// Enemies on the opposing grid, paired with their records so the stage and the estimate read the same list.
+	const placedEnemies = useMemo(
+		() =>
+			formation.enemies.flatMap((entry) => {
+				const enemy = enemyById.get(entry.enemyId);
+				return enemy ? [{ cell: entry.cell, enemy }] : [];
+			}),
+		[enemyById, formation.enemies]
+	);
+	const combat = useMemo(
+		() =>
+			estimateCombat(
+				results.map((doll) => ({ cell: doll.setup.cell, stats: doll.stats })),
+				placedEnemies.map((entry) => entry.enemy),
+				BASE_CRIT_MULTIPLIER + (fairyBuff?.critDamage ?? 0) / 100
+			),
+		[results, placedEnemies, fairyBuff]
+	);
 	// The doll being moved by tap-to-move, if any.
 	const moving = moveFrom === null ? undefined : formation.setups.find((setup) => setup.cell === moveFrom);
 	const theme = useTheme();
@@ -129,6 +167,22 @@ export default function FormationSimulator() {
 		}
 	}, [panned]);
 	const closeModal = useCallback(() => setSelectedCell(null), []);
+	const handleEnemyTileClick = useCallback(
+		(cell: number) => {
+			if (!panned()) {
+				setSelectedEnemyCell(cell);
+			}
+		},
+		[panned]
+	);
+	const closeEnemyModal = useCallback(() => setSelectedEnemyCell(null), []);
+	const handlePickEnemy = useCallback(
+		(cell: number, enemyId: number) => {
+			formation.placeEnemy(cell, enemyId);
+			setSelectedEnemyCell(null);
+		},
+		[formation.placeEnemy]
+	);
 	const stopPointerDown = useCallback((event: PointerEvent<HTMLButtonElement>) => event.stopPropagation(), []);
 	const startMove = useCallback((cell: number) => {
 		setSelectedCell(null);
@@ -171,6 +225,8 @@ export default function FormationSimulator() {
 												canDrag={!phone}
 												showTotals={showTotals}
 												onDragPreview={previewDrag}
+												enemies={placedEnemies}
+												onEnemyTileClick={handleEnemyTileClick}
 											/>
 										</Box>
 									</Box>
@@ -200,7 +256,13 @@ export default function FormationSimulator() {
 									</Box>
 								)}
 							</Box>
-							<EchelonSidebar results={results} />
+							<Box sx={{ display: "grid", gap: 2, position: { md: "sticky" }, top: { md: 88 } }}>
+								<EchelonSidebar results={results} />
+								<FairyPanel data={fairyData} fairy={formation.fairy} onChoose={formation.setFairy} onUpdate={formation.updateFairy} />
+							</Box>
+						</Box>
+						<Box sx={{ mt: 2 }}>
+							<CombatPanel estimate={combat} results={results} />
 						</Box>
 						<Box sx={{ mt: 2 }}>
 							<ResultsTable results={results} />
@@ -214,6 +276,15 @@ export default function FormationSimulator() {
 							sources={sources}
 							onClose={closeModal}
 							onStartMove={startMove}
+						/>
+						<EnemyModal
+							open={selectedEnemyCell !== null}
+							cell={selectedEnemyCell}
+							enemies={data.enemies}
+							current={placedEnemies.find((entry) => entry.cell === selectedEnemyCell)?.enemy}
+							onPick={handlePickEnemy}
+							onClear={formation.removeEnemy}
+							onClose={closeEnemyModal}
 						/>
 					</>
 				)}
