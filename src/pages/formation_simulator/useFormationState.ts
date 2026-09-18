@@ -61,6 +61,8 @@ export interface FormationState {
 	moveDoll: (from: number, to: number) => void;
 	/** Put an enemy on a cell of the opposing grid, replacing whatever stood there. */
 	placeEnemy: (cell: number, enemyId: number) => void;
+	/** Move the enemy on one cell of the opposing grid to another, swapping with any enemy already there. */
+	moveEnemy: (from: number, to: number) => void;
 	/** Take the enemy off a cell of the opposing grid. */
 	removeEnemy: (cell: number) => void;
 	/** Choose a fairy by id, fully levelled like a freshly placed doll, or clear it with null. */
@@ -192,9 +194,16 @@ export function useFormationState(data: FormationData | null): FormationState {
 		setSetups((current) => current.map((setup) => (setup.cell === from ? { ...setup, cell: to } : setup.cell === to ? { ...setup, cell: from } : setup)));
 	}, []);
 
+	const moveEnemy = useCallback((from: number, to: number) => {
+		if (from === to) {
+			return;
+		}
+		setEnemies((current) => current.map((entry) => (entry.cell === from ? { ...entry, cell: to } : entry.cell === to ? { ...entry, cell: from } : entry)));
+	}, []);
+
 	// Memoised so a component taking the whole state as one prop only re-renders when a field changes.
 	return useMemo(
-		() => ({ setups, enemies, fairy, placeDoll, updateDoll, removeDoll, moveDoll, placeEnemy, removeEnemy, setFairy, updateFairy }),
-		[setups, enemies, fairy, placeDoll, updateDoll, removeDoll, moveDoll, placeEnemy, removeEnemy, setFairy, updateFairy]
+		() => ({ setups, enemies, fairy, placeDoll, updateDoll, removeDoll, moveDoll, placeEnemy, removeEnemy, moveEnemy, setFairy, updateFairy }),
+		[setups, enemies, fairy, placeDoll, updateDoll, removeDoll, moveDoll, placeEnemy, removeEnemy, moveEnemy, setFairy, updateFairy]
 	);
 }
