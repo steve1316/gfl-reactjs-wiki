@@ -20,6 +20,7 @@ An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Do
 - **Equipment Index** - filter, search and sort equipment, and see which dolls an exclusive item belongs to.
 - **Enemy Index** - every enemy with its stats, skills and counter tips, plus the Protocol Assimilation units you can capture and field yourself.
 - **Formation Simulator** - place an echelon and a facing enemy squad, apply tile and fairy buffs, and compare damage estimates. Share a setup by its link.
+- **Story player** - read the main story in the browser, with the game's own backgrounds, character art and dialogue framing.
 - **Always current** - a daily job picks up new dolls, skins, equipment and art from the game data.
 
 <p>
@@ -29,7 +30,8 @@ An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Do
 
 ## Roadmap
 
-- [ ] **Story player** - read the main story and events in the browser.
+- [ ] **Story audio** - the music and sound effects the scripts already call for.
+- [ ] **Event stories** - the side campaigns, memoirs and character stories beyond the main chapters.
 
 ## Running locally
 

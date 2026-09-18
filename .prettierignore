@@ -5,6 +5,9 @@ pnpm-lock.yaml
 # Vendored third-party libraries. Not ours to reformat.
 public/vendor
 
+# Recorded upstream payloads used as test fixtures. Reformatting them makes every `pnpm format` look like a change.
+tools/assets/tests/fixtures
+
 # Generated data. Fix the generator in tools/, not the output.
 src/data/*.js
 src/data/*.d.ts
