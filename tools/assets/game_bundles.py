@@ -96,6 +96,9 @@ TIERS = (
     "enemy_spine",
     "faction_icon",
     "live2d",
+    "story_sprite",
+    "story_background",
+    "story_ui",
 )
 
 # Each role is `(name, filename alternatives, required)`. `{stem}` is the codename, with `_<skinId>` for skins.
@@ -114,6 +117,26 @@ SPINE_ROLES = (
     ("dorm_texture", ("R{stem}.png",), False),
 )
 SKILL_ROLES = (("icon", ("SkillIcon/{stem}.png",), True),)
+
+# Story sprites sit in `avgpicprefabs_*` bundles. Unlike the character bundles, the manifest lists only the prefab that lays a sprite
+# out, not the textures inside it, so the prefab is what is matched here. The art itself is a `pic_<stem>` texture the extractor reads
+# out of the bundle, along with a `_D` damaged pose where the character has one.
+STORY_SPRITE_ROLES = (("prefab", ("{stem}.prefab",), True),)
+
+# A story background is either a flat texture under `AVGTexture/` or, for one of them, a battle background folder holding its own layers.
+STORY_BACKGROUND_ROLES = (
+    ("full", ("AVGTexture/{stem}.png", "{stem}/background.png"), True),
+    ("alpha", ("AVGTexture/{stem}_Alpha.png", "{stem}/background_Alpha.png"), False),
+)
+
+# The dialogue chrome: one sprite atlas holding the frame, the speaker plate and the player's own buttons.
+STORY_UI_BUNDLE = "atlasclips_avg"
+
+# Story sprites that live outside their own prefab bundle, keyed by prefab. See the file's own note for why they cannot be derived.
+STORY_SOURCES_PATH = os.path.join(TOOLS_DIR, "story-sprite-sources.json")
+
+# A sprite resolved through `STORY_SOURCES_PATH` is matched by the texture's own filename rather than by the prefab's.
+STORY_SOURCE_ROLES = (("texture", ("{stem}.png", "{stem}.jpg"), True),)
 EQUIP_ROLES = (("icon", ("Equip/{stem}.png",), True), ("alpha", ("Equip/{stem}_Alpha.png",), False))
 
 # Enemy portraits sit in the unit's own bundle under a different naming scheme from the dolls': `_SS` is the small card, which every enemy
@@ -705,6 +728,128 @@ def hoc_items(index, hoc):
     return [art, rig]
 
 
+def avg_bundle_index(index, pattern, extract):
+    """Index the AVG bundles by the name each asset is known by in the scripts.
+
+    A story sprite or background is named in the script but not in the bundle name, and the bundles group several characters together,
+    so the only way to find one is to walk the manifest once and remember where each asset lives.
+
+    Args:
+        index: The bundle index from `load_index`.
+        pattern: Prefix a bundle name must start with, lowercased.
+        extract: Callable taking a lowercased path and returning the asset's name, or None when the path is not one.
+
+    Returns:
+        A dict of lowercased asset name to the bundle holding it.
+    """
+    found = {}
+    for name, bundle in index.items():
+        if not name.startswith(pattern):
+            continue
+        for lowered, _path in bundle["files"]:
+            asset = extract(lowered)
+            if asset and asset not in found:
+                found[asset] = name
+    return found
+
+
+def story_prefab_index(index):
+    """Index every story sprite prefab by its name.
+
+    Args:
+        index: The bundle index from `load_index`.
+
+    Returns:
+        A dict of lowercased prefab name to the bundle holding it.
+    """
+    return avg_bundle_index(index, "avgpicprefabs", lambda path: path.rsplit("/", 1)[-1][: -len(".prefab")] if path.endswith(".prefab") else None)
+
+
+def story_background_index(index):
+    """Index every story background by the scene code the game's mission table names it with.
+
+    Most are a flat texture named after the code. One is a battle background folder, where the code is the folder rather than the file.
+
+    Args:
+        index: The bundle index from `load_index`.
+
+    Returns:
+        A dict of lowercased background code to the bundle holding it.
+    """
+    found = {}
+    for name, bundle in index.items():
+        if not (name.startswith("resource_avgtexture") or name.startswith("battlebackground")):
+            continue
+        for lowered, _path in bundle["files"]:
+            if not lowered.endswith((".png", ".jpg")):
+                continue
+            parts = lowered.rsplit("/", 2)
+            stem = parts[-1].rsplit(".", 1)[0]
+            if "/avgtexture/" in lowered and stem not in found:
+                found[stem] = name
+            elif len(parts) >= 2 and parts[-1].startswith("background.") and parts[-2] not in found:
+                found[parts[-2]] = name
+    return found
+
+
+def story_items(index, sprites, backgrounds):
+    """Resolve the art one story needs: every character on stage, every background, and the dialogue chrome.
+
+    Args:
+        index: The bundle index from `load_index`.
+        sprites: Sprite prefab names the scripts refer to.
+        backgrounds: Background codes the mission table names.
+
+    Returns:
+        A list of items across the `story_sprite`, `story_background` and `story_ui` tiers.
+    """
+    prefabs = story_prefab_index(index)
+    scenes = story_background_index(index)
+    sources = read_json(STORY_SOURCES_PATH)["sprites"] if os.path.exists(STORY_SOURCES_PATH) else {}
+    by_prefab = {name.lower(): entry for name, entry in sources.items()}
+    items = []
+    for prefab in sorted(sprites, key=str.lower):
+        source = by_prefab.get(prefab.lower())
+        if source:
+            # The art sits in a character bundle under the character's own name, so the texture is what is matched, not the prefab.
+            items.append(
+                resolve_item(
+                    index,
+                    "story_sprite",
+                    f"story_sprite:{prefab}",
+                    source["texture"],
+                    [source["bundle"]],
+                    STORY_SOURCE_ROLES,
+                    prefab=prefab,
+                    texture=source["texture"],
+                )
+            )
+            continue
+        bundle = prefabs.get(prefab.lower())
+        # Many script sprite slots carry an off-screen speaker's label rather than a character, so they have no art and are skipped.
+        if bundle:
+            items.append(resolve_item(index, "story_sprite", f"story_sprite:{prefab}", prefab, [bundle], STORY_SPRITE_ROLES, prefab=prefab))
+    for code in sorted(backgrounds, key=str.lower):
+        bundle = scenes.get(code.lower())
+        if bundle:
+            items.append(resolve_item(index, "story_background", f"story_background:{code}", code, [bundle], STORY_BACKGROUND_ROLES, background=code))
+    if STORY_UI_BUNDLE in index:
+        # Built by hand rather than through `resolve_item`: the chrome is a sprite atlas whose pieces are named inside the bundle, not
+        # listed as files, so there are no role templates to match. The shape still matches what the rest of the pipeline expects.
+        items.append(
+            {
+                "key": "story_ui",
+                "tier": "story_ui",
+                "status": "resolved",
+                "bundles": [STORY_UI_BUNDLE],
+                "assets": {},
+                "missing": [],
+                "sizeOriginal": index[STORY_UI_BUNDLE]["sizeOriginal"],
+            }
+        )
+    return items
+
+
 def faction_icon_items(index):
     """Resolve one emblem per faction.
 
@@ -1018,7 +1163,7 @@ def skin_live2d_items(index, models):
     return [item for item in (skin_live2d_item(index, model) for model in models) if item is not None]
 
 
-def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(), live2d_models=(), units=()):
+def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(), live2d_models=(), units=(), story_keys=()):
     """Work out which dolls, Mods, skins, equipment, HOCs and fairies the committed manifest does not list yet.
 
     A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed. A HOC counts as hosted
@@ -1036,6 +1181,7 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(),
         enemies: Enemy records from `load_site`, each `{"id", "code", "name"}`.
         live2d_models: Records from `skin_live2d_table.skin_live2d_models`.
         units: Ids of the Protocol Assimilation units the site ships.
+        story_keys: Item keys of the story art the manifest already lists, which are therefore not new targets.
 
     Returns:
         A dict of `dolls`, `mods`, `equipment`, `hocs`, `fairies` and `enemies` id sets, a `skins` set of `(doll_id, skin_id)` pairs (only numeric skin
@@ -1043,7 +1189,7 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(),
         triples for T-Doll skin Live2D models the manifest does not list.
     """
     listed = manifest["dolls"]
-    targets = {"dolls": set(), "mods": set(), "skins": set(), "equipment": set()}
+    targets = {"dolls": set(), "mods": set(), "skins": set(), "equipment": set(), "story": {key.lower() for key in story_keys}}
     for doll in dolls:
         doll_id = doll["normal"]["id"]
         entry = listed.get(str(doll_id))
@@ -1121,6 +1267,8 @@ def select_new_items(items, targets):
             keep = item.get("enemy_id") in targets.get("enemies", set())
         elif tier == "faction_icon":
             keep = not targets.get("factions_hosted", False)
+        elif tier in ("story_sprite", "story_background", "story_ui"):
+            keep = item["key"].lower() not in targets.get("story", set())
         elif tier == "live2d":
             if item.get("kind") == "skin":
                 keep = (item.get("id"), item.get("form"), item.get("skin")) in targets.get("skin", set())
@@ -1193,7 +1341,22 @@ def summarise(items, index, include_ui=True):
 
 
 def build_inventory(
-    resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=(), enemies=(), live2d_rows=(), doll_ids=None, units=(), sangvis=None
+    resdata,
+    dolls,
+    equipment_ids,
+    guns,
+    skill_codes,
+    equip_codes,
+    select=None,
+    hocs=(),
+    fairies=(),
+    enemies=(),
+    live2d_rows=(),
+    doll_ids=None,
+    units=(),
+    sangvis=None,
+    story_sprites=(),
+    story_backgrounds=(),
 ):
     """Resolve every wanted asset against the ResData manifest.
 
@@ -1212,6 +1375,8 @@ def build_inventory(
         doll_ids: Doll ids the wiki hosts, used to filter `live2d_rows`. Defaults to every id in `dolls` when not given.
         units: Ids of the Protocol Assimilation units the site ships, which carry skill icons of their own.
         sangvis: `sangvis` rows by id, holding each unit's skill group ids.
+        story_sprites: Sprite prefab names the story scripts refer to. Empty when no story data is generated.
+        story_backgrounds: Background codes the story's mission table names. Empty when no story data is generated.
 
     Returns:
         The inventory dict with `resVersion`, `resUrl`, `summary`, `bundles` and `items`.
@@ -1235,6 +1400,8 @@ def build_inventory(
     if enemies:
         items.extend(faction_icon_items(index))
     items.extend(live2d_items(index, fairies, hocs))
+    if story_sprites or story_backgrounds:
+        items.extend(story_items(index, story_sprites, story_backgrounds))
     known_dolls = doll_ids if doll_ids is not None else {doll["normal"]["id"] for doll in dolls}
     items.extend(skin_live2d_items(index, skin_live2d_models(live2d_rows, set(index), known_dolls)))
     if select is not None:
@@ -1242,6 +1409,37 @@ def build_inventory(
     include_ui = select is None or any(item["tier"] == "equip_icon" for item in items)
     summary, bundles = summarise(items, index, include_ui)
     return {"resVersion": resdata.get("resVison"), "resUrl": res_url, "summary": summary, "bundles": bundles, "items": items}
+
+
+def load_story(site_dir):
+    """Read which sprites and backgrounds the generated story data asks for.
+
+    Args:
+        site_dir: Directory holding the site's generated data, whose `story/` folder the story build writes.
+
+    Returns:
+        A `(sprites, backgrounds)` pair of sorted name lists. Both are empty when no story data is generated yet.
+    """
+    story_dir = os.path.join(site_dir, "story")
+    if not os.path.isdir(story_dir):
+        return [], []
+    sprites, backgrounds = set(), set()
+    scenes_dir = os.path.join(story_dir, "scenes")
+    if os.path.isdir(scenes_dir):
+        for name in os.listdir(scenes_dir):
+            if not name.endswith(".json"):
+                continue
+            for beat in read_json(os.path.join(scenes_dir, name)).get("beats", []):
+                for sprite in beat.get("sprites", []):
+                    if sprite.get("prefab"):
+                        sprites.add(sprite["prefab"])
+    for name in os.listdir(story_dir):
+        if not name.startswith("chapter-") or not name.endswith(".json"):
+            continue
+        for mission in read_json(os.path.join(story_dir, name)).get("missions", []):
+            if mission.get("background"):
+                backgrounds.add(mission["background"])
+    return sorted(sprites, key=str.lower), sorted(backgrounds, key=str.lower)
 
 
 def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None):
@@ -1261,7 +1459,17 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
     guns, skill_codes, equip_codes, sangvis = load_tables(gf_data_dir)
     live2d_rows = load_live2d_table(gf_data_dir)
     resdata = read_json(resdata_path)
-    shared = {"hocs": hocs, "fairies": fairies, "enemies": enemies, "live2d_rows": live2d_rows, "units": units, "sangvis": sangvis}
+    story_sprites, story_backgrounds = load_story(site_dir)
+    shared = {
+        "hocs": hocs,
+        "fairies": fairies,
+        "enemies": enemies,
+        "live2d_rows": live2d_rows,
+        "units": units,
+        "sangvis": sangvis,
+        "story_sprites": story_sprites,
+        "story_backgrounds": story_backgrounds,
+    }
     if manifest_path is None:
         return build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, **shared)
     # `new_targets` needs the resolved skin Live2D models, the same ones `build_inventory` resolves below, or `targets["skin"]` stays empty
@@ -1269,7 +1477,14 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
     index, _res_url = load_index(resdata)
     known_dolls = {doll["normal"]["id"] for doll in dolls}
     live2d_models = skin_live2d_models(live2d_rows, set(index), known_dolls)
-    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies, enemies=enemies, live2d_models=live2d_models, units=units)
+    manifest = read_json(manifest_path)
+    story_block = manifest.get("story", {})
+    story_keys = (
+        [f"story_sprite:{name}" for name in story_block.get("sprites", [])]
+        + [f"story_background:{name}" for name in story_block.get("backgrounds", [])]
+        + (["story_ui"] if story_block.get("ui") else [])
+    )
+    targets = new_targets(dolls, equipment_ids, manifest, hocs=hocs, fairies=fairies, enemies=enemies, live2d_models=live2d_models, units=units, story_keys=story_keys)
     inventory = build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=lambda items: select_new_items(items, targets), **shared)
     inventory["onlyMissing"] = True
     return inventory

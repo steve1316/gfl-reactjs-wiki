@@ -132,6 +132,10 @@ REPORT_TIERS = {
     ("hoc_art", "card"): "hoc_card",
     ("hoc_art", "full"): "hoc_full",
     ("fairy_art", "form"): "fairy_art",
+    ("story_sprite", "full"): "story_sprite",
+    ("story_sprite", "full_d"): "story_sprite",
+    ("story_background", "full"): "story_background",
+    ("story_ui", "image"): "story_ui",
     ("enemy_art", "card"): "enemy_card",
     ("enemy_art", "full"): "enemy_full",
     ("faction_icon", "icon"): "faction_icon",
@@ -901,6 +905,194 @@ def load_failure(items, exc):
     """
     result = new_result()
     result["missing"].extend({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc!r}"} for item in items)
+    return result
+
+
+def story_sprite_name(prefab):
+    """Filename stem a story sprite is published under.
+
+    Args:
+        prefab: The prefab name a script refers to, such as `M4A1Mod`.
+
+    Returns:
+        The lowercased stem, so the site can build the URL from the script's own name.
+    """
+    return prefab.lower()
+
+
+def story_expression_table(bundle_name, cache_dir):
+    """Read the expression table a story prefab publishes, mapping each prefab to its textures in script order.
+
+    An AVG prefab carries a component whose `orderScale` list names one texture per expression, which is what a script's
+    `Prefab(n)` indexes into. Only some prefabs populate it, but those that do are exactly the ones whose base pose is not named
+    after the prefab, so it is the only way to find their art.
+
+    Args:
+        bundle_name: Bundle name.
+        cache_dir: The bundle cache directory.
+
+    Returns:
+        A dict of lowercased prefab name to its texture names in expression order. Empty when the bundle has no such component.
+    """
+    import UnityPy
+
+    env = UnityPy.load(os.path.join(cache_dir, f"{bundle_name}.ab"))
+    objects = {}
+    for obj in env.objects:
+        if obj.type.name == "GameObject":
+            objects[obj.path_id] = obj.read().m_Name
+    table = {}
+    for obj in env.objects:
+        if obj.type.name != "MonoBehaviour":
+            continue
+        try:
+            tree = obj.read_typetree()
+        except Exception:
+            continue
+        order = tree.get("orderScale") or []
+        if not order:
+            continue
+        key = (tree.get("imageName") or objects.get((tree.get("m_GameObject") or {}).get("m_PathID"), "") or "").lower()
+        names = [entry.get("picname", "") for entry in order if entry.get("picname")]
+        if key and names and len(names) > len(table.get(key, [])):
+            table[key] = names
+    return table
+
+
+def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
+    """Extract each story character's standing art, and the damaged pose where the character has one.
+
+    The manifest lists only the prefab that lays a sprite out, not the textures inside its bundle, so the textures are looked up by
+    name rather than by path. Most carry `pic_X` for a prefab named `X`, plus `pic_X_D` for a damaged pose, but the boss sprites drop
+    the prefix and are named `X` outright, and the case rarely matches the prefab's, so both forms are tried case-insensitively.
+
+    Args:
+        items: Resolved `story_sprite` inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result merged over every item.
+    """
+    result = new_result()
+    by_bundle = {}
+    for item in items:
+        for bundle in item["bundles"]:
+            by_bundle.setdefault(bundle, []).append(item)
+    for bundle, bundle_items in by_bundle.items():
+        try:
+            textures = load_named_textures(bundle, cache_dir, "Texture2D")
+        except Exception as exc:
+            for item in bundle_items:
+                result["missing"].append({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc!r}"})
+            continue
+        # One case-folded index per bundle, so a prefab can be matched however the artist happened to capitalise its texture.
+        folded = {name.lower(): image for name, image in textures.items()}
+        expressions = None
+        for item in bundle_items:
+            prefab = item["prefab"]
+            stem = story_sprite_name(prefab)
+            # A sprite listed in `story-sprite-sources.json` names its texture outright, since neither naming rule reaches it.
+            source = item.get("texture")
+            for role, suffix in (("full", ""), ("full_d", "_D")):
+                wanted = [f"{source}{suffix}".lower()] if source else []
+                wanted += [f"pic_{prefab}{suffix}".lower(), f"{prefab}{suffix}".lower()]
+                image = next((folded[key] for key in wanted if key in folded), None)
+                if image is None:
+                    # Read lazily, since the table only exists for a minority of prefabs and parsing it is not cheap.
+                    if expressions is None:
+                        try:
+                            expressions = story_expression_table(bundle, cache_dir)
+                        except Exception:
+                            expressions = {}
+                    order = expressions.get(prefab.lower(), [])
+                    # Index 0 is the default pose and index 1 the damaged one, matching how the scripts index into the same list.
+                    slot = 1 if suffix else 0
+                    if len(order) > slot:
+                        image = folded.get(order[slot].lower())
+                if image is None:
+                    # Only the plain pose is required; a character without a damaged one is normal, not a gap.
+                    if role == "full":
+                        result["missing"].append({"key": item["key"], "role": role, "reason": f"no texture for {prefab}{suffix} in {bundle}"})
+                    continue
+                try:
+                    data = encode_webp(image, FULL_QUALITY)
+                    write_file(staging, f"story/sprites/{stem}{'_d' if suffix else ''}.webp", data, REPORT_TIERS[("story_sprite", role)], result)
+                except Exception as exc:
+                    result["missing"].append({"key": item["key"], "role": role, "reason": f"encode or write failed: {exc!r}"})
+    return result
+
+
+def build_story_background(textures, item, staging):
+    """Write one story background, merging its alpha mask when the scene ships one.
+
+    Args:
+        textures: The `Texture2D` index from `load_textures`, holding the item's bundles.
+        item: A `story_background` inventory item.
+        staging: The staging root.
+
+    Returns:
+        A worker result for this item.
+    """
+    result = new_result()
+    try:
+        image = texture_for(textures, item["assets"]["full"]).read().image
+        if "alpha" in item["assets"]:
+            image = merge_alpha(image, texture_for(textures, item["assets"]["alpha"]).read().image)
+        data = encode_webp(image, FULL_QUALITY)
+        write_file(staging, f"story/backgrounds/{item['background'].lower()}.webp", data, REPORT_TIERS[("story_background", "full")], result)
+    except Exception as exc:
+        result["missing"].append({"key": item["key"], "role": "full", "reason": f"decode, encode or write failed: {exc!r}"})
+    return result
+
+
+def extract_story_background_items(items, cache_dir, staging, loader=unity_load):
+    """Extract every story background, loading their shared bundles once.
+
+    Args:
+        items: Resolved `story_background` inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result merged over every item.
+    """
+    return extract_grouped_items(items, cache_dir, staging, build_story_background, loader)
+
+
+def extract_story_ui_item(item, cache_dir, staging, loader=unity_load):
+    """Extract the dialogue chrome: the frame, plates and buttons the player draws its UI from.
+
+    The atlas also holds Chinese-named pieces. Those are skipped rather than transliterated, since a filename has to be stable and
+    guessable from the site's own code.
+
+    Args:
+        item: The resolved `story_ui` inventory item.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    bundle = item["bundles"][0]
+    try:
+        sprites = load_named_textures(bundle, cache_dir, "Sprite")
+    except Exception as exc:
+        result["missing"].append({"key": item["key"], "role": "*", "reason": f"bundle load failed: {exc!r}"})
+        return result
+    for name, image in sprites.items():
+        stem = re.sub(r"[^A-Za-z0-9._-]+", "_", name).strip("_").lower()
+        if not stem or not re.search(r"[a-z0-9]", stem):
+            continue
+        try:
+            data = encode_webp(image, CARD_QUALITY)
+            write_file(staging, f"story/ui/{stem}.webp", data, REPORT_TIERS[("story_ui", "image")], result)
+        except Exception as exc:
+            result["missing"].append({"key": item["key"], "role": name, "reason": f"encode or write failed: {exc!r}"})
     return result
 
 
@@ -1739,8 +1931,20 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
     art_items, hoc_items, fairy_items, enemy_items, faction_items, skill_items, equip_items, live2d_items, legacy_skill_items = [], [], [], [], [], [], [], [], []
+    story_sprite_items, story_background_items, story_ui_items = [], [], []
     for item in inventory["items"]:
-        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art", "enemy_art", "faction_icon", "live2d")
+        wanted = item["tier"] in ART_TIERS or item["tier"] in (
+            "skill_icon",
+            "equip_icon",
+            "hoc_art",
+            "fairy_art",
+            "enemy_art",
+            "faction_icon",
+            "live2d",
+            "story_sprite",
+            "story_background",
+            "story_ui",
+        )
         if not wanted:
             continue
         if item["tier"] == "skill_icon" and item.get("source") == "legacy":
@@ -1750,7 +1954,18 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
             continue
         report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
-        buckets = {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items, "enemy_art": enemy_items, "faction_icon": faction_items, "live2d": live2d_items}
+        buckets = {
+            "skill_icon": skill_items,
+            "equip_icon": equip_items,
+            "hoc_art": hoc_items,
+            "fairy_art": fairy_items,
+            "enemy_art": enemy_items,
+            "faction_icon": faction_items,
+            "live2d": live2d_items,
+            "story_sprite": story_sprite_items,
+            "story_background": story_background_items,
+            "story_ui": story_ui_items,
+        }
         buckets.get(item["tier"], art_items).append(item)
 
     # Imported here, not at module scope, since `extract_live2d` imports back from this module - a top-level import would be circular.
@@ -1771,6 +1986,13 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             futures[pool.submit(extract_fairy_art_items, fairy_items, cache_dir, staging)] = "worker:fairy_art"
         if faction_items:
             futures[pool.submit(extract_faction_icon_items, faction_items, cache_dir, staging)] = "worker:faction_icon"
+        # Split into chunks so the sprite bundles spread over the pool rather than queueing behind one worker.
+        for start in range(0, len(story_sprite_items), 20):
+            futures[pool.submit(extract_story_sprite_items, story_sprite_items[start : start + 20], cache_dir, staging)] = f"worker:story_sprite:{start}"
+        if story_background_items:
+            futures[pool.submit(extract_story_background_items, story_background_items, cache_dir, staging)] = "worker:story_background"
+        for item in story_ui_items:
+            futures[pool.submit(extract_story_ui_item, item, cache_dir, staging)] = item["key"]
         # Split into chunks so 350 enemies spread over the pool instead of queueing behind one worker.
         for start in range(0, len(enemy_items), 40):
             futures[pool.submit(extract_enemy_art_items, enemy_items[start : start + 40], cache_dir, staging)] = f"worker:enemy_art:{start}"

@@ -1,0 +1,19 @@
+{
+	"note": "Story prefabs whose art is not in their own avgpicprefabs bundle. These reference a texture in a character or resource bundle, named after the character rather than the prefab, so neither a name match nor the prefab's orderScale table finds them. Each entry gives the texture and the bundle holding it. None of these are derivable: BOSS-5 maps to a texture called BOSS-6, the game misspells Executioner, BOSS-12 uses a Chinese name, and FairyWarrior is a plain image inside resource_fairy. They were found by reading which file the game's own story viewer requests for each prefab, then confirming that name against ResData.",
+	"sprites": {
+		"SOPII": { "texture": "pic_M4 SOPMOD II", "bundle": "character_m4 sopmod ii_he" },
+		"RO635-NoArmor": { "texture": "pic_RO635_NoArmor0", "bundle": "character_ro635_noarmor" },
+		"NytoIsomer": { "texture": "Nyto_Isomer_Shadow", "bundle": "character_nyto" },
+		"98k": { "texture": "pic_98K", "bundle": "character_98k_he" },
+		"FAL": { "texture": "pic_FNFAL", "bundle": "character_fnfal_he" },
+		"BOSS-5": { "texture": "BOSS-6", "bundle": "character_boss" },
+		"MK2": { "texture": "pic_StenMK2", "bundle": "character_stenmk2_he" },
+		"BOSS-4": { "texture": "Intruder", "bundle": "character_bossintruder" },
+		"Nytochild01": { "texture": "Nytochild01_1", "bundle": "character_nyto_child" },
+		"BOSS-2": { "texture": "Excutioner", "bundle": "character_bossexcutioner" },
+		"FairyWarrior": { "texture": "fighting_1", "bundle": "resource_fairy" },
+		"BOSS-12": { "texture": "伊莱莎无武器", "bundle": "character_boss" },
+		"NPC-Soldier": { "texture": "NPC-YegorArm3", "bundle": "character_npc-yegor" },
+		"M4 SOPMOD IIMod-Noarmor": { "texture": "pic_M4 SOPMOD IIMod_NoArmor1", "bundle": "character_m4 sopmod iimod" }
+	}
+}
