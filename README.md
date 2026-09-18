@@ -1,6 +1,6 @@
 # Griffin Archive
 
-An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Dolls, equipment, HOCs and fairies, with their art, Spine chibis and Live2D models. It runs entirely in the browser and is hosted on GitHub Pages.
+An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Dolls, equipment, HOCs, fairies and enemies, with their art, Spine chibis and Live2D models. It runs entirely in the browser and is hosted on GitHub Pages.
 
 **[Open Griffin Archive](https://steve1316.github.io/gfl-archive/)**
 
@@ -18,6 +18,8 @@ An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Do
 - **Animations** - battle and dorm chibis from the game's Spine rigs, plus skin Live2D models with their motions and dialogue.
 - **HOCs and Fairies** - their own indexes and pages with stats, skills, fairy talents, art and animations, including Live2D where the game has it.
 - **Equipment Index** - filter, search and sort equipment, and see which dolls an exclusive item belongs to.
+- **Enemy Index** - every enemy with its stats, skills and counter tips, plus the Protocol Assimilation units you can capture and field yourself.
+- **Formation Simulator** - place an echelon and a facing enemy squad, apply tile and fairy buffs, and compare damage estimates. Share a setup by its link.
 - **Always current** - a daily job picks up new dolls, skins, equipment and art from the game data.
 
 <p>
@@ -27,7 +29,6 @@ An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Do
 
 ## Roadmap
 
-- [ ] **Formation Simulator** - place an echelon and see tile, equipment and fairy buffs applied to each doll's stats.
 - [ ] **Story player** - read the main story and events in the browser.
 
 ## Running locally
@@ -51,7 +52,7 @@ Art and animations are not in this repo. They load from [gfl-wiki-assets](https:
 ## How it works
 
 - **`src/`** - the site: React 19, TypeScript and MUI, built with Vite. Game data ships as generated JSON, and each page loads only what it needs.
-- **`tools/data/`** - imports doll, equipment, HOC and fairy data from the game's tables and checks the result.
+- **`tools/data/`** - imports doll, equipment, HOC, fairy and enemy data from the game's tables and checks the result.
 - **`tools/assets/`** - Python tools (UnityPy, Python 3.12) that extract art, Spine rigs and Live2D models from the game's asset bundles and publish them to the asset repo.
 - **`.github/workflows/`** - `deploy.yml` publishes the site on every push to `master`. `refresh.yml` runs daily, imports anything new, and deploys only if something changed.
 
