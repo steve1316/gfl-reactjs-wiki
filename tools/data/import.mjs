@@ -33,6 +33,7 @@ import { addExtraSkins, validateExtraSkins } from "./lib/skins.mjs";
 import { readStatConfig } from "./lib/stats.mjs";
 import { loadUpstream, readLock, resolveUpstreamDir } from "./lib/upstream.mjs";
 import { fetchWikidataFacts } from "./lib/wikidata.mjs";
+import { writeStory } from "../story/build_story.mjs";
 
 /** Where generated data is written. */
 const OUT_DIR = "src/data";
@@ -115,7 +116,8 @@ async function attachProfiles(dolls, upstream) {
 async function main() {
 	const args = process.argv.slice(2);
 	const cutoff = args.includes("--date") ? args[args.indexOf("--date") + 1] : new Date().toISOString().slice(0, 10);
-	const upstream = loadUpstream(resolveUpstreamDir());
+	const upstreamDir = resolveUpstreamDir();
+	const upstream = loadUpstream(upstreamDir);
 	const overrides = JSON.parse(fs.readFileSync("tools/data/overrides.json", "utf8"));
 	const extraSkins = JSON.parse(fs.readFileSync("tools/data/extra-skins.json", "utf8"));
 	const aliases = JSON.parse(fs.readFileSync("tools/data/equipment-aliases.json", "utf8"));
@@ -189,6 +191,16 @@ async function main() {
 	// The opposing side. Kept apart from the enemy archive's own files, which carry lore and rank bars the simulator never reads.
 	writeJson(`${OUT_DIR}/formation/enemies.json`, { items: buildFormationEnemies(enemies) });
 
+	// The story player. Written as a small chapter list, one file per chapter's mission list, and one file per scene, so opening a
+	// scene fetches that scene alone rather than the chapter around it.
+	const story = writeStory(upstream, upstreamDir);
+	for (const name of new Set(story.missingScripts)) {
+		ctx.warnings.push(`story script ${name} is listed by the game's index but is not in the upstream data`);
+	}
+	for (const [tag, count] of story.unknownTags) {
+		ctx.warnings.push(`story tag <${tag}> is not recognised by the parser, seen ${count} time${count === 1 ? "" : "s"}`);
+	}
+
 	const { repo, sha } = readLock();
 	const counts = {
 		dolls: dolls.length,
@@ -197,7 +209,9 @@ async function main() {
 		hocs: hocs.items.length,
 		fairies: fairies.items.length,
 		enemies: enemies.items.length,
-		assimilation: assimilation.units.length
+		assimilation: assimilation.units.length,
+		storyChapters: story.chapters,
+		storyScenes: story.scenes
 	};
 	writeJson(`${OUT_DIR}/upstream.json`, { repo, sha, counts });
 
@@ -207,7 +221,7 @@ async function main() {
 		console.warn(`warning: ${warning}`);
 	}
 	console.log(
-		`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, fairies ${counts.fairies}, enemies ${counts.enemies}, assimilation ${counts.assimilation}, warnings ${ctx.warnings.length}`
+		`dolls ${counts.dolls}, mods ${counts.mods}, equipment ${counts.equipment}, hocs ${counts.hocs}, fairies ${counts.fairies}, enemies ${counts.enemies}, assimilation ${counts.assimilation}, story ${counts.storyChapters} chapters / ${counts.storyScenes} scenes, warnings ${ctx.warnings.length}`
 	);
 	console.log(`profiles: ${profiles.joined} joined an IOPWiki page, ${profiles.wikidata} filled from Wikidata`);
 }
