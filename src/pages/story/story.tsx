@@ -6,7 +6,9 @@ import type { SxProps, Theme } from "@mui/material";
 
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
+import { storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
 import { loadStoryChapter, loadStoryScene } from "../../lib/data";
+import { hasStoryBackground, hasStorySprite } from "../../lib/processData";
 import type { StoryBeat, StoryChapter, StoryPage, StoryScene } from "../../types/story";
 
 /** How long one character takes to type at the middle speed, in milliseconds. */
@@ -21,7 +23,8 @@ const PROGRESS_KEY = "storyProgress";
 const styles = {
 	stage: { position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 2, overflow: "hidden", bgcolor: "#05070c", cursor: "pointer", userSelect: "none" },
 	sprites: { position: "absolute", inset: 0, display: "flex", alignItems: "stretch", justifyContent: "space-between", px: { xs: 1, sm: 4 } },
-	spriteSide: { height: "100%", alignItems: "flex-end", pb: "30%" },
+	// Lifted just clear of the dialogue box, so a character stands on the scene's ground rather than behind the text.
+	spriteSide: { height: "100%", alignItems: "flex-end", pb: "15%" },
 	// Stands in for art the game does not ship, the way `ArtPlaceholder` does for a card that is not hosted.
 	spriteGhost: {
 		width: { xs: 56, sm: 96 },
@@ -36,6 +39,7 @@ const styles = {
 		pb: 1
 	},
 	spriteName: { color: "text.secondary", writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "0.08em" },
+	spriteArt: { height: "88%", width: "auto", maxWidth: { xs: 160, sm: 320 }, objectFit: "contain", objectPosition: "bottom", display: "block" },
 	box: {
 		position: "absolute",
 		left: 0,
@@ -178,6 +182,9 @@ export default function Story() {
 	const done = typed >= full.length;
 	const stage = useMemo(() => (scene ? stageAt(scene.beats, beatIndex) : { background: null, bgm: null }), [scene, beatIndex]);
 	const mission = useMemo(() => chapter?.missions.find((entry) => entry.scripts.includes(sceneName)) ?? null, [chapter, sceneName]);
+	// The mission names its own scene art. A beat's own `background` op is a scene-local index the game resolves in code the data does
+	// not ship, so it cannot be mapped to a picture - it still drives the fallback wash, which at least changes when the scene does.
+	const scenery = useMemo(() => (mission?.background && hasStoryBackground(mission.background) ? storyBackgroundUrl(mission.background) : null), [mission]);
 	const backlog = useMemo(() => {
 		if (!scene) {
 			return [];
@@ -332,19 +339,29 @@ export default function Story() {
 					</Box>
 				) : (
 					<>
-						<Box sx={[styles.stage, { background: backdrop(stage.background) }]} onClick={advance} role="button" tabIndex={-1} aria-label="Advance the scene">
+						<Box
+							sx={[styles.stage, scenery ? { backgroundImage: `url(${scenery})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: backdrop(stage.background) }]}
+							onClick={advance}
+							role="button"
+							tabIndex={-1}
+							aria-label="Advance the scene"
+						>
 							<Box sx={styles.sprites}>
 								{["left", "right"].map((side) => (
 									<Stack key={side} direction="row" spacing={1} sx={styles.spriteSide}>
 										{(beat?.sprites ?? [])
 											.filter((sprite) => sprite.side === side)
-											.map((sprite, position) => (
-												<Box key={`${sprite.prefab}-${position}`} sx={styles.spriteGhost}>
-													<Typography variant="caption" sx={styles.spriteName} noWrap>
-														{sprite.prefab}
-													</Typography>
-												</Box>
-											))}
+											.map((sprite, position) =>
+												hasStorySprite(sprite.prefab) ? (
+													<Box key={`${sprite.prefab}-${position}`} component="img" src={storySpriteUrl(sprite.prefab)} alt={sprite.prefab} sx={styles.spriteArt} />
+												) : (
+													<Box key={`${sprite.prefab}-${position}`} sx={styles.spriteGhost}>
+														<Typography variant="caption" sx={styles.spriteName} noWrap>
+															{sprite.prefab}
+														</Typography>
+													</Box>
+												)
+											)}
 									</Stack>
 								))}
 							</Box>

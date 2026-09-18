@@ -60,6 +60,15 @@ export interface AssetsManifest {
 	fairies?: Record<string, ("form1" | "form2" | "form3")[]>;
 	/** Which art kinds exist for each enemy, keyed by stringified id. Absent until enemy art is published. */
 	enemies?: Record<string, EnemyArtKind[]>;
+	/** The published story art: which sprites and backgrounds exist, and whether the dialogue chrome does. */
+	story?: {
+		/** Published sprite stems, lowercased prefab names. */
+		sprites: string[];
+		/** Published background stems, lowercased scene codes. */
+		backgrounds: string[];
+		/** Whether the dialogue chrome is published. */
+		ui: boolean;
+	};
 	/** Faction emblem slugs that have art, such as `sangvis-ferri`. Absent until the emblems are published. */
 	factions?: string[];
 	/**

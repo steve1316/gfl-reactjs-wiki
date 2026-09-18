@@ -337,3 +337,34 @@ export function hocLive2dModelUrl(id: number): string {
 export function skinLive2dModelUrl(dollId: number, form: string, skinKey: string, variant: string): string {
 	return join(ASSET_BASE, `live2d/tdolls/${dollId}/${form}/${skinKey}/${variant}/model.model3.json`);
 }
+
+/**
+ * URL for a story character's standing art.
+ *
+ * @param prefab The prefab name a script refers to, such as `M4A1Mod`.
+ * @param damaged Whether to ask for the damaged pose instead of the plain one.
+ * @returns An absolute URL.
+ */
+export function storySpriteUrl(prefab: string, damaged = false): string {
+	return join(ASSET_BASE, `story/sprites/${prefab.toLowerCase()}${damaged ? "_d" : ""}.webp`);
+}
+
+/**
+ * URL for a story background.
+ *
+ * @param code The scene code the game's mission table names, such as a location name.
+ * @returns An absolute URL.
+ */
+export function storyBackgroundUrl(code: string): string {
+	return join(ASSET_BASE, `story/backgrounds/${code.toLowerCase()}.webp`);
+}
+
+/**
+ * URL for one piece of the game's dialogue chrome.
+ *
+ * @param name The piece's published stem, such as `layerbord`.
+ * @returns An absolute URL.
+ */
+export function storyUiUrl(name: string): string {
+	return join(ASSET_BASE, `story/ui/${name}.webp`);
+}

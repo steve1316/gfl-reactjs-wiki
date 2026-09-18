@@ -155,6 +155,26 @@ export function hasEnemyArt(id: number, kind: EnemyArtKind): boolean {
 }
 
 /**
+ * Whether a story character's art is hosted.
+ *
+ * @param prefab The prefab name a script refers to.
+ * @returns True when the manifest lists that sprite.
+ */
+export function hasStorySprite(prefab: string): boolean {
+	return manifest.story?.sprites.includes(prefab.toLowerCase()) ?? false;
+}
+
+/**
+ * Whether a story background is hosted.
+ *
+ * @param code The scene code the mission table names.
+ * @returns True when the manifest lists that background.
+ */
+export function hasStoryBackground(code: string): boolean {
+	return manifest.story?.backgrounds.includes(code.toLowerCase()) ?? false;
+}
+
+/**
  * Whether a faction has a hosted emblem.
  *
  * @param faction Faction name as the enemy data spells it.
