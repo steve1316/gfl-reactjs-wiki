@@ -22,7 +22,7 @@ const COLUMNS: readonly [StatKey, string][] = [
 ];
 
 /** Labels for breakdown sources. */
-const SOURCE_LABELS: Record<Contribution["source"], string> = { links: "Dummy links", affection: "Affection", tiles: "Tiles", cap: "Cap" };
+const SOURCE_LABELS: Record<Contribution["source"], string> = { links: "Dummy links", affection: "Affection", tiles: "Tiles", fairy: "Fairy", cap: "Cap" };
 
 /**
  * The Material "expand more" chevron path. Drawn inline because importing the icon module moved it into a shared chunk and grew every page's

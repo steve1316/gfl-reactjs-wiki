@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { FORMATION_PARAM, decodeFormation, encodeFormation } from "../../lib/formation/codec";
+import type { EnemySetup, FairySetup } from "../../lib/formation/codec";
 import { MAX_ECHELON, MAX_SKILL_LEVEL, MAX_LINKS, levelCap, maxModStage } from "../../lib/formation/pipeline";
 import type { DollSetup } from "../../lib/formation/pipeline";
 import type { FormationData } from "../../types/formation";
@@ -36,10 +37,20 @@ function defaultSetup(cell: number, dollId: number, data: FormationData): DollSe
 	return { cell, dollId, modStage, level: levelCap(modStage, data.constants), links: MAX_LINKS, affection: 0, skill1: MAX_SKILL_LEVEL, skill2: MAX_SKILL_LEVEL };
 }
 
-/** The echelon and the ways to change it. */
+/** The fairy a new pick starts at: fully levelled, like a freshly placed doll. */
+const DEFAULT_FAIRY_LEVEL = 100;
+
+/** Star rank a new fairy pick starts at. */
+const DEFAULT_FAIRY_STARS = 5;
+
+/** The echelon, the enemy squad, the fairy and the ways to change them. */
 export interface FormationState {
 	/** Dolls on the grid, in placement order. */
 	setups: DollSetup[];
+	/** Enemies on the opposing grid, in placement order. */
+	enemies: EnemySetup[];
+	/** The chosen fairy, or null when none is chosen. */
+	fairy: FairySetup | null;
 	/** Put a doll on an empty cell with default settings. Ignored when the cell is taken, the doll is already placed or the echelon is full. */
 	placeDoll: (cell: number, dollId: number) => void;
 	/** Change the settings of the doll on a cell. */
@@ -48,17 +59,28 @@ export interface FormationState {
 	removeDoll: (cell: number) => void;
 	/** Move the doll on one cell to another, swapping with any doll already there. */
 	moveDoll: (from: number, to: number) => void;
+	/** Put an enemy on a cell of the opposing grid, replacing whatever stood there. */
+	placeEnemy: (cell: number, enemyId: number) => void;
+	/** Take the enemy off a cell of the opposing grid. */
+	removeEnemy: (cell: number) => void;
+	/** Choose a fairy by id, fully levelled like a freshly placed doll, or clear it with null. */
+	setFairy: (fairyId: number | null) => void;
+	/** Change the chosen fairy's level or star rank. */
+	updateFairy: (patch: Partial<Omit<FairySetup, "fairyId">>) => void;
 }
 
 /**
- * The echelon, read once from the `f` query parameter when the data arrives and written back shortly after each change.
+ * The echelon, the enemy squad and the fairy, read once from the `f` query parameter when the data arrives and written back shortly
+ * after each change.
  *
  * @param data The loaded formation data, or null while it loads.
- * @returns The echelon state.
+ * @returns The formation state.
  */
 export function useFormationState(data: FormationData | null): FormationState {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [setups, setSetups] = useState<DollSetup[]>([]);
+	const [enemies, setEnemies] = useState<EnemySetup[]>([]);
+	const [fairy, setFairyState] = useState<FairySetup | null>(null);
 	const [ready, setReady] = useState(false);
 	// The URL write waiting on the debounce, with the page path it belongs to, or null when the URL is up to date.
 	const pendingWriteRef = useRef<{ pathname: string; write: () => void } | null>(null);
@@ -67,9 +89,11 @@ export function useFormationState(data: FormationData | null): FormationState {
 		if (data && !ready) {
 			const shared = searchParams.get(FORMATION_PARAM);
 			// A link with no formation in it opens on the default echelon. An empty one, such as after clearing the grid, stays empty.
-			const decoded = decodeFormation(shared ?? "", data.forms, data.constants);
+			const decoded = decodeFormation(shared ?? "", data.forms, data.constants, new Set(data.enemies.map((enemy) => enemy.id)));
 			const dolls = shared === null ? DEFAULT_ECHELON.filter(({ dollId }) => data.forms[String(dollId)]) : [];
-			setSetups(decoded.length > 0 ? decoded : dolls.map(({ cell, dollId }) => defaultSetup(cell, dollId, data)));
+			setSetups(decoded.setups.length > 0 ? decoded.setups : dolls.map(({ cell, dollId }) => defaultSetup(cell, dollId, data)));
+			setEnemies(decoded.enemies);
+			setFairyState(decoded.fairy);
 			setReady(true);
 		}
 	}, [data, ready, searchParams]);
@@ -80,7 +104,7 @@ export function useFormationState(data: FormationData | null): FormationState {
 		if (!ready) {
 			return;
 		}
-		const encoded = encodeFormation(setups);
+		const encoded = encodeFormation({ setups, enemies, fairy });
 		const write = () => {
 			pendingWriteRef.current = null;
 			setSearchParams(
@@ -99,7 +123,7 @@ export function useFormationState(data: FormationData | null): FormationState {
 		pendingWriteRef.current = { pathname: window.location.pathname, write };
 		const timer = window.setTimeout(write, URL_WRITE_DELAY_MS);
 		return () => window.clearTimeout(timer);
-	}, [ready, setups, setSearchParams]);
+	}, [ready, setups, enemies, fairy, setSearchParams]);
 
 	// Flush a waiting write on unmount. Skipped when the unmount is a navigation to another page, which the write would otherwise undo.
 	useEffect(
@@ -150,6 +174,17 @@ export function useFormationState(data: FormationData | null): FormationState {
 
 	const removeDoll = useCallback((cell: number) => setSetups((current) => current.filter((setup) => setup.cell !== cell)), []);
 
+	// One enemy per cell, so replacing a tile's occupant needs no cap check: there are only ever as many entries as there are cells.
+	const placeEnemy = useCallback((cell: number, enemyId: number) => {
+		setEnemies((current) => [...current.filter((entry) => entry.cell !== cell), { cell, enemyId }]);
+	}, []);
+
+	const removeEnemy = useCallback((cell: number) => setEnemies((current) => current.filter((entry) => entry.cell !== cell)), []);
+
+	const setFairy = useCallback((fairyId: number | null) => setFairyState(fairyId === null ? null : { fairyId, level: DEFAULT_FAIRY_LEVEL, stars: DEFAULT_FAIRY_STARS }), []);
+
+	const updateFairy = useCallback((patch: Partial<Omit<FairySetup, "fairyId">>) => setFairyState((current) => (current === null ? current : { ...current, ...patch })), []);
+
 	const moveDoll = useCallback((from: number, to: number) => {
 		if (from === to) {
 			return;
@@ -158,5 +193,8 @@ export function useFormationState(data: FormationData | null): FormationState {
 	}, []);
 
 	// Memoised so a component taking the whole state as one prop only re-renders when a field changes.
-	return useMemo(() => ({ setups, placeDoll, updateDoll, removeDoll, moveDoll }), [setups, placeDoll, updateDoll, removeDoll, moveDoll]);
+	return useMemo(
+		() => ({ setups, enemies, fairy, placeDoll, updateDoll, removeDoll, moveDoll, placeEnemy, removeEnemy, setFairy, updateFairy }),
+		[setups, enemies, fairy, placeDoll, updateDoll, removeDoll, moveDoll, placeEnemy, removeEnemy, setFairy, updateFairy]
+	);
 }

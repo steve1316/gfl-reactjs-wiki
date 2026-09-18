@@ -5,6 +5,7 @@
  * its types stripped in tests, so it must only use erasable TypeScript syntax.
  */
 
+import type { FairyStatValues } from "../../types/fairy";
 import type { FormationConstants, FormationForm, TileStatCode } from "../../types/formation";
 import { levelStats } from "./growth.ts";
 import { appliesTo, tileSources } from "./tiles.ts";
@@ -36,6 +37,18 @@ const PERCENT_STATS: readonly StatKey[] = ["dmg", "rof", "acc", "eva", "armor"];
 
 /** Stats affection raises. */
 const AFFECTION_STATS: readonly StatKey[] = ["dmg", "acc", "eva"];
+
+/** Which doll stat each fairy stat raises. Crit damage is not a doll stat: it raises the crit multiplier the damage model uses. */
+const FAIRY_STAT: Record<"damage" | "accuracy" | "evasion" | "armor", StatKey> = { damage: "dmg", accuracy: "acc", evasion: "eva", armor: "armor" };
+
+/** `FAIRY_STAT` as pairs, built once rather than per doll inside the pipeline's loop. */
+const FAIRY_STAT_ENTRIES = Object.entries(FAIRY_STAT) as [keyof typeof FAIRY_STAT, StatKey][];
+
+/**
+ * A fairy's buff to the whole echelon, each a percentage. The same five stats a fairy's own page shows, so it is that type by another
+ * name: `fairyStats` produces it and the pipeline consumes it unchanged.
+ */
+export type FairyBuff = FairyStatValues;
 
 /** Affection buckets: normal, 90 and above, Oath. */
 export type AffectionLevel = 0 | 1 | 2;
@@ -92,7 +105,7 @@ export interface Contribution {
 	/** The stat changed. */
 	stat: StatKey;
 	/** What changed it. */
-	source: "links" | "affection" | "tiles" | "cap";
+	source: "links" | "affection" | "tiles" | "fairy" | "cap";
 	/** The change in the stat's own units. Negative for a cap. */
 	amount: number;
 	/** For tiles, the cells of the dolls giving the buff. Empty otherwise. */
@@ -204,9 +217,16 @@ export function placedSources(placed: readonly PlacedForm[], constants: Formatio
  * @param forms Formation forms by gun id.
  * @param constants Formation constants.
  * @param sources Tile buffs per cell for these setups, when the caller already has them. Worked out here otherwise.
+ * @param fairy The fairy's buff to the whole echelon, or null when no fairy is chosen.
  * @returns One result per placed doll, in the order given.
  */
-export function effectiveEchelon(setups: readonly DollSetup[], forms: Record<string, FormationForm>, constants: FormationConstants, sources?: readonly (readonly TileSource[])[]): EffectiveDoll[] {
+export function effectiveEchelon(
+	setups: readonly DollSetup[],
+	forms: Record<string, FormationForm>,
+	constants: FormationConstants,
+	sources?: readonly (readonly TileSource[])[],
+	fairy?: FairyBuff | null
+): EffectiveDoll[] {
 	const placed = placedForms(setups, forms);
 	const cellSources = sources ?? placedSources(placed, constants);
 	return placed.map(({ setup, form }) => {
@@ -245,6 +265,17 @@ export function effectiveEchelon(setups: readonly DollSetup[], forms: Record<str
 				change(stat, next, "tiles", fromCells);
 				if (next > limit) {
 					change(stat, limit, "cap");
+				}
+			}
+		}
+
+		// The fairy buffs the whole echelon rather than a cell, so it lands after the tiles, on the same percentage-of-base footing.
+		// Its place in the order is provisional along with the rest of this pipeline.
+		if (fairy) {
+			for (const [key, stat] of FAIRY_STAT_ENTRIES) {
+				const percent = fairy[key];
+				if (percent !== 0) {
+					change(stat, Math.floor(stats[stat] * (1 + percent / 100)), "fairy");
 				}
 			}
 		}
