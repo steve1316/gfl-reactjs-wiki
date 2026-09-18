@@ -3,7 +3,7 @@ import type { FormEvent, HTMLAttributes, Key, SyntheticEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // MaterialUI imports
-import { Box, AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, alpha, Icon, Divider, TextField, useMediaQuery, useTheme } from "@mui/material";
+import { Box, AppBar, Toolbar, IconButton, Typography, Drawer, List, ListItemButton, ListItemIcon, ListItemText, alpha, Divider, TextField, useMediaQuery, useTheme } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
 // Autocomplete imports
@@ -86,25 +86,33 @@ const styles = {
 		}
 	}),
 	drawerPaper: { width: "inherit" },
+	/**
+	 * One drawer icon.
+	 *
+	 * `block` rather than the inline default, or the image sits on the text baseline three pixels down from the top of its slot.
+	 * `contain` because these are the game's own icons at seven different shapes, and stretching each one into a square squashed
+	 * the tall ones. The HOC icon used to be given a width of its own to work around exactly that.
+	 */
+	navIcon: { display: "block", width: 25, height: 25, objectFit: "contain" },
 	link: { textDecoration: "none", color: "text.primary" }
 } satisfies Record<string, SxProps<Theme>>;
 
 /**
  * The drawer's destinations. Static, so declared once here rather than rebuilt on every keystroke in the search.
  *
- * Each entry carries its rendered icon rather than a URL, so the list renderer never has to know how an entry draws itself.
+ * Each entry names its icon's URL and the list renderer draws it, since every one of them is now a published image. They used to
+ * carry rendered `img` elements of their own, which is how they drifted into different sizes.
  */
 const NAV_ITEMS = [
-	{ title: "Home", link: "/", icon: <img src={HomeIcon} height={25} width={25} alt="" /> },
-	{ title: "T-Doll Index", link: "/index", icon: <img src={IndexIcon} height={25} width={25} alt="" /> },
-	{ title: "Equipment Index", link: "/equipment-index", icon: <img src={EquipmentIcon} height={25} width={25} alt="" /> },
-	// Width 24 rather than 25, because the icon's right side is cut off at 25.
-	{ title: "HOC Index", link: "/hoc-index", icon: <img src={HOCIcon} height={25} width={24} alt="" /> },
-	{ title: "Fairy Index", link: "/fairy-index", icon: <img src={FairyIcon} height={25} width={25} alt="" /> },
+	{ title: "Home", link: "/", icon: HomeIcon },
+	{ title: "T-Doll Index", link: "/index", icon: IndexIcon },
+	{ title: "Equipment Index", link: "/equipment-index", icon: EquipmentIcon },
+	{ title: "HOC Index", link: "/hoc-index", icon: HOCIcon },
+	{ title: "Fairy Index", link: "/fairy-index", icon: FairyIcon },
 	// The game's own battle icon, crossed rifles. The index covers all four hostile factions, so a mark belonging to any one of
 	// them would speak for the others.
-	{ title: "Enemy Index", link: "/enemy-index", icon: <img src={EnemyIcon} height={25} width={25} alt="" /> },
-	{ title: "Formation Simulator", link: "/formation", icon: <img src={FormationIcon} height={25} width={25} alt="" /> }
+	{ title: "Enemy Index", link: "/enemy-index", icon: EnemyIcon },
+	{ title: "Formation Simulator", link: "/formation", icon: FormationIcon }
 ];
 
 /**
@@ -215,8 +223,10 @@ const NavList = memo(function NavList({ onNavigate }: NavListProps) {
 				<div key={item.title}>
 					<Box component={Link} to={item.link} sx={styles.link} onClick={onNavigate}>
 						<ListItemButton>
+							{/* Not MUI's `Icon`, which exists for icon fonts: it is a 24px box with `overflow: hidden`, and the 25px
+							    image inside it lost four pixels off the bottom of every entry in this list. */}
 							<ListItemIcon>
-								<Icon>{item.icon}</Icon>
+								<Box component="img" src={item.icon} alt="" sx={styles.navIcon} />
 							</ListItemIcon>
 							<ListItemText primary={item.title} />
 						</ListItemButton>
