@@ -40,9 +40,17 @@ const styles = {
 	//
 	// The width is given rather than derived from the stretched height: a row flex container resolves an item's width before its
 	// height, so an `aspect-ratio` cannot work backwards from a height that is not known yet.
+	// Beside the text the card is stretched to its row, which the Grid has already sized to the taller of the hero and the
+	// Animations card, so the two cards end level.
+	//
+	// The card takes its width from the art rather than being given one. The hero portrait is the full art trimmed to the drawing,
+	// so its shape is the drawing's own: tall for most enemies, wide for a few mechs. Letting the card follow that is what fills it
+	// at any height, where a fixed width had to matte every enemy to the square canvas the game draws them on.
 	portrait: {
-		aspectRatio: { xs: ENEMY_CARD_ASPECT, lg: "auto" },
-		width: { xs: 300, sm: 380, md: 420, lg: 400, xl: 440 },
+		width: { xs: 300, sm: 380, md: 420, lg: "auto" },
+		// Room enough that a drawing of the usual shape fills the card's height outright, without leaving the text beside it too
+		// narrow to read. Only the few enemies drawn wider than tall reach the cap.
+		maxWidth: { lg: 420, xl: 560 },
 		alignSelf: { lg: "stretch" },
 		// Pulls the card back out through the hero's own vertical padding, so it spans the whole row rather than stopping 24px
 		// short of the Animations card at each end.
@@ -53,9 +61,18 @@ const styles = {
 		position: "relative",
 		boxShadow: 8
 	},
-	// `contain`, not the doll page's `cover`. Enemy art is square, so a card tall enough to match the Animations card beside it is
-	// far taller than it is wide, and filling that would cut a quarter off each side. Several enemies are wide mechs whose guns and
-	// legs are the first thing such a crop would take, so the art is matted instead.
+	// Fills the card's height and takes whatever width that needs, which is what lets the card shrink-wrap to the drawing. The card's
+	// `maxWidth` catches the few enemies drawn wider than they are tall: those stop at the cap and are matted top and bottom
+	// instead, rather than being cropped down their sides.
+	heroArt: {
+		height: "100%",
+		width: { xs: "100%", lg: "auto" },
+		maxWidth: "100%",
+		objectFit: "contain",
+		display: "block"
+	},
+	// The square card art, for the enemies with no full art to trim. It cannot fill a tall card without losing its sides, so it is
+	// matted.
 	portraitArt: {
 		width: "100%",
 		height: "100%",
@@ -148,6 +165,19 @@ const styles = {
 } satisfies Record<string, SxProps<Theme>>;
 
 /**
+ * The portrait card's shape below the width where it is stretched beside the text.
+ *
+ * The trimmed hero art is the drawing's own shape, a median of about 3:4, so a card of that shape mattes it least. An enemy with no
+ * full art falls back to the square card art, which needs a square card.
+ *
+ * @param hasHero Whether the trimmed hero art is what the card is showing.
+ * @returns The aspect ratio to spread into the card's `sx`.
+ */
+function portraitAspect(hasHero: boolean) {
+	return { aspectRatio: { xs: hasHero ? "3 / 4" : ENEMY_CARD_ASPECT, lg: "auto" } };
+}
+
+/**
  * One faction chip's colours, and the room its mark needs.
  *
  * Not part of `styles`, since it takes the faction rather than only the theme. The mark is painted in `currentColor`, so the icon
@@ -192,6 +222,8 @@ interface EnemyHeroProps {
 	details: EnemyDetails | undefined;
 	/** The archive's card art, or undefined when none is published. */
 	cardImage: string | undefined;
+	/** The full art trimmed to the drawing, or undefined for an enemy with no full art. Drawn in place of the card art when present. */
+	heroImage: string | undefined;
 	/** The lore blurb to show, which is the captured unit's own when the Captured toggle is on. */
 	introduce: string;
 	/** The archive's advice on how to fight this enemy, empty when there is none or when the captured unit is on screen. */
@@ -230,6 +262,7 @@ export default memo(function EnemyHero({
 	ranks,
 	details,
 	cardImage,
+	heroImage,
 	introduce,
 	counter,
 	variants,
@@ -247,8 +280,14 @@ export default memo(function EnemyHero({
 			{hasFactionEmblem(faction) ? <Box component="img" src={factionEmblemUrl(faction)} alt="" sx={styles.emblem} /> : null}
 
 			<Box sx={styles.content}>
-				<Card sx={styles.portrait}>
-					{cardImage ? <CardMedia component="img" sx={styles.portraitArt} image={cardImage} title={name} /> : <ArtPlaceholder name={name} sx={styles.portraitArt} />}
+				<Card sx={{ ...styles.portrait, ...portraitAspect(heroImage !== undefined) }}>
+					{heroImage ? (
+						<CardMedia component="img" sx={styles.heroArt} image={heroImage} title={name} />
+					) : cardImage ? (
+						<CardMedia component="img" sx={styles.portraitArt} image={cardImage} title={name} />
+					) : (
+						<ArtPlaceholder name={name} sx={styles.portraitArt} />
+					)}
 
 					{/* A sibling of the media rather than a child, so opening the art never also fires a click on the portrait. */}
 					{artLink === null ? null : (

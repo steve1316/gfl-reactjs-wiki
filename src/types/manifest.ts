@@ -18,8 +18,11 @@ export interface ManifestSkin extends ManifestForm {
 	modImages?: CardKind[];
 }
 
-/** The two portrait kinds a HOC or an enemy has. */
+/** The two portrait kinds a HOC has. */
 export type PortraitKind = "card" | "full";
+
+/** What an enemy has. `hero` is its full art trimmed to the drawing, which is what its page's portrait card draws. */
+export type EnemyArtKind = PortraitKind | "hero";
 
 /** What one doll has available, across all of its forms. */
 export interface ManifestDoll {
@@ -55,8 +58,8 @@ export interface AssetsManifest {
 	hocs?: Record<string, PortraitKind[]>;
 	/** Which forms exist for each fairy with art, keyed by stringified id. Absent when no fairy art has been merged in yet. */
 	fairies?: Record<string, ("form1" | "form2" | "form3")[]>;
-	/** Which portrait kinds exist for each enemy with art, keyed by stringified id. Absent until enemy art is published. */
-	enemies?: Record<string, PortraitKind[]>;
+	/** Which art kinds exist for each enemy, keyed by stringified id. Absent until enemy art is published. */
+	enemies?: Record<string, EnemyArtKind[]>;
 	/** Faction emblem slugs that have art, such as `sangvis-ferri`. Absent until the emblems are published. */
 	factions?: string[];
 	/**

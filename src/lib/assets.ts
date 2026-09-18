@@ -214,6 +214,19 @@ function factionSlug(faction: string): string {
 }
 
 /**
+ * URL for an enemy's hero portrait, its full art trimmed down to the drawing.
+ *
+ * The game draws every enemy on a square canvas that is mostly transparent, so the published full art cannot fill a portrait card
+ * without being matted. This is the same art with that margin cropped away, which lets the card take the drawing's own shape.
+ *
+ * @param id Enemy id, the archive's `sub_id`.
+ * @returns An absolute URL.
+ */
+export function enemyHeroArtUrl(id: number): string {
+	return join(ASSET_BASE, `enemies/${id}/hero.webp`);
+}
+
+/**
  * URL for a faction's full emblem, the mark beside its wordmark.
  *
  * @param faction Faction name as the enemy data spells it, such as `Sangvis Ferri`.

@@ -20,7 +20,7 @@ import type { EnemyVariant } from "./EnemyHero";
 import EnemySkillsPanel from "./EnemySkillsPanel";
 import EnemyStatsPanel from "./EnemyStatsPanel";
 
-import { enemyCardUrl, enemyFullArtUrl } from "../../lib/assets";
+import { enemyCardUrl, enemyFullArtUrl, enemyHeroArtUrl } from "../../lib/assets";
 import { loadAssimilation, loadEnemyDetails, loadEnemySpineRigs } from "../../lib/data";
 import { hasEnemyArt } from "../../lib/processData";
 import { useEnemies } from "../../lib/useEnemies";
@@ -117,6 +117,7 @@ function EnemyDetail({ family, initialId }: EnemyDetailProps) {
 	const capturedUnit = assimilation === null ? null : (assimilation.units.find((entry) => entry.familyId === enemy.familyId) ?? null);
 	const captured = capturedOn && capturedUnit !== null && assimilation !== null;
 	const cardImage = hasEnemyArt(enemy.id, "card") ? enemyCardUrl(enemy.id) : undefined;
+	const heroImage = hasEnemyArt(enemy.id, "hero") ? enemyHeroArtUrl(enemy.id) : undefined;
 	const heroArtUrl = hasEnemyArt(enemy.id, "full") ? enemyFullArtUrl(enemy.id) : undefined;
 
 	// One pill per tier, labelled by the variant's own name. The base has none of its own, so it reads as Base.
@@ -184,6 +185,7 @@ function EnemyDetail({ family, initialId }: EnemyDetailProps) {
 							ranks={enemy.ranks}
 							details={enemyDetails}
 							cardImage={cardImage}
+							heroImage={heroImage}
 							introduce={captured && capturedUnit !== null ? capturedUnit.introduce : (enemyDetails?.introduce ?? "")}
 							counter={captured ? "" : (enemyDetails?.counter ?? "")}
 							variants={variants}
