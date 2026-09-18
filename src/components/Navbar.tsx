@@ -18,7 +18,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import HomeGlyphIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import BugReportIcon from "@mui/icons-material/BugReport";
+import CrisisAlertIcon from "@mui/icons-material/CrisisAlert";
 
 import { uiUrl } from "../lib/assets";
 import { enemySearchIndex, fairySearchIndex, hocSearchIndex, searchIndex } from "../lib/data";
@@ -102,7 +102,9 @@ const NAV_ITEMS = [
 	// Width 24 rather than 25, because the icon's right side is cut off at 25.
 	{ title: "HOC Index", link: "/hoc-index", icon: <img src={HOCIcon} height={25} width={24} alt="" /> },
 	{ title: "Fairy Index", link: "/fairy-index", icon: <img src={FairyIcon} height={25} width={25} alt="" /> },
-	{ title: "Enemy Index", link: "/enemy-index", icon: <BugReportIcon /> },
+	// A crosshair rather than a bug: the index covers all four hostile factions, so a mark belonging to any one of them would
+	// speak for the others, and the bug glyph reads as a software defect.
+	{ title: "Enemy Index", link: "/enemy-index", icon: <CrisisAlertIcon /> },
 	{ title: "Formation Simulator", link: "/formation", icon: <img src={FormationIcon} height={25} width={25} alt="" /> }
 ];
 

@@ -19,6 +19,7 @@ const tdoll_index_logo = uiUrl("tdoll_index_logo.jpg");
 const equipment_index_logo = uiUrl("equipment_index_logo.jpg");
 const hoc_index_logo = uiUrl("hoc_index_logo.jpg");
 const fairy_index_logo = uiUrl("fairy_index_logo.jpg");
+const enemy_index_logo = uiUrl("enemy_index_logo.jpg");
 const formation_logo = uiUrl("formation_logo.jpg");
 
 /**
@@ -45,6 +46,12 @@ const SECTION_CARDS = [
 	{ title: "Equipment Index", description: "View Index of Equipment available for T-Dolls.", link: "/equipment-index", image: equipment_index_logo },
 	{ title: "HOC Index", description: "View Index of HOCs available.", link: "/hoc-index", image: hoc_index_logo },
 	{ title: "Fairy Index", description: "View Index of Fairies available.", link: "/fairy-index", image: fairy_index_logo },
+	{
+		title: "Enemy Index",
+		description: "View Index of every enemy in the game, and which of them Protocol Assimilation can capture.",
+		link: "/enemy-index",
+		image: enemy_index_logo
+	},
 	{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo }
 ];
 
@@ -88,7 +95,7 @@ export default function Home() {
 	// Set HTML meta-data here using document API.
 	useEffect(() => {
 		document.title = "Griffin Archive";
-		document.querySelector('meta[name="description"]')?.setAttribute("content", "Database for Girls' Frontline featuring T-Dolls, equipment, Fairies and HOCs");
+		document.querySelector('meta[name="description"]')?.setAttribute("content", "Database for Girls' Frontline featuring T-Dolls, equipment, Fairies, HOCs and enemies");
 	}, []);
 
 	return (
