@@ -54,6 +54,23 @@ V3_LIVE2D_HOC_FILES = (("model", ("model.moc3", "model.model3.json")),)
 # Skin-id layout (v3)
 
 
+def faction_slugs(factions_root):
+    """Every faction with published art, by the slug the site builds its URLs from.
+
+    Each faction ships two files, `<slug>.webp` for the full emblem and `<slug>-mark.webp` for the bare mark a filter chip draws.
+    Only the full emblem is listed, since the two are always published together and the site derives the mark's URL from the slug.
+
+    Args:
+        factions_root: The staging tree's `factions` directory, which need not exist.
+
+    Returns:
+        The slugs, in no particular order.
+    """
+    if not os.path.isdir(factions_root):
+        return []
+    return [name[: -len(".webp")] for name in os.listdir(factions_root) if name.endswith(".webp") and not name.endswith("-mark.webp")]
+
+
 def numeric_dirs(folder):
     """List the numerically named subfolders of a folder in numeric order.
 
@@ -235,7 +252,7 @@ def build_v3(assets_root):
     enemies = {
         enemy_id: [kind for kind, name in V3_ENEMY_IMAGE_FILES if os.path.isfile(os.path.join(assets_root, "enemies", enemy_id, name))] for enemy_id in enemy_ids
     }
-    factions = sorted(name[: -len(".webp")] for name in os.listdir(os.path.join(assets_root, "factions"))) if os.path.isdir(os.path.join(assets_root, "factions")) else []
+    factions = sorted(faction_slugs(os.path.join(assets_root, "factions")))
     fairy_ids = numeric_dirs(os.path.join(assets_root, "fairies"))
     fairies = {
         fairy_id: [kind for kind, name in V3_FAIRY_IMAGE_FILES if os.path.isfile(os.path.join(assets_root, "fairies", fairy_id, name))]

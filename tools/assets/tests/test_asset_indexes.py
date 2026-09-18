@@ -279,6 +279,32 @@ class FairyIndexTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Faction emblems
+
+
+class FactionManifestTests(unittest.TestCase):
+    """Each faction ships a full emblem and a bare mark, and only the emblem names the manifest lists."""
+
+    def test_manifest_lists_one_slug_per_faction(self):
+        with tempfile.TemporaryDirectory() as assets:
+            touch(assets, "factions/kcco.webp", "factions/kcco-mark.webp", "factions/sangvis-ferri.webp", "factions/sangvis-ferri-mark.webp")
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["factions"], ["kcco", "sangvis-ferri"])
+
+    def test_manifest_ignores_anything_that_is_not_a_webp(self):
+        with tempfile.TemporaryDirectory() as assets:
+            touch(assets, "factions/paradeus.webp", "factions/readme.txt")
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["factions"], ["paradeus"])
+
+    def test_manifest_has_no_factions_when_the_folder_is_absent(self):
+        with tempfile.TemporaryDirectory() as assets:
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["factions"], [])
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Live2D manifest models
 
 
