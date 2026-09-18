@@ -18,7 +18,6 @@ import MenuIcon from "@mui/icons-material/Menu";
 import HomeGlyphIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CrisisAlertIcon from "@mui/icons-material/CrisisAlert";
 
 import { uiUrl } from "../lib/assets";
 import { enemySearchIndex, fairySearchIndex, hocSearchIndex, searchIndex } from "../lib/data";
@@ -29,6 +28,7 @@ const IndexIcon = uiUrl("index_icon.png");
 const EquipmentIcon = uiUrl("equipment_icon.png");
 const HOCIcon = uiUrl("hoc_icon.png");
 const FairyIcon = uiUrl("fairy_icon.png");
+const EnemyIcon = uiUrl("enemy_icon.png");
 const FormationIcon = uiUrl("formation_icon.png");
 
 /** One entry in the search dropdown, grouped by its leading character. */
@@ -92,8 +92,7 @@ const styles = {
 /**
  * The drawer's destinations. Static, so declared once here rather than rebuilt on every keystroke in the search.
  *
- * Each entry carries its rendered icon rather than a URL, since the Enemy Index has no published icon image and uses a built-in
- * glyph instead. Keeping that choice in the data means the list renderer never has to know which kind an entry uses.
+ * Each entry carries its rendered icon rather than a URL, so the list renderer never has to know how an entry draws itself.
  */
 const NAV_ITEMS = [
 	{ title: "Home", link: "/", icon: <img src={HomeIcon} height={25} width={25} alt="" /> },
@@ -102,9 +101,9 @@ const NAV_ITEMS = [
 	// Width 24 rather than 25, because the icon's right side is cut off at 25.
 	{ title: "HOC Index", link: "/hoc-index", icon: <img src={HOCIcon} height={25} width={24} alt="" /> },
 	{ title: "Fairy Index", link: "/fairy-index", icon: <img src={FairyIcon} height={25} width={25} alt="" /> },
-	// A crosshair rather than a bug: the index covers all four hostile factions, so a mark belonging to any one of them would
-	// speak for the others, and the bug glyph reads as a software defect.
-	{ title: "Enemy Index", link: "/enemy-index", icon: <CrisisAlertIcon /> },
+	// The game's own battle icon, crossed rifles. The index covers all four hostile factions, so a mark belonging to any one of
+	// them would speak for the others.
+	{ title: "Enemy Index", link: "/enemy-index", icon: <img src={EnemyIcon} height={25} width={25} alt="" /> },
 	{ title: "Formation Simulator", link: "/formation", icon: <img src={FormationIcon} height={25} width={25} alt="" /> }
 ];
 
