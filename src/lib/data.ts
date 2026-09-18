@@ -19,6 +19,7 @@ import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment"
 import type { FairyData } from "../types/fairy";
 import type { FormationConstants, FormationData, FormationEnemy, FormationForm } from "../types/formation";
 import type { HocData } from "../types/hoc";
+import type { StoryChapter, StoryIndex, StoryScene } from "../types/story";
 import type { Live2dIndex, Live2dMotion, Live2dTdollFile } from "../types/live2d";
 import type { EnemySpineEntry, EnemySpineIndex, HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
 import type { DollDetails, RawTDoll, TDoll, TDollWithDetails } from "../types/tdoll";
@@ -113,7 +114,9 @@ const EXISTING_DATA_URLS = import.meta.glob<string>(
 		"../data/enemy-details.json",
 		"../data/assimilation.json",
 		"../data/enemy-spine-index.json",
-		"../data/live2d-index.json"
+		"../data/live2d-index.json",
+		"../data/story/index.json",
+		"../data/story/chapter-*.json"
 	],
 	{
 		query: "?url",
@@ -148,7 +151,16 @@ const FORMATION_DATA_URLS = import.meta.glob<string>("../data/formation/*.json",
 	eager: true
 });
 
-/** The URL maps above, merged under one lookup key so `fetchData` does not need to know they differ. */
+/**
+ * Hosted URLs of each story scene, resolved only when a scene is opened.
+ *
+ * Deliberately not eager, unlike every glob above. There are hundreds of scenes, and an eager glob would put every one of their URL
+ * strings into this module, which other pages import - so reading one scene would cost every page on the site a little. Lazy keeps
+ * that cost on the story player alone.
+ */
+const STORY_SCENE_URLS = import.meta.glob<string>("../data/story/scenes/*.json", { query: "?url&no-inline", import: "default" });
+
+/** The eager URL maps above, merged under one lookup key so `fetchData` does not need to know they differ. */
 const DATA_URLS: Record<string, string> = { ...EXISTING_DATA_URLS, ...TDOLL_LIVE2D_DATA_URLS, ...FORMATION_DATA_URLS };
 
 /**
@@ -179,6 +191,15 @@ const equipmentCache = new Map<0, Promise<{ types: EquipmentType[]; items: Recor
 
 /** Cache of the in-flight or loaded HOCs, under the single key `0`. A failed load is dropped so it can be retried. */
 const hocCache = new Map<0, Promise<HocData>>();
+
+/** Cache of the in-flight or loaded story index, under the single key `0`. A failed load is dropped so it can be retried. */
+const storyIndexCache = new Map<0, Promise<StoryIndex>>();
+
+/** Cache of loaded chapters, keyed by chapter id. A failed load is dropped so it can be retried. */
+const storyChapterCache = new Map<number, Promise<StoryChapter>>();
+
+/** Cache of loaded scenes, keyed by script name. A failed load is dropped so it can be retried. */
+const storySceneCache = new Map<string, Promise<StoryScene>>();
 
 /** Cache of the in-flight or loaded HOC Spine index, under the single key `0`. A failed load is dropped so it can be retried. */
 const hocSpineIndexCache = new Map<0, Promise<HocSpineIndex>>();
@@ -650,4 +671,66 @@ export function loadFormationData(): Promise<FormationData> {
 		return { forms, constants, enemies: enemies.items };
 	};
 	return formationCache.get(0) ?? cacheUntilFailure(formationCache, 0, load());
+}
+
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////
+// Story
+
+/**
+ * Turn a script name into the filename its scene was written under.
+ *
+ * Mirrors `sceneFile` in `tools/story/build_story.mjs`. A couple of script names carry a folder part, and a slash cannot go in a
+ * filename, so it becomes a double underscore - no script name contains one, which keeps the mapping reversible.
+ *
+ * @param name The script name, such as `0-1-1`.
+ * @returns The filename stem.
+ */
+function sceneFile(name: string): string {
+	return name.replace(/\//g, "__").toLowerCase();
+}
+
+/**
+ * Load the list of story chapters. Small enough to fetch before a reader has chosen anything.
+ *
+ * @returns The chapters in menu order, without their missions.
+ * @throws When the file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadStoryIndex(): Promise<StoryIndex> {
+	return storyIndexCache.get(0) ?? cacheUntilFailure(storyIndexCache, 0, fetchData<StoryIndex>("story/index"));
+}
+
+/**
+ * Load one chapter's mission list.
+ *
+ * @param id The chapter id from the story index.
+ * @returns The chapter's missions in order.
+ * @throws When the file fails to load. The failed load is not cached, so a later call tries again.
+ */
+export function loadStoryChapter(id: number): Promise<StoryChapter> {
+	return storyChapterCache.get(id) ?? cacheUntilFailure(storyChapterCache, id, fetchData<StoryChapter>(`story/chapter-${id}`));
+}
+
+/**
+ * Load one scene's beats.
+ *
+ * The scene URLs are behind a lazy glob, so this resolves the URL before fetching it rather than reading it from a map.
+ *
+ * @param name The script name from a mission's `scripts` list.
+ * @returns The scene.
+ * @throws When the scene is not a bundled file, or the fetch fails. A failed load is not cached, so a later call tries again.
+ */
+export function loadStoryScene(name: string): Promise<StoryScene> {
+	const load = async (): Promise<StoryScene> => {
+		const resolve = STORY_SCENE_URLS[`../data/story/scenes/${sceneFile(name)}.json`];
+		if (resolve === undefined) {
+			throw new Error(`story scene ${name} is not a bundled data file`);
+		}
+		const response = await fetch(await resolve());
+		if (!response.ok) {
+			throw new Error(`story scene ${name} failed to load with HTTP ${response.status}`);
+		}
+		return (await response.json()) as StoryScene;
+	};
+	return storySceneCache.get(name) ?? cacheUntilFailure(storySceneCache, name, load());
 }
