@@ -805,8 +805,9 @@ def story_items(index, sprites, backgrounds):
     """
     prefabs = story_prefab_index(index)
     scenes = story_background_index(index)
-    sources = read_json(STORY_SOURCES_PATH)["sprites"] if os.path.exists(STORY_SOURCES_PATH) else {}
-    by_prefab = {name.lower(): entry for name, entry in sources.items()}
+    listed = read_json(STORY_SOURCES_PATH) if os.path.exists(STORY_SOURCES_PATH) else {}
+    by_prefab = {name.lower(): entry for name, entry in listed.get("sprites", {}).items()}
+    expression_sources = {name.lower(): entry for name, entry in listed.get("expressions", {}).items()}
     items = []
     wanted_expressions = sprites if isinstance(sprites, dict) else {name: [] for name in sprites}
     for prefab in sorted(wanted_expressions, key=str.lower):
@@ -832,6 +833,27 @@ def story_items(index, sprites, backgrounds):
         # Many script sprite slots carry an off-screen speaker's label rather than a character, so they have no art and are skipped.
         if bundle:
             items.append(resolve_item(index, "story_sprite", f"story_sprite:{prefab}", prefab, [bundle], STORY_SPRITE_ROLES, prefab=prefab, expressions=expressions))
+    # An expression whose art sits outside the prefab's bundle is its own item, since it can come from a different bundle again.
+    for prefab, wanted in sorted(wanted_expressions.items(), key=lambda pair: pair[0].lower()):
+        listed_expressions = expression_sources.get(prefab.lower(), {})
+        for expression in wanted:
+            source = listed_expressions.get(str(expression))
+            if not source:
+                continue
+            items.append(
+                resolve_item(
+                    index,
+                    "story_sprite",
+                    f"story_sprite:{prefab}#{expression}",
+                    source["texture"],
+                    [source["bundle"]],
+                    STORY_SOURCE_ROLES,
+                    prefab=prefab,
+                    texture=source["texture"],
+                    expression=expression,
+                    expressions=[],
+                )
+            )
     for code in sorted(backgrounds, key=str.lower):
         bundle = scenes.get(code.lower())
         if bundle:
@@ -1275,7 +1297,10 @@ def select_new_items(items, targets):
             # when any one of its stems is unpublished, rather than all or nothing the way a background or the chrome is.
             published = targets.get("story", set())
             stem = item["prefab"].lower()
-            keep = any(name not in published for name in [f"story_sprite:{stem}"] + [f"story_sprite:{stem}_{index}" for index in item.get("expressions", [])])
+            if item.get("expression"):
+                keep = f"story_sprite:{stem}_{item['expression']}" not in published
+            else:
+                keep = any(name not in published for name in [f"story_sprite:{stem}"] + [f"story_sprite:{stem}_{index}" for index in item.get("expressions", [])])
         elif tier in ("story_background", "story_ui"):
             keep = item["key"].lower() not in targets.get("story", set())
         elif tier == "live2d":

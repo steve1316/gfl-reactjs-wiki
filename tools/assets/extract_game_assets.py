@@ -993,6 +993,19 @@ def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
         for item in bundle_items:
             prefab = item["prefab"]
             stem = story_sprite_name(prefab)
+            # An item for a single expression writes only that variant, from the texture the source file names.
+            if item.get("expression"):
+                named = item.get("texture", "")
+                image = folded.get(named.lower())
+                if image is None:
+                    result["missing"].append({"key": item["key"], "role": "texture", "reason": f"{named} is not in {bundle}"})
+                    continue
+                try:
+                    data = encode_webp(image, FULL_QUALITY)
+                    write_file(staging, f"story/sprites/{stem}_{item['expression']}.webp", data, REPORT_TIERS[("story_sprite", "full")], result)
+                except Exception as exc:
+                    result["missing"].append({"key": item["key"], "role": "texture", "reason": f"encode or write failed: {exc!r}"})
+                continue
             # A sprite listed in `story-sprite-sources.json` names its texture outright, since neither naming rule reaches it.
             source = item.get("texture")
             for role, suffix in (("full", ""), ("full_d", "_D")):
