@@ -8,7 +8,7 @@ import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import { storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
 import { loadStoryChapter, loadStoryScene } from "../../lib/data";
-import { hasStoryBackground, hasStorySprite } from "../../lib/processData";
+import { hasStoryBackground, hasStorySprite, storySpriteStem } from "../../lib/processData";
 import type { StoryBeat, StoryChapter, StoryPage, StoryScene } from "../../types/story";
 
 /** How long one character takes to type at the middle speed, in milliseconds. */
@@ -25,20 +25,6 @@ const styles = {
 	sprites: { position: "absolute", inset: 0, display: "flex", alignItems: "stretch", justifyContent: "space-between", px: { xs: 1, sm: 4 } },
 	// Lifted just clear of the dialogue box, so a character stands on the scene's ground rather than behind the text.
 	spriteSide: { height: "100%", alignItems: "flex-end", pb: "15%" },
-	// Stands in for art the game does not ship, the way `ArtPlaceholder` does for a card that is not hosted.
-	spriteGhost: {
-		width: { xs: 56, sm: 96 },
-		height: "58%",
-		borderRadius: "10px 10px 0 0",
-		bgcolor: "rgba(255,255,255,0.045)",
-		border: "1px solid",
-		borderColor: "rgba(255,255,255,0.14)",
-		display: "flex",
-		alignItems: "flex-end",
-		justifyContent: "center",
-		pb: 1
-	},
-	spriteName: { color: "text.secondary", writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "0.08em" },
 	spriteArt: { height: "88%", width: "auto", maxWidth: { xs: 160, sm: 320 }, objectFit: "contain", objectPosition: "bottom", display: "block" },
 	box: {
 		position: "absolute",
@@ -351,24 +337,25 @@ export default function Story() {
 									<Stack key={side} direction="row" spacing={1} sx={styles.spriteSide}>
 										{(beat?.sprites ?? [])
 											.filter((sprite) => sprite.side === side)
-											.map((sprite, position) =>
-												hasStorySprite(sprite.prefab) ? (
+											.flatMap((sprite, position) => {
+												// A slot with no art is not a character with a missing picture. Scripts use the same slot to carry an
+												// off-screen speaker's label, such as a description of a voice, so the stage shows nobody and the
+												// dialogue box still names who is talking.
+												const stem = storySpriteStem(sprite.prefab);
+												if (stem === null) {
+													return [];
+												}
+												return [
 													<Box
 														key={`${sprite.prefab}-${position}`}
 														component="img"
 														// The expression the script asked for, or the plain pose when the game ships no art for it.
-														src={storySpriteUrl(sprite.prefab, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0)}
+														src={storySpriteUrl(stem, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0)}
 														alt={sprite.prefab}
 														sx={styles.spriteArt}
 													/>
-												) : (
-													<Box key={`${sprite.prefab}-${position}`} sx={styles.spriteGhost}>
-														<Typography variant="caption" sx={styles.spriteName} noWrap>
-															{sprite.prefab}
-														</Typography>
-													</Box>
-												)
-											)}
+												];
+											})}
 									</Stack>
 								))}
 							</Box>
