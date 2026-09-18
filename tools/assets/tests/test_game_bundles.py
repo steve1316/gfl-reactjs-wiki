@@ -841,6 +841,7 @@ class NewTargetTests(unittest.TestCase):
         self.assertEqual(
             self.targets,
             {
+                "units": set(),
                 "dolls": {424},
                 "mods": {100},
                 "skins": {(65, 9001)},
@@ -918,7 +919,7 @@ class NewTargetTests(unittest.TestCase):
             self.assertTrue(inventory["onlyMissing"])
             self.assertTrue(any(item["tier"] == "art" for item in inventory["items"]))
 
-            dolls, equipment_ids, _hocs, _fairies, _enemies = game_bundles.load_site(SITE_DATA)
+            dolls, equipment_ids, _hocs, _fairies, _enemies, _units = game_bundles.load_site(SITE_DATA)
             full = {"equipment": equipment_ids, "dolls": {}}
             for doll in dolls:
                 skins = {str(skin_id): {"images": ["card"]} for skin_id in ((doll.get("skins") or {}).get("skin_ids") or []) if isinstance(skin_id, int)}
@@ -939,9 +940,9 @@ class NewTargetTests(unittest.TestCase):
         gf-data-us checkout, not committed), so there is no committed source to check the real manifest's `skin` targets against here. The
         wiring that resolves and threads real skin models through `new_targets` is covered end to end instead, on a scratch tree, by
         `test_inventory_from_paths_only_missing_threads_skin_live2d_models_into_new_targets`."""
-        dolls, equipment_ids, hocs, fairies, enemies = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
+        dolls, equipment_ids, hocs, fairies, enemies, units = game_bundles.load_site(game_bundles.SITE_DATA_DIR)
         manifest = game_bundles.read_json(game_bundles.MANIFEST_PATH)
-        targets = game_bundles.new_targets(dolls, equipment_ids, manifest, hocs=hocs, fairies=fairies, enemies=enemies)
+        targets = game_bundles.new_targets(dolls, equipment_ids, manifest, hocs=hocs, fairies=fairies, enemies=enemies, units=units)
         published_live2d = manifest.get("live2d", {})
         published_fairy_ids = set(int(fid) for fid in published_live2d.get("fairies", {}))
         published_hoc_ids = set(int(hid) for hid in published_live2d.get("hocs", {}))
@@ -950,6 +951,10 @@ class NewTargetTests(unittest.TestCase):
         # manifest grows an `enemies` block.
         published_enemy_ids = set(int(eid) for eid in manifest.get("enemies", {}))
         expected_enemies = {enemy["id"] for enemy in enemies if enemy["id"] not in published_enemy_ids}
+        # Captured units are targets until their skill icons are published, and this set empties itself once the manifest grows an
+        # `assimilation` block, the same way the enemy one above does.
+        published_unit_ids = set(int(uid) for uid in manifest.get("assimilation", {}))
+        expected_units = {unit_id for unit_id in units if unit_id not in published_unit_ids}
         self.assertEqual(
             targets,
             {
@@ -960,6 +965,7 @@ class NewTargetTests(unittest.TestCase):
                 "hocs": set(),
                 "fairies": set(),
                 "enemies": expected_enemies,
+                "units": expected_units,
                 # True once the emblems are published, which is a fixed set rather than a per-id one.
                 "factions_hosted": len(manifest.get("factions", [])) > 0,
                 "live2d": expected_live2d,

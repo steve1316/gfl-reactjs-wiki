@@ -38,6 +38,10 @@ V3_FAIRY_IMAGE_FILES = (("form1", "form1.webp"), ("form2", "form2.webp"), ("form
 # An enemy has the same two portrait kinds a HOC does. Every enemy has a card; only about two in three have the large art.
 V3_ENEMY_IMAGE_FILES = (("card", "card.webp"), ("full", "full.webp"))
 
+# The skill slots a captured Protocol Assimilation unit can have an icon for, in the order its page lists them. A unit whose `skill2`
+# is a strategic skill has no icon for that slot, so the slot simply does not appear in its list.
+V3_ASSIMILATION_SKILLS = ("skill1", "skill2", "skill3", "skill_advance")
+
 # Live2D fairy form kinds, in manifest order, with the two files that must both exist for the form to count as present.
 V3_LIVE2D_FAIRY_FILES = (
     ("form1", ("form1.moc3", "form1.model3.json")),
@@ -253,6 +257,10 @@ def build_v3(assets_root):
         enemy_id: [kind for kind, name in V3_ENEMY_IMAGE_FILES if os.path.isfile(os.path.join(assets_root, "enemies", enemy_id, name))] for enemy_id in enemy_ids
     }
     factions = sorted(faction_slugs(os.path.join(assets_root, "factions")))
+    unit_ids = numeric_dirs(os.path.join(assets_root, "assimilation"))
+    assimilation = {
+        unit_id: [slot for slot in V3_ASSIMILATION_SKILLS if os.path.isfile(os.path.join(assets_root, "assimilation", unit_id, f"{slot}.png"))] for unit_id in unit_ids
+    }
     fairy_ids = numeric_dirs(os.path.join(assets_root, "fairies"))
     fairies = {
         fairy_id: [kind for kind, name in V3_FAIRY_IMAGE_FILES if os.path.isfile(os.path.join(assets_root, "fairies", fairy_id, name))]
@@ -261,7 +269,20 @@ def build_v3(assets_root):
 
     live2d = build_live2d(assets_root)
 
-    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs, "fairies": fairies, "enemies": enemies, "factions": factions, "live2d": live2d}
+    return {
+        "version": 3,
+        "imageKinds": list(V3_IMAGE_KINDS),
+        "equipment": equipment,
+        "dolls": dolls,
+        "hocs": hocs,
+        "fairies": fairies,
+        "enemies": enemies,
+        "factions": factions,
+        "live2d": live2d,
+        # Last, so a manifest merged from an incremental staging tree matches this one: the merge appends a key the committed
+        # manifest does not have yet, and `publish.py prepare` compares the two byte for byte.
+        "assimilation": assimilation,
+    }
 
 
 def dumps(manifest, indent=None):
@@ -302,6 +323,7 @@ def main():
     print(f"  fairies      {len(manifest['fairies'])}")
     print(f"  enemies      {len(manifest['enemies'])}")
     print(f"  factions     {len(manifest['factions'])}")
+    print(f"  assimilation {len(manifest['assimilation'])}")
     print(f"  live2d fairies {len(manifest['live2d']['fairies'])}")
     print(f"  live2d hocs    {len(manifest['live2d']['hocs'])}")
     print(f"  live2d tdolls  {len(manifest['live2d']['tdolls'])}")

@@ -159,6 +159,15 @@ class PathTests(unittest.TestCase):
         self.assertEqual(extract.skill_outputs(item), ["tdolls/65/skill1.png", "tdolls/20/skill2.png"])
         self.assertEqual(extract.equip_output({"equip_id": 120}), "equipment/120.png")
 
+    def test_a_skill_icon_shared_with_a_captured_unit_is_written_to_both(self):
+        """One icon serves a doll slot and a Protocol Assimilation unit slot, so it is written under each."""
+        item = {"users": [[65, "skill1"]], "unit_users": [[1013, "skill1"], [1013, "skill_advance"]]}
+        self.assertEqual(extract.skill_outputs(item), ["tdolls/65/skill1.png", "assimilation/1013/skill1.png", "assimilation/1013/skill_advance.png"])
+
+    def test_a_skill_icon_no_doll_uses_is_written_only_for_the_unit(self):
+        """A Ringleader's own skill has no doll using it, so the icon lands under the unit alone."""
+        self.assertEqual(extract.skill_outputs({"users": [], "unit_users": [[1013, "skill1"]]}), ["assimilation/1013/skill1.png"])
+
     def test_hosted_card_names(self):
         """Hosted card names parse into a form and skin slot, damaged variants and non-cards are ignored."""
         self.assertEqual(extract.parse_hosted_card("65_card.png"), ("normal", None))

@@ -112,7 +112,7 @@ def merge_manifest(committed, partial):
 
     A partial's `hocs` entry is a plain list of image kinds, keyed by HOC id. A HOC id is either entirely new or entirely already
     committed, there is nothing to merge piecemeal within one. A partial's `fairies` and `enemies` entries merge the same way, keyed by
-    fairy id and enemy id.
+    fairy id and enemy id, and so does `assimilation`, keyed by captured unit id and listing that unit's skill icon slots.
     A partial's `live2d` entry merges the same way too, one level deeper: its `fairies` and `hocs` sub-keys each merge by id.
 
     Returns:
@@ -145,7 +145,7 @@ def merge_manifest(committed, partial):
         conflicts.extend(f"doll {doll_id} {skill} icon" for skill in record["skills"] if skill in entry["skills"])
         entry["skills"] = [skill for skill in SKILL_KINDS if skill in entry["skills"] or skill in record["skills"]]
         merged["dolls"][doll_id] = in_order(entry, MANIFEST_DOLL_KEYS)
-    for key, label in (("hocs", "hoc"), ("fairies", "fairy"), ("enemies", "enemy")):
+    for key, label in (("hocs", "hoc"), ("fairies", "fairy"), ("enemies", "enemy"), ("assimilation", "captured unit")):
         if key in partial or key in merged:
             entries = dict(merged.get(key, {}))
             for entry_id, kinds in partial.get(key, {}).items():

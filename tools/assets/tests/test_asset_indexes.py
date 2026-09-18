@@ -279,6 +279,32 @@ class FairyIndexTests(unittest.TestCase):
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
 # //////////////////////////////////////////////////////////////////////////////////////////////////
+# Protocol Assimilation skill icons
+
+
+class AssimilationManifestTests(unittest.TestCase):
+    """A captured unit's skill icons are recorded per unit, keyed by the unit's own id rather than any enemy id."""
+
+    def test_manifest_lists_the_slots_a_unit_has_an_icon_for(self):
+        with tempfile.TemporaryDirectory() as assets:
+            touch(assets, "assimilation/1013/skill1.png", "assimilation/1013/skill_advance.png", "assimilation/1001/skill1.png")
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["assimilation"], {"1001": ["skill1"], "1013": ["skill1", "skill_advance"]})
+
+    def test_manifest_keeps_the_page_order_rather_than_the_file_order(self):
+        with tempfile.TemporaryDirectory() as assets:
+            touch(assets, "assimilation/1013/skill_advance.png", "assimilation/1013/skill2.png", "assimilation/1013/skill1.png")
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["assimilation"], {"1013": ["skill1", "skill2", "skill_advance"]})
+
+    def test_manifest_has_no_units_when_the_folder_is_absent(self):
+        with tempfile.TemporaryDirectory() as assets:
+            manifest = build_manifest.build_v3(assets)
+        self.assertEqual(manifest["assimilation"], {})
+
+
+# //////////////////////////////////////////////////////////////////////////////////////////////////
+# //////////////////////////////////////////////////////////////////////////////////////////////////
 # Faction emblems
 
 

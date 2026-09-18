@@ -160,6 +160,26 @@ class ManifestMergeTests(unittest.TestCase):
         merged = merge_indexes.merge_manifest(committed_manifest(), partial_manifest())
         self.assertNotIn("hocs", merged)
 
+    def test_new_captured_unit_joins_in_numeric_order(self):
+        """A partial captured unit's skill icon slots join the committed assimilation dict by numeric id."""
+        committed = committed_manifest()
+        committed["assimilation"] = {"1013": ["skill1"]}
+        partial = partial_manifest()
+        partial["assimilation"] = {"1022": ["skill1", "skill_advance"]}
+        merged = merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(list(merged["assimilation"]), ["1013", "1022"])
+        self.assertEqual(merged["assimilation"]["1022"], ["skill1", "skill_advance"])
+
+    def test_captured_unit_conflict_is_refused(self):
+        """A captured unit the committed manifest already lists stops the merge, so published icons are never replaced."""
+        committed = committed_manifest()
+        committed["assimilation"] = {"1013": ["skill1"]}
+        partial = partial_manifest()
+        partial["assimilation"] = {"1013": ["skill3"]}
+        with self.assertRaises(merge_indexes.MergeConflict) as caught:
+            merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(caught.exception.conflicts, ["captured unit 1013 art"])
+
     def test_new_fairy_joins_in_numeric_order(self):
         """A partial fairy art entry joins the committed fairies dict by numeric id."""
         committed = committed_manifest()

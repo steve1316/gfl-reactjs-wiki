@@ -445,12 +445,13 @@ def skill_outputs(item):
     """List the skill icon files one skill codename is written to.
 
     Args:
-        item: A `skill_icon` inventory item with `users`.
+        item: A `skill_icon` inventory item with `users`, and `unit_users` when captured units share the icon.
 
     Returns:
-        One `tdolls/<id>/<slot>.png` path per doll slot using the icon.
+        One `tdolls/<id>/<slot>.png` path per doll slot using the icon, then one `assimilation/<id>/<slot>.png` per captured unit slot.
     """
-    return [f"tdolls/{doll_id}/{slot}.png" for doll_id, slot in item["users"]]
+    paths = [f"tdolls/{doll_id}/{slot}.png" for doll_id, slot in item["users"]]
+    return paths + [f"assimilation/{unit_id}/{slot}.png" for unit_id, slot in item.get("unit_users", [])]
 
 
 def equip_output(item):

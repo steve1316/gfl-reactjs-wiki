@@ -217,6 +217,11 @@ EXPECTED_MISSING_ART = frozenset(("enemy_art:232001",))
 # Skill codes whose icon file carries another name. `c93G` was checked pixel-identical to the hosted C93 skill icon.
 SKILL_ICON_ALIASES = {"c93": "c93G"}
 
+# The `sangvis` fields holding a captured unit's skill group ids, in the order its page lists them. Thirteen units point `skill2` at a
+# strategic skill, which lives in `chess_skill` rather than `battle_skill_config` and so resolves to no code and no icon. The other
+# seventeen are ordinary skills with icons like the rest, which is why the slot is listed rather than skipped.
+ASSIMILATION_SKILL_SLOTS = ("skill1", "skill2", "skill3", "skill_advance")
+
 LOG_LOCK = threading.Lock()
 
 
@@ -297,8 +302,9 @@ def load_site(site_dir):
         site_dir: Directory holding `dolls-*.json`, `equipment.json` and, when hosted, `hocs.json` and `fairies.json`.
 
     Returns:
-        A `(dolls, equipment_ids, hocs, fairies, enemies)` tuple. Dolls are sorted by id, ids are sorted and deduplicated, and `hocs`,
-        `fairies` and `enemies` are lists of `{"id": int, "code": str, "name": str}` sorted by id, empty when their site file is absent.
+        A `(dolls, equipment_ids, hocs, fairies, enemies, units)` tuple. Dolls are sorted by id, ids are sorted and deduplicated, `hocs`,
+        `fairies` and `enemies` are lists of `{"id": int, "code": str, "name": str}` sorted by id, empty when their site file is absent,
+        and `units` is the sorted ids of the Protocol Assimilation units the site ships.
     """
     dolls = []
     for path in sorted(glob.glob(os.path.join(site_dir, "dolls-*.json"))):
@@ -309,7 +315,26 @@ def load_site(site_dir):
     hocs = load_records(os.path.join(site_dir, "hocs.json"))
     fairies = load_records(os.path.join(site_dir, "fairies.json"))
     enemies = load_records(os.path.join(site_dir, "enemies.json"))
-    return dolls, equipment_ids, hocs, fairies, enemies
+    return dolls, equipment_ids, hocs, fairies, enemies, assimilation_units(site_dir)
+
+
+def assimilation_units(site_dir):
+    """Read the ids of the Protocol Assimilation units the site shows.
+
+    These are the enemies a player can capture and field, and they carry skills with icons of their own. Their ids are `sangvis.id`,
+    which is what the skill icons are published under, rather than any enemy id: one captured unit stands for a whole enemy family,
+    so keying on an enemy's own id would copy the same icon under every variant of it.
+
+    Args:
+        site_dir: Directory holding `assimilation.json`.
+
+    Returns:
+        The unit ids, sorted. Empty when the file is absent.
+    """
+    path = os.path.join(site_dir, "assimilation.json")
+    if not os.path.isfile(path):
+        return []
+    return sorted(unit["id"] for unit in read_json(path)["units"])
 
 
 def load_tables(gf_data_dir):
@@ -319,7 +344,8 @@ def load_tables(gf_data_dir):
         gf_data_dir: The `gf-data-us` checkout.
 
     Returns:
-        A `(guns, skill_codes, equip_codes)` triple: gun rows by id, skill codename by skill group id (lowest level wins), equipment codename by id.
+        A `(guns, skill_codes, equip_codes, sangvis)` tuple: gun rows by id, skill codename by skill group id (lowest level wins),
+        equipment codename by id, and the `sangvis` rows by id, whose skill fields are skill group ids like a gun's.
     """
     stc = os.path.join(gf_data_dir, "stc")
     guns = {row["id"]: row for row in read_json(os.path.join(stc, "gun.json"))}
@@ -328,7 +354,10 @@ def load_tables(gf_data_dir):
     for row in skill_rows:
         skill_codes.setdefault(row["skill_group_id"], row["code"])
     equip_codes = {row["id"]: row["code"] for row in read_json(os.path.join(stc, "equip.json"))}
-    return guns, skill_codes, equip_codes
+    # Older checkouts predate Protocol Assimilation, and the test fixtures carry only the tables they exercise.
+    sangvis_path = os.path.join(stc, "sangvis.json")
+    sangvis = {row["id"]: row for row in read_json(sangvis_path)} if os.path.isfile(sangvis_path) else {}
+    return guns, skill_codes, equip_codes, sangvis
 
 
 def load_live2d_table(gf_data_dir):
@@ -567,22 +596,30 @@ def legacy_skill_item(doll_id, slot):
     return item
 
 
-def skill_items(index, dolls, guns, skill_codes):
+def skill_items(index, dolls, guns, skill_codes, units=(), sangvis=None):
     """Resolve one skill icon item per distinct skill codename.
 
-    Skill 1 comes from the doll's `gun.skill1`, and a Mod's skill 2 from `gun(20000 + id).skill2`. Icons are shared by codename, so each item
-    lists the doll slots that use it. A collaboration doll has no `gun` row, so its slots become legacy items read from the old asset repo.
+    Skill 1 comes from the doll's `gun.skill1`, and a Mod's skill 2 from `gun(20000 + id).skill2`. A captured Protocol Assimilation unit
+    keeps its skill group ids on its own `sangvis` row and draws from the same icon set. Icons are shared by codename, so each item lists
+    both the doll slots and the unit slots that use it. A collaboration doll has no `gun` row, so its slots become legacy items read from
+    the old asset repo.
+
+    A unit's `skill2` is its strategic skill, which lives in `chess_skill` rather than `battle_skill_config` and has no icon at all. It
+    resolves to no code and is skipped in silence, the way a doll slot with no code would not be.
 
     Args:
         index: The bundle index from `load_index`.
         dolls: Site doll records.
         guns: Gun rows by id.
         skill_codes: Skill codename by skill group id.
+        units: Ids of the Protocol Assimilation units the site ships.
+        sangvis: `sangvis` rows by id, holding each unit's skill group ids. Required when `units` is not empty.
 
     Returns:
         A list of item dicts.
     """
     users = collections.OrderedDict()
+    unit_users = collections.OrderedDict()
     items = []
     for doll in dolls:
         doll_id = doll["normal"]["id"]
@@ -598,9 +635,18 @@ def skill_items(index, dolls, guns, skill_codes):
                 items.append(unresolved_item("skill_icon", f"skill_icon:doll:{doll_id}:{slot}", "no skill code", users=[[doll_id, slot]]))
                 continue
             users.setdefault(code, []).append([doll_id, slot])
-    for code, slots in users.items():
+    for unit_id in units:
+        row = (sangvis or {}).get(unit_id) or {}
+        for slot in ASSIMILATION_SKILL_SLOTS:
+            code = skill_codes.get(row.get(slot))
+            if code:
+                unit_users.setdefault(code, []).append([unit_id, slot])
+    for code in list(users) + [code for code in unit_users if code not in users]:
         icon = SKILL_ICON_ALIASES.get(code, code)
-        items.append(resolve_item(index, "skill_icon", f"skill_icon:{code}", icon, [SKILL_BUNDLE], SKILL_ROLES, code=code, users=slots))
+        fields = {"code": code, "users": users.get(code, [])}
+        if code in unit_users:
+            fields["unit_users"] = unit_users[code]
+        items.append(resolve_item(index, "skill_icon", f"skill_icon:{code}", icon, [SKILL_BUNDLE], SKILL_ROLES, **fields))
     return items
 
 
@@ -972,7 +1018,7 @@ def skin_live2d_items(index, models):
     return [item for item in (skin_live2d_item(index, model) for model in models) if item is not None]
 
 
-def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(), live2d_models=()):
+def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(), live2d_models=(), units=()):
     """Work out which dolls, Mods, skins, equipment, HOCs and fairies the committed manifest does not list yet.
 
     A known gap inside a hosted form, such as a skin with no rig, is not a target, because the form itself is listed. A HOC counts as hosted
@@ -989,6 +1035,7 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(),
         fairies: Fairy records from `load_site`, each `{"id", "code", "name"}`.
         enemies: Enemy records from `load_site`, each `{"id", "code", "name"}`.
         live2d_models: Records from `skin_live2d_table.skin_live2d_models`.
+        units: Ids of the Protocol Assimilation units the site ships.
 
     Returns:
         A dict of `dolls`, `mods`, `equipment`, `hocs`, `fairies` and `enemies` id sets, a `skins` set of `(doll_id, skin_id)` pairs (only numeric skin
@@ -1017,6 +1064,8 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(),
     listed_enemies = manifest.get("enemies", {})
     targets["enemies"] = {enemy["id"] for enemy in enemies if str(enemy["id"]) not in listed_enemies}
     targets["factions_hosted"] = len(manifest.get("factions", [])) > 0
+    listed_units = manifest.get("assimilation", {})
+    targets["units"] = {unit_id for unit_id in units if str(unit_id) not in listed_units}
     listed_live2d = manifest.get("live2d", {})
     listed_live2d_fairies = listed_live2d.get("fairies", {})
     listed_live2d_hocs = listed_live2d.get("hocs", {})
@@ -1052,8 +1101,9 @@ def select_new_items(items, targets):
         tier = item["tier"]
         if tier == "skill_icon":
             users = [user for user in item.get("users", []) if (user[1] == "skill1" and user[0] in targets["dolls"]) or (user[1] == "skill2" and user[0] in targets["mods"])]
-            if users:
-                selected.append({**item, "users": users})
+            unit_users = [user for user in item.get("unit_users", []) if user[0] in targets.get("units", set())]
+            if users or unit_users:
+                selected.append({**item, "users": users, **({"unit_users": unit_users} if unit_users else {})})
             continue
         if tier in ("art", "spine"):
             keep = item.get("doll_id") in targets["dolls"]
@@ -1142,7 +1192,9 @@ def summarise(items, index, include_ui=True):
     return summary, bundles
 
 
-def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=(), enemies=(), live2d_rows=(), doll_ids=None):
+def build_inventory(
+    resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=None, hocs=(), fairies=(), enemies=(), live2d_rows=(), doll_ids=None, units=(), sangvis=None
+):
     """Resolve every wanted asset against the ResData manifest.
 
     Args:
@@ -1158,6 +1210,8 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         enemies: Enemy records from `load_site`, each `{"id", "code"}`.
         live2d_rows: Rows from `stc/live2d.json`, used to resolve T-Doll skin Live2D models. Empty when the checkout has none.
         doll_ids: Doll ids the wiki hosts, used to filter `live2d_rows`. Defaults to every id in `dolls` when not given.
+        units: Ids of the Protocol Assimilation units the site ships, which carry skill icons of their own.
+        sangvis: `sangvis` rows by id, holding each unit's skill group ids.
 
     Returns:
         The inventory dict with `resVersion`, `resUrl`, `summary`, `bundles` and `items`.
@@ -1167,7 +1221,7 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
     items = []
     for doll in dolls:
         items.extend(doll_items(index, doll, codes))
-    items.extend(skill_items(index, dolls, guns, skill_codes))
+    items.extend(skill_items(index, dolls, guns, skill_codes, units, sangvis))
     items.extend(equip_items(index, equipment_ids, equip_codes))
     for hoc in hocs:
         items.extend(hoc_items(index, hoc))
@@ -1203,28 +1257,20 @@ def inventory_from_paths(resdata_path, gf_data_dir, site_dir, manifest_path=None
     Returns:
         The inventory dict from `build_inventory`.
     """
-    dolls, equipment_ids, hocs, fairies, enemies = load_site(site_dir)
+    dolls, equipment_ids, hocs, fairies, enemies, units = load_site(site_dir)
+    guns, skill_codes, equip_codes, sangvis = load_tables(gf_data_dir)
     live2d_rows = load_live2d_table(gf_data_dir)
     resdata = read_json(resdata_path)
+    shared = {"hocs": hocs, "fairies": fairies, "enemies": enemies, "live2d_rows": live2d_rows, "units": units, "sangvis": sangvis}
     if manifest_path is None:
-        return build_inventory(resdata, dolls, equipment_ids, *load_tables(gf_data_dir), hocs=hocs, fairies=fairies, enemies=enemies, live2d_rows=live2d_rows)
+        return build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, **shared)
     # `new_targets` needs the resolved skin Live2D models, the same ones `build_inventory` resolves below, or `targets["skin"]` stays empty
     # and `select_new_items` drops every skin item regardless of what the manifest lists.
     index, _res_url = load_index(resdata)
     known_dolls = {doll["normal"]["id"] for doll in dolls}
     live2d_models = skin_live2d_models(live2d_rows, set(index), known_dolls)
-    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies, enemies=enemies, live2d_models=live2d_models)
-    inventory = build_inventory(
-        resdata,
-        dolls,
-        equipment_ids,
-        *load_tables(gf_data_dir),
-        select=lambda items: select_new_items(items, targets),
-        hocs=hocs,
-        fairies=fairies,
-        enemies=enemies,
-        live2d_rows=live2d_rows,
-    )
+    targets = new_targets(dolls, equipment_ids, read_json(manifest_path), hocs=hocs, fairies=fairies, enemies=enemies, live2d_models=live2d_models, units=units)
+    inventory = build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_codes, select=lambda items: select_new_items(items, targets), **shared)
     inventory["onlyMissing"] = True
     return inventory
 
