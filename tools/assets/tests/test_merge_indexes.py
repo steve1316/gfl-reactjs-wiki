@@ -160,6 +160,26 @@ class ManifestMergeTests(unittest.TestCase):
         merged = merge_indexes.merge_manifest(committed_manifest(), partial_manifest())
         self.assertNotIn("hocs", merged)
 
+    def test_enemy_gains_a_kind_without_replacing_what_is_published(self):
+        """A trimmed hero portrait joins an enemy the committed manifest already lists card and full art for."""
+        committed = committed_manifest()
+        committed["enemies"] = {"5001": ["card", "full"]}
+        partial = partial_manifest()
+        partial["enemies"] = {"5001": ["hero"], "2001": ["card"]}
+        merged = merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(merged["enemies"]["5001"], ["card", "full", "hero"])
+        self.assertEqual(merged["enemies"]["2001"], ["card"])
+
+    def test_enemy_kind_already_published_is_refused(self):
+        """A kind the committed manifest already lists for that enemy stops the merge, so hosted art is never replaced."""
+        committed = committed_manifest()
+        committed["enemies"] = {"5001": ["card", "full"]}
+        partial = partial_manifest()
+        partial["enemies"] = {"5001": ["full", "hero"]}
+        with self.assertRaises(merge_indexes.MergeConflict) as caught:
+            merge_indexes.merge_manifest(committed, partial)
+        self.assertEqual(caught.exception.conflicts, ["enemy 5001 full art"])
+
     def test_new_captured_unit_joins_in_numeric_order(self):
         """A partial captured unit's skill icon slots join the committed assimilation dict by numeric id."""
         committed = committed_manifest()

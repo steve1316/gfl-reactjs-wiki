@@ -31,7 +31,7 @@ import os
 import sys
 
 from build_live2d_index import dump_tdoll_file
-from build_manifest import SKILL_KINDS, dumps, tdoll_skin_sort_key
+from build_manifest import SKILL_KINDS, V3_ENEMY_IMAGE_FILES, dumps, tdoll_skin_sort_key
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,8 +111,9 @@ def merge_manifest(committed, partial):
         partial: The manifest built from the `add` staging folder.
 
     A partial's `hocs` entry is a plain list of image kinds, keyed by HOC id. A HOC id is either entirely new or entirely already
-    committed, there is nothing to merge piecemeal within one. A partial's `fairies` and `enemies` entries merge the same way, keyed by
-    fairy id and enemy id, and so does `assimilation`, keyed by captured unit id and listing that unit's skill icon slots.
+    committed, there is nothing to merge piecemeal within one. A partial's `fairies` entry merges the same way, and so does
+    `assimilation`, keyed by captured unit id and listing that unit's skill icon slots. `enemies` merges one kind at a time, since an
+    enemy's trimmed hero portrait is derived from its full art and published after it.
     A partial's `live2d` entry merges the same way too, one level deeper: its `fairies` and `hocs` sub-keys each merge by id.
 
     Returns:
@@ -145,7 +146,7 @@ def merge_manifest(committed, partial):
         conflicts.extend(f"doll {doll_id} {skill} icon" for skill in record["skills"] if skill in entry["skills"])
         entry["skills"] = [skill for skill in SKILL_KINDS if skill in entry["skills"] or skill in record["skills"]]
         merged["dolls"][doll_id] = in_order(entry, MANIFEST_DOLL_KEYS)
-    for key, label in (("hocs", "hoc"), ("fairies", "fairy"), ("enemies", "enemy"), ("assimilation", "captured unit")):
+    for key, label in (("hocs", "hoc"), ("fairies", "fairy"), ("assimilation", "captured unit")):
         if key in partial or key in merged:
             entries = dict(merged.get(key, {}))
             for entry_id, kinds in partial.get(key, {}).items():
@@ -154,6 +155,16 @@ def merge_manifest(committed, partial):
                 else:
                     entries[entry_id] = kinds
             merged[key] = by_id(entries)
+    # Enemies merge a kind at a time rather than all or nothing. An enemy gains art in more than one pass: its card and full art are
+    # published when the enemy is, and its trimmed hero portrait is derived from that full art afterwards. Adding a kind the
+    # committed manifest does not list is an add like any other, while a kind it already lists is still a conflict.
+    if "enemies" in partial or "enemies" in merged:
+        entries = {entry_id: list(kinds) for entry_id, kinds in merged.get("enemies", {}).items()}
+        for entry_id, kinds in partial.get("enemies", {}).items():
+            listed = entries.setdefault(entry_id, [])
+            conflicts.extend(f"enemy {entry_id} {kind} art" for kind in kinds if kind in listed)
+            entries[entry_id] = [kind for kind, _name in V3_ENEMY_IMAGE_FILES if kind in listed or kind in kinds]
+        merged["enemies"] = by_id(entries)
     # Faction emblems are a fixed set with no ids to merge, so a partial that carries them simply replaces what is there.
     if partial.get("factions"):
         merged["factions"] = list(partial["factions"])

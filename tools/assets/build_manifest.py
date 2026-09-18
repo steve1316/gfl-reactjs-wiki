@@ -36,7 +36,9 @@ V3_HOC_IMAGE_FILES = (("card", "card.webp"), ("full", "full.webp"))
 V3_FAIRY_IMAGE_FILES = (("form1", "form1.webp"), ("form2", "form2.webp"), ("form3", "form3.webp"))
 
 # An enemy has the same two portrait kinds a HOC does. Every enemy has a card; only about two in three have the large art.
-V3_ENEMY_IMAGE_FILES = (("card", "card.webp"), ("full", "full.webp"))
+# `hero` is the full art trimmed down to the drawing by `trim_enemy_hero.py`, which is what lets an enemy's portrait card take the
+# art's own shape instead of the square canvas the game draws it on.
+V3_ENEMY_IMAGE_FILES = (("card", "card.webp"), ("full", "full.webp"), ("hero", "hero.webp"))
 
 # The skill slots a captured Protocol Assimilation unit can have an icon for, in the order its page lists them. A unit whose `skill2`
 # is a strategic skill has no icon for that slot, so the slot simply does not appear in its list.
