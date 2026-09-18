@@ -17,7 +17,7 @@ import CapturedPanel from "./CapturedPanel";
 import CapturedSkillsPanel from "./CapturedSkillsPanel";
 import EnemyHero from "./EnemyHero";
 import type { EnemyVariant } from "./EnemyHero";
-import EnemyRanksPanel from "./EnemyRanksPanel";
+import EnemySkillsPanel from "./EnemySkillsPanel";
 import EnemyStatsPanel from "./EnemyStatsPanel";
 
 import { enemyCardUrl, enemyFullArtUrl } from "../../lib/assets";
@@ -54,26 +54,28 @@ const styles = {
 	sectionHeading: {
 		mb: 1.5
 	},
-	// Stats and skills side by side inside the Combat card on a wide screen, stacked on a narrow one.
-	combat: {
+	// Skills beside the strategic chips inside the Abilities card on a wide screen, stacked on a narrow one. The doll page
+	// splits its own Abilities card the same way, with the tile buffs where the chips sit here.
+	abilities: {
 		display: "flex",
 		flexDirection: { xs: "column", lg: "row" },
 		gap: 2
 	},
-	// Stats is a fixed column on a wide screen, about what its ten rows need, and the skills take the rest, since their
-	// descriptions are what wrap and make the row taller.
-	combatPart: {
+	abilityPart: {
 		display: "flex",
 		flexDirection: "column",
 		minWidth: 0,
 		"& > :last-child": { flexGrow: 1 }
 	},
-	combatHeading: {
+	abilityHeading: {
 		mb: 1,
 		fontWeight: 600
 	},
-	skill: { mb: 1.75, "&:last-of-type": { mb: 0 } },
-	skillName: { fontWeight: 700 }
+	chibiColumn: {
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "stretch"
+	}
 } satisfies Record<string, SxProps<Theme>>;
 
 /** Props for EnemyDetail. */
@@ -108,7 +110,6 @@ function EnemyDetail({ family, initialId }: EnemyDetailProps) {
 	// Paired so the panel only renders once both the unit and the shared class data are in hand.
 	const capturedUnit = assimilation === null ? null : (assimilation.units.find((entry) => entry.familyId === enemy.familyId) ?? null);
 	const captured = capturedOn && capturedUnit !== null && assimilation !== null;
-	const hasSkills = enemyDetails !== undefined && enemyDetails.skills.length > 0;
 	const cardImage = hasEnemyArt(enemy.id, "card") ? enemyCardUrl(enemy.id) : undefined;
 	const heroArtUrl = hasEnemyArt(enemy.id, "full") ? enemyFullArtUrl(enemy.id) : undefined;
 
@@ -162,20 +163,20 @@ function EnemyDetail({ family, initialId }: EnemyDetailProps) {
 			<PageBackdrop artUrl={heroArtUrl} />
 			<ScrollToTop />
 			<Container sx={styles.page} maxWidth={false}>
-				{/************** Two rows, the shape the doll page uses: a wide card beside a narrow one, so a 1080p screen shows
-				                the whole page. On a phone everything stacks. **************/}
+				{/************** The doll page's own two rows: a wide card beside a narrow one, so a 1080p screen shows the whole
+				                page. On a phone everything stacks, with the animations last since they are the heaviest to load. **************/}
 				<Grid container spacing={2}>
-					{/************** The archive's entry: portrait, badges, name, variant pills, Captured toggle, lore and counter **************/}
-					<Grid size={{ xs: 12, md: 7, lg: 8 }}>
+					{/************** The archive's entry: portrait, badges, name, variant pills, Captured toggle, lore, counter and profile **************/}
+					<Grid size={{ xs: 12, md: 7, lg: 8 }} sx={{ order: 0 }}>
 						<EnemyHero
 							name={enemy.name}
 							id={enemy.id}
 							code={enemy.code}
-							subName={enemyDetails?.subName ?? null}
 							faction={enemy.faction}
 							boss={enemy.boss}
 							capturable={capturable}
-							organisation={enemyDetails?.organisation ?? null}
+							ranks={enemy.ranks}
+							details={enemyDetails}
 							cardImage={cardImage}
 							introduce={captured && capturedUnit !== null ? capturedUnit.introduce : (enemyDetails?.introduce ?? "")}
 							counter={captured ? "" : (enemyDetails?.counter ?? "")}
@@ -188,72 +189,59 @@ function EnemyDetail({ family, initialId }: EnemyDetailProps) {
 						/>
 					</Grid>
 
-					{/************** The archive's rank bars, or what the unit is worth fielding once captured **************/}
-					<Grid size={{ xs: 12, md: 5, lg: 4 }}>
+					{/************** Stats: the deployment numbers with the archive's rank bars, or what a captured unit is worth fielding **************/}
+					<Grid size={{ xs: 12, sm: rig !== null ? 6 : 12, md: 5, lg: 4 }} sx={{ order: { xs: 1, md: 2 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								{captured ? "Standing" : "Ranks"}
+								Stats
 							</Typography>
-							{captured && capturedUnit !== null && assimilation !== null ? <CapturedPanel unit={capturedUnit} data={assimilation} /> : <EnemyRanksPanel ranks={enemy.ranks} />}
+							{captured && capturedUnit !== null && assimilation !== null ? (
+								<CapturedPanel unit={capturedUnit} data={assimilation} />
+							) : (
+								<EnemyStatsPanel stats={enemyDetails?.baseStats ?? null} ranks={enemy.ranks} level={enemyDetails?.baseStatsLevel ?? null} />
+							)}
 						</Paper>
 					</Grid>
 
-					{/************** Stats and skills in one card. Full width when nothing sits beside it. **************/}
-					<Grid size={rig !== null ? { xs: 12, md: 7, lg: 8 } : { xs: 12 }}>
+					{/************** Abilities: the enemy's own skills, or the captured unit's skills and strategic chips **************/}
+					<Grid size={{ xs: 12, md: 7, lg: 8 }} sx={{ order: { xs: 2, sm: 3 } }}>
 						<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
 							<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
-								Combat
+								Abilities
 							</Typography>
-							<Box sx={styles.combat}>
-								<Box sx={[styles.combatPart, { flex: { lg: "0 0 320px" } }]}>
-									<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.combatHeading}>
-										{captured ? "Strategic chips" : "Stats"}
-									</Typography>
-									{captured && capturedUnit !== null && assimilation !== null ? (
-										<CapturedChipsPanel unit={capturedUnit} data={assimilation} />
-									) : (
-										enemyDetails !== undefined && <EnemyStatsPanel stats={enemyDetails.baseStats} level={enemyDetails.baseStatsLevel} />
-									)}
-								</Box>
-								<Box sx={[styles.combatPart, { flex: { lg: "1 1 auto" } }]}>
-									<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.combatHeading}>
-										Skills
-									</Typography>
-									{captured && capturedUnit !== null && assimilation !== null ? (
-										<CapturedSkillsPanel unit={capturedUnit} data={assimilation} />
-									) : hasSkills && enemyDetails !== undefined ? (
-										<Box>
-											{enemyDetails.skills.map((skill) => (
-												<Box key={skill.name} sx={styles.skill}>
-													<Typography variant="body2" sx={styles.skillName}>
-														{skill.name}
-													</Typography>
-													<Typography variant="body2" color="text.secondary">
-														{skill.description}
-													</Typography>
-												</Box>
-											))}
-										</Box>
-									) : (
-										<Typography variant="body2" color="text.secondary">
-											{enemyDetails === undefined ? "" : "The archive lists no skills of its own for this enemy."}
+							{captured && capturedUnit !== null && assimilation !== null ? (
+								<Box sx={styles.abilities}>
+									<Box sx={[styles.abilityPart, { flex: { lg: "1 1 auto" } }]}>
+										<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.abilityHeading}>
+											Skills
 										</Typography>
-									)}
+										<CapturedSkillsPanel unit={capturedUnit} data={assimilation} />
+									</Box>
+									<Box sx={[styles.abilityPart, { flex: { lg: "0 0 300px" } }]}>
+										<Typography variant="subtitle2" component="h3" color="textSecondary" sx={styles.abilityHeading}>
+											Strategic chips
+										</Typography>
+										<CapturedChipsPanel unit={capturedUnit} data={assimilation} />
+									</Box>
 								</Box>
-							</Box>
+							) : (
+								<EnemySkillsPanel skills={enemyDetails?.skills} />
+							)}
 						</Paper>
 					</Grid>
 
-					{/************** The chibi, with one pill per animation its skeleton defines **************/}
+					{/************** The chibi, with the doll page's own controls **************/}
 					{rig !== null ? (
-						<Grid size={{ xs: 12, md: 5, lg: 4 }}>
-							<Paper sx={[styles.section, styles.rowSection]} variant="outlined">
+						<Grid size={{ xs: 12, sm: 6, md: 5, lg: 4 }} sx={{ order: { xs: 3, sm: 2, md: 1 } }}>
+							<Paper sx={styles.section} variant="outlined">
 								<Typography variant="h6" component="h2" sx={styles.sectionHeading}>
 									Animations
 								</Typography>
-								<LazySection minHeight={320}>
-									<EnemyAnimationsPanel id={enemy.id} rig={rig} />
-								</LazySection>
+								<Box sx={styles.chibiColumn}>
+									<LazySection minHeight={320}>
+										<EnemyAnimationsPanel id={enemy.id} rig={rig} />
+									</LazySection>
+								</Box>
 							</Paper>
 						</Grid>
 					) : null}
@@ -264,7 +252,7 @@ function EnemyDetail({ family, initialId }: EnemyDetailProps) {
 }
 
 /**
- * One enemy's page: the archive's lore, rank bars, base stats, skills and counter advice, plus what the enemy is like to
+ * One enemy's page: the archive's lore, stats and rank bars, skills and counter advice, plus what the enemy is like to
  * field when Protocol Assimilation can capture it.
  *
  * @returns The enemy page, a loading state, a retry notice, or the 404 page for an unknown id.

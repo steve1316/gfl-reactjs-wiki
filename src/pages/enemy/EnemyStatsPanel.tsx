@@ -1,51 +1,72 @@
 import { memo } from "react";
 
 // MaterialUI imports
-import { Box, Typography } from "@mui/material";
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
-import type { EnemyStatKey, EnemyStatValues } from "../../types/enemy";
+import RankBar from "../../components/RankBar";
+import { ENEMY_RANK_LABELS } from "../../lib/enemyRanks";
+import type { EnemyRankKey, EnemyRankValues, EnemyStatKey, EnemyStatValues } from "../../types/enemy";
 
-/** The stat keys in display order. */
-const STAT_KEYS: readonly EnemyStatKey[] = ["hp", "damage", "accuracy", "evasion", "rateOfFire", "armor", "armorPiercing", "range", "speed", "number"];
-
-/** Each stat's name as the game shows it. */
-const STAT_LABELS: Record<EnemyStatKey, string> = {
-	hp: "HP",
-	damage: "Damage",
-	accuracy: "Accuracy",
-	evasion: "Evasion",
-	rateOfFire: "Rate of Fire",
-	armor: "Armor",
-	armorPiercing: "Armor Piercing",
-	range: "Range",
-	speed: "Speed",
-	number: "Units per squad"
-};
+/**
+ * The stat rows in display order, each with the archive's own rank bar for it.
+ *
+ * The bars used to be a card of their own, which left a reader with two lists of the same six things and no hint that they were
+ * related. They are the game's 0 to 7 ratings from `enemy_illustration`, and they only mean anything next to the number they rate.
+ *
+ * Every row here has one, so the table has no empty cells. The archive ships no rating for armor piercing and none for squad size,
+ * and its one rating with no stat behind it is tenacity, so all three are reported by the spec sheet in the hero instead.
+ */
+const STAT_ROWS: readonly { key: EnemyStatKey; label: string; rank: EnemyRankKey }[] = [
+	{ key: "hp", label: "HP", rank: "health" },
+	{ key: "damage", label: "Damage", rank: "power" },
+	{ key: "accuracy", label: "Accuracy", rank: "accuracy" },
+	{ key: "evasion", label: "Evasion", rank: "evasion" },
+	{ key: "rateOfFire", label: "Rate of fire", rank: "rateOfFire" },
+	{ key: "armor", label: "Armor", rank: "armor" },
+	{ key: "range", label: "Range", rank: "range" },
+	{ key: "speed", label: "Speed", rank: "speed" }
+];
 
 const styles = {
-	row: { display: "flex", justifyContent: "space-between", gap: 2, py: 0.75, borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } },
-	note: { mt: 1.5, display: "block" }
+	container: {
+		width: "100%"
+	},
+	table: (theme: Theme) => ({
+		width: "100%",
+		backgroundColor: theme.palette.raised
+	}),
+	// Wide enough for seven segments and no wider, so the label and the number keep their room on a phone.
+	rankCell: {
+		width: 96,
+		px: 1
+	},
+	note: {
+		mt: 1.5,
+		display: "block"
+	}
 } satisfies Record<string, SxProps<Theme>>;
 
 /** Props for EnemyStatsPanel. */
 interface EnemyStatsPanelProps {
 	/** The enemy's base deployment stats, or null for the few enemies the archive records none for. */
 	stats: EnemyStatValues | null;
+	/** The archive's rank bars for this enemy, shown beside the stat each one rates. */
+	ranks: EnemyRankValues;
 	/** The level the stats are quoted at, or null when upstream records none. */
 	level: number | null;
 }
 
 /**
- * One enemy's base deployment stats.
+ * One enemy's base deployment stats, each with the archive's rank bar for it.
  *
- * The numbers are the base unit's own row, not what a player meets on a map: the game deploys the same enemy at different
- * levels and scales it, so the note under the table says so rather than letting these read as final.
+ * Laid out as the doll page's own stat table, so the two pages read the same way. The numbers are the base unit's own row rather
+ * than what a player meets on a map: the game deploys the same enemy at different levels and scales it, which is what the note says.
  *
  * @param props Component props.
  * @returns The stat table, or a note when the archive records no stats.
  */
-export default memo(function EnemyStatsPanel({ stats, level }: EnemyStatsPanelProps) {
+export default memo(function EnemyStatsPanel({ stats, ranks, level }: EnemyStatsPanelProps) {
 	if (stats === null) {
 		return (
 			<Typography variant="body2" color="text.secondary">
@@ -53,20 +74,37 @@ export default memo(function EnemyStatsPanel({ stats, level }: EnemyStatsPanelPr
 			</Typography>
 		);
 	}
+
 	return (
-		<Box>
-			{STAT_KEYS.map((key) => (
-				<Box key={key} sx={styles.row}>
-					<Typography variant="body2" color="text.secondary">
-						{STAT_LABELS[key]}
-					</Typography>
-					<Typography variant="body2">{stats[key].toLocaleString()}</Typography>
-				</Box>
-			))}
+		<>
+			<TableContainer sx={styles.container} component={Paper}>
+				<Table sx={styles.table} size="small">
+					<TableHead>
+						<TableRow>
+							<TableCell>Stats</TableCell>
+							<TableCell sx={styles.rankCell}>Rank</TableCell>
+							<TableCell align="right">{level === null ? "Base" : `At level ${level}`}</TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{STAT_ROWS.map((row) => (
+							<TableRow key={row.key}>
+								<TableCell component="th" scope="row">
+									{row.label}
+								</TableCell>
+								<TableCell sx={styles.rankCell}>
+									<RankBar value={ranks[row.rank]} label={ENEMY_RANK_LABELS[row.rank]} />
+								</TableCell>
+								<TableCell align="right">{stats[row.key].toLocaleString()}</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</TableContainer>
 			<Typography variant="caption" color="text.secondary" sx={styles.note}>
-				Base deployment values{level === null ? "" : ` at level ${level}`}. The game scales these by the level and mode an enemy is deployed in, so the rank bars are the better way to compare
-				two enemies.
+				These are the enemy&apos;s base numbers. The game raises them for the level and difficulty you actually meet it at, so what you fight is usually stronger than this. The bars are the 0
+				to 7 ratings the game&apos;s own Enemy Archive shows, and they are the quicker way to see how two enemies compare.
 			</Typography>
-		</Box>
+		</>
 	);
 });
