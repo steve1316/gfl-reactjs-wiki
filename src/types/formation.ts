@@ -123,10 +123,48 @@ export interface FormationBaseStats {
 	armor: number;
 }
 
+/** One enemy's combat stats, as the archive's base deployment row gives them. */
+export interface FormationEnemyStats {
+	/** HP of a single unit in the squad. */
+	hp: number;
+	/** Damage per shot. */
+	dmg: number;
+	/** Accuracy. */
+	acc: number;
+	/** Evasion. */
+	eva: number;
+	/** Rate of fire. */
+	rof: number;
+	/** Armor. */
+	armor: number;
+	/** Armor piercing. */
+	armorPiercing: number;
+	/** Units in the squad, which is the enemy's equivalent of a doll's dummy links. */
+	count: number;
+}
+
+/** One enemy the simulator can place, from `formation/enemies.json`. */
+export interface FormationEnemy {
+	/** The archive's `sub_id`, unique across the archive. */
+	id: number;
+	/** Official English name. */
+	name: string;
+	/** The game's unit code, which names its Spine rig. */
+	code: string;
+	/** Faction name, such as `Sangvis Ferri`. */
+	faction: string;
+	/** Whether this is one of the named boss and Ringleader tier. */
+	boss: boolean;
+	/** Base deployment stats. */
+	stats: FormationEnemyStats;
+}
+
 /** The loaded formation data set. */
 export interface FormationData {
 	/** Forms keyed by gun id as a string. */
 	forms: Record<string, FormationForm>;
 	/** Shared constants. */
 	constants: FormationConstants;
+	/** Every enemy that can be placed on the opposing grid, in archive order. */
+	enemies: FormationEnemy[];
 }

@@ -17,7 +17,7 @@ import searchIndexJson from "../data/search-index.json";
 import type { AssimilationData, EnemyData, EnemyDetailsData } from "../types/enemy";
 import type { Equipment, EquipmentType, RawEquipment } from "../types/equipment";
 import type { FairyData } from "../types/fairy";
-import type { FormationConstants, FormationData, FormationForm } from "../types/formation";
+import type { FormationConstants, FormationData, FormationEnemy, FormationForm } from "../types/formation";
 import type { HocData } from "../types/hoc";
 import type { Live2dIndex, Live2dMotion, Live2dTdollFile } from "../types/live2d";
 import type { EnemySpineEntry, EnemySpineIndex, HocSpineEntry, HocSpineIndex, SpineDollEntry, SpineIndex } from "../types/spine";
@@ -632,15 +632,22 @@ export async function loadLive2dAvailability(): Promise<Live2dAvailability> {
 // Formation simulator
 
 /**
- * Load the formation simulator's forms and constants.
+ * Load the formation simulator's forms, constants and enemies.
+ *
+ * The three are fetched together rather than separately, since the page draws both sides of the fight at once and has nothing to
+ * show until it has all of them.
  *
  * @returns The formation data.
- * @throws When either file fails to load. The failed load is not cached, so a later call tries again.
+ * @throws When any of the files fails to load. The failed load is not cached, so a later call tries again.
  */
 export function loadFormationData(): Promise<FormationData> {
 	const load = async (): Promise<FormationData> => {
-		const [forms, constants] = await Promise.all([fetchData<Record<string, FormationForm>>("formation/dolls"), fetchData<FormationConstants>("formation/constants")]);
-		return { forms, constants };
+		const [forms, constants, enemies] = await Promise.all([
+			fetchData<Record<string, FormationForm>>("formation/dolls"),
+			fetchData<FormationConstants>("formation/constants"),
+			fetchData<{ items: FormationEnemy[] }>("formation/enemies")
+		]);
+		return { forms, constants, enemies: enemies.items };
 	};
 	return formationCache.get(0) ?? cacheUntilFailure(formationCache, 0, load());
 }

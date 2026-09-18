@@ -80,6 +80,45 @@ function buildFormationForm(gun, dollId) {
 }
 
 /**
+ * Build the opposing side's data: every enemy the archive gives combat stats for, trimmed to what the simulator reads.
+ *
+ * The enemy archive's own files are not reused here. `enemies.json` carries the rank bars rather than numbers, and
+ * `enemy-details.json` is 287 KB of lore and skill text the simulator has no use for, so this is a third, small file the
+ * formation route can load on its own.
+ *
+ * @param {{ items: object[], details: Record<string, object> }} enemies The enemy archive from `buildEnemies`.
+ * @returns {object[]} One record per enemy with stats, in archive order.
+ */
+export function buildFormationEnemies(enemies) {
+	return enemies.items.flatMap((enemy) => {
+		const stats = enemies.details[enemy.id]?.baseStats;
+		// A handful of archive entries are illustrations with no deployment row at all, and there is nothing to fight without one.
+		if (!stats) {
+			return [];
+		}
+		return [
+			{
+				id: enemy.id,
+				name: enemy.name,
+				code: enemy.code,
+				faction: enemy.faction,
+				boss: enemy.boss,
+				stats: {
+					hp: stats.hp,
+					dmg: stats.damage,
+					acc: stats.accuracy,
+					eva: stats.evasion,
+					rof: stats.rateOfFire,
+					armor: stats.armor,
+					armorPiercing: stats.armorPiercing,
+					count: stats.number
+				}
+			}
+		];
+	});
+}
+
+/**
  * Build the formation simulator's data: every released doll's base form and Mod, and the constants the engine reads.
  *
  * @param {ReturnType<import("./upstream.mjs").loadUpstream>} upstream Upstream readers.

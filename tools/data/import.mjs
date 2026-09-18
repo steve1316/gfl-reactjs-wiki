@@ -23,7 +23,7 @@ import { buildDoll, selectReleased, splitDetails } from "./lib/dolls.mjs";
 import { buildAssimilation, buildEnemies } from "./lib/enemies.mjs";
 import { buildEquipment, exclusivesByDoll } from "./lib/equipment.mjs";
 import { buildFairies } from "./lib/fairies.mjs";
-import { buildFormation } from "./lib/formation.mjs";
+import { buildFormation, buildFormationEnemies } from "./lib/formation.mjs";
 import { buildHocs } from "./lib/hocs.mjs";
 import { fetchIopwikiPages, parseEnRelease, wikipediaTitle } from "./lib/iopwiki.mjs";
 import { findEquipmentMentions } from "./lib/mentions.mjs";
@@ -186,6 +186,8 @@ async function main() {
 	fs.mkdirSync(`${OUT_DIR}/formation`, { recursive: true });
 	writeJson(`${OUT_DIR}/formation/dolls.json`, formation.forms);
 	writeJson(`${OUT_DIR}/formation/constants.json`, formation.constants);
+	// The opposing side. Kept apart from the enemy archive's own files, which carry lore and rank bars the simulator never reads.
+	writeJson(`${OUT_DIR}/formation/enemies.json`, { items: buildFormationEnemies(enemies) });
 
 	const { repo, sha } = readLock();
 	const counts = {
