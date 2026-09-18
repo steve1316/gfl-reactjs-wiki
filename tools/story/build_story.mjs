@@ -5,10 +5,9 @@
  * menu shows, and `story_util` is the missions inside them. A chapter's `story_campaign_id` is a comma-separated list of campaign ids,
  * and a mission's `campaign` names one of them, which is the join between the two. Scripts are then named by `story_util.scripts`.
  *
- * Scope is the main story: the chapters the playback menu marks `type` 1, which is Chapter 0 through 13. The menu also lists side
- * campaigns as `type` 2 and the data holds campaigns it does not catalogue at all; both are counted in the summary and left for
- * later. Widening the scope is a one-line change here, but it is not free - the main story is 350 scenes and 2.6 MB, while every
- * catalogued chapter together is 1,406 scenes and 22.5 MB, which is more than this repo's whole history weighs today.
+ * Scope is every chapter the playback menu catalogues: the main story it marks `type` 1, and the side campaigns it marks `type` 2.
+ * The data also holds campaigns the menu does not list at all, which are counted in the summary and left alone - without a menu entry
+ * there is no title or ordering to show them under.
  *
  * Output is three levels, so nothing fetches more than it shows: a tiny chapter list, one file per chapter holding that chapter's
  * mission list, and one file per scene holding its beats. A reader opening a single scene pays for that scene, not for the chapter
@@ -32,9 +31,6 @@ const OUT_DIR = path.join("src", "data", "story");
 
 /** Where each scene's beats are written, one file each. */
 const SCENE_DIR = path.join(OUT_DIR, "scenes");
-
-/** Playback `type` of a main-story chapter. Side campaigns are 2. */
-const MAIN_STORY_TYPE = 1;
 
 /**
  * Turn a script name into a filename.
@@ -131,14 +127,9 @@ export function buildStory(upstream, dir) {
 	const scenes = new Map();
 	let beatCount = 0;
 
-	let skippedChapters = 0;
 	for (const row of playback) {
 		const rows = byChapter.get(row.id);
 		if (rows.length === 0) {
-			continue;
-		}
-		if (row.type !== MAIN_STORY_TYPE) {
-			skippedChapters++;
 			continue;
 		}
 		const listed = [];
@@ -193,7 +184,6 @@ export function buildStory(upstream, dir) {
 			beats: beatCount,
 			unknownTags,
 			missingScripts,
-			skippedChapters,
 			uncatalogued: [...uncatalogued]
 		}
 	};
