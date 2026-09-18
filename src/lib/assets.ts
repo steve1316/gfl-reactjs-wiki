@@ -204,13 +204,23 @@ export function enemyFullArtUrl(id: number): string {
 }
 
 /**
- * URL for a faction's emblem.
+ * The file name a faction's art is published under, such as `sangvis-ferri`.
+ *
+ * @param faction Faction name as the enemy data spells it, such as `Sangvis Ferri`.
+ * @returns The slug.
+ */
+function factionSlug(faction: string): string {
+	return faction.toLowerCase().replaceAll(" ", "-");
+}
+
+/**
+ * URL for a faction's full emblem, the mark beside its wordmark.
  *
  * @param faction Faction name as the enemy data spells it, such as `Sangvis Ferri`.
  * @returns An absolute URL.
  */
 export function factionEmblemUrl(faction: string): string {
-	return join(ASSET_BASE, `factions/${faction.toLowerCase().replaceAll(" ", "-")}.webp`);
+	return join(ASSET_BASE, `factions/${factionSlug(faction)}.webp`);
 }
 
 /**

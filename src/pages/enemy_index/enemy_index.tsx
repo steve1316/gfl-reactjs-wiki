@@ -294,7 +294,7 @@ export default function EnemyIndex() {
 									value={label}
 									onToggle={handleToggleFaction}
 									colour={colour}
-									avatar={colour === undefined ? undefined : <FactionIcon faction={label} />}
+									icon={colour === undefined ? undefined : <FactionIcon faction={label} />}
 								/>
 							</li>
 						);

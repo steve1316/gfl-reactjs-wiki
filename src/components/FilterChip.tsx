@@ -25,8 +25,10 @@ interface FilterChipProps {
 	 * in which case the chip falls back to the theme's accent.
 	 */
 	colour?: string;
-	/** Small leading element, such as a rarity number or the Mod icon. */
+	/** Small leading element, such as a rarity number or the Mod icon. Drawn in a round 24px slot. */
 	avatar?: ReactElement;
+	/** Small leading glyph, such as a faction's emblem. Drawn at its own size rather than in the avatar's round slot. */
+	icon?: ReactElement;
 }
 
 /**
@@ -46,12 +48,13 @@ interface FilterChipProps {
  * @param props Component props.
  * @returns The chip.
  */
-export default memo(function FilterChip({ label, selected, onToggle, value, colour, avatar }: FilterChipProps) {
+export default memo(function FilterChip({ label, selected, onToggle, value, colour, avatar, icon }: FilterChipProps) {
 	return (
 		<Chip
 			clickable
 			label={label}
 			avatar={avatar}
+			icon={icon}
 			onClick={() => onToggle(value)}
 			variant={selected ? "filled" : "outlined"}
 			aria-pressed={selected}
@@ -71,6 +74,13 @@ export default memo(function FilterChip({ label, selected, onToggle, value, colo
 					"& .MuiChip-avatar": {
 						color: "inherit",
 						backgroundColor: selected ? "transparent" : theme.palette.action.hover
+					},
+					// Same reason for the colour. The spacing is MUI's own 5px/-6px opened up a little, since these marks are
+					// square where a MUI glyph has its own built-in padding, and 5px sat them right on the chip's rounded cap.
+					"& .MuiChip-icon": {
+						color: "inherit",
+						marginLeft: "9px",
+						marginRight: "-3px"
 					}
 				};
 			}}
