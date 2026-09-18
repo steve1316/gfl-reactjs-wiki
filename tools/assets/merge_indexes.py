@@ -173,6 +173,19 @@ def merge_manifest(committed, partial):
             merged["live2d"] = merge_live2d_index(merged.get("live2d", {}), partial.get("live2d", {}))
         except MergeConflict as error:
             conflicts.extend(error.conflicts)
+    # Story art merges as three flat sets: a sprite or background is published once, and the dialogue chrome is a single yes or no.
+    if "story" in partial or "story" in merged:
+        story = {"sprites": [], "backgrounds": [], "ui": False, **copy.deepcopy(merged.get("story", {}))}
+        incoming = partial.get("story", {})
+        for key, label in (("sprites", "story sprite"), ("backgrounds", "story background")):
+            listed = set(story.get(key, []))
+            conflicts.extend(f"{label} {name}" for name in incoming.get(key, []) if name in listed)
+            story[key] = sorted(listed | set(incoming.get(key, [])))
+        if incoming.get("ui"):
+            if story.get("ui"):
+                conflicts.append("story dialogue chrome")
+            story["ui"] = True
+        merged["story"] = story
     if conflicts:
         raise MergeConflict(conflicts)
     merged["dolls"] = by_id(merged["dolls"])

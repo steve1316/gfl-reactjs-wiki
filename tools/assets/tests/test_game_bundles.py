@@ -842,6 +842,7 @@ class NewTargetTests(unittest.TestCase):
             self.targets,
             {
                 "units": set(),
+                "story": set(),
                 "dolls": {424},
                 "mods": {100},
                 "skins": {(65, 9001)},
@@ -958,6 +959,7 @@ class NewTargetTests(unittest.TestCase):
         self.assertEqual(
             targets,
             {
+                "story": set(),
                 "dolls": set(),
                 "mods": set(),
                 "skins": set(),

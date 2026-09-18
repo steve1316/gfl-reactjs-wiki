@@ -193,6 +193,41 @@ def scan_live2d_tdolls(tdolls_root):
     return entries
 
 
+def story_stems(folder, skip_damaged=False):
+    """List the published filename stems in one story folder.
+
+    Args:
+        folder: The folder to read.
+        skip_damaged: Whether to leave out the `_d` damaged poses, which are variants of a sprite rather than sprites of their own.
+
+    Returns:
+        The stems, sorted.
+    """
+    if not os.path.isdir(folder):
+        return []
+    stems = [name[: -len(".webp")] for name in os.listdir(folder) if name.endswith(".webp")]
+    if skip_damaged:
+        stems = [stem for stem in stems if not stem.endswith("_d")]
+    return sorted(stems)
+
+
+def build_story(assets_root):
+    """List the story art the tree holds: which sprites and backgrounds are published, and whether the dialogue chrome is.
+
+    Args:
+        assets_root: The `assets` tree root.
+
+    Returns:
+        The `story` manifest block.
+    """
+    root = os.path.join(assets_root, "story")
+    return {
+        "sprites": story_stems(os.path.join(root, "sprites"), skip_damaged=True),
+        "backgrounds": story_stems(os.path.join(root, "backgrounds")),
+        "ui": len(story_stems(os.path.join(root, "ui"))) > 0,
+    }
+
+
 def build_live2d(assets_root):
     """Scan the `live2d/` folder for fairy, HOC and T-Doll skin Live2D models.
 
@@ -270,6 +305,7 @@ def build_v3(assets_root):
     }
 
     live2d = build_live2d(assets_root)
+    story = build_story(assets_root)
 
     return {
         "version": 3,
@@ -284,6 +320,7 @@ def build_v3(assets_root):
         # Last, so a manifest merged from an incremental staging tree matches this one: the merge appends a key the committed
         # manifest does not have yet, and `publish.py prepare` compares the two byte for byte.
         "assimilation": assimilation,
+        "story": story,
     }
 
 
