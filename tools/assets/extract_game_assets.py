@@ -78,6 +78,8 @@ EXTRA_SKINS_PATH = os.path.join(REPO_ROOT, "tools", "data", "extra-skins.json")
 TREE = "assets"
 LEGACY_TREES = ("assets", "art")
 
+STORY_SOURCES_PATH = os.path.join(TOOLS_DIR, "story-sprite-sources.json")
+
 CARD_QUALITY = 90
 FULL_QUALITY = 85
 WEBP_METHOD = 4
@@ -959,6 +961,55 @@ def story_expression_table(bundle_name, cache_dir):
     return table
 
 
+def story_texture_aliases():
+    """Read the prefabs whose art sits in their own bundle under an unrelated name.
+
+    These cannot be resolved by shape, because the texture is not a variant of the prefab's name at all. They also cannot go through
+    the inventory's source list, which matches a file the manifest lists, and an `avgpicprefabs` bundle lists only its prefabs.
+
+    Returns:
+        A dict of lowercased prefab name to the texture name to use. Empty when the file is absent.
+    """
+    if not os.path.exists(STORY_SOURCES_PATH):
+        return {}
+    with open(STORY_SOURCES_PATH, encoding="utf-8") as handle:
+        listed = json.load(handle).get("textureAliases", {})
+    return {name.lower(): texture for name, texture in listed.items()}
+
+
+def story_texture_by_shape(textures, prefab):
+    """Find a character's plain pose when no texture is named exactly after its prefab.
+
+    Many characters, the story NPCs especially, ship no unsuffixed texture at all - their first pose is written `Name(0)` or `Name_0`,
+    and a few start at 1. Others differ from the prefab only in punctuation (`NPC-lnxy` against `NPC_lnxy`, `SCAR-L` against `SCARL`)
+    or drop the `NPC-` prefix outright. Comparing names with punctuation stripped catches all of those in one rule, and the lowest
+    index wins so the plain pose is preferred over a later expression.
+
+    Args:
+        textures: The bundle's textures, keyed by their real name.
+        prefab: The prefab name a script refers to.
+
+    Returns:
+        The matching texture name, or None when nothing in the bundle fits.
+    """
+    flatten = lambda name: re.sub(r"[^a-z0-9]", "", name.lower())
+    bare = prefab.replace("NPC-", "").replace("NPC_", "")
+    stems = [stem for stem in (flatten(prefab), flatten(f"pic{prefab}"), flatten(bare)) if stem]
+    best = None
+    for name in textures:
+        flat = flatten(name)
+        for stem in stems:
+            if not flat.startswith(stem):
+                continue
+            rest = flat[len(stem) :]
+            if rest != "" and not rest.isdigit():
+                continue
+            index = int(rest) if rest else -1
+            if best is None or index < best[0]:
+                best = (index, name)
+    return best[1] if best else None
+
+
 def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
     """Extract each story character's standing art, and the damaged pose where the character has one.
 
@@ -976,6 +1027,7 @@ def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
         A worker result merged over every item.
     """
     result = new_result()
+    aliases = story_texture_aliases()
     by_bundle = {}
     for item in items:
         for bundle in item["bundles"]:
@@ -993,6 +1045,7 @@ def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
         for item in bundle_items:
             prefab = item["prefab"]
             stem = story_sprite_name(prefab)
+            alias = aliases.get(prefab.lower())
             # An item for a single expression writes only that variant, from the texture the source file names.
             if item.get("expression"):
                 named = item.get("texture", "")
@@ -1010,6 +1063,8 @@ def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
             source = item.get("texture")
             for role, suffix in (("full", ""), ("full_d", "_D")):
                 wanted = [f"{source}{suffix}".lower()] if source else []
+                if alias and not suffix:
+                    wanted.append(alias.lower())
                 wanted += [f"pic_{prefab}{suffix}".lower(), f"{prefab}{suffix}".lower()]
                 image = next((folded[key] for key in wanted if key in folded), None)
                 if image is None:
@@ -1024,6 +1079,11 @@ def extract_story_sprite_items(items, cache_dir, staging, loader=unity_load):
                     slot = 1 if suffix else 0
                     if len(order) > slot:
                         image = folded.get(order[slot].lower())
+                # Last resort for the plain pose: match on the name with its punctuation stripped.
+                if image is None and role == "full":
+                    shaped = story_texture_by_shape(textures, prefab)
+                    if shaped:
+                        image = textures[shaped]
                 if image is None:
                     # Only the plain pose is required; a character without a damaged one is normal, not a gap.
                     if role == "full":

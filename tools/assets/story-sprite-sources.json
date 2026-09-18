@@ -56,6 +56,26 @@
 		"M4 SOPMOD IIMod-Noarmor": {
 			"texture": "pic_M4 SOPMOD IIMod_NoArmor1",
 			"bundle": "character_m4 sopmod iimod"
+		},
+		"SOPIIDamage": {
+			"texture": "M4 SOPMOD IIDamage",
+			"bundle": "character_special"
+		},
+		"NPC_ErmaAngel": {
+			"texture": "pic_Erma_10201",
+			"bundle": "character_erma_10201"
+		},
+		"RPK16_Nyto": {
+			"texture": "pic_RPK16_Nyto_LL",
+			"bundle": "character_rpk16_nyto"
+		},
+		"NPC-KalinSwim": {
+			"texture": "pic_NPC_Kalina_209",
+			"bundle": "character_npc_kalina_209"
+		},
+		"FairyTaunt": {
+			"texture": "target_3",
+			"bundle": "resource_fairy"
 		}
 	},
 	"expressionNote": "Expression variants whose art is not in the prefab's own bundle, keyed by prefab then by the expression index a script uses. The index is not the filename's own number: RO635-NoArmor's expression 5 is the texture ending _4, confirmed by tracing two scenes that use exactly one of its expressions. An expression can also sit in a different bundle from the character's plain pose, as SOPII's do. Anything not listed here falls back to the plain pose. NytoIsomer's expression 3 resolves to the same texture as her plain pose, so it is deliberately not listed: the player's fallback already shows the right picture for it.",
@@ -116,5 +136,12 @@
 				"bundle": "character_nyto"
 			}
 		}
+	},
+	"aliasNote": "Characters whose art is in their own prefab bundle but under an unrelated name. They cannot go in `sprites` above, because that path matches a file the manifest lists and an avgpicprefabs bundle lists only its prefabs, never the textures inside it. The extractor looks these up by name instead. M1903bar is a deliberate fallback: the scripts place her in a bar alongside the m1903 and m1903cafe prefabs, and no bar-specific texture ships, so she borrows her own standard art rather than showing a placeholder.",
+	"textureAliases": {
+		"BossCerberus": "Cerberus",
+		"BossDestroyerPlus": "DestroyerPlus",
+		"NPC-SPAS12Mod": "NPC-SPAS12_0",
+		"M1903bar": "pic_M1903"
 	}
 }
