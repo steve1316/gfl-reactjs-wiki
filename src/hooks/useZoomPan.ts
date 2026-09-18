@@ -96,6 +96,23 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 	const pointers = useRef(new Map<number, { x: number; y: number }>());
 	const pinchStart = useRef<{ distance: number; scale: number } | null>(null);
 	const containerRef = useRef<T | null>(null);
+	/**
+	 * The container element, mirrored into state so effects that need it re-run when it appears.
+	 *
+	 * A ref alone is not enough. A caller that only mounts its stage once its data has loaded leaves `containerRef.current` null
+	 * through the first render, and the wheel listener below would attach to nothing and never try again, since nothing it depends
+	 * on changes afterwards. That is what left the enemy art viewer without wheel zoom while the doll viewer, which mounts its stage
+	 * on the first render, happened to work.
+	 */
+	const [containerNode, setContainerNode] = useState<T | null>(null);
+
+	// No dependency array on purpose: this runs after every render, and sets state only when the element has actually changed, so
+	// it settles immediately rather than looping.
+	useEffect(() => {
+		if (containerRef.current !== containerNode) {
+			setContainerNode(containerRef.current);
+		}
+	});
 
 	// Where a one-pointer drag began and where the content sat at that moment. The drag is applied as an
 	// absolute offset from this, not as a sum of per-event deltas, so a gesture that loses intermediate
@@ -167,7 +184,7 @@ export function useZoomPan<T extends HTMLElement = HTMLElement>(options: UseZoom
 		};
 		element.addEventListener("wheel", handleWheel, { passive: false });
 		return () => element.removeEventListener("wheel", handleWheel);
-	}, [zoomBy]);
+	}, [zoomBy, containerNode]);
 
 	const detach = useCallback(() => {
 		if (!attached.current) {
