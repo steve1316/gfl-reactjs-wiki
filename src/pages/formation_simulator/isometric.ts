@@ -7,14 +7,26 @@
 
 import { rowColumn } from "../../lib/formation/tiles.ts";
 
-/** Tile width as a fraction of the stage width. The grid and the enemy beside it fill the stage, with a thin margin at each end. */
-const TILE_WIDTH_SHARE = 1 / 3.95;
+/**
+ * Tile width as a fraction of the stage width.
+ *
+ * Two 3x3 grids stand side by side, and an isometric 3x3 grid is three tile widths across, so the stage has to hold six of them plus
+ * the gap between the sides and a margin at each end. That makes the tiles smaller than when the stage held one grid and a single
+ * enemy, which is the cost of showing both sides of the fight at once.
+ */
+const TILE_WIDTH_SHARE = 1 / 7.1;
 
 /** Tile height as a fraction of tile width. */
 const TILE_ASPECT = 0.58;
 
-/** Where the back corner of the grid sits across the stage, as a fraction of its width. Set so the grid's left corner clears the edge by a little. */
-const ORIGIN_X_SHARE = 0.395;
+/** Where the back corner of the echelon's grid sits across the stage, as a fraction of its width, so its left corner clears the edge. */
+const ORIGIN_X_SHARE = 0.225;
+
+/** Where the back corner of the enemy's grid sits, far enough right that the two grids do not touch. */
+const ENEMY_ORIGIN_X_SHARE = 0.775;
+
+/** Which side of the field a grid is on. */
+export type StageSide = "player" | "enemy";
 
 /** Headroom above the grid for the back row's chibis, in tile widths. A chibi stands about 1.2 tiles tall from the middle of its tile. */
 const HEADROOM = 0.95;
@@ -35,10 +47,23 @@ export interface StageGeometry {
 	tileWidth: number;
 	/** Height of one tile diamond. */
 	tileHeight: number;
-	/** X of the grid's back corner. */
+	/** X of the echelon grid's back corner. */
 	originX: number;
-	/** Y of the grid's back corner. */
+	/** X of the enemy grid's back corner. */
+	enemyOriginX: number;
+	/** Y of both grids' back corner. */
 	originY: number;
+}
+
+/**
+ * The x of a side's back corner.
+ *
+ * @param geometry Stage geometry.
+ * @param side Which grid.
+ * @returns The x in CSS pixels.
+ */
+function sideOriginX(geometry: StageGeometry, side: StageSide): number {
+	return side === "enemy" ? geometry.enemyOriginX : geometry.originX;
 }
 
 /**
@@ -51,7 +76,15 @@ export function stageGeometry(width: number): StageGeometry {
 	const tileWidth = width * TILE_WIDTH_SHARE;
 	const tileHeight = tileWidth * TILE_ASPECT;
 	const originY = tileWidth * HEADROOM;
-	return { width, height: Math.round(originY + GRID_SIZE * tileHeight + tileWidth * FOOTROOM), tileWidth, tileHeight, originX: width * ORIGIN_X_SHARE, originY };
+	return {
+		width,
+		height: Math.round(originY + GRID_SIZE * tileHeight + tileWidth * FOOTROOM),
+		tileWidth,
+		tileHeight,
+		originX: width * ORIGIN_X_SHARE,
+		enemyOriginX: width * ENEMY_ORIGIN_X_SHARE,
+		originY
+	};
 }
 
 /**
@@ -59,12 +92,13 @@ export function stageGeometry(width: number): StageGeometry {
  *
  * @param geometry Stage geometry.
  * @param cell Cell, 0 to 8.
+ * @param side Which grid the cell belongs to.
  * @returns The point.
  */
-export function tileCentre(geometry: StageGeometry, cell: number): { x: number; y: number } {
+export function tileCentre(geometry: StageGeometry, cell: number, side: StageSide): { x: number; y: number } {
 	const [row, column] = rowColumn(cell);
 	return {
-		x: geometry.originX + ((column - row) * geometry.tileWidth) / 2,
+		x: sideOriginX(geometry, side) + ((column - row) * geometry.tileWidth) / 2,
 		y: geometry.originY + ((column + row) * geometry.tileHeight) / 2 + geometry.tileHeight / 2
 	};
 }
@@ -74,36 +108,27 @@ export function tileCentre(geometry: StageGeometry, cell: number): { x: number; 
  *
  * @param geometry Stage geometry.
  * @param cell Cell, 0 to 8.
+ * @param side Which grid the cell belongs to.
  * @returns The points.
  */
-export function tilePoints(geometry: StageGeometry, cell: number): string {
-	const { x, y } = tileCentre(geometry, cell);
+export function tilePoints(geometry: StageGeometry, cell: number, side: StageSide): string {
+	const { x, y } = tileCentre(geometry, cell, side);
 	const halfWidth = geometry.tileWidth / 2;
 	const halfHeight = geometry.tileHeight / 2;
 	return `${x},${y - halfHeight} ${x + halfWidth},${y} ${x},${y + halfHeight} ${x - halfWidth},${y}`;
 }
 
 /**
- * Where the enemy placeholder stands: right of the grid, level with its middle.
- *
- * @param geometry Stage geometry.
- * @returns The point for the enemy's feet.
- */
-export function enemyAnchor(geometry: StageGeometry): { x: number; y: number } {
-	const middle = tileCentre(geometry, 4);
-	return { x: geometry.originX + geometry.tileWidth * 1.92, y: middle.y + geometry.tileHeight * 0.5 };
-}
-
-/**
- * Which cell a point is over.
+ * Which cell of one side a point is over.
  *
  * @param geometry Stage geometry.
  * @param x Point x in CSS pixels.
  * @param y Point y in CSS pixels.
- * @returns The cell, or null when the point is off the grid.
+ * @param side Which grid to test against.
+ * @returns The cell, or null when the point is off that grid.
  */
-export function cellAt(geometry: StageGeometry, x: number, y: number): number | null {
-	const across = (x - geometry.originX) / (geometry.tileWidth / 2);
+export function cellAtSide(geometry: StageGeometry, x: number, y: number, side: StageSide): number | null {
+	const across = (x - sideOriginX(geometry, side)) / (geometry.tileWidth / 2);
 	const down = (y - geometry.originY) / (geometry.tileHeight / 2);
 	const column = Math.floor((across + down) / 2);
 	const row = Math.floor((down - across) / 2);
@@ -111,4 +136,22 @@ export function cellAt(geometry: StageGeometry, x: number, y: number): number | 
 		return null;
 	}
 	return row * GRID_SIZE + column;
+}
+
+/**
+ * Which cell of either side a point is over.
+ *
+ * @param geometry Stage geometry.
+ * @param x Point x in CSS pixels.
+ * @param y Point y in CSS pixels.
+ * @returns The side and cell, or null when the point is off both grids.
+ */
+export function cellAt(geometry: StageGeometry, x: number, y: number): { side: StageSide; cell: number } | null {
+	for (const side of ["player", "enemy"] as const) {
+		const cell = cellAtSide(geometry, x, y, side);
+		if (cell !== null) {
+			return { side, cell };
+		}
+	}
+	return null;
 }
