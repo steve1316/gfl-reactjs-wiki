@@ -134,7 +134,9 @@ REPORT_TIERS = {
     ("fairy_art", "form"): "fairy_art",
     ("enemy_art", "card"): "enemy_card",
     ("enemy_art", "full"): "enemy_full",
+    ("faction_icon", "icon"): "faction_icon",
 }
+
 
 # Enemy portraits are square, unlike the dolls' 256x512 cards: the small one is a single 512 image rather than a two-half atlas. The large
 # one comes at either 1024 or 2048, both of which the game ships, so both are standard. A handful of cards ship their alpha as a separate mask.
@@ -768,6 +770,45 @@ def build_enemy_art(textures, item, staging):
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": role, "reason": f"encode or write failed: {exc}"})
     return result
+
+
+def build_faction_icon(textures, item, staging):
+    """Extract one faction's emblem from already loaded textures.
+
+    The file name is the faction, lowercased with its spaces turned into hyphens, so the site can build the URL from the faction name
+    the enemy data already carries.
+
+    Args:
+        textures: Textures loaded from the emblem bundle.
+        item: A `faction_icon` inventory item.
+        staging: The staging root.
+
+    Returns:
+        A worker result.
+    """
+    result = new_result()
+    slug = item["faction"].lower().replace(" ", "-")
+    try:
+        image = decode(textures, item["assets"]["icon"])
+        write_file(staging, f"factions/{slug}.webp", encode_webp(image.convert("RGBA"), FULL_QUALITY), REPORT_TIERS[("faction_icon", "icon")], result)
+    except Exception as exc:
+        result["missing"].append({"key": item["key"], "role": "icon", "reason": f"decode or write failed: {exc!r}"})
+    return result
+
+
+def extract_faction_icon_items(items, cache_dir, staging, loader=unity_load):
+    """Extract every faction emblem, loading the shared bundle once.
+
+    Args:
+        items: Resolved `faction_icon` inventory items.
+        cache_dir: The bundle cache directory.
+        staging: The staging root.
+        loader: Callable opening one `.ab` file, replaceable in tests.
+
+    Returns:
+        A worker result.
+    """
+    return extract_grouped_items(items, cache_dir, staging, build_faction_icon, loader)
 
 
 def extract_enemy_art_items(items, cache_dir, staging, loader=unity_load):
@@ -1614,7 +1655,7 @@ def reset_staging(staging):
     Args:
         staging: The staging root.
     """
-    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies", "assets/enemies", "assets/live2d"):
+    for rel in ("assets/tdolls", "assets/equipment", "assets/hocs", "assets/fairies", "assets/enemies", "assets/factions", "assets/live2d"):
         shutil.rmtree(os.path.join(staging, rel), ignore_errors=True)
     os.makedirs(os.path.join(staging, TREE), exist_ok=True)
 
@@ -1696,9 +1737,9 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
     ui_files = copy_ui(legacy_assets, staging) if legacy_dir else []
 
     report = {"resVersion": inventory["resVersion"], "missing": [], "nonstandard": []}
-    art_items, hoc_items, fairy_items, enemy_items, skill_items, equip_items, live2d_items, legacy_skill_items = [], [], [], [], [], [], [], []
+    art_items, hoc_items, fairy_items, enemy_items, faction_items, skill_items, equip_items, live2d_items, legacy_skill_items = [], [], [], [], [], [], [], [], []
     for item in inventory["items"]:
-        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art", "enemy_art", "live2d")
+        wanted = item["tier"] in ART_TIERS or item["tier"] in ("skill_icon", "equip_icon", "hoc_art", "fairy_art", "enemy_art", "faction_icon", "live2d")
         if not wanted:
             continue
         if item["tier"] == "skill_icon" and item.get("source") == "legacy":
@@ -1708,7 +1749,7 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             report["missing"].append({"key": item["key"], "role": "*", "reason": item.get("reason", "no bundle holds the files")})
             continue
         report["missing"].extend({"key": item["key"], "role": role, "reason": "not in any bundle"} for role in item["missing"])
-        buckets = {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items, "enemy_art": enemy_items, "live2d": live2d_items}
+        buckets = {"skill_icon": skill_items, "equip_icon": equip_items, "hoc_art": hoc_items, "fairy_art": fairy_items, "enemy_art": enemy_items, "faction_icon": faction_items, "live2d": live2d_items}
         buckets.get(item["tier"], art_items).append(item)
 
     # Imported here, not at module scope, since `extract_live2d` imports back from this module - a top-level import would be circular.
@@ -1727,6 +1768,8 @@ def run_extraction(inventory, legacy_dir, legacy_skins, site_dir, cache_dir, sta
             futures[pool.submit(extract_hoc_art_items, hoc_items, cache_dir, staging)] = "worker:hoc_art"
         if fairy_items:
             futures[pool.submit(extract_fairy_art_items, fairy_items, cache_dir, staging)] = "worker:fairy_art"
+        if faction_items:
+            futures[pool.submit(extract_faction_icon_items, faction_items, cache_dir, staging)] = "worker:faction_icon"
         # Split into chunks so 350 enemies spread over the pool instead of queueing behind one worker.
         for start in range(0, len(enemy_items), 40):
             futures[pool.submit(extract_enemy_art_items, enemy_items[start : start + 40], cache_dir, staging)] = f"worker:enemy_art:{start}"

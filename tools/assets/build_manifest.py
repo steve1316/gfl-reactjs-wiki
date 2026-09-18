@@ -235,6 +235,7 @@ def build_v3(assets_root):
     enemies = {
         enemy_id: [kind for kind, name in V3_ENEMY_IMAGE_FILES if os.path.isfile(os.path.join(assets_root, "enemies", enemy_id, name))] for enemy_id in enemy_ids
     }
+    factions = sorted(name[: -len(".webp")] for name in os.listdir(os.path.join(assets_root, "factions"))) if os.path.isdir(os.path.join(assets_root, "factions")) else []
     fairy_ids = numeric_dirs(os.path.join(assets_root, "fairies"))
     fairies = {
         fairy_id: [kind for kind, name in V3_FAIRY_IMAGE_FILES if os.path.isfile(os.path.join(assets_root, "fairies", fairy_id, name))]
@@ -243,7 +244,7 @@ def build_v3(assets_root):
 
     live2d = build_live2d(assets_root)
 
-    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs, "fairies": fairies, "enemies": enemies, "live2d": live2d}
+    return {"version": 3, "imageKinds": list(V3_IMAGE_KINDS), "equipment": equipment, "dolls": dolls, "hocs": hocs, "fairies": fairies, "enemies": enemies, "factions": factions, "live2d": live2d}
 
 
 def dumps(manifest, indent=None):
@@ -283,6 +284,7 @@ def main():
     print(f"  hocs         {len(manifest['hocs'])}")
     print(f"  fairies      {len(manifest['fairies'])}")
     print(f"  enemies      {len(manifest['enemies'])}")
+    print(f"  factions     {len(manifest['factions'])}")
     print(f"  live2d fairies {len(manifest['live2d']['fairies'])}")
     print(f"  live2d hocs    {len(manifest['live2d']['hocs'])}")
     print(f"  live2d tdolls  {len(manifest['live2d']['tdolls'])}")

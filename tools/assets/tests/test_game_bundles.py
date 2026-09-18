@@ -840,7 +840,18 @@ class NewTargetTests(unittest.TestCase):
         """A missing doll, a missing Mod, a missing numeric skin and a missing equipment id are the targets."""
         self.assertEqual(
             self.targets,
-            {"dolls": {424}, "mods": {100}, "skins": {(65, 9001)}, "equipment": {3}, "hocs": set(), "fairies": set(), "enemies": set(), "live2d": set(), "skin": set()},
+            {
+                "dolls": {424},
+                "mods": {100},
+                "skins": {(65, 9001)},
+                "equipment": {3},
+                "hocs": set(),
+                "fairies": set(),
+                "enemies": set(),
+                "factions_hosted": False,
+                "live2d": set(),
+                "skin": set(),
+            },
         )
 
     def test_selects_forms_of_new_targets(self):
@@ -949,6 +960,8 @@ class NewTargetTests(unittest.TestCase):
                 "hocs": set(),
                 "fairies": set(),
                 "enemies": expected_enemies,
+                # True once the emblems are published, which is a fixed set rather than a per-id one.
+                "factions_hosted": len(manifest.get("factions", [])) > 0,
                 "live2d": expected_live2d,
                 "skin": set(),
             },

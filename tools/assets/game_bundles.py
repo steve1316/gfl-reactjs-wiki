@@ -94,6 +94,7 @@ TIERS = (
     "fairy_art",
     "enemy_art",
     "enemy_spine",
+    "faction_icon",
     "live2d",
 )
 
@@ -126,6 +127,19 @@ ENEMY_ART_ROLES = (
 # An enemy has one combat rig and no dorm rig, so only the first three Spine roles apply.
 ENEMY_SPINE_ROLES = SPINE_ROLES[:3]
 
+
+# The faction emblems all live in one bundle, one folder per faction. Each is layered into a front, a back and sometimes a background;
+# the front carries the mark a reader recognises, so it is the only one taken. The folder names are the game's own, including the
+# lowercase `sangvis` among the capitalised rest and its `_bu` suffixes.
+FACTION_ICON_BUNDLE = "sprites_guncamps"
+FACTION_ICON_PATHS = {
+    "Sangvis Ferri": "sangvis/{front}.png",
+    "KCCO": "KCCO/{front}.png",
+    "Paradeus": "Paradeus/{front}.png",
+}
+
+# The file inside each faction's folder that holds its mark, since the game does not name them consistently.
+FACTION_ICON_FRONTS = {"Sangvis Ferri": "\u524d\u90e8", "KCCO": "\u901a\u7528\u6b63\u89c4\u519b_logo", "Paradeus": "\u524d"}
 
 # HOC pictures all live in one bundle. The card path keeps its folder, since L9A1 also has a root-level `L9A1_Vertical.png`.
 HOC_ART_BUNDLE = "resource_squads"
@@ -645,6 +659,23 @@ def hoc_items(index, hoc):
     return [art, rig]
 
 
+def faction_icon_items(index):
+    """Resolve one emblem per faction.
+
+    Args:
+        index: The bundle index from `load_index`.
+
+    Returns:
+        One item per faction, in `FACTION_ICON_PATHS` order.
+    """
+    items = []
+    for faction, template in FACTION_ICON_PATHS.items():
+        path = template.format(front=FACTION_ICON_FRONTS[faction])
+        roles = (("icon", (path,), True),)
+        items.append(resolve_item(index, "faction_icon", f"faction_icon:{faction}", faction, [FACTION_ICON_BUNDLE], roles, faction=faction))
+    return items
+
+
 def skeleton_index(index):
     """Index every Spine skeleton in ResData by its lowercased name.
 
@@ -985,6 +1016,7 @@ def new_targets(dolls, equipment_ids, manifest, hocs=(), fairies=(), enemies=(),
     targets["fairies"] = {fairy["id"] for fairy in fairies if str(fairy["id"]) not in listed_fairies}
     listed_enemies = manifest.get("enemies", {})
     targets["enemies"] = {enemy["id"] for enemy in enemies if str(enemy["id"]) not in listed_enemies}
+    targets["factions_hosted"] = len(manifest.get("factions", [])) > 0
     listed_live2d = manifest.get("live2d", {})
     listed_live2d_fairies = listed_live2d.get("fairies", {})
     listed_live2d_hocs = listed_live2d.get("hocs", {})
@@ -1037,6 +1069,8 @@ def select_new_items(items, targets):
             keep = item.get("fairy_id") in targets.get("fairies", set())
         elif tier in ("enemy_art", "enemy_spine"):
             keep = item.get("enemy_id") in targets.get("enemies", set())
+        elif tier == "faction_icon":
+            keep = not targets.get("factions_hosted", False)
         elif tier == "live2d":
             if item.get("kind") == "skin":
                 keep = (item.get("id"), item.get("form"), item.get("skin")) in targets.get("skin", set())
@@ -1144,6 +1178,8 @@ def build_inventory(resdata, dolls, equipment_ids, guns, skill_codes, equip_code
         skeletons = skeleton_index(index)
         for enemy in enemies:
             items.extend(enemy_items(index, skeletons, enemy))
+    if enemies:
+        items.extend(faction_icon_items(index))
     items.extend(live2d_items(index, fairies, hocs))
     known_dolls = doll_ids if doll_ids is not None else {doll["normal"]["id"] for doll in dolls}
     items.extend(skin_live2d_items(index, skin_live2d_models(live2d_rows, set(index), known_dolls)))

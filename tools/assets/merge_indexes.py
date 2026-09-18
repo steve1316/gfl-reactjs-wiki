@@ -154,6 +154,9 @@ def merge_manifest(committed, partial):
                 else:
                     entries[entry_id] = kinds
             merged[key] = by_id(entries)
+    # Faction emblems are a fixed set with no ids to merge, so a partial that carries them simply replaces what is there.
+    if partial.get("factions"):
+        merged["factions"] = list(partial["factions"])
     if "live2d" in partial or "live2d" in merged:
         try:
             merged["live2d"] = merge_live2d_index(merged.get("live2d", {}), partial.get("live2d", {}))
