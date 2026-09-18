@@ -1090,7 +1090,25 @@ def extract_story_background_items(items, cache_dir, staging, loader=unity_load)
     Returns:
         A worker result merged over every item.
     """
-    return extract_grouped_items(items, cache_dir, staging, build_story_background, loader)
+    # One bundle at a time, not the union of them. A background bundle holds hundreds of 2048x2048 textures, and decoding several
+    # bundles' worth at once is tens of gigabytes of raw pixels - enough to have the worker killed rather than merely slowed.
+    result = new_result()
+    by_bundle = {}
+    for item in items:
+        for bundle in item["bundles"]:
+            by_bundle.setdefault(bundle, []).append(item)
+    for bundle, bundle_items in by_bundle.items():
+        try:
+            textures = load_textures([bundle], cache_dir, loader)
+        except Exception as exc:
+            for field, rows in load_failure(bundle_items, exc).items():
+                result[field].extend(rows)
+            continue
+        for item in bundle_items:
+            for field, rows in build_story_background(textures, item, staging).items():
+                result[field].extend(rows)
+        textures.clear()
+    return result
 
 
 def extract_story_ui_item(item, cache_dir, staging, loader=unity_load):
