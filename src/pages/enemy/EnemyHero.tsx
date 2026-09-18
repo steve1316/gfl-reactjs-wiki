@@ -1,11 +1,20 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
+import type { MouseEvent } from "react";
+import { Link } from "react-router-dom";
 
 // MaterialUI imports
-import { Alert, Box, Card, CardMedia, Chip, Typography } from "@mui/material";
+import { Alert, Box, Card, CardMedia, Chip, Fab, ToggleButton, Typography, alpha } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
+// MaterialUI icon imports
+import ZoomOutMapIcon from "@mui/icons-material/ZoomOutMap";
+
 import ArtPlaceholder from "../../components/ArtPlaceholder";
-import { ENEMY_CARD_ASPECT } from "../../lib/artLayout";
+import FactionIcon from "../../components/FactionIcon";
+import { ENEMY_CARD_ASPECT, FAB_EXPAND_SX } from "../../lib/artLayout";
+import { factionEmblemUrl } from "../../lib/assets";
+import { hasFactionEmblem } from "../../lib/processData";
+import { FACTION_COLOURS } from "../../theme/palette";
 
 const styles = {
 	root: {
@@ -63,8 +72,51 @@ const styles = {
 	counter: {
 		width: "100%",
 		textAlign: "left"
-	}
+	},
+	emblem: {
+		height: 34,
+		width: "auto",
+		display: "block",
+		// The emblems are drawn light on dark, so they need no treatment beyond sitting quietly beside the badges.
+		opacity: 0.9
+	},
+	pillRow: {
+		display: "flex",
+		flexWrap: "wrap",
+		gap: 0.5,
+		justifyContent: { xs: "center", md: "flex-start" }
+	},
+	pill: (theme: Theme) => ({
+		backgroundColor: alpha(theme.palette.background.default, 0.6),
+		color: theme.palette.text.primary
+	}),
+	pillSelected: (theme: Theme) => ({
+		backgroundColor: theme.palette.primary.main,
+		color: theme.palette.primary.contrastText
+	}),
+	capturedToggle: (theme: Theme) => ({
+		display: "flex",
+		alignItems: "center",
+		gap: 0.5,
+		px: 1,
+		py: 0.25,
+		color: theme.palette.text.primary,
+		borderColor: theme.palette.divider,
+		"&.Mui-selected": {
+			color: theme.palette.success.contrastText,
+			backgroundColor: theme.palette.success.main,
+			"&:hover": { backgroundColor: theme.palette.success.main }
+		}
+	})
 } satisfies Record<string, SxProps<Theme>>;
+
+/** One selectable variant of an enemy: the same unit at a harder tier, sharing its art and rig. */
+export interface EnemyVariant {
+	/** The variant's enemy id. */
+	id: number;
+	/** What the pill reads, such as "Base" or "Gray Zone Specialized Model". */
+	label: string;
+}
 
 /** Props for EnemyHero. */
 interface EnemyHeroProps {
@@ -80,7 +132,7 @@ interface EnemyHeroProps {
 	faction: string;
 	/** Whether this is one of the named boss and Ringleader tier. */
 	boss: boolean;
-	/** Whether Protocol Assimilation has a playable unit for this enemy. */
+	/** Whether Protocol Assimilation can capture this enemy, which is what puts the Captured toggle on screen. */
 	capturable: boolean;
 	/** The organisation the enemy belongs to, or null when upstream records none. */
 	organisation: string | null;
@@ -90,6 +142,18 @@ interface EnemyHeroProps {
 	introduce: string;
 	/** The archive's advice on how to fight this enemy, empty when there is none. */
 	counter: string;
+	/** The family's variants, in id order. A single entry means the enemy has no harder tiers and no pills are drawn. */
+	variants: EnemyVariant[];
+	/** The variant on screen. */
+	variantId: number;
+	/** Called with the id of the variant whose pill was clicked. */
+	onVariantChange: (id: number) => void;
+	/** Whether the page is showing the captured unit rather than the enemy. */
+	capturedOn: boolean;
+	/** Flips between the enemy and the captured unit. */
+	onToggleCaptured: () => void;
+	/** Link to the full art viewer, or null when the enemy has no full art published. */
+	artLink: string | null;
 }
 
 /**
@@ -102,22 +166,60 @@ interface EnemyHeroProps {
  * @param props Component props.
  * @returns The hero block.
  */
-export default memo(function EnemyHero({ name, id, code, subName, faction, boss, capturable, organisation, cardImage, introduce, counter }: EnemyHeroProps) {
+export default memo(function EnemyHero({
+	name,
+	id,
+	code,
+	subName,
+	faction,
+	boss,
+	capturable,
+	organisation,
+	cardImage,
+	introduce,
+	counter,
+	variants,
+	variantId,
+	onVariantChange,
+	capturedOn,
+	onToggleCaptured,
+	artLink
+}: EnemyHeroProps) {
 	const subtitle = [code === name ? "" : code, subName === null || subName === name ? "" : subName].filter((part) => part !== "").join(" \u00b7 ");
+	// Shared by every pill, which carries its variant id in `data-variant`, so a fresh arrow per pill never re-renders the row.
+	const handleVariantClick = useCallback((event: MouseEvent<HTMLElement>) => onVariantChange(Number(event.currentTarget.dataset.variant)), [onVariantChange]);
 
 	return (
 		<Box data-testid="enemy-hero" sx={styles.root}>
 			<Box sx={styles.content}>
 				<Card sx={styles.portrait}>
 					{cardImage ? <CardMedia component="img" sx={styles.portraitArt} image={cardImage} title={name} /> : <ArtPlaceholder name={name} sx={styles.portraitArt} />}
+
+					{/* A sibling of the media rather than a child, so opening the art never also fires a click on the portrait. */}
+					{artLink === null ? null : (
+						<Fab color="primary" component={Link} to={artLink} sx={FAB_EXPAND_SX} aria-label="view full art">
+							<ZoomOutMapIcon />
+						</Fab>
+					)}
 				</Card>
 
 				<Box sx={styles.info}>
 					<Box sx={styles.topRow}>
-						<Chip label={faction} color="primary" variant="outlined" size="small" />
+						{hasFactionEmblem(faction) ? <Box component="img" src={factionEmblemUrl(faction)} alt="" sx={styles.emblem} /> : null}
+						<Chip
+							label={faction}
+							icon={<FactionIcon faction={faction} />}
+							variant="outlined"
+							size="small"
+							sx={{ borderColor: FACTION_COLOURS[faction as keyof typeof FACTION_COLOURS], color: FACTION_COLOURS[faction as keyof typeof FACTION_COLOURS] }}
+						/>
 						{boss && <Chip label="Boss" color="error" variant="outlined" size="small" />}
-						{capturable && <Chip label="Capturable" color="success" variant="outlined" size="small" />}
 						{organisation === null ? null : <Chip label={organisation} variant="outlined" size="small" />}
+						{capturable ? (
+							<ToggleButton value="captured" selected={capturedOn} onChange={onToggleCaptured} size="small" sx={styles.capturedToggle} aria-label="show the captured unit">
+								Captured
+							</ToggleButton>
+						) : null}
 					</Box>
 
 					<Typography variant="h4" component="h1" sx={styles.name}>
@@ -127,6 +229,23 @@ export default memo(function EnemyHero({ name, id, code, subName, faction, boss,
 							#{id}
 						</Typography>
 					</Typography>
+
+					{variants.length > 1 ? (
+						<Box sx={styles.pillRow} role="group" aria-label="Variants">
+							{variants.map((variant) => (
+								<Chip
+									key={variant.id}
+									label={variant.label}
+									size="small"
+									clickable
+									data-variant={variant.id}
+									onClick={handleVariantClick}
+									aria-pressed={variant.id === variantId}
+									sx={variant.id === variantId ? styles.pillSelected : styles.pill}
+								/>
+							))}
+						</Box>
+					) : null}
 
 					{/* The code usually repeats the name, so it only earns a line when it says something the name does not. */}
 					{subtitle === "" ? null : (

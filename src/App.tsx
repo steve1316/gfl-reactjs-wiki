@@ -29,6 +29,7 @@ const FairyLive2d = lazy(() => import("./pages/fairy_live2d/fairy_live2d"));
 /** The Enemy pages load on first visit, since they ship their own data files that no other route needs. */
 const EnemyIndex = lazy(() => import("./pages/enemy_index/enemy_index"));
 const EnemyPage = lazy(() => import("./pages/enemy/enemy"));
+const EnemyArt = lazy(() => import("./pages/enemy_art/enemy_art"));
 
 /** The T-Doll skin Live2D viewer loads on first visit, since few readers open it and it would otherwise add to every T-Doll route. */
 const TDollLive2d = lazy(() => import("./pages/tdoll_live2d/tdoll_live2d"));
@@ -101,6 +102,14 @@ export default function App() {
 						element={
 							<Suspense>
 								<EnemyIndex />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/enemy/:id/art"
+						element={
+							<Suspense>
+								<EnemyArt />
 							</Suspense>
 						}
 					/>
