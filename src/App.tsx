@@ -36,6 +36,10 @@ const TDollLive2d = lazy(() => import("./pages/tdoll_live2d/tdoll_live2d"));
 /** The Formation Simulator loads on first visit, since it ships its own data files that no other route needs. */
 const FormationSimulator = lazy(() => import("./pages/formation_simulator/formation_simulator"));
 
+/** The story routes load on first visit. The player pulls one scene file at a time, none of which any other route needs. */
+const StoryIndex = lazy(() => import("./pages/story_index/story_index"));
+const Story = lazy(() => import("./pages/story/story"));
+
 /**
  * The application shell: theme, navigation and routes.
  *
@@ -137,6 +141,22 @@ export default function App() {
 						element={
 							<Suspense>
 								<TDollLive2d />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/story/:chapter/:scene"
+						element={
+							<Suspense>
+								<Story />
+							</Suspense>
+						}
+					/>
+					<Route
+						path="/story"
+						element={
+							<Suspense>
+								<StoryIndex />
 							</Suspense>
 						}
 					/>
