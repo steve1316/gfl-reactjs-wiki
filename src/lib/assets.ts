@@ -344,14 +344,14 @@ export function skinLive2dModelUrl(dollId: number, form: string, skinKey: string
  * A script names an expression by index. Index 0 is the plain pose and has no suffix, which is also what a character falls back to
  * when the game does not ship the expression the script asked for.
  *
- * @param prefab The prefab name a script refers to, such as `M4A1Mod`.
+ * @param stem The published stem, from `storySpriteStem`.
  * @param expression The expression index, 0 for the plain pose.
  * @param damaged Whether to ask for the damaged pose, which only the plain pose has.
  * @returns An absolute URL.
  */
-export function storySpriteUrl(prefab: string, expression = 0, damaged = false): string {
+export function storySpriteUrl(stem: string, expression = 0, damaged = false): string {
 	const suffix = damaged ? "_d" : expression > 0 ? `_${expression}` : "";
-	return join(ASSET_BASE, `story/sprites/${prefab.toLowerCase()}${suffix}.webp`);
+	return join(ASSET_BASE, `story/sprites/${stem.toLowerCase()}${suffix}.webp`);
 }
 
 /**

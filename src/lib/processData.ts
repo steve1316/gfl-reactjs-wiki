@@ -155,15 +155,34 @@ export function hasEnemyArt(id: number, kind: EnemyArtKind): boolean {
 }
 
 /**
- * Whether a story character's art is hosted.
+ * The published stem for a story character, or null when the game ships no art for it.
+ *
+ * Scripts sometimes name an NPC without its prefix - `helian` for `NPC-Helian` - so that alias is tried too. Many sprite slots hold
+ * no character at all: a script uses them to carry an off-screen speaker's label, such as a description of a voice, and those have
+ * no art by design rather than by omission.
+ *
+ * @param prefab The prefab name a script refers to.
+ * @returns The stem the art is published under, or null when there is none.
+ */
+export function storySpriteStem(prefab: string): string | null {
+	const stem = prefab.toLowerCase();
+	const sprites = manifest.story?.sprites;
+	return sprites?.find((name) => name === stem || name === `npc-${stem}` || name === `npc_${stem}`) ?? null;
+}
+
+/**
+ * Whether a story character's art is hosted at a given expression.
  *
  * @param prefab The prefab name a script refers to.
  * @param expression The expression index, 0 for the plain pose.
  * @returns True when the manifest lists that sprite at that expression.
  */
 export function hasStorySprite(prefab: string, expression = 0): boolean {
-	const stem = prefab.toLowerCase();
-	return manifest.story?.sprites.includes(expression > 0 ? `${stem}_${expression}` : stem) ?? false;
+	const stem = storySpriteStem(prefab);
+	if (stem === null) {
+		return false;
+	}
+	return expression > 0 ? (manifest.story?.sprites.includes(`${stem}_${expression}`) ?? false) : true;
 }
 
 /**
