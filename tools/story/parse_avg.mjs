@@ -8,7 +8,8 @@
  *     Prefab(expression)<Speaker>NAME</Speaker>;Prefab2(0)||<BGM>cue</BGM>:first page+second page
  *
  * `||` splits the left side of the stage from the right. Within a side, `;` separates sprites, a sprite is `Prefab(expression)`, and
- * a bare `()` means nobody is shown, which is how narration is written. Tags are either paired (`<BGM>cue</BGM>`) or bare
+ * a bare `()` means nobody is shown, which is how narration is written. A named prefab with the expression left out, `Prefab()`, is
+ * a character who speaks without being seen. Tags are either paired (`<BGM>cue</BGM>`) or bare
  * (`<comms box>`); a tag that positions or labels a sprite binds to the sprite before it, and anything else is a direction for the
  * whole beat.
  *
@@ -32,7 +33,12 @@ const NARRATOR_TAGS = new Set(["narrator"]);
 /** Tags that describe the sprite before them rather than the beat, so they bind to that sprite. */
 const SPRITE_TAGS = new Set(["Position", "position", "Scale", "Size", "通讯框", "边框"]);
 
-/** Tag names to the scene op they become, so the player reads one vocabulary instead of the game's mixed one. */
+/**
+ * Tag names to the scene op they become, so the player reads one vocabulary instead of the game's mixed one.
+ *
+ * The screen fades come in numbered pairs: `1` puts the wash up and `2` takes it down again, almost always with a beat or two held
+ * underneath. They map to separate `On` and `Off` ops rather than one, since a player that cannot tell them apart cannot fade back.
+ */
 const OP_NAMES = {
 	BGM: "bgm",
 	SE: "sfx",
@@ -51,14 +57,14 @@ const OP_NAMES = {
 	震屏3: "shake",
 	controll_shake: "shake",
 	立绘振动: "spriteShake",
-	黑屏1: "blackscreen",
-	黑屏2: "blackscreen",
-	白屏1: "whitescreen",
-	白屏2: "whitescreen",
+	黑屏1: "blackscreenOn",
+	黑屏2: "blackscreenOff",
+	白屏1: "whitescreenOn",
+	白屏2: "whitescreenOff",
 	白屏闪光: "whiteFlash",
 	闪屏: "flash",
-	黑点1: "fadePoint",
-	黑点2: "fadePoint",
+	黑点1: "fadePointOn",
+	黑点2: "fadePointOff",
 	同时置暗: "darken",
 	同时置亮: "brighten",
 	同时点亮: "brighten",
@@ -104,6 +110,14 @@ const OP_NAMES = {
 
 /** Inline markup inside the spoken text, which becomes styled spans rather than stage directions. */
 const INLINE_TAGS = new Set(["color", "size", "c", "t", "r", "b", "i"]);
+
+/**
+ * Inline markup that lists a choice rather than styling text.
+ *
+ * A beat offering the reader a decision writes the options inside its own line, as `...<c>Option one<c>Option two`. They are menu
+ * entries, so they are lifted out into the page's `choices` instead of being left in the text as styled runs.
+ */
+const CHOICE_TAGS = new Set(["c", "t"]);
 
 /** Splits the text of a beat into successive click-through pages. */
 const PAGE_SEPARATOR = "+";
@@ -165,7 +179,9 @@ function readBlock(block, side, beat) {
 				current = null;
 				continue;
 			}
-			current = { prefab: prefab.trim(), expression: expression === "" ? 0 : Number(expression), side, tags: {} };
+			// `Prefab()` with the expression left out names someone who is heard but not seen, such as a voice over a blackout.
+			// `Prefab(0)` is the same character actually on stage, so the two cannot be collapsed.
+			current = { prefab: prefab.trim(), expression: expression === "" ? 0 : Number(expression), shown: expression !== "", side, tags: {} };
 			beat.sprites.push(current);
 			continue;
 		}
@@ -181,7 +197,8 @@ function readBlock(block, side, beat) {
 			continue;
 		}
 		if (SPRITE_TAGS.has(name) && current) {
-			current.tags[name] = value;
+			// Named the same way as a stage direction, so `Position` and `position` land on one key and the player reads one vocabulary.
+			current.tags[OP_NAMES[name] ?? name] = value;
 			continue;
 		}
 		if (INLINE_TAGS.has(name)) {
@@ -206,30 +223,44 @@ function readBlock(block, side, beat) {
  * Split spoken text into pages and turn its inline markup into styled spans.
  *
  * @param {string} text The text after the colon.
- * @returns {{ spans: { text: string, style?: Record<string, string> }[] }[]} One entry per click-through page.
+ * @returns {{ spans: { text: string, style?: Record<string, string> }[], choices?: string[] }[]} One entry per click-through page.
  */
 export function readText(text) {
-	return text.split(PAGE_SEPARATOR).map((page) => ({ spans: readSpans(page) }));
+	return text.split(PAGE_SEPARATOR).map((page) => {
+		const { spans, choices } = readSpans(page);
+		// Left off entirely when the page offers none, since almost no page does and the scene files are shipped to the browser.
+		return choices.length === 0 ? { spans } : { spans, choices };
+	});
 }
 
 /**
- * Turn one page's inline markup into a flat list of styled spans.
+ * Turn one page's inline markup into a flat list of styled spans, and lift out any choice it offers.
  *
  * @param {string} page One page of text.
- * @returns {{ text: string, style?: Record<string, string> }[]} The spans, in order.
+ * @returns {{ spans: { text: string, style?: Record<string, string> }[], choices: string[] }} The spans in order, and the choices.
  */
 function readSpans(page) {
 	const spans = [];
+	const choices = [];
 	const style = {};
 	let buffer = "";
 	const token = /<(\/?)([a-zA-Z]+)(?:=([^<>]*))?>/g;
 	let last = 0;
 	let match;
 	const flush = () => {
-		if (buffer !== "") {
-			spans.push(Object.keys(style).length === 0 ? { text: buffer } : { text: buffer, style: { ...style } });
-			buffer = "";
+		if (buffer === "") {
+			return;
 		}
+		const open = Object.keys(style);
+		if (open.some((name) => CHOICE_TAGS.has(name))) {
+			const label = buffer.trim();
+			if (label !== "") {
+				choices.push(label);
+			}
+		} else {
+			spans.push(open.length === 0 ? { text: buffer } : { text: buffer, style: { ...style } });
+		}
+		buffer = "";
 	};
 	while ((match = token.exec(page)) !== null) {
 		const [whole, closing, name, value] = match;
@@ -247,7 +278,7 @@ function readSpans(page) {
 	}
 	buffer += page.slice(last);
 	flush();
-	return spans;
+	return { spans, choices };
 }
 
 // //////////////////////////////////////////////////////////////////////////////////////////////////

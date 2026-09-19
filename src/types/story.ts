@@ -12,6 +12,8 @@ export interface StorySpan {
 export interface StoryPage {
 	/** The styled runs making up the page, in order. */
 	spans: StorySpan[];
+	/** The options this page puts to the reader, in the order the script lists them. Absent on the great majority of pages, which offer none. */
+	choices?: string[];
 }
 
 /** A character standing on one side of the stage for a beat. */
@@ -20,9 +22,11 @@ export interface StorySprite {
 	prefab: string;
 	/** Which expression variant of the prefab to show, 0 when the script named none. */
 	expression: number;
+	/** Whether the character is actually drawn. False when the script named them only to attribute a line, as a voice off screen. */
+	shown: boolean;
 	/** Which side of the stage the sprite stands on. */
 	side: "left" | "right";
-	/** Stage directions bound to this sprite rather than the beat, such as `Position` or `Scale`. */
+	/** Stage directions bound to this sprite rather than the beat, under the same names the beat's ops use, such as `spritePosition` or `commsBox`. */
 	tags: Record<string, string>;
 }
 

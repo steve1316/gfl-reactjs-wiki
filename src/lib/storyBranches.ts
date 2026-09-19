@@ -1,13 +1,4 @@
-import type { StoryBeat, StorySpan } from "../types/story";
-
-/**
- * The inline styles the scripts put on a choice's label.
- *
- * A prompt beat writes its options as `<c>` or `<t>` runs inside its own text, so they arrive as ordinary spans carrying one of these
- * styles. They are menu entries rather than dialogue, so the player pulls them out instead of reading them with the rest of the line.
- * `<c>` is by far the commoner of the two.
- */
-const CHOICE_STYLES = ["c", "t"];
+import type { StoryBeat } from "../types/story";
 
 /** How many characters a fallback label keeps before it is cut short. */
 const LABEL_LIMIT = 160;
@@ -49,26 +40,13 @@ export interface StoryTimeline {
 }
 
 /**
- * Whether a span is a choice label rather than dialogue.
+ * The options a beat puts to the reader.
  *
- * @param span The span.
- * @returns True when the script marked it as a choice.
+ * @param beat The beat.
+ * @returns The option labels in order, empty when the beat offers none.
  */
-export function isChoiceSpan(span: StorySpan): boolean {
-	return CHOICE_STYLES.some((style) => span.style?.[style] !== undefined);
-}
-
-/**
- * The choice labels a prompt beat carries, in the order the script lists them.
- *
- * @param beat The beat, or null.
- * @returns The labels, empty when the beat is not a prompt.
- */
-function promptLabels(beat: StoryBeat | null): string[] {
-	if (!beat) {
-		return [];
-	}
-	return beat.pages.flatMap((page) => page.spans.filter(isChoiceSpan).map((span) => span.text.trim())).filter((text) => text !== "");
+function offeredChoices(beat: StoryBeat): string[] {
+	return beat.pages.flatMap((page) => page.choices ?? []);
 }
 
 /**
@@ -101,7 +79,6 @@ function firstLine(beats: StoryBeat[], indexes: number[]): string {
 	for (const index of indexes) {
 		for (const page of beats[index]?.pages ?? []) {
 			const text = page.spans
-				.filter((span) => !isChoiceSpan(span))
 				.map((span) => span.text)
 				.join("")
 				.trim();
@@ -130,12 +107,14 @@ export function branchRegions(beats: StoryBeat[]): BranchMap {
 	const labelOf: (string | null)[] = new Array<string | null>(beats.length).fill(null);
 	// Every beat of each alternative in the region being built, so a label can fall back to the first line the alternative speaks.
 	let heads: Map<string, number[]> = new Map();
-	let seen = new Set<string>();
 	let previous: string | null = null;
-	// A prompt has been read and the next tagged beat starts the choice it introduces.
+	// A prompt has been read and the next tagged beat starts the choice it introduces. The scene opens armed, for a script with none.
 	let armed = true;
-	// The region being built was opened without a prompt, so a repeated number is all there is to go on.
-	let promptless = true;
+	// Where the last prompt sat and what it offered, so a region opening directly after one takes its wording.
+	let promptAt = -2;
+	let promptOptions: string[] = [];
+	// The wording the region being built was opened with, empty when no prompt introduced it.
+	let regionOptions: string[] = [];
 
 	const close = () => {
 		const region = regions[regions.length - 1];
@@ -143,39 +122,33 @@ export function branchRegions(beats: StoryBeat[]): BranchMap {
 			return;
 		}
 		const numbered = [...heads.entries()].sort((left, right) => Number(left[0]) - Number(right[0]));
-		const prompt = promptLabels(beats[region.start - 1] ?? null);
 		region.options = numbered.map(([label, indexes], position) => ({
 			label,
-			text: (prompt[position] ?? firstLine(beats, indexes)) || `Option ${position + 1}`
+			text: (regionOptions[position] ?? firstLine(beats, indexes)) || `Option ${position + 1}`
 		}));
 	};
 
-	const open = (index: number, fromPrompt: boolean) => {
-		close();
-		regions.push({ start: index, options: [] });
-		heads = new Map();
-		seen = new Set();
-		previous = null;
-		promptless = !fromPrompt;
-		armed = false;
-	};
-
 	beats.forEach((beat, index) => {
-		if (promptLabels(beat).length > 0) {
+		const offered = offeredChoices(beat);
+		if (offered.length > 0) {
 			armed = true;
+			promptAt = index;
+			promptOptions = offered;
 			return;
 		}
 		const label = branchLabel(beat);
 		if (label === null) {
 			return;
 		}
-		if (regions.length === 0 || armed) {
-			open(index, armed && index > 0 && promptLabels(beats[index - 1] ?? null).length > 0);
-		} else if (promptless && seen.has(label) && label !== previous) {
-			open(index, false);
+		if (armed || (regionOptions.length === 0 && heads.has(label) && label !== previous)) {
+			close();
+			regions.push({ start: index, options: [] });
+			heads = new Map();
+			previous = null;
+			regionOptions = promptAt === index - 1 ? promptOptions : [];
+			armed = false;
 		}
 		heads.set(label, [...(heads.get(label) ?? []), index]);
-		seen.add(label);
 		regionOf[index] = regions.length - 1;
 		labelOf[index] = label;
 		previous = label;

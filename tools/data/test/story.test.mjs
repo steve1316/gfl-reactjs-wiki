@@ -8,7 +8,7 @@ import { parseBeat, parseScript, readText, splitBeat } from "../../story/parse_a
 
 test("a beat reads its sprite, speaker and text", () => {
 	const beat = parseBeat("Alpha(2)<Speaker>Alpha</Speaker>||:Hello there");
-	assert.deepEqual(beat.sprites, [{ prefab: "Alpha", expression: 2, side: "left", tags: {} }]);
+	assert.deepEqual(beat.sprites, [{ prefab: "Alpha", expression: 2, shown: true, side: "left", tags: {} }]);
 	assert.equal(beat.speaker, "Alpha");
 	assert.equal(beat.pages.length, 1);
 	assert.deepEqual(beat.pages[0].spans, [{ text: "Hello there" }]);
@@ -85,12 +85,38 @@ test("a narrator tag marks the beat as narration", () => {
 
 test("a sprite tag binds to the sprite before it, and becomes an op when there is none", () => {
 	const bound = parseBeat("Alpha(0)<Position>120</Position>||:Line");
-	assert.deepEqual(bound.sprites[0].tags, { Position: "120" });
+	// Bound or loose, the tag arrives under the same name, so a reader of either does not need the game's own spelling.
+	assert.deepEqual(bound.sprites[0].tags, { spritePosition: "120" });
 	assert.deepEqual(bound.ops, []);
 
 	const loose = parseBeat("()<Position>120</Position>||:Line");
 	assert.deepEqual(loose.sprites, []);
 	assert.deepEqual(loose.ops, [{ type: "spritePosition", value: "120", raw: "Position" }]);
+});
+
+test("a prefab with no expression is heard but not seen", () => {
+	const unseen = parseBeat("M4A1()<Speaker>M4A1</Speaker>||:Line").sprites[0];
+	assert.equal(unseen.shown, false);
+	// Still carried, since the beat names them as the speaker and a tag can bind to the slot.
+	assert.equal(unseen.prefab, "M4A1");
+	assert.equal(parseBeat("M4A1(0)<Speaker>M4A1</Speaker>||:Line").sprites[0].shown, true);
+});
+
+test("the two spellings of a sprite tag land on one name", () => {
+	assert.deepEqual(parseBeat("Alpha(0)<position>9</position>||:Line").sprites[0].tags, { spritePosition: "9" });
+	assert.deepEqual(parseBeat("Alpha(0)<\u901a\u8baf\u6846>||:Line").sprites[0].tags, { commsBox: "" });
+});
+
+test("a choice is lifted out of the text rather than left in it as a styled run", () => {
+	const [page] = parseBeat("()||:Pick one.<c>Go left<c>Go right").pages;
+	assert.deepEqual(page.spans, [{ text: "Pick one." }]);
+	assert.deepEqual(page.choices, ["Go left", "Go right"]);
+});
+
+test("a page offering no choice carries no choices field", () => {
+	const [page] = parseBeat("()||:Just a line.").pages;
+	assert.deepEqual(page.spans, [{ text: "Just a line." }]);
+	assert.equal("choices" in page, false);
 });
 
 test("a bare tag carries its value after an equals sign", () => {

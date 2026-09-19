@@ -7,10 +7,10 @@ import type { SxProps, Theme } from "@mui/material";
 
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
-import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
+import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl, storyUiUrl } from "../../lib/assets";
 import { loadStoryChapter, loadStoryScene } from "../../lib/data";
-import { hasStoryAudio, hasStoryBackground, hasStorySprite, storySpriteStem } from "../../lib/processData";
-import { branchRegions, buildTimeline, isChoiceSpan } from "../../lib/storyBranches";
+import { hasStoryAudio, hasStoryBackground, hasStorySprite, hasStoryUi, storySpriteStem } from "../../lib/processData";
+import { branchRegions, buildTimeline } from "../../lib/storyBranches";
 import type { StoryBeat, StoryChapter, StoryPage, StoryScene } from "../../types/story";
 
 /** How long one character takes to type at the middle speed, in milliseconds. */
@@ -29,39 +29,73 @@ const MUTED_KEY = "storyMuted";
 const MUSIC_VOLUME = 0.35;
 const EFFECT_VOLUME = 0.6;
 
+/**
+ * The game's own dialogue panel, drawn behind the text.
+ *
+ * It is one piece rather than a frame to slice, so it is stretched to the box. The artwork is a flat dark panel with a dotted grid
+ * and a mark in one corner, so stretching it shows only as a slightly wider grid. A `background-image` value rather than a URL, so
+ * an unpublished chrome falls back to the scrim underneath instead of asking for a picture that is not there.
+ */
+const DIALOGUE_PANEL = hasStoryUi() ? `url(${storyUiUrl("dialogueborder_1")})` : "none";
+
+/** The game's own comms frame, drawn around a character who is calling in rather than present. */
+const COMMS_FRAME = hasStoryUi() ? `url(${storyUiUrl("layerbord")})` : "none";
+
+/** How long a screen fade takes to wash in or out, in milliseconds. */
+const WASH_MS = 450;
+
+/** How far a shake of range 1 moves the stage, as a share of its width. Scripts ask for ranges of about 5 to 8. */
+const SHAKE_UNIT = 0.0015;
+
+/** The longest a shake runs, in seconds. Scripts ask for up to 4, which reads as a fault rather than an impact. */
+const SHAKE_MAX_S = 1.2;
+
 const styles = {
 	stage: { position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 2, overflow: "hidden", bgcolor: "#05070c", cursor: "pointer", userSelect: "none" },
 	sprites: { position: "absolute", inset: 0, display: "flex", alignItems: "stretch", justifyContent: "space-between", px: { xs: 1, sm: 4 } },
 	// Lifted just clear of the dialogue box, so a character stands on the scene's ground rather than behind the text.
 	spriteSide: { height: "100%", alignItems: "flex-end", pb: "15%" },
 	spriteArt: { height: "88%", width: "auto", maxWidth: { xs: 160, sm: 320 }, objectFit: "contain", objectPosition: "bottom", display: "block" },
-	box: {
-		position: "absolute",
-		left: 0,
-		right: 0,
-		bottom: 0,
-		minHeight: "34%",
-		p: { xs: 1.5, sm: 2.5 },
-		bgcolor: "rgba(6, 10, 18, 0.82)",
-		borderTop: "2px solid",
-		borderColor: "secondary.main",
-		backdropFilter: "blur(2px)"
-	},
-	// The choice menu takes the dialogue box's place, so the stage behind it stays visible while the reader decides.
-	choices: {
-		position: "absolute",
-		left: 0,
-		right: 0,
-		bottom: 0,
-		p: { xs: 1.5, sm: 2.5 },
+	// A character calling in sits inside the game's comms frame instead of standing on the scene's ground.
+	comms: {
+		height: "58%",
+		aspectRatio: "256 / 208",
+		alignSelf: "center",
+		backgroundImage: COMMS_FRAME,
+		backgroundSize: "100% 100%",
+		backgroundRepeat: "no-repeat",
 		display: "flex",
-		flexDirection: "column",
-		gap: 1,
-		bgcolor: "rgba(6, 10, 18, 0.88)",
-		borderTop: "2px solid",
-		borderColor: "secondary.main",
-		backdropFilter: "blur(2px)"
+		alignItems: "flex-end",
+		justifyContent: "center",
+		overflow: "hidden",
+		// Keeps the character off the frame's own border and its lettering.
+		px: "9%",
+		pt: "8%",
+		pb: "14%"
 	},
+	commsArt: { height: "100%", width: "100%", objectFit: "contain", objectPosition: "bottom", display: "block" },
+	// The dialogue box and the choice menu are the same panel in the same place, so they share it rather than each drawing their own.
+	panel: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 0,
+		// The panel carries its own mark in the bottom right, so the text is kept clear of that corner.
+		p: { xs: 1.5, sm: 2.5 },
+		pb: { xs: 2.5, sm: 3.5 },
+		backgroundImage: DIALOGUE_PANEL,
+		backgroundSize: "100% 100%",
+		backgroundRepeat: "no-repeat",
+		// Behind the panel in case it has not loaded, so the text never sits straight on the scene art.
+		bgcolor: "rgba(6, 10, 18, 0.84)"
+	},
+	box: { minHeight: "34%" },
+	// The choice menu takes the dialogue box's place, so the stage behind it stays visible while the reader decides.
+	choices: { display: "flex", flexDirection: "column", gap: 1 },
+	// The washes and tints sit over the scene but under the dialogue, so a line spoken over a blackout is still readable.
+	wash: { position: "absolute", inset: 0, pointerEvents: "none", transition: `opacity ${WASH_MS}ms ease` },
+	// A vignette rather than a full wash: the game's "black point" closes the scene in from the edges.
+	vignette: { background: "radial-gradient(circle, rgba(0,0,0,0) 20%, rgba(0,0,0,0.92) 78%)" },
 	choiceButton: { justifyContent: "flex-start", textAlign: "left", textTransform: "none", lineHeight: 1.5 },
 	speaker: { fontWeight: 800, color: "secondary.main", mb: 0.5 },
 	text: { whiteSpace: "pre-wrap", lineHeight: 1.7 },
@@ -83,6 +117,22 @@ interface Stage {
 	background: string | null;
 	/** The music cue currently playing, or null before any is set. */
 	bgm: string | null;
+	/** The full-stage wash currently up, or null when the scene is in the clear. */
+	wash: "black" | "white" | null;
+	/** Whether the scene is dimmed, which scripts use to hold a moment back while something else is read. */
+	darkened: boolean;
+	/** Whether the scene is under the night tint. */
+	night: boolean;
+	/** Whether the scene is closed in by the vignette. */
+	vignette: boolean;
+}
+
+/** A shake the script asked for on one beat. */
+interface Shake {
+	/** How long the stage shakes for, in seconds. */
+	duration: number;
+	/** How far it moves, in the script's own units. */
+	range: number;
 }
 
 /**
@@ -109,17 +159,11 @@ function backdrop(background: string | null): string {
 /**
  * Flatten a page's styled runs into plain text, for the backlog and for measuring how much has been typed.
  *
- * A choice label is left out. The script writes the options inside the prompt beat's own text, and the choice menu shows them, so
- * reading them out here as well would run all the options together into one line.
- *
  * @param page The page.
  * @returns Its text.
  */
 function pageText(page: StoryPage): string {
-	return page.spans
-		.filter((span) => !isChoiceSpan(span))
-		.map((span) => span.text)
-		.join("");
+	return page.spans.map((span) => span.text).join("");
 }
 
 /**
@@ -132,17 +176,94 @@ function pageText(page: StoryPage): string {
  * @returns The stage.
  */
 function stageAt(beats: StoryBeat[], upTo: number): Stage {
-	const stage: Stage = { background: null, bgm: null };
+	const stage: Stage = { background: null, bgm: null, wash: null, darkened: false, night: false, vignette: false };
 	for (let index = 0; index <= upTo && index < beats.length; index++) {
 		for (const op of beats[index]?.ops ?? []) {
-			if (op.type === "background" && op.value) {
-				stage.background = op.value;
-			} else if (op.type === "bgm" && op.value) {
-				stage.bgm = op.value;
+			switch (op.type) {
+				case "background":
+					if (op.value) {
+						stage.background = op.value;
+						// A new scene starts in the clear, or a dimming meant for the last one would hang over it.
+						stage.darkened = false;
+						stage.night = false;
+					}
+					break;
+				case "bgm":
+					if (op.value) {
+						stage.bgm = op.value;
+					}
+					break;
+				case "blackscreenOn":
+					stage.wash = "black";
+					break;
+				case "whitescreenOn":
+					stage.wash = "white";
+					break;
+				case "blackscreenOff":
+				case "whitescreenOff":
+					stage.wash = null;
+					break;
+				case "darken":
+					stage.darkened = true;
+					break;
+				case "brighten":
+					stage.darkened = false;
+					break;
+				case "night":
+					stage.night = true;
+					break;
+				case "fadePointOn":
+					stage.vignette = true;
+					break;
+				case "fadePointOff":
+					stage.vignette = false;
+					break;
+				default:
+					break;
 			}
 		}
 	}
 	return stage;
+}
+
+/**
+ * The stage animation for one shake.
+ *
+ * @param shake The shake.
+ * @returns An `sx` fragment holding the animation and its keyframes.
+ */
+function shakeSx(shake: Shake) {
+	const amplitude = shake.range * SHAKE_UNIT * 100;
+	return {
+		animation: `storyShake ${shake.duration}s cubic-bezier(.36,.07,.19,.97) both`,
+		"@keyframes storyShake": {
+			"10%, 90%": { transform: `translateX(${-amplitude}%)` },
+			"20%, 80%": { transform: `translateX(${amplitude * 1.8}%)` },
+			"30%, 50%, 70%": { transform: `translateX(${-amplitude * 2.6}%)` },
+			"40%, 60%": { transform: `translateX(${amplitude * 2.6}%)` }
+		}
+	};
+}
+
+/**
+ * The shake a beat asks for.
+ *
+ * Scripts write it as `%%key=value%%` pairs, such as `%%type_id=2%%duration=3%%delay=0.1%%range=8`.
+ *
+ * @param beat The beat, or null.
+ * @returns The shake, or null when the beat asks for none.
+ */
+function shakeAt(beat: StoryBeat | null): Shake | null {
+	const op = beat?.ops.find((entry) => entry.type === "shake");
+	if (!op) {
+		return null;
+	}
+	const fields = new Map((op.value ?? "").split("%%").flatMap((part) => (part.includes("=") ? [part.split("=", 2) as [string, string]] : [])));
+	const duration = Number(fields.get("duration"));
+	const range = Number(fields.get("range"));
+	// A script that named neither still wants a jolt, so fall back to a short one rather than dropping the beat's effect.
+	// Clamped here rather than where it is played, so the value on a Shake is the one that actually runs.
+	return { duration: Number.isFinite(duration) && duration > 0 ? Math.min(duration, SHAKE_MAX_S) : 0.6, range: Number.isFinite(range) && range > 0 ? range : 6 };
 }
 
 /**
@@ -227,9 +348,37 @@ export default function Story() {
 	const page = beat?.pages[pageIndex] ?? null;
 	const full = page ? pageText(page) : "";
 	const done = typed >= full.length;
+	const atLast = beatIndex >= beats.length - 1 && (beat === null || pageIndex >= beat.pages.length - 1);
 	// The reader has read everything the timeline holds and a choice is waiting, so the menu takes the dialogue box's place.
-	const choosing = timeline.pending !== null && beatIndex >= beats.length - 1 && pageIndex >= Math.max(0, (beat?.pages.length ?? 1) - 1) && done;
+	const choosing = timeline.pending !== null && atLast && done;
+	// Narrowed here rather than tested again in the JSX, so the menu reads one condition instead of two.
+	const pending = choosing ? timeline.pending : null;
+	const atEnd = timeline.pending === null && beats.length > 0 && atLast;
 	const stage = useMemo(() => stageAt(beats, beatIndex), [beats, beatIndex]);
+	const shake = useMemo(() => shakeAt(beat), [beat]);
+	// Resolved once a beat. Each sprite costs several scans of the published-art list, and the page re-renders on every typed character.
+	const cast = useMemo(
+		() =>
+			(beat?.sprites ?? []).flatMap((sprite, position) => {
+				// A slot with no art is not a character with a missing picture. Scripts use the same slot to carry an off-screen speaker's
+				// label, such as a description of a voice, so the stage shows nobody and the dialogue box still names who is talking.
+				const stem = storySpriteStem(sprite.prefab);
+				if (stem === null) {
+					return [];
+				}
+				return [
+					{
+						key: `${sprite.prefab}-${position}`,
+						side: sprite.side,
+						prefab: sprite.prefab,
+						comms: sprite.tags.commsBox !== undefined,
+						// The expression the script asked for, or the plain pose when the game ships no art for it.
+						src: storySpriteUrl(stem, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0)
+					}
+				];
+			}),
+		[beat]
+	);
 	const mission = useMemo(() => chapter?.missions.find((entry) => entry.scripts.includes(sceneName)) ?? null, [chapter, sceneName]);
 	// The mission names its own scene art. A beat's own `background` op is a scene-local index the game resolves in code the data does
 	// not ship, so it cannot be mapped to a picture - it still drives the fallback wash, which at least changes when the scene does.
@@ -430,8 +579,6 @@ export default function Story() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [back]);
 
-	const atEnd = timeline.pending === null && beats.length > 0 && beatIndex >= beats.length - 1 && (beat === null || pageIndex >= beat.pages.length - 1);
-
 	return (
 		<Box component="main" sx={{ py: 3 }}>
 			<ScrollToTop />
@@ -455,7 +602,13 @@ export default function Story() {
 				) : (
 					<>
 						<Box
-							sx={[styles.stage, scenery ? { backgroundImage: `url(${scenery})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: backdrop(stage.background) }]}
+							// Keyed on the beat so a shake restarts when the reader reaches another one, rather than only on the first.
+							key={shake ? `shake-${beatIndex}` : "stage"}
+							sx={[
+								styles.stage,
+								scenery ? { backgroundImage: `url(${scenery})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: backdrop(stage.background) },
+								shake ? shakeSx(shake) : {}
+							]}
 							onClick={advance}
 							role="button"
 							tabIndex={-1}
@@ -464,37 +617,32 @@ export default function Story() {
 							<Box sx={styles.sprites}>
 								{["left", "right"].map((side) => (
 									<Stack key={side} direction="row" spacing={1} sx={styles.spriteSide}>
-										{(beat?.sprites ?? [])
-											.filter((sprite) => sprite.side === side)
-											.flatMap((sprite, position) => {
-												// A slot with no art is not a character with a missing picture. Scripts use the same slot to carry an
-												// off-screen speaker's label, such as a description of a voice, so the stage shows nobody and the
-												// dialogue box still names who is talking.
-												const stem = storySpriteStem(sprite.prefab);
-												if (stem === null) {
-													return [];
-												}
-												return [
-													<Box
-														key={`${sprite.prefab}-${position}`}
-														component="img"
-														// The expression the script asked for, or the plain pose when the game ships no art for it.
-														src={storySpriteUrl(stem, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0)}
-														alt={sprite.prefab}
-														sx={styles.spriteArt}
-													/>
-												];
-											})}
+										{cast
+											.filter((member) => member.side === side)
+											.map((member) =>
+												member.comms ? (
+													<Box key={member.key} sx={styles.comms}>
+														<Box component="img" src={member.src} alt={member.prefab} sx={styles.commsArt} />
+													</Box>
+												) : (
+													<Box key={member.key} component="img" src={member.src} alt={member.prefab} sx={styles.spriteArt} />
+												)
+											)}
 									</Stack>
 								))}
 							</Box>
 
-							{choosing && timeline.pending ? (
-								<Box sx={styles.choices} onClick={stopBubbling}>
+							<Box sx={[styles.wash, { bgcolor: "#0a1020", opacity: stage.night ? 0.42 : 0 }]} />
+							<Box sx={[styles.wash, { bgcolor: "#000", opacity: stage.darkened ? 0.55 : 0 }]} />
+							<Box sx={[styles.wash, styles.vignette, { opacity: stage.vignette ? 1 : 0 }]} />
+							<Box sx={[styles.wash, { bgcolor: stage.wash === "white" ? "#fff" : "#000", opacity: stage.wash === null ? 0 : 1 }]} />
+
+							{pending ? (
+								<Box sx={[styles.panel, styles.choices]} onClick={stopBubbling}>
 									<Typography variant="caption" color="text.secondary">
 										Choose
 									</Typography>
-									{timeline.pending.options.map((option) => (
+									{pending.options.map((option) => (
 										<Button
 											key={option.label}
 											size="small"
@@ -508,7 +656,7 @@ export default function Story() {
 									))}
 								</Box>
 							) : (
-								<Box sx={styles.box}>
+								<Box sx={[styles.panel, styles.box]}>
 									{beat?.speaker && (
 										<Typography variant="subtitle2" sx={styles.speaker}>
 											{beat.speaker}
@@ -622,28 +770,26 @@ function renderTyped(page: StoryPage | null, typed: number) {
 		return null;
 	}
 	let remaining = typed;
-	return page.spans
-		.filter((span) => !isChoiceSpan(span))
-		.map((span, position) => {
-			if (remaining <= 0) {
-				return null;
-			}
-			const shown = span.text.slice(0, remaining);
-			remaining -= span.text.length;
-			const style = span.style ?? {};
-			return (
-				<Box
-					key={position}
-					component="span"
-					sx={{
-						color: style.color ? style.color : undefined,
-						fontSize: style.size ? `${Number(style.size) / 26}rem` : undefined,
-						fontWeight: style.b !== undefined ? 700 : undefined,
-						fontStyle: style.i !== undefined ? "italic" : undefined
-					}}
-				>
-					{shown}
-				</Box>
-			);
-		});
+	return page.spans.map((span, position) => {
+		if (remaining <= 0) {
+			return null;
+		}
+		const shown = span.text.slice(0, remaining);
+		remaining -= span.text.length;
+		const style = span.style ?? {};
+		return (
+			<Box
+				key={position}
+				component="span"
+				sx={{
+					color: style.color ? style.color : undefined,
+					fontSize: style.size ? `${Number(style.size) / 26}rem` : undefined,
+					fontWeight: style.b !== undefined ? 700 : undefined,
+					fontStyle: style.i !== undefined ? "italic" : undefined
+				}}
+			>
+				{shown}
+			</Box>
+		);
+	});
 }

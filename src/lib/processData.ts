@@ -209,6 +209,17 @@ export function hasStoryBackground(code: string): boolean {
 }
 
 /**
+ * Whether the story's dialogue chrome is published.
+ *
+ * A single flag rather than a list, since the chrome is published as one set or not at all.
+ *
+ * @returns True when the manifest says the chrome is there.
+ */
+export function hasStoryUi(): boolean {
+	return manifest.story?.ui ?? false;
+}
+
+/**
  * Whether a faction has a hosted emblem.
  *
  * @param faction Faction name as the enemy data spells it.
