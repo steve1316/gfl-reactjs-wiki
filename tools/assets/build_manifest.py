@@ -225,6 +225,7 @@ def build_story(assets_root):
         "sprites": story_stems(os.path.join(root, "sprites"), skip_damaged=True),
         "backgrounds": story_stems(os.path.join(root, "backgrounds")),
         "ui": len(story_stems(os.path.join(root, "ui"))) > 0,
+        "audio": sorted(name[: -len(".opus")] for name in os.listdir(os.path.join(root, "audio"))) if os.path.isdir(os.path.join(root, "audio")) else [],
     }
 
 

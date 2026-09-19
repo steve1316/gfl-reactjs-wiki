@@ -175,9 +175,9 @@ def merge_manifest(committed, partial):
             conflicts.extend(error.conflicts)
     # Story art merges as three flat sets: a sprite or background is published once, and the dialogue chrome is a single yes or no.
     if "story" in partial or "story" in merged:
-        story = {"sprites": [], "backgrounds": [], "ui": False, **copy.deepcopy(merged.get("story", {}))}
+        story = {"sprites": [], "backgrounds": [], "ui": False, "audio": [], **copy.deepcopy(merged.get("story", {}))}
         incoming = partial.get("story", {})
-        for key, label in (("sprites", "story sprite"), ("backgrounds", "story background")):
+        for key, label in (("sprites", "story sprite"), ("backgrounds", "story background"), ("audio", "story audio cue")):
             listed = set(story.get(key, []))
             conflicts.extend(f"{label} {name}" for name in incoming.get(key, []) if name in listed)
             story[key] = sorted(listed | set(incoming.get(key, [])))
