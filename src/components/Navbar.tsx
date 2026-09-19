@@ -30,6 +30,7 @@ const HOCIcon = uiUrl("hoc_icon.png");
 const FairyIcon = uiUrl("fairy_icon.png");
 const EnemyIcon = uiUrl("enemy_icon.png");
 const FormationIcon = uiUrl("formation_icon.png");
+const StoryIcon = uiUrl("story_icon.png");
 
 /** One entry in the search dropdown, grouped by its leading character. */
 interface SearchOption {
@@ -90,7 +91,7 @@ const styles = {
 	 * One drawer icon.
 	 *
 	 * `block` rather than the inline default, or the image sits on the text baseline three pixels down from the top of its slot.
-	 * `contain` because these are the game's own icons at seven different shapes, and stretching each one into a square squashed
+	 * `contain` because these are the game's own icons at eight different shapes, and stretching each one into a square squashed
 	 * the tall ones. The HOC icon used to be given a width of its own to work around exactly that.
 	 */
 	navIcon: { display: "block", width: 25, height: 25, objectFit: "contain" },
@@ -112,7 +113,9 @@ const NAV_ITEMS = [
 	// The game's own battle icon, crossed rifles. The index covers all four hostile factions, so a mark belonging to any one of
 	// them would speak for the others.
 	{ title: "Enemy Index", link: "/enemy-index", icon: EnemyIcon },
-	{ title: "Formation Simulator", link: "/formation", icon: FormationIcon }
+	{ title: "Formation Simulator", link: "/formation", icon: FormationIcon },
+	// The game's own summary icon for its story log, a coffee cup.
+	{ title: "Story", link: "/story", icon: StoryIcon }
 ];
 
 /**

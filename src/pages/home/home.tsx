@@ -21,6 +21,7 @@ const hoc_index_logo = uiUrl("hoc_index_logo.jpg");
 const fairy_index_logo = uiUrl("fairy_index_logo.jpg");
 const enemy_index_logo = uiUrl("enemy_index_logo.jpg");
 const formation_logo = uiUrl("formation_logo.jpg");
+const story_logo = uiUrl("story_logo.jpg");
 
 /**
  * Styles for this page, as `sx` entries.
@@ -52,7 +53,8 @@ const SECTION_CARDS = [
 		link: "/enemy-index",
 		image: enemy_index_logo
 	},
-	{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo }
+	{ title: "Formation Simulator", description: "Simulate T-Doll formations and formation effects.", link: "/formation", image: formation_logo },
+	{ title: "Story", description: "Read the main story and every side campaign, with the game's own art, music and sound effects.", link: "/story", image: story_logo }
 ];
 
 /** Transform origin for each card's grow-in. A constant, since an inline object is a new prop every render. */

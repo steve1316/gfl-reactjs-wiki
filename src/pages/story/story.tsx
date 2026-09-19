@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 
 import { Box, Button, Chip, CircularProgress, Container, Drawer, Slider, Stack, Tooltip, Typography } from "@mui/material";
@@ -9,6 +10,7 @@ import ScrollToTop from "../../components/ScrollToTop";
 import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
 import { loadStoryChapter, loadStoryScene } from "../../lib/data";
 import { hasStoryAudio, hasStoryBackground, hasStorySprite, storySpriteStem } from "../../lib/processData";
+import { branchRegions, buildTimeline, isChoiceSpan } from "../../lib/storyBranches";
 import type { StoryBeat, StoryChapter, StoryPage, StoryScene } from "../../types/story";
 
 /** How long one character takes to type at the middle speed, in milliseconds. */
@@ -45,25 +47,50 @@ const styles = {
 		borderColor: "secondary.main",
 		backdropFilter: "blur(2px)"
 	},
+	// The choice menu takes the dialogue box's place, so the stage behind it stays visible while the reader decides.
+	choices: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 0,
+		p: { xs: 1.5, sm: 2.5 },
+		display: "flex",
+		flexDirection: "column",
+		gap: 1,
+		bgcolor: "rgba(6, 10, 18, 0.88)",
+		borderTop: "2px solid",
+		borderColor: "secondary.main",
+		backdropFilter: "blur(2px)"
+	},
+	choiceButton: { justifyContent: "flex-start", textAlign: "left", textTransform: "none", lineHeight: 1.5 },
 	speaker: { fontWeight: 800, color: "secondary.main", mb: 0.5 },
 	text: { whiteSpace: "pre-wrap", lineHeight: 1.7 },
 	caret: { display: "inline-block", width: "0.5em", textAlign: "center", opacity: 0.7 },
 	backlogLine: { py: 0.75, borderBottom: "1px solid", borderColor: "divider" }
 } satisfies Record<string, SxProps<Theme>>;
 
+/** Where a reader had got to in one scene, as it is kept in storage. */
+interface SceneProgress {
+	/** How far into the played timeline they had read. */
+	beat: number;
+	/** The branch number taken at each choice, keyed by that choice's index into the scene's regions. */
+	choices: Record<number, string>;
+}
+
 /** What the stage shows at a point in the scene, folded from every beat up to it. */
 interface Stage {
 	/** The background the scene is currently on, or null before any is set. */
 	background: string | null;
-	/** The music cue currently playing, or null before any is set. Nothing plays it yet - audio is a later phase. */
+	/** The music cue currently playing, or null before any is set. */
 	bgm: string | null;
 }
 
 /**
  * A placeholder backdrop derived from the scene's background code.
  *
- * The story backgrounds are not published to the asset repo yet, so a scene change would otherwise be invisible. Deriving a hue from
- * the code at least makes each backdrop distinct and stable, the way `ArtPlaceholder` stands in for card art that is not hosted.
+ * A beat's own background op is a scene-local index the game resolves in code it does not ship, so mid-scene changes cannot be
+ * mapped to a picture. Deriving a hue from the code at least makes each backdrop distinct and stable, the way `ArtPlaceholder`
+ * stands in for card art that is not hosted.
  *
  * @param background The background code, or null.
  * @returns A CSS gradient.
@@ -82,11 +109,17 @@ function backdrop(background: string | null): string {
 /**
  * Flatten a page's styled runs into plain text, for the backlog and for measuring how much has been typed.
  *
+ * A choice label is left out. The script writes the options inside the prompt beat's own text, and the choice menu shows them, so
+ * reading them out here as well would run all the options together into one line.
+ *
  * @param page The page.
  * @returns Its text.
  */
 function pageText(page: StoryPage): string {
-	return page.spans.map((span) => span.text).join("");
+	return page.spans
+		.filter((span) => !isChoiceSpan(span))
+		.map((span) => span.text)
+		.join("");
 }
 
 /**
@@ -115,28 +148,35 @@ function stageAt(beats: StoryBeat[], upTo: number): Stage {
 /**
  * Read where the reader had got to in a scene.
  *
+ * Entries written before the player understood branches are a bare number. They restore as a beat index with no choices, which
+ * the timeline then clamps back to the scene's first unanswered choice.
+ *
  * @param scene The script name.
- * @returns The beat index, or 0 when there is nothing saved or storage is unavailable.
+ * @returns The saved place, or the start of the scene when there is nothing saved or storage is unavailable.
  */
-function readProgress(scene: string): number {
+function readProgress(scene: string): SceneProgress {
 	try {
-		const saved = JSON.parse(window.localStorage.getItem(PROGRESS_KEY) ?? "{}") as Record<string, number>;
-		return saved[scene] ?? 0;
+		const saved = JSON.parse(window.localStorage.getItem(PROGRESS_KEY) ?? "{}") as Record<string, number | SceneProgress>;
+		const entry = saved[scene];
+		if (typeof entry === "number") {
+			return { beat: entry, choices: {} };
+		}
+		return { beat: entry?.beat ?? 0, choices: entry?.choices ?? {} };
 	} catch {
-		return 0;
+		return { beat: 0, choices: {} };
 	}
 }
 
 /**
- * Remember where the reader has got to in a scene.
+ * Remember where the reader has got to in a scene, and which way they went at each choice.
  *
  * @param scene The script name.
- * @param beat The beat index.
+ * @param progress The place to save.
  */
-function writeProgress(scene: string, beat: number) {
+function writeProgress(scene: string, progress: SceneProgress) {
 	try {
-		const saved = JSON.parse(window.localStorage.getItem(PROGRESS_KEY) ?? "{}") as Record<string, number>;
-		saved[scene] = beat;
+		const saved = JSON.parse(window.localStorage.getItem(PROGRESS_KEY) ?? "{}") as Record<string, SceneProgress>;
+		saved[scene] = progress;
 		window.localStorage.setItem(PROGRESS_KEY, JSON.stringify(saved));
 	} catch {
 		// A private window or blocked storage just means the place is not remembered, which is not worth failing the page over.
@@ -146,8 +186,7 @@ function writeProgress(scene: string, beat: number) {
 /**
  * The story player: one scene, advanced a page at a time.
  *
- * Sprites and backgrounds are placeholders for now. The art is a separate, large piece of work, so the player ships readable first
- * and the art drops in behind the same two helpers later.
+ * Where a script branches, the reader picks which way to go and only the beats of that alternative are played.
  *
  * @returns The page.
  */
@@ -162,6 +201,8 @@ export default function Story() {
 	const [attempt, setAttempt] = useState(0);
 	const [beatIndex, setBeatIndex] = useState(0);
 	const [pageIndex, setPageIndex] = useState(0);
+	// The branch number taken at each of the scene's choices, keyed by that choice's index into the branch map.
+	const [choices, setChoices] = useState<Record<number, string>>({});
 	const [typed, setTyped] = useState(0);
 	const [auto, setAuto] = useState(false);
 	const [speed, setSpeed] = useState(1);
@@ -178,21 +219,22 @@ export default function Story() {
 		}
 	});
 
-	const beat = scene?.beats[beatIndex] ?? null;
+	const branches = useMemo(() => (scene ? branchRegions(scene.beats) : null), [scene]);
+	// Only the beats the reader's choices actually reach. It stops at the first choice still unanswered, since what follows depends on it.
+	const timeline = useMemo(() => (scene && branches ? buildTimeline(scene.beats, branches, choices) : { beats: [], pending: null, pendingIndex: -1 }), [scene, branches, choices]);
+	const beats = timeline.beats;
+	const beat = beats[beatIndex] ?? null;
 	const page = beat?.pages[pageIndex] ?? null;
 	const full = page ? pageText(page) : "";
 	const done = typed >= full.length;
-	const stage = useMemo(() => (scene ? stageAt(scene.beats, beatIndex) : { background: null, bgm: null }), [scene, beatIndex]);
+	// The reader has read everything the timeline holds and a choice is waiting, so the menu takes the dialogue box's place.
+	const choosing = timeline.pending !== null && beatIndex >= beats.length - 1 && pageIndex >= Math.max(0, (beat?.pages.length ?? 1) - 1) && done;
+	const stage = useMemo(() => stageAt(beats, beatIndex), [beats, beatIndex]);
 	const mission = useMemo(() => chapter?.missions.find((entry) => entry.scripts.includes(sceneName)) ?? null, [chapter, sceneName]);
 	// The mission names its own scene art. A beat's own `background` op is a scene-local index the game resolves in code the data does
 	// not ship, so it cannot be mapped to a picture - it still drives the fallback wash, which at least changes when the scene does.
 	const scenery = useMemo(() => (mission?.background && hasStoryBackground(mission.background) ? storyBackgroundUrl(mission.background) : null), [mission]);
-	const backlog = useMemo(() => {
-		if (!scene) {
-			return [];
-		}
-		return scene.beats.slice(0, beatIndex + 1).flatMap((entry) => entry.pages.map((entryPage) => ({ speaker: entry.speaker, text: pageText(entryPage) })));
-	}, [scene, beatIndex]);
+	const backlog = useMemo(() => beats.slice(0, beatIndex + 1).flatMap((entry) => entry.pages.map((entryPage) => ({ speaker: entry.speaker, text: pageText(entryPage) }))), [beats, beatIndex]);
 
 	useEffect(() => {
 		document.title = mission ? `${mission.title} - Story` : "Story";
@@ -210,7 +252,8 @@ export default function Story() {
 				setScene(loadedScene);
 				setChapter(loadedChapter);
 				const saved = readProgress(sceneName);
-				setBeatIndex(saved < loadedScene.beats.length ? saved : 0);
+				setChoices(saved.choices);
+				setBeatIndex(Math.max(0, saved.beat));
 				setPageIndex(0);
 				setTyped(0);
 			},
@@ -240,10 +283,17 @@ export default function Story() {
 	}, [full, speed]);
 
 	useEffect(() => {
-		if (scene && beatIndex > 0) {
-			writeProgress(sceneName, beatIndex);
+		if (beats.length > 0 && beatIndex > beats.length - 1) {
+			setBeatIndex(beats.length - 1);
+			setPageIndex(0);
 		}
-	}, [scene, sceneName, beatIndex]);
+	}, [beats, beatIndex]);
+
+	useEffect(() => {
+		if (scene && beatIndex > 0) {
+			writeProgress(sceneName, { beat: beatIndex, choices });
+		}
+	}, [scene, sceneName, beatIndex, choices]);
 
 	// The music follows the scene's current cue. A cue the game no longer ships simply leaves the stage quiet.
 	useEffect(() => {
@@ -295,7 +345,7 @@ export default function Story() {
 	}, [muted]);
 
 	const advance = useCallback(() => {
-		if (!scene || !beat) {
+		if (!beat) {
 			return;
 		}
 		// A part-typed page finishes first, so a click never skips text the reader has not seen.
@@ -307,11 +357,11 @@ export default function Story() {
 			setPageIndex((current) => current + 1);
 			return;
 		}
-		if (beatIndex + 1 < scene.beats.length) {
+		if (beatIndex + 1 < beats.length) {
 			setBeatIndex((current) => current + 1);
 			setPageIndex(0);
 		}
-	}, [scene, beat, done, full, pageIndex, beatIndex]);
+	}, [beats, beat, done, full, pageIndex, beatIndex]);
 	advanceRef.current = advance;
 
 	const back = useCallback(() => {
@@ -321,37 +371,50 @@ export default function Story() {
 		}
 		setBeatIndex((current) => {
 			const next = Math.max(0, current - 1);
-			setPageIndex(Math.max(0, (scene?.beats[next]?.pages.length ?? 1) - 1));
+			setPageIndex(Math.max(0, (beats[next]?.pages.length ?? 1) - 1));
 			return next;
 		});
-	}, [pageIndex, scene]);
+	}, [pageIndex, beats]);
 
 	const restart = useCallback(() => {
 		setBeatIndex(0);
 		setPageIndex(0);
 		setTyped(0);
+		setChoices({});
 	}, []);
 	const toEnd = useCallback(() => {
-		if (scene) {
-			setBeatIndex(scene.beats.length - 1);
-			setPageIndex(Math.max(0, (scene.beats[scene.beats.length - 1]?.pages.length ?? 1) - 1));
+		if (beats.length > 0) {
+			setBeatIndex(beats.length - 1);
+			setPageIndex(Math.max(0, (beats[beats.length - 1]?.pages.length ?? 1) - 1));
 		}
-	}, [scene]);
+	}, [beats]);
+	const choose = useCallback(
+		(region: number, label: string) => {
+			setChoices((current) => ({ ...current, [region]: label }));
+			// The chosen alternative is appended to the timeline, so the next beat is the one that was just unlocked.
+			setBeatIndex(beats.length);
+			setPageIndex(0);
+			setTyped(0);
+		},
+		[beats]
+	);
 	const retry = useCallback(() => setAttempt((count) => count + 1), []);
 	const toggleAuto = useCallback(() => setAuto((current) => !current), []);
 	const toggleMuted = useCallback(() => setMuted((current) => !current), []);
+	// The stage advances on a click, so a click landing on a choice button must not also count as advancing the scene.
+	const stopBubbling = useCallback((event: MouseEvent) => event.stopPropagation(), []);
 	const openBacklog = useCallback(() => setBacklogOpen(true), []);
 	const closeBacklog = useCallback(() => setBacklogOpen(false), []);
 	const changeSpeed = useCallback((_event: Event, value: number | number[]) => setSpeed(Array.isArray(value) ? (value[0] ?? 1) : value), []);
 
 	// Autoplay waits for the page to finish typing, then holds before moving on.
 	useEffect(() => {
-		if (!auto || !done) {
+		if (!auto || !done || choosing) {
 			return;
 		}
 		const timer = window.setTimeout(() => advanceRef.current(), AUTO_HOLD_MS / speed);
 		return () => window.clearTimeout(timer);
-	}, [auto, done, speed, beatIndex, pageIndex]);
+	}, [auto, done, choosing, speed, beatIndex, pageIndex]);
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
@@ -367,7 +430,7 @@ export default function Story() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, [back]);
 
-	const atEnd = scene !== null && beatIndex >= scene.beats.length - 1 && (beat === null || pageIndex >= beat.pages.length - 1);
+	const atEnd = timeline.pending === null && beats.length > 0 && beatIndex >= beats.length - 1 && (beat === null || pageIndex >= beat.pages.length - 1);
 
 	return (
 		<Box component="main" sx={{ py: 3 }}>
@@ -426,26 +489,46 @@ export default function Story() {
 								))}
 							</Box>
 
-							<Box sx={styles.box}>
-								{beat?.speaker && (
-									<Typography variant="subtitle2" sx={styles.speaker}>
-										{beat.speaker}
+							{choosing && timeline.pending ? (
+								<Box sx={styles.choices} onClick={stopBubbling}>
+									<Typography variant="caption" color="text.secondary">
+										Choose
 									</Typography>
-								)}
-								<Typography variant="body1" sx={styles.text}>
-									{renderTyped(page, typed)}
-									{!done && (
-										<Box component="span" sx={styles.caret}>
-											|
-										</Box>
+									{timeline.pending.options.map((option) => (
+										<Button
+											key={option.label}
+											size="small"
+											variant="outlined"
+											color="secondary"
+											sx={styles.choiceButton}
+											onClick={() => choose(timeline.pendingIndex, option.label)}
+										>
+											{option.text}
+										</Button>
+									))}
+								</Box>
+							) : (
+								<Box sx={styles.box}>
+									{beat?.speaker && (
+										<Typography variant="subtitle2" sx={styles.speaker}>
+											{beat.speaker}
+										</Typography>
 									)}
-								</Typography>
-								{full === "" && (
-									<Typography variant="body2" color="text.secondary">
-										{beat && beat.ops.length > 0 ? beat.ops.map((op) => op.type).join(", ") : "..."}
+									<Typography variant="body1" sx={styles.text}>
+										{renderTyped(page, typed)}
+										{!done && (
+											<Box component="span" sx={styles.caret}>
+												|
+											</Box>
+										)}
 									</Typography>
-								)}
-							</Box>
+									{full === "" && (
+										<Typography variant="body2" color="text.secondary">
+											{beat && beat.ops.length > 0 ? beat.ops.map((op) => op.type).join(", ") : "..."}
+										</Typography>
+									)}
+								</Box>
+							)}
 						</Box>
 
 						<Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: "wrap", rowGap: 1, alignItems: "center" }}>
@@ -464,9 +547,13 @@ export default function Story() {
 							<Button size="small" onClick={restart}>
 								Restart
 							</Button>
-							<Button size="small" onClick={toEnd} disabled={atEnd}>
-								Skip to end
-							</Button>
+							<Tooltip title={timeline.pending ? "The scene branches ahead, so it cannot be skipped past the choice" : ""}>
+								<span>
+									<Button size="small" onClick={toEnd} disabled={atEnd || choosing}>
+										Skip to end
+									</Button>
+								</span>
+							</Tooltip>
 							<Box sx={{ width: 150, display: "flex", alignItems: "center", gap: 1 }}>
 								<Typography variant="caption" color="text.secondary">
 									Speed
@@ -474,7 +561,7 @@ export default function Story() {
 								<Slider size="small" min={0.5} max={3} step={0.5} value={speed} onChange={changeSpeed} aria-label="Text speed" valueLabelDisplay="auto" />
 							</Box>
 							<Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
-								Beat {beatIndex + 1} of {scene.beats.length}
+								Beat {beatIndex + 1} of {beats.length}
 								{stage.bgm ? ` - ${stage.bgm}` : ""}
 							</Typography>
 						</Stack>
@@ -535,26 +622,28 @@ function renderTyped(page: StoryPage | null, typed: number) {
 		return null;
 	}
 	let remaining = typed;
-	return page.spans.map((span, position) => {
-		if (remaining <= 0) {
-			return null;
-		}
-		const shown = span.text.slice(0, remaining);
-		remaining -= span.text.length;
-		const style = span.style ?? {};
-		return (
-			<Box
-				key={position}
-				component="span"
-				sx={{
-					color: style.color ? style.color : undefined,
-					fontSize: style.size ? `${Number(style.size) / 26}rem` : undefined,
-					fontWeight: style.b !== undefined ? 700 : undefined,
-					fontStyle: style.i !== undefined ? "italic" : undefined
-				}}
-			>
-				{shown}
-			</Box>
-		);
-	});
+	return page.spans
+		.filter((span) => !isChoiceSpan(span))
+		.map((span, position) => {
+			if (remaining <= 0) {
+				return null;
+			}
+			const shown = span.text.slice(0, remaining);
+			remaining -= span.text.length;
+			const style = span.style ?? {};
+			return (
+				<Box
+					key={position}
+					component="span"
+					sx={{
+						color: style.color ? style.color : undefined,
+						fontSize: style.size ? `${Number(style.size) / 26}rem` : undefined,
+						fontWeight: style.b !== undefined ? 700 : undefined,
+						fontStyle: style.i !== undefined ? "italic" : undefined
+					}}
+				>
+					{shown}
+				</Box>
+			);
+		});
 }
