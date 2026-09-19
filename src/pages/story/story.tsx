@@ -346,9 +346,9 @@ const styles = {
 	},
 	stageButton: {
 		minWidth: 0,
-		// Eight plates at full size overrun a phone, so they lose their labels and some of their padding first.
-		width: { xs: 36, sm: 45 },
-		height: { xs: 36, sm: 45 },
+		// 48 tall is the smallest target a thumb hits reliably, so the plates narrow before they shorten.
+		width: { xs: 40, sm: 45 },
+		height: 48,
 		p: 0.25,
 		flexDirection: "column",
 		gap: 0,
@@ -360,7 +360,8 @@ const styles = {
 		textTransform: "none",
 		"&:hover": { borderColor: "common.white", bgcolor: "rgba(0, 0, 0, 0.6)" }
 	},
-	stageButtonLabel: { fontSize: 10, lineHeight: 1.1, display: { xs: "none", sm: "block" } },
+	// Kept at every width. Eight unlabelled glyphs are not guessable, and Log, Reset and Skip least of all.
+	stageButtonLabel: { fontSize: { xs: 9, sm: 10 }, lineHeight: 1.1 },
 	// Autoplay is the one control that keeps working after it is pressed, so its plate says so: a dashed edge and a turning icon.
 	stageButtonRunning: {
 		borderStyle: "dashed",
@@ -386,8 +387,7 @@ const styles = {
 	},
 	// The keys, shown once and then only on request.
 	hint: {
-		// Hidden on a phone: there is no keyboard to tell the reader about, and the scene is only ~220px tall at that width.
-		display: { xs: "none", sm: "flex" },
+		display: "flex",
 		alignItems: "center",
 		flexWrap: "wrap",
 		justifyContent: "center",
@@ -403,7 +403,7 @@ const styles = {
 		fontSize: 13
 	},
 	key: { display: "inline-block", px: 0.75, mx: 0.25, borderRadius: "3px", bgcolor: "#262b36", border: "1px solid #454f63", borderBottomWidth: "2px", fontSize: 12 },
-	menuRow: { display: "flex", alignItems: "baseline", gap: 1.25, px: 2, py: 0.75, fontSize: 13, borderLeft: "3px solid transparent", cursor: "pointer", "&:hover": { bgcolor: "action.hover" } },
+	menuRow: { display: "flex", alignItems: "center", gap: 1.25, px: 2, minHeight: 48, fontSize: 13, borderLeft: "3px solid transparent", cursor: "pointer", "&:hover": { bgcolor: "action.hover" } },
 	menuRowOn: { bgcolor: "action.selected", borderLeftColor: "secondary.main" },
 	menuLabel: { color: "text.secondary", minWidth: 44, fontVariantNumeric: "tabular-nums" },
 	menuCount: { ml: "auto", color: "text.disabled", fontSize: 11 },
@@ -444,7 +444,10 @@ const styles = {
 		[STACKED]: { height: "8.5em", "&::before": { content: '""', float: "right", width: "31%", height: "1.7em" } }
 	},
 	caret: { display: "inline-block", width: "0.5em", textAlign: "center", opacity: 0.7 },
-	backlogLine: { py: 0.75, borderBottom: "1px solid", borderColor: "divider" }
+	backlogLine: { py: 0.75, borderBottom: "1px solid", borderColor: "divider" },
+	// Two readings of the same hint. A touch device has no keys to be told about, and was being told nothing at all instead.
+	hintKeys: { display: "contents", "@media (pointer: coarse)": { display: "none" } },
+	hintTap: { display: "none", "@media (pointer: coarse)": { display: "inline" } }
 } satisfies Record<string, SxProps<Theme>>;
 
 /** Where a reader had got to in one scene, as it is kept in storage. */
@@ -1224,28 +1227,33 @@ export default function Story() {
 					<Box sx={styles.bottomStack}>
 						{hintOpen && (
 							<Box sx={styles.hint} onClick={stopBubbling}>
-								<span>
-									<Box component="kbd" sx={styles.key}>
-										Space
-									</Box>
-									or
-									<Box component="kbd" sx={styles.key}>
-										&rarr;
-									</Box>
-									next line
-								</span>
-								<span>
-									<Box component="kbd" sx={styles.key}>
-										&larr;
-									</Box>
-									back
-								</span>
-								<span>
-									<Box component="kbd" sx={styles.key}>
-										Esc
-									</Box>
-									menu
-								</span>
+								<Box component="span" sx={styles.hintKeys}>
+									<span>
+										<Box component="kbd" sx={styles.key}>
+											Space
+										</Box>
+										or
+										<Box component="kbd" sx={styles.key}>
+											&rarr;
+										</Box>
+										next line
+									</span>
+									<span>
+										<Box component="kbd" sx={styles.key}>
+											&larr;
+										</Box>
+										back
+									</span>
+									<span>
+										<Box component="kbd" sx={styles.key}>
+											Esc
+										</Box>
+										menu
+									</span>
+								</Box>
+								<Box component="span" sx={styles.hintTap}>
+									Tap the scene to read on
+								</Box>
 								<Button size="small" color="inherit" onClick={dismissHint}>
 									Got it
 								</Button>
