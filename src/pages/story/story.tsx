@@ -12,7 +12,7 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import KeyboardIcon from "@mui/icons-material/Keyboard";
 import HistoryIcon from "@mui/icons-material/History";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import FastForwardIcon from "@mui/icons-material/FastForward";
@@ -23,7 +23,7 @@ import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl, storyUiUrl } from ".
 import { loadStoryChapter, loadStoryIndex, loadStoryScene } from "../../lib/data";
 import { hasStoryAudio, hasStoryBackground, hasStorySprite, hasStoryUi, storySpriteStem } from "../../lib/processData";
 import { branchRegions, buildTimeline } from "../../lib/storyBranches";
-import type { StoryBeat, StoryChapter, StoryChapterSummary, StoryPage, StoryScene } from "../../types/story";
+import type { StoryBeat, StoryChapter, StoryChapterSummary, StoryMission, StoryPage, StoryScene } from "../../types/story";
 
 /** How long one character takes to type at the middle speed, in milliseconds. */
 const TYPE_MS = 28;
@@ -36,6 +36,9 @@ const PROGRESS_KEY = "storyProgress";
 
 /** Where the reader's choice to silence the story is remembered. */
 const MUTED_KEY = "storyMuted";
+
+/** Where the reader's volume setting is remembered. */
+const VOLUME_KEY = "storyVolume";
 
 /** Where the fact that the reader has already been shown the keys is remembered. */
 const HINT_KEY = "storyKeysSeen";
@@ -57,7 +60,11 @@ const CHAPTER_GROUPS: { type: number; label: string }[] = [
 	{ type: 3, label: "Minor Events" }
 ];
 
-/** How loud the music sits under the dialogue, and how loud a sound effect fires over it. */
+/**
+ * How loud the music sits under the dialogue, and how loud a sound effect fires over it.
+ *
+ * These are the balance between the two. The reader's own volume setting scales both.
+ */
 const MUSIC_VOLUME = 0.35;
 const EFFECT_VOLUME = 0.6;
 
@@ -71,18 +78,23 @@ const EFFECT_VOLUME = 0.6;
 const DIALOGUE_PANEL = hasStoryUi() ? `url(${storyUiUrl("dialogueborder_1")})` : "none";
 
 /**
- * The `BIN` values that name a flat wash rather than one of the scene's pictures.
+ * The `BIN` values that name no picture at all, so the scene plays against black.
  *
  * Most of a script's `BIN` numbers are scene-local indices the game resolves in code it does not ship, but these two are used the
- * same way everywhere: to drop to black between scenes, or flash to white. `9` alone is 31% of every background change in the data.
+ * same way everywhere, to drop the scene to black between places. `9` alone is 31% of every background change in the data. `10`
+ * sounds like white, and the game's own player even names its file that way, but that file is a near-transparent black over a
+ * black page, so it reads as black there too.
  */
-const BIN_WASHES: Record<string, string> = { "9": "#000000", "10": "#ffffff" };
+const BIN_BLACKOUTS = new Set(["9", "10"]);
 
 /** How wide the dialogue box sits, as a share of the stage, matching the game's own layout. */
 const BOX_WIDTH_PCT = 46;
 
 /** How far a character is dropped below the top of the stage, as a share of its height. */
 const SPRITE_DROP_PCT = 20;
+
+/** How long a character takes to arrive, in milliseconds. The game's own player slides them in from 20px to the left. */
+const SPRITE_IN_MS = 200;
 
 /** How long a screen fade takes to wash in or out, in milliseconds. */
 const WASH_MS = 450;
@@ -109,7 +121,18 @@ const styles = {
 	sprites: { position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" },
 	// One slot per character on stage, spread evenly across the full width: one sits centred, two at a third and two thirds.
 	// Each is a square the height of the stage, dropped so the character is framed from the waist up, as the game draws them.
-	spriteSlot: { position: "absolute", top: `${SPRITE_DROP_PCT}%`, height: "100%", aspectRatio: "1 / 1", transform: "translateX(-50%)" },
+	spriteSlot: {
+		position: "absolute",
+		top: `${SPRITE_DROP_PCT}%`,
+		height: "100%",
+		aspectRatio: "1 / 1",
+		transform: "translateX(-50%)",
+		animation: `storySpriteIn ${SPRITE_IN_MS}ms ease-out both`,
+		"@keyframes storySpriteIn": {
+			from: { opacity: 0, transform: "translateX(calc(-50% - 20px))" },
+			to: { opacity: 1, transform: "translateX(-50%)" }
+		}
+	},
 	spriteArt: { width: "100%", height: "100%", objectFit: "contain", objectPosition: "top", display: "block" },
 	// The dialogue box and the choice menu are the same panel in the same place, so they share it rather than each drawing their own.
 	panel: {
@@ -153,6 +176,14 @@ const styles = {
 		"&:hover": { borderColor: "common.white", bgcolor: "rgba(0, 0, 0, 0.6)" }
 	},
 	stageButtonLabel: { fontSize: 10, lineHeight: 1.1, display: { xs: "none", sm: "block" } },
+	// Autoplay is the one control that keeps working after it is pressed, so its plate says so: a dashed edge and a turning icon.
+	stageButtonRunning: {
+		borderStyle: "dashed",
+		borderColor: "secondary.main",
+		color: "secondary.main",
+		"& .MuiSvgIcon-root": { animation: "storyAutoSpin 2.4s linear infinite" },
+		"@keyframes storyAutoSpin": { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } }
+	},
 	// A gap opens before each group of plates, so navigation and playback read as separate sets rather than one long row.
 	plateGap: { ml: { xs: 1, sm: 1.75 } },
 	// Where the scene stands, quietly, out of the way of the art. It carries its own scrim, since plenty of scenes play on white.
@@ -194,6 +225,8 @@ const styles = {
 	menuRowOn: { bgcolor: "action.selected", borderLeftColor: "secondary.main" },
 	menuLabel: { color: "text.secondary", minWidth: 44, fontVariantNumeric: "tabular-nums" },
 	menuCount: { ml: "auto", color: "text.disabled", fontSize: 11 },
+	menuButton: { width: "100%", bgcolor: "transparent", border: 0, font: "inherit", color: "text.primary", textAlign: "left" },
+	menuSub: { pl: 5, fontSize: 12.5, color: "text.secondary" },
 	link: { textDecoration: "none", color: "text.primary" },
 	menuHead: { px: 2, pt: 1.5, pb: 0.5, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "secondary.main", fontWeight: 700 },
 	choiceButton: { justifyContent: "flex-start", textAlign: "left", textTransform: "none", lineHeight: 1.5 },
@@ -426,13 +459,28 @@ export default function Story() {
 	const [pageIndex, setPageIndex] = useState(0);
 	// The branch number taken at each of the scene's choices, keyed by that choice's index into the branch map.
 	const [choices, setChoices] = useState<Record<number, string>>({});
-	const [typed, setTyped] = useState(0);
+	// The count is stored with the text it belongs to. Keeping them apart let a new page render with the previous page's count
+	// for one frame, which read as the line rolling backwards before it typed out.
+	const [typing, setTyping] = useState({ text: "", count: 0 });
 	const [auto, setAuto] = useState(false);
 	const [speed, setSpeed] = useState(SPEED_DEFAULT);
 	const [backlogOpen, setBacklogOpen] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
 	// The chapter list behind the scene menu, fetched the first time the menu is opened rather than on every scene.
 	const [menuChapters, setMenuChapters] = useState<StoryChapterSummary[] | null>(null);
+	const [volume, setVolume] = useState(() => {
+		try {
+			// Read as a string first: `Number(null)` is 0, which would silently open a reader who has never set it on mute.
+			const raw = window.localStorage.getItem(VOLUME_KEY);
+			const saved = raw === null ? Number.NaN : Number(raw);
+			return Number.isFinite(saved) && saved >= 0 && saved <= 1 ? saved : 1;
+		} catch {
+			return 1;
+		}
+	});
+	// Which chapter is open in the scene menu, and the missions of every chapter opened so far.
+	const [openChapter, setOpenChapter] = useState<number | null>(null);
+	const [chapterMissions, setChapterMissions] = useState<Record<number, StoryMission[]>>({});
 	const [hintOpen, setHintOpen] = useState(() => {
 		try {
 			return window.localStorage.getItem(HINT_KEY) !== "1";
@@ -459,6 +507,7 @@ export default function Story() {
 	const beat = beats[beatIndex] ?? null;
 	const page = beat?.pages[pageIndex] ?? null;
 	const full = page ? pageText(page) : "";
+	const typed = typing.text === full ? typing.count : 0;
 	const done = typed >= full.length;
 	const atLast = beatIndex >= beats.length - 1 && (beat === null || pageIndex >= beat.pages.length - 1);
 	// The reader has read everything the timeline holds and a choice is waiting, so the menu takes the dialogue box's place.
@@ -497,9 +546,8 @@ export default function Story() {
 	const scenery = useMemo(() => (mission?.background && hasStoryBackground(mission.background) ? storyBackgroundUrl(mission.background) : null), [mission]);
 	// A beat asking for black or white overrides the scene's own picture, which is how the scripts cut between places.
 	const backing = useMemo(() => {
-		const wash = stage.background === null ? undefined : BIN_WASHES[stage.background];
-		if (wash !== undefined) {
-			return wash;
+		if (stage.background !== null && BIN_BLACKOUTS.has(stage.background)) {
+			return "#000000";
 		}
 		return scenery ? `url(${scenery}) center / cover no-repeat` : backdrop(stage.background);
 	}, [stage.background, scenery]);
@@ -508,6 +556,21 @@ export default function Story() {
 	useEffect(() => {
 		document.title = mission ? `${mission.title} - Story` : "Story";
 	}, [mission]);
+
+	useEffect(() => {
+		if (openChapter === null || chapterMissions[openChapter] !== undefined) {
+			return;
+		}
+		let active = true;
+		const id = openChapter;
+		loadStoryChapter(id).then(
+			(loaded) => active && setChapterMissions((current) => ({ ...current, [id]: loaded.missions })),
+			() => active && setChapterMissions((current) => ({ ...current, [id]: [] }))
+		);
+		return () => {
+			active = false;
+		};
+	}, [openChapter, chapterMissions]);
 
 	useEffect(() => {
 		if (!menuOpen || menuChapters !== null) {
@@ -538,7 +601,7 @@ export default function Story() {
 				setChoices(saved.choices);
 				setBeatIndex(Math.max(0, saved.beat));
 				setPageIndex(0);
-				setTyped(0);
+				setTyping({ text: "", count: 0 });
 			},
 			() => active && setFailed(true)
 		);
@@ -549,17 +612,17 @@ export default function Story() {
 
 	// Type the current page out one character at a time. Restarts whenever the page changes.
 	useEffect(() => {
-		setTyped(0);
+		setTyping({ text: full, count: 0 });
 		if (full === "") {
 			return;
 		}
 		const interval = window.setInterval(() => {
-			setTyped((count) => {
-				if (count >= full.length) {
+			setTyping((current) => {
+				if (current.count >= full.length) {
 					window.clearInterval(interval);
-					return count;
+					return current;
 				}
-				return count + 1;
+				return { text: full, count: current.count + 1 };
 			});
 		}, TYPE_MS / speed);
 		return () => window.clearInterval(interval);
@@ -573,7 +636,9 @@ export default function Story() {
 	}, [beats, beatIndex]);
 
 	useEffect(() => {
-		if (scene && beatIndex > 0) {
+		// Guarded on the loaded scene: while a new one is being fetched the name has already changed but the beat has not, and
+		// writing then would drop the old scene's position onto the new one, opening it part-read.
+		if (scene && scene.name === sceneName && beatIndex > 0) {
 			writeProgress(sceneName, { beat: beatIndex, choices });
 		}
 	}, [scene, sceneName, beatIndex, choices]);
@@ -594,12 +659,12 @@ export default function Story() {
 		if (!element.src.endsWith(wanted.slice(wanted.lastIndexOf("/") + 1))) {
 			element.src = wanted;
 		}
-		element.volume = MUSIC_VOLUME;
+		element.volume = MUSIC_VOLUME * volume;
 		if (!muted) {
 			// A browser may refuse to start audio before the reader has interacted, and advancing the scene is that interaction.
 			void element.play().catch(() => {});
 		}
-	}, [stage.bgm, muted]);
+	}, [stage.bgm, muted, volume]);
 
 	// Sound effects fire once as their beat is reached, over whatever music is playing.
 	useEffect(() => {
@@ -611,10 +676,10 @@ export default function Story() {
 				continue;
 			}
 			const effect = new Audio(storyAudioUrl(op.value));
-			effect.volume = EFFECT_VOLUME;
+			effect.volume = EFFECT_VOLUME * volume;
 			void effect.play().catch(() => {});
 		}
-	}, [beat, muted]);
+	}, [beat, muted, volume]);
 
 	useEffect(() => {
 		try {
@@ -633,7 +698,7 @@ export default function Story() {
 		}
 		// A part-typed page finishes first, so a click never skips text the reader has not seen.
 		if (!done && full !== "") {
-			setTyped(full.length);
+			setTyping({ text: full, count: full.length });
 			return;
 		}
 		if (pageIndex + 1 < beat.pages.length) {
@@ -662,7 +727,7 @@ export default function Story() {
 	const restart = useCallback(() => {
 		setBeatIndex(0);
 		setPageIndex(0);
-		setTyped(0);
+		setTyping({ text: "", count: 0 });
 		setChoices({});
 	}, []);
 	const toEnd = useCallback(() => {
@@ -677,7 +742,7 @@ export default function Story() {
 			// The chosen alternative is appended to the timeline, so the next beat is the one that was just unlocked.
 			setBeatIndex(beats.length);
 			setPageIndex(0);
-			setTyped(0);
+			setTyping({ text: "", count: 0 });
 		},
 		[beats]
 	);
@@ -699,6 +764,16 @@ export default function Story() {
 	}, []);
 	const openBacklog = useCallback(() => setBacklogOpen(true), []);
 	const closeBacklog = useCallback(() => setBacklogOpen(false), []);
+	const changeVolume = useCallback((_event: Event, value: number | number[]) => {
+		const next = Array.isArray(value) ? (value[0] ?? 1) : value;
+		setVolume(next);
+		try {
+			window.localStorage.setItem(VOLUME_KEY, String(next));
+		} catch {
+			// Losing the setting only costs the reader their level next time, which is not worth failing over.
+		}
+	}, []);
+	const toggleChapter = useCallback((id: number) => setOpenChapter((current) => (current === id ? null : id)), []);
 	const changeSpeed = useCallback((_event: Event, value: number | number[]) => setSpeed(Array.isArray(value) ? (value[0] ?? 1) : value), []);
 
 	// Autoplay waits for the page to finish typing, then holds before moving on.
@@ -752,10 +827,11 @@ export default function Story() {
 			key: "auto",
 			label: "Auto",
 			aria: auto ? "Stop autoplay" : "Autoplay",
-			icon: auto ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />,
+			icon: auto ? <AutorenewIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />,
 			onClick: toggleAuto,
 			disabled: false,
-			gap: false
+			gap: false,
+			running: auto
 		},
 		{
 			key: "sound",
@@ -806,7 +882,7 @@ export default function Story() {
 								<Button
 									key={plate.key}
 									variant="outlined"
-									sx={[styles.stageButton, plate.gap ? styles.plateGap : {}]}
+									sx={[styles.stageButton, plate.gap ? styles.plateGap : {}, plate.running ? styles.stageButtonRunning : {}]}
 									onClick={plate.onClick}
 									disabled={plate.disabled}
 									aria-label={plate.aria}
@@ -880,11 +956,6 @@ export default function Story() {
 										</Box>
 									)}
 								</Typography>
-								{full === "" && (
-									<Typography variant="body2" color="text.secondary">
-										{beat && beat.ops.length > 0 ? beat.ops.map((op) => op.type).join(", ") : "..."}
-									</Typography>
-								)}
 							</Box>
 						)}
 					</Box>
@@ -940,20 +1011,41 @@ export default function Story() {
 									<Box key={group.type}>
 										<Typography sx={styles.menuHead}>{group.label}</Typography>
 										{rows.map((entry) => (
-											<Box
-												key={entry.id}
-												component={RouterLink}
-												to={`/story/${entry.id}`}
-												onClick={closeMenu}
-												sx={[styles.menuRow, styles.link, entry.id === chapterId ? styles.menuRowOn : {}]}
-											>
-												<Box component="span" sx={styles.menuLabel}>
-													{entry.label}
+											<Box key={entry.id}>
+												{/* A chapter holds many missions, so opening one lists them here rather than jumping to a page that does not exist. */}
+												<Box
+													component="button"
+													type="button"
+													onClick={() => toggleChapter(entry.id)}
+													aria-expanded={openChapter === entry.id}
+													sx={[styles.menuRow, styles.menuButton, entry.id === chapterId ? styles.menuRowOn : {}]}
+												>
+													<Box component="span" sx={styles.menuLabel}>
+														{entry.label}
+													</Box>
+													<Box component="span">{entry.name}</Box>
+													<Box component="span" sx={styles.menuCount}>
+														{entry.missions}
+													</Box>
 												</Box>
-												<Box component="span">{entry.name}</Box>
-												<Box component="span" sx={styles.menuCount}>
-													{entry.missions}
-												</Box>
+												{openChapter === entry.id &&
+													(chapterMissions[entry.id] === undefined ? (
+														<Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+															<CircularProgress size={18} aria-label="Loading the missions" />
+														</Box>
+													) : (
+														(chapterMissions[entry.id] ?? []).map((chapterMission) => (
+															<Box
+																key={chapterMission.id}
+																component={RouterLink}
+																to={`/story/${entry.id}/${encodeURIComponent(chapterMission.scripts[0] ?? "")}`}
+																onClick={closeMenu}
+																sx={[styles.menuRow, styles.link, styles.menuSub, chapterMission.scripts.includes(sceneName) ? styles.menuRowOn : {}]}
+															>
+																{chapterMission.title}
+															</Box>
+														))
+													))}
 											</Box>
 										))}
 									</Box>
@@ -964,7 +1056,13 @@ export default function Story() {
 
 					<Stack spacing={1} sx={{ px: 2, py: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
 						<Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-							<Typography variant="caption" color="text.secondary">
+							<Typography variant="caption" color="text.secondary" sx={{ minWidth: 48 }}>
+								Volume
+							</Typography>
+							<Slider size="small" min={0} max={1} step={0.05} value={volume} onChange={changeVolume} aria-label="Volume" valueLabelDisplay="auto" />
+						</Stack>
+						<Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+							<Typography variant="caption" color="text.secondary" sx={{ minWidth: 48 }}>
 								Speed
 							</Typography>
 							<Slider size="small" min={SPEED_MIN} max={SPEED_MAX} step={SPEED_STEP} value={speed} onChange={changeSpeed} aria-label="Text speed" valueLabelDisplay="auto" />
