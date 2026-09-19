@@ -20,18 +20,13 @@ An unofficial archive for _Girls' Frontline_, the mobile game by MICA Team: T-Do
 - **Equipment Index** - filter, search and sort equipment, and see which dolls an exclusive item belongs to.
 - **Enemy Index** - every enemy with its stats, skills and counter tips, plus the Protocol Assimilation units you can capture and field yourself.
 - **Formation Simulator** - place an echelon and a facing enemy squad, apply tile and fairy buffs, and compare damage estimates. Share a setup by its link.
-- **Story player** - read the main story in the browser, with the game's own backgrounds, character art and dialogue framing.
+- **Story player** - read the main story and every side campaign in the browser, with the game's own backgrounds, character art, music and sound effects.
 - **Always current** - a daily job picks up new dolls, skins, equipment and art from the game data.
 
 <p>
   <img src="https://raw.githubusercontent.com/steve1316/gfl-wiki-assets/main/readme/tdoll-index.webp" width="49%" alt="The T-Doll Index with its filters">
   <img src="https://raw.githubusercontent.com/steve1316/gfl-wiki-assets/main/readme/hoc-page.webp" width="49%" alt="A HOC page">
 </p>
-
-## Roadmap
-
-- [ ] **Story audio** - the music and sound effects the scripts already call for.
-- [ ] **Event stories** - the side campaigns, memoirs and character stories beyond the main chapters.
 
 ## Running locally
 
@@ -55,7 +50,7 @@ Art and animations are not in this repo. They load from [gfl-wiki-assets](https:
 
 - **`src/`** - the site: React 19, TypeScript and MUI, built with Vite. Game data ships as generated JSON, and each page loads only what it needs.
 - **`tools/data/`** - imports doll, equipment, HOC, fairy and enemy data from the game's tables and checks the result.
-- **`tools/assets/`** - Python tools (UnityPy, Python 3.12) that extract art, Spine rigs and Live2D models from the game's asset bundles and publish them to the asset repo.
+- **`tools/assets/`** - Python tools (UnityPy, Python 3.12) that extract art, Spine rigs and Live2D models from the game's asset bundles and publish them to the asset repo. `story_audio.py` also builds the story's music and sound effects, which needs [vgmstream](https://github.com/vgmstream/vgmstream/releases) unpacked to `tools/assets/.tools/vgmstream/` and `ffmpeg` on the path. The binary is not committed, so fetch it before rebuilding audio.
 - **`.github/workflows/`** - `deploy.yml` publishes the site on every push to `master`. `refresh.yml` runs daily, imports anything new, and deploys only if something changed.
 
 ## Data sources
