@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent } from "react";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useLocation, useParams } from "react-router-dom";
 
 import { Box, Button, CircularProgress, Drawer, Slider, Stack, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
@@ -18,10 +18,11 @@ import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 
 import LoadError from "../../components/LoadError";
+import StoryPanelFrame from "../../components/StoryPanelFrame";
 import ScrollToTop from "../../components/ScrollToTop";
-import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl, storyUiUrl } from "../../lib/assets";
+import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
 import { loadStoryChapter, loadStoryIndex, loadStoryScene } from "../../lib/data";
-import { hasStoryAudio, hasStoryBackground, hasStorySprite, hasStoryUi, storySpriteStem } from "../../lib/processData";
+import { hasStoryAudio, hasStoryBackground, hasStorySprite, storySpriteStem } from "../../lib/processData";
 import { branchRegions, buildTimeline } from "../../lib/storyBranches";
 import type { StoryBeat, StoryChapter, StoryChapterSummary, StoryMission, StoryPage, StoryScene } from "../../types/story";
 
@@ -46,12 +47,12 @@ const HINT_KEY = "storyKeysSeen";
 /**
  * The text speed slider: how many characters a second, as a multiple of `TYPE_MS`.
  *
- * It opens at half the old default, which read too fast to follow, and tops out at what used to be the default.
+ * It tops out at what used to be the default, which read too fast to follow, and opens a step below that.
  */
 const SPEED_MIN = 0.25;
 const SPEED_MAX = 1;
 const SPEED_STEP = 0.25;
-const SPEED_DEFAULT = 0.5;
+const SPEED_DEFAULT = 0.75;
 
 /** The game's own playback types, as the headings the scene menu groups chapters under. */
 const CHAPTER_GROUPS: { type: number; label: string }[] = [
@@ -69,13 +70,13 @@ const MUSIC_VOLUME = 0.35;
 const EFFECT_VOLUME = 0.6;
 
 /**
- * The game's own dialogue panel, drawn behind the text.
+ * The dot grid inside the dialogue panel, as the game draws it: a fine light dot every 6.5 pixels over a near-black fill.
  *
- * It is one piece rather than a frame to slice, so it is stretched to the box. The artwork is a flat dark panel with a dotted grid
- * and a mark in one corner, so stretching it shows only as a slightly wider grid. A `background-image` value rather than a URL, so
- * an unpublished chrome falls back to the scrim underneath instead of asking for a picture that is not there.
+ * Kept a fixed size rather than scaled with the panel, so it stays a crisp one-pixel dot on any display instead of blurring the
+ * way the stretched sprite did.
  */
-const DIALOGUE_PANEL = hasStoryUi() ? `url(${storyUiUrl("dialogueborder_1")})` : "none";
+const PANEL_DOTS = "radial-gradient(circle at 50% 50%, rgba(238, 238, 238, 0.13) 0, rgba(238, 238, 238, 0.13) 0.7px, rgba(0, 0, 0, 0) 1.2px)";
+const PANEL_DOT_SIZE = "6.5px 6.5px";
 
 /**
  * The two entries in the game's background table that are a wash rather than a picture, so they have no art to publish.
@@ -94,6 +95,12 @@ const SPRITE_DROP_PCT = 20;
 /** How long a character takes to arrive, in milliseconds. The game's own player slides them in from 20px to the left. */
 const SPRITE_IN_MS = 200;
 
+/** Carried on every link into a scene from inside the player, telling it to open at the start rather than resume. */
+const OPEN_AT_START = { restart: true };
+
+/** How many pictures a scene warms at once. Enough to stay ahead of the reader without crowding out the one on screen. */
+const PRELOAD_LANES = 4;
+
 /** How long a screen fade takes to wash in or out, in milliseconds. */
 const WASH_MS = 450;
 
@@ -105,12 +112,35 @@ const SHAKE_MAX_S = 1.2;
 
 const styles = {
 	// The scene takes the whole of what the navbar leaves, and sits centred in it when the window is taller than 16:9.
-	main: { height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", bgcolor: "#05070c" },
+	//
+	// Measured against the viewport rather than the page: the wrapper above grows to its content, so a `height: 100%` here left a
+	// 16:9 stage on a wide window taller than the space it had, pushing the panel off the bottom and giving the page a scrollbar.
+	// The bar's own heights come from the theme, which is where MUI keeps the three it uses.
+	main: (theme: Theme) => {
+		const below = (height: unknown) => ({ height: `calc(100dvh - ${typeof height === "number" ? `${height}px` : String(height)})` });
+		const bar = theme.mixins.toolbar as Record<string, unknown>;
+		const queries = Object.fromEntries(
+			Object.entries(bar)
+				.filter(([key, value]) => key.startsWith("@media") && typeof value === "object" && value !== null && "minHeight" in value)
+				.map(([key, value]) => [key, below((value as { minHeight: unknown }).minHeight)])
+		);
+		return {
+			...below(bar.minHeight),
+			display: "flex",
+			alignItems: "center",
+			justifyContent: "center",
+			overflow: "hidden",
+			bgcolor: "#05070c",
+			// Queried by the stage, so it can take the lesser of the width it has and the width its height allows.
+			containerType: "size",
+			...queries
+		};
+	},
 	stage: {
 		position: "relative",
-		width: "100%",
+		// Whichever of the two the space allows: a `width: 100%` with a capped height stretched the scene instead of shrinking it.
+		width: "min(100cqw, calc(100cqh * 16 / 9))",
 		aspectRatio: "16 / 9",
-		maxHeight: "100%",
 		overflow: "hidden",
 		bgcolor: "#05070c",
 		cursor: "pointer",
@@ -132,25 +162,28 @@ const styles = {
 		}
 	},
 	spriteArt: { width: "100%", height: "100%", objectFit: "contain", objectPosition: "top", display: "block" },
+	// Everything that sits along the bottom of the scene, stacked so a taller dialogue box pushes the hint up instead of meeting it.
+	bottomStack: { position: "absolute", left: 0, right: 0, bottom: "3.5%", display: "flex", flexDirection: "column", alignItems: "center", gap: 1, px: 1 },
 	// The dialogue box and the choice menu are the same panel in the same place, so they share it rather than each drawing their own.
 	panel: {
-		position: "absolute",
-		left: "50%",
-		transform: "translateX(-50%)",
+		position: "relative",
 		width: { xs: "94%", sm: `${BOX_WIDTH_PCT}%` },
-		bottom: "3.5%",
+		boxSizing: "border-box",
 		// The panel carries its own mark in the bottom right, so the text is kept clear of that corner.
 		p: { xs: 1.5, sm: 2.5 },
 		pb: { xs: 2.5, sm: 3.5 },
-		backgroundImage: DIALOGUE_PANEL,
-		backgroundSize: "100% 100%",
-		backgroundRepeat: "no-repeat",
-		// Behind the panel in case it has not loaded, so the text never sits straight on the scene art.
-		bgcolor: "rgba(6, 10, 18, 0.84)"
+		backgroundImage: PANEL_DOTS,
+		backgroundSize: PANEL_DOT_SIZE,
+		bgcolor: "rgba(10, 10, 12, 0.86)"
 	},
-	box: { minHeight: "16%" },
+	// One height, whatever the beat holds. The panel art carries a notch in its top right, and letting the box grow for a longer
+	// line or for the end row restretched that art until the text sat under it.
+	box: { position: "relative", minHeight: { xs: "8.6em", sm: "9.6em" } },
+	// The panel's flowing content, lifted over the drawn frame. The end row is positioned against the panel instead, so it is
+	// deliberately left out of this.
+	panelBody: { position: "relative" },
 	// The choice menu takes the dialogue box's place, so the stage behind it stays visible while the reader decides.
-	choices: { display: "flex", flexDirection: "column", gap: 1 },
+	choices: { position: "relative", display: "flex", flexDirection: "column", gap: 1 },
 	// The tints sit over the scene but under the dialogue, so a line spoken over a darkened scene is still readable.
 	wash: { position: "absolute", inset: 0, pointerEvents: "none", transition: `opacity ${WASH_MS}ms ease` },
 	// A beat's own transition, played once as it arrives and then gone, rather than a wash left sitting over the scene.
@@ -199,11 +232,8 @@ const styles = {
 	},
 	// The keys, shown once and then only on request.
 	hint: {
-		position: "absolute",
-		left: "50%",
-		transform: "translateX(-50%)",
-		bottom: "24%",
-		display: "flex",
+		// Hidden on a phone: there is no keyboard to tell the reader about, and the scene is only ~220px tall at that width.
+		display: { xs: "none", sm: "flex" },
 		alignItems: "center",
 		flexWrap: "wrap",
 		justifyContent: "center",
@@ -228,8 +258,27 @@ const styles = {
 	link: { textDecoration: "none", color: "text.primary" },
 	menuHead: { px: 2, pt: 1.5, pb: 0.5, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "secondary.main", fontWeight: 700 },
 	choiceButton: { justifyContent: "flex-start", textAlign: "left", textTransform: "none", lineHeight: 1.5 },
-	speaker: { fontWeight: 800, color: "secondary.main", mb: 0.5 },
-	text: { whiteSpace: "pre-wrap", lineHeight: 1.7 },
+	// Sits under the last line, inside the same panel, so the end reads as part of the scene rather than a new box appearing.
+	// Laid over the panel's lower area rather than added to it, so arriving at the end never changes the box's height.
+	//
+	// Centred on the same line as the panel's own mark, which sits 79.5% down the frame, and stopped short of the hazard stripes
+	// that begin 80.6% across. Both figures are shares of the frame, so the two rows stay level at any panel size.
+	ending: {
+		position: "absolute",
+		left: { xs: 12, sm: 20 },
+		right: "21%",
+		top: "79.5%",
+		transform: "translateY(-50%)",
+		alignItems: "center",
+		flexWrap: "wrap",
+		rowGap: 0.5
+	},
+	endingLabel: { fontSize: 13, fontWeight: 700, color: "text.secondary", letterSpacing: "0.04em" },
+	// Holds its line whether or not the beat names anyone: the panel art cuts a notch across its top right, and narration that
+	// started at the very top of the box ran straight into it.
+	speaker: { fontWeight: 800, color: "secondary.main", mb: 0.5, lineHeight: 1.6, height: "1.6em" },
+	// A fixed run of lines, scrolling past it, so a one-line beat and a three-line beat leave the box the same shape.
+	text: { whiteSpace: "pre-wrap", lineHeight: 1.7, height: "3.4em", overflowY: "auto" },
 	caret: { display: "inline-block", width: "0.5em", textAlign: "center", opacity: 0.7 },
 	backlogLine: { py: 0.75, borderBottom: "1px solid", borderColor: "divider" }
 } satisfies Record<string, SxProps<Theme>>;
@@ -252,6 +301,45 @@ interface Stage {
 	darkened: boolean;
 	/** Whether the scene is under the night tint. */
 	night: boolean;
+}
+
+/**
+ * Every picture a scene will ask for, in the order its beats reach them.
+ *
+ * Beat order matters: warming them in that order means the pictures for the opening lines arrive first, so the reader is never
+ * waiting on a character who was always going to appear two lines later.
+ *
+ * @param beats The scene's beats.
+ * @param missionBackground The background the mission opens on, used before any beat names one.
+ * @returns The URLs, each listed once.
+ */
+function sceneImages(beats: StoryBeat[], missionBackground?: string): string[] {
+	const urls: string[] = [];
+	const add = (url: string | null) => {
+		if (url !== null && !urls.includes(url)) {
+			urls.push(url);
+		}
+	};
+	if (missionBackground && hasStoryBackground(missionBackground)) {
+		add(storyBackgroundUrl(missionBackground));
+	}
+	for (const beat of beats) {
+		for (const op of beat.ops) {
+			if (op.type === "background" && op.value && !BACKGROUND_WASHES.has(op.value.toLowerCase()) && hasStoryBackground(op.value)) {
+				add(storyBackgroundUrl(op.value));
+			}
+		}
+		for (const sprite of beat.sprites) {
+			if (!sprite.shown) {
+				continue;
+			}
+			const stem = storySpriteStem(sprite.prefab);
+			if (stem !== null) {
+				add(storySpriteUrl(stem, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0));
+			}
+		}
+	}
+	return urls;
 }
 
 /**
@@ -446,6 +534,10 @@ function writeProgress(scene: string, progress: SceneProgress) {
  */
 export default function Story() {
 	const { chapter: chapterParam, scene: sceneParam } = useParams();
+	const location = useLocation();
+	// Picking a scene is a request to read it, so it opens at the start. A reload or a pasted link still resumes where the
+	// reader left off, which is the case the saved place is actually for.
+	const openAtStart = (location.state as { restart?: boolean } | null)?.restart === true;
 	const chapterId = Number(chapterParam);
 	const sceneName = sceneParam ?? "";
 
@@ -541,6 +633,15 @@ export default function Story() {
 	const mission = useMemo(() => chapter?.missions.find((entry) => entry.scripts.includes(sceneName)) ?? null, [chapter, sceneName]);
 	// The mission names its own scene art. A beat's own `background` op is a scene-local index the game resolves in code the data does
 	// not ship, so it cannot be mapped to a picture - it still drives the fallback wash, which at least changes when the scene does.
+	// Reaching the last line is otherwise indistinguishable from the player having stuck, so the end says so, and offers the
+	// next scene of the mission when there is one.
+	const ended = atEnd && done;
+	const nextScene = useMemo(() => {
+		const scripts = mission?.scripts ?? [];
+		const at = scripts.indexOf(sceneName);
+		return at === -1 ? null : (scripts[at + 1] ?? null);
+	}, [mission, sceneName]);
+	const artwork = useMemo(() => (scene ? sceneImages(scene.beats, mission?.background) : []), [scene, mission]);
 	const scenery = useMemo(() => (mission?.background && hasStoryBackground(mission.background) ? storyBackgroundUrl(mission.background) : null), [mission]);
 	// A beat asking for black or white overrides the scene's own picture, which is how the scripts cut between places.
 	const backing = useMemo(() => {
@@ -600,7 +701,7 @@ export default function Story() {
 				}
 				setScene(loadedScene);
 				setChapter(loadedChapter);
-				const saved = readProgress(sceneName);
+				const saved = openAtStart ? { beat: 0, choices: {} } : readProgress(sceneName);
 				setChoices(saved.choices);
 				setBeatIndex(Math.max(0, saved.beat));
 				setPageIndex(0);
@@ -611,7 +712,7 @@ export default function Story() {
 		return () => {
 			active = false;
 		};
-	}, [sceneName, chapterId, attempt]);
+	}, [sceneName, chapterId, attempt, openAtStart]);
 
 	// Type the current page out one character at a time. Restarts whenever the page changes.
 	useEffect(() => {
@@ -630,6 +731,33 @@ export default function Story() {
 		}, TYPE_MS / speed);
 		return () => window.clearInterval(interval);
 	}, [full, speed]);
+
+	// Fetched ahead of the reader, a few at a time, so a character or a change of place is already in the cache when its beat
+	// arrives. Nothing here blocks the scene: the pictures are only being warmed, and the stage draws whatever has landed.
+	useEffect(() => {
+		if (artwork.length === 0) {
+			return;
+		}
+		let stopped = false;
+		let next = 0;
+		const warmOne = () => {
+			if (stopped || next >= artwork.length) {
+				return;
+			}
+			const image = new Image();
+			image.onload = warmOne;
+			image.onerror = warmOne;
+			image.src = artwork[next] ?? "";
+			next += 1;
+		};
+		for (let lane = 0; lane < PRELOAD_LANES; lane++) {
+			warmOne();
+		}
+		return () => {
+			// Anything already in flight finishes into the cache; this only stops new ones starting for a scene being left.
+			stopped = true;
+		};
+	}, [artwork]);
 
 	useEffect(() => {
 		if (beats.length > 0 && beatIndex > beats.length - 1) {
@@ -903,64 +1031,91 @@ export default function Story() {
 							{stage.bgm ? ` \u00b7 ${stage.bgm}` : ""}
 						</Box>
 
-						{hintOpen && (
-							<Box sx={styles.hint} onClick={stopBubbling}>
-								<span>
-									<Box component="kbd" sx={styles.key}>
-										Space
-									</Box>
-									or
-									<Box component="kbd" sx={styles.key}>
-										&rarr;
-									</Box>
-									next line
-								</span>
-								<span>
-									<Box component="kbd" sx={styles.key}>
-										&larr;
-									</Box>
-									back
-								</span>
-								<span>
-									<Box component="kbd" sx={styles.key}>
-										Esc
-									</Box>
-									menu
-								</span>
-								<Button size="small" color="inherit" onClick={dismissHint}>
-									Got it
-								</Button>
-							</Box>
-						)}
-
-						{pending ? (
-							<Box sx={[styles.panel, styles.choices]} onClick={stopBubbling}>
-								<Typography variant="caption" color="text.secondary">
-									Choose
-								</Typography>
-								{pending.options.map((option) => (
-									<Button key={option.label} size="small" variant="outlined" color="secondary" sx={styles.choiceButton} onClick={() => choose(timeline.pendingIndex, option.label)}>
-										{option.text}
-									</Button>
-								))}
-							</Box>
-						) : (
-							<Box sx={[styles.panel, styles.box]}>
-								{beat?.speaker && (
-									<Typography variant="subtitle2" sx={styles.speaker}>
-										{beat.speaker}
-									</Typography>
-								)}
-								<Typography variant="body1" sx={styles.text}>
-									{renderTyped(page, typed)}
-									{!done && (
-										<Box component="span" sx={styles.caret}>
-											|
+						<Box sx={styles.bottomStack}>
+							{hintOpen && (
+								<Box sx={styles.hint} onClick={stopBubbling}>
+									<span>
+										<Box component="kbd" sx={styles.key}>
+											Space
 										</Box>
+										or
+										<Box component="kbd" sx={styles.key}>
+											&rarr;
+										</Box>
+										next line
+									</span>
+									<span>
+										<Box component="kbd" sx={styles.key}>
+											&larr;
+										</Box>
+										back
+									</span>
+									<span>
+										<Box component="kbd" sx={styles.key}>
+											Esc
+										</Box>
+										menu
+									</span>
+									<Button size="small" color="inherit" onClick={dismissHint}>
+										Got it
+									</Button>
+								</Box>
+							)}
+
+							{pending ? (
+								<Box sx={[styles.panel, styles.choices]} onClick={stopBubbling}>
+									<StoryPanelFrame marked={false} />
+									<Typography variant="caption" color="text.secondary">
+										Choose
+									</Typography>
+									{pending.options.map((option) => (
+										<Button
+											key={option.label}
+											size="small"
+											variant="outlined"
+											color="secondary"
+											sx={styles.choiceButton}
+											onClick={() => choose(timeline.pendingIndex, option.label)}
+										>
+											{option.text}
+										</Button>
+									))}
+								</Box>
+							) : (
+								<Box sx={[styles.panel, styles.box]}>
+									<StoryPanelFrame />
+									<Box sx={styles.panelBody}>
+										{/* Always drawn, so narration starts on the same line a spoken beat does rather than riding up into the frame. */}
+										<Typography variant="subtitle2" sx={styles.speaker} aria-hidden={!beat?.speaker}>
+											{beat?.speaker ?? ""}
+										</Typography>
+										<Typography variant="body1" sx={styles.text}>
+											{renderTyped(page, typed)}
+											{!done && (
+												<Box component="span" sx={styles.caret}>
+													|
+												</Box>
+											)}
+										</Typography>
+									</Box>
+									{ended && (
+										<Stack direction="row" spacing={1.5} sx={styles.ending} onClick={stopBubbling}>
+											<Box component="span" sx={styles.endingLabel}>
+												Scene end.
+											</Box>
+											{nextScene && (
+												<Button size="small" color="secondary" component={RouterLink} to={`/story/${chapterId}/${encodeURIComponent(nextScene)}`} state={OPEN_AT_START}>
+													Next scene
+												</Button>
+											)}
+											<Button size="small" onClick={restart}>
+												Read again
+											</Button>
+										</Stack>
 									)}
-								</Typography>
-							</Box>
-						)}
+								</Box>
+							)}
+						</Box>
 					</Box>
 				</>
 			)}
@@ -989,6 +1144,7 @@ export default function Story() {
 										key={script}
 										component={RouterLink}
 										to={`/story/${chapterId}/${encodeURIComponent(script)}`}
+										state={OPEN_AT_START}
 										onClick={closeMenu}
 										sx={[styles.menuRow, styles.link, script === sceneName ? styles.menuRowOn : {}]}
 									>
@@ -1042,6 +1198,7 @@ export default function Story() {
 																key={chapterMission.id}
 																component={RouterLink}
 																to={`/story/${entry.id}/${encodeURIComponent(chapterMission.scripts[0] ?? "")}`}
+																state={OPEN_AT_START}
 																onClick={closeMenu}
 																sx={[styles.menuRow, styles.link, styles.menuSub, chapterMission.scripts.includes(sceneName) ? styles.menuRowOn : {}]}
 															>
