@@ -6,9 +6,9 @@ import type { SxProps, Theme } from "@mui/material";
 
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
-import { storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
+import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
 import { loadStoryChapter, loadStoryScene } from "../../lib/data";
-import { hasStoryBackground, hasStorySprite, storySpriteStem } from "../../lib/processData";
+import { hasStoryAudio, hasStoryBackground, hasStorySprite, storySpriteStem } from "../../lib/processData";
 import type { StoryBeat, StoryChapter, StoryPage, StoryScene } from "../../types/story";
 
 /** How long one character takes to type at the middle speed, in milliseconds. */
@@ -19,6 +19,13 @@ const AUTO_HOLD_MS = 1400;
 
 /** Where the reader's place in each scene is remembered. */
 const PROGRESS_KEY = "storyProgress";
+
+/** Where the reader's choice to silence the story is remembered. */
+const MUTED_KEY = "storyMuted";
+
+/** How loud the music sits under the dialogue, and how loud a sound effect fires over it. */
+const MUSIC_VOLUME = 0.35;
+const EFFECT_VOLUME = 0.6;
 
 const styles = {
 	stage: { position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 2, overflow: "hidden", bgcolor: "#05070c", cursor: "pointer", userSelect: "none" },
@@ -161,6 +168,15 @@ export default function Story() {
 	const [backlogOpen, setBacklogOpen] = useState(false);
 	// Held in a ref as well so the keyboard handler can advance without being rebuilt on every character typed.
 	const advanceRef = useRef<() => void>(() => {});
+	// The looping music. One element reused across cues, so changing track does not leave the old one playing.
+	const musicRef = useRef<HTMLAudioElement | null>(null);
+	const [muted, setMuted] = useState(() => {
+		try {
+			return window.localStorage.getItem(MUTED_KEY) === "1";
+		} catch {
+			return false;
+		}
+	});
 
 	const beat = scene?.beats[beatIndex] ?? null;
 	const page = beat?.pages[pageIndex] ?? null;
@@ -229,6 +245,55 @@ export default function Story() {
 		}
 	}, [scene, sceneName, beatIndex]);
 
+	// The music follows the scene's current cue. A cue the game no longer ships simply leaves the stage quiet.
+	useEffect(() => {
+		const element = musicRef.current;
+		if (!element) {
+			return;
+		}
+		const cue = stage.bgm;
+		const wanted = cue && hasStoryAudio(cue) ? storyAudioUrl(cue) : null;
+		if (wanted === null) {
+			element.pause();
+			element.removeAttribute("src");
+			return;
+		}
+		if (!element.src.endsWith(wanted.slice(wanted.lastIndexOf("/") + 1))) {
+			element.src = wanted;
+		}
+		element.volume = MUSIC_VOLUME;
+		if (!muted) {
+			// A browser may refuse to start audio before the reader has interacted, and advancing the scene is that interaction.
+			void element.play().catch(() => {});
+		}
+	}, [stage.bgm, muted]);
+
+	// Sound effects fire once as their beat is reached, over whatever music is playing.
+	useEffect(() => {
+		if (muted || !beat) {
+			return;
+		}
+		for (const op of beat.ops) {
+			if (op.type !== "sfx" || !op.value || !hasStoryAudio(op.value)) {
+				continue;
+			}
+			const effect = new Audio(storyAudioUrl(op.value));
+			effect.volume = EFFECT_VOLUME;
+			void effect.play().catch(() => {});
+		}
+	}, [beat, muted]);
+
+	useEffect(() => {
+		try {
+			window.localStorage.setItem(MUTED_KEY, muted ? "1" : "0");
+		} catch {
+			// Storage being unavailable only costs the reader their preference, which is not worth failing the page over.
+		}
+		if (muted) {
+			musicRef.current?.pause();
+		}
+	}, [muted]);
+
 	const advance = useCallback(() => {
 		if (!scene || !beat) {
 			return;
@@ -274,6 +339,7 @@ export default function Story() {
 	}, [scene]);
 	const retry = useCallback(() => setAttempt((count) => count + 1), []);
 	const toggleAuto = useCallback(() => setAuto((current) => !current), []);
+	const toggleMuted = useCallback(() => setMuted((current) => !current), []);
 	const openBacklog = useCallback(() => setBacklogOpen(true), []);
 	const closeBacklog = useCallback(() => setBacklogOpen(false), []);
 	const changeSpeed = useCallback((_event: Event, value: number | number[]) => setSpeed(Array.isArray(value) ? (value[0] ?? 1) : value), []);
@@ -389,6 +455,9 @@ export default function Story() {
 							<Button size="small" variant={auto ? "contained" : "outlined"} onClick={toggleAuto}>
 								{auto ? "Auto on" : "Auto"}
 							</Button>
+							<Button size="small" onClick={toggleMuted}>
+								{muted ? "Sound off" : "Sound on"}
+							</Button>
 							<Button size="small" onClick={openBacklog}>
 								Backlog
 							</Button>
@@ -429,6 +498,9 @@ export default function Story() {
 					</>
 				)}
 			</Container>
+
+			{/* One long-lived element for the music. It sits outside the stage so redrawing a beat never restarts the track. */}
+			<Box component="audio" ref={musicRef} loop preload="none" aria-hidden sx={{ display: "none" }} />
 
 			<Drawer anchor="right" open={backlogOpen} onClose={closeBacklog}>
 				<Box sx={{ width: { xs: 300, sm: 420 }, p: 2 }} role="presentation">
