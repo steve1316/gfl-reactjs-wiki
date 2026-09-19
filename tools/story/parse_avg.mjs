@@ -306,6 +306,33 @@ export function parseBeat(line) {
 }
 
 /**
+ * Carry a comms window forward from the beat that opens it.
+ *
+ * A script marks a call once, on the line where the caller first speaks, and then says nothing more about it. The game keeps that
+ * character in the window for as long as they stay on stage, so a scene where someone calls in reads as one continuous call rather
+ * than a single framed line. There is no closing tag anywhere in the scripts, so leaving the stage is what ends it.
+ *
+ * @param {object[]} beats The beats in order, edited in place.
+ */
+function carryCommsWindows(beats) {
+	let calling = new Set();
+	for (const beat of beats) {
+		const present = new Set(beat.sprites.map((sprite) => sprite.prefab));
+		calling = new Set([...calling].filter((prefab) => present.has(prefab)));
+		for (const sprite of beat.sprites) {
+			if (sprite.tags.commsBox !== undefined) {
+				calling.add(sprite.prefab);
+			}
+		}
+		for (const sprite of beat.sprites) {
+			if (calling.has(sprite.prefab)) {
+				sprite.tags.commsBox = "";
+			}
+		}
+	}
+}
+
+/**
  * Parse a whole script.
  *
  * @param {string} source The script file's text.
@@ -326,5 +353,6 @@ export function parseScript(source) {
 		delete beat.unknown;
 		beats.push(beat);
 	}
+	carryCommsWindows(beats);
 	return { beats, unknown };
 }

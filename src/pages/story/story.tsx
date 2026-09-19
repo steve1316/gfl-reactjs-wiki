@@ -20,9 +20,9 @@ import FastForwardIcon from "@mui/icons-material/FastForward";
 import LoadError from "../../components/LoadError";
 import StoryPanelFrame from "../../components/StoryPanelFrame";
 import ScrollToTop from "../../components/ScrollToTop";
-import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl } from "../../lib/assets";
+import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl, storyUiUrl } from "../../lib/assets";
 import { loadStoryChapter, loadStoryIndex, loadStoryScene } from "../../lib/data";
-import { hasStoryAudio, hasStoryBackground, hasStorySprite, storySpriteStem } from "../../lib/processData";
+import { hasStoryAudio, hasStoryBackground, hasStorySprite, hasStoryUi, storySpriteStem } from "../../lib/processData";
 import { branchRegions, buildTimeline } from "../../lib/storyBranches";
 import type { StoryBeat, StoryChapter, StoryChapterSummary, StoryMission, StoryPage, StoryScene } from "../../types/story";
 
@@ -92,8 +92,61 @@ const BOX_WIDTH_PCT = 46;
 /** How far a character is dropped below the top of the stage, as a share of its height. */
 const SPRITE_DROP_PCT = 20;
 
+/**
+ * The window a character calling in is seen through, as shares of the stage's height.
+ *
+ * A comms character is not drawn whole: the game crops the sprite to head and shoulders and shows that inside a frame, which is
+ * what makes the beat read as a call rather than someone standing in the room. Measured against the game's own player, where the
+ * window is 330x480 of an 800-tall stage, sitting 10% down and centred on the sprite.
+ */
+const COMMS_WIDTH_CQH = 41.25;
+const COMMS_HEIGHT_CQH = 60;
+const COMMS_TOP_CQH = 10;
+
+/** The game's own comms frame, drawn around the window as a nine-slice. */
+const COMMS_FRAME = hasStoryUi() ? `url(${storyUiUrl("layerbord")})` : "none";
+
+/**
+ * How far the frame hangs outside the window it draws, again as shares of the stage's height.
+ *
+ * The art holds two frames offset from one another, so the drawn border is not symmetric: it sits further out on the left and the
+ * bottom than on the other two sides. Measured from where the frame's ink actually lands around a 330x480 window.
+ */
+const COMMS_FRAME_INSET = { top: -0.72, right: -0.63, bottom: -2.86, left: -2.27 };
+
+/**
+ * How thick each side of the frame is drawn, and which bands of the art fill it.
+ *
+ * The side slices are wider than half the art, so the browser squeezes them to meet in the middle: that is what turns the art's
+ * chunky corner brackets into the thin outline the game shows.
+ */
+const COMMS_FRAME_BORDER = { top: 4.6, right: 4.6, bottom: 7.5, left: 7.5 };
+const COMMS_FRAME_SLICE = "37.5% 37.5% 60% 60%";
+
+/**
+ * What backs the window, under the picture and the screen.
+ *
+ * The game's own window is opaque: the scene behind it does not show through at all, and its teal is the screen's doing rather
+ * than the backing's. Sampled across the game's window it reads a flat `rgb(15, 58, 58)`, which is what this screen over black
+ * composites to.
+ */
+const COMMS_BACKING = "#000000";
+
+/** The halftone screen laid over a caller, which is what makes the picture read as a feed rather than a person in the room. */
+const COMMS_SCREEN = "radial-gradient(rgba(204, 204, 204, 0.47) 0, rgba(0, 255, 255, 0.2) 0.6px)";
+const COMMS_SCREEN_SIZE = "3px 3px";
+
 /** How long a character takes to arrive, in milliseconds. The game's own player slides them in from 20px to the left. */
 const SPRITE_IN_MS = 200;
+
+/** The arrival itself, shared by a character on stage and one calling in so both enter the same way. */
+const SPRITE_IN = {
+	animation: `storySpriteIn ${SPRITE_IN_MS}ms ease-out both`,
+	"@keyframes storySpriteIn": {
+		from: { opacity: 0, transform: "translateX(calc(-50% - 20px))" },
+		to: { opacity: 1, transform: "translateX(-50%)" }
+	}
+};
 
 /** Carried on every link into a scene from inside the player, telling it to open at the start rather than resume. */
 const OPEN_AT_START = { restart: true };
@@ -142,10 +195,16 @@ const styles = {
 		width: "min(100cqw, calc(100cqh * 16 / 9))",
 		aspectRatio: "16 / 9",
 		overflow: "hidden",
-		bgcolor: "#05070c",
+		// What a blanked background shows through as. The scene's own picture covers it whenever the scene is not blanked.
+		bgcolor: "#000000",
+		transition: `background-color ${WASH_MS}ms ease`,
 		cursor: "pointer",
-		userSelect: "none"
+		userSelect: "none",
+		// Queried by the characters, so a comms window can be sized against the stage rather than against its own slot.
+		containerType: "size"
 	},
+	// The scene's picture, on its own layer so a beat that blanks the background fades it out and leaves the cast against the bare stage.
+	scene: { position: "absolute", inset: 0, transition: `opacity ${WASH_MS}ms ease` },
 	sprites: { position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" },
 	// One slot per character on stage, spread evenly across the full width: one sits centred, two at a third and two thirds.
 	// Each is a square the height of the stage, dropped so the character is framed from the waist up, as the game draws them.
@@ -155,13 +214,48 @@ const styles = {
 		height: "100%",
 		aspectRatio: "1 / 1",
 		transform: "translateX(-50%)",
-		animation: `storySpriteIn ${SPRITE_IN_MS}ms ease-out both`,
-		"@keyframes storySpriteIn": {
-			from: { opacity: 0, transform: "translateX(calc(-50% - 20px))" },
-			to: { opacity: 1, transform: "translateX(-50%)" }
-		}
+		...SPRITE_IN
 	},
 	spriteArt: { width: "100%", height: "100%", objectFit: "contain", objectPosition: "top", display: "block" },
+	// Where the window sits. It does not crop, because the frame is drawn hanging outside the window and would lose its outer edge.
+	comms: {
+		position: "absolute",
+		top: `${COMMS_TOP_CQH}cqh`,
+		width: `${COMMS_WIDTH_CQH}cqh`,
+		height: `${COMMS_HEIGHT_CQH}cqh`,
+		transform: "translateX(-50%)",
+		...SPRITE_IN
+	},
+	// The window itself: the sprite is drawn at its usual size inside and this crops it, so the crop lands on the same part of the
+	// character however tall the stage is.
+	commsCrop: { position: "absolute", inset: 0, overflow: "hidden", bgcolor: COMMS_BACKING },
+	// Drawn behind the caller, so the frame's own dark bands sit under them rather than over their face.
+	commsFrame: {
+		position: "absolute",
+		top: `${COMMS_FRAME_INSET.top}cqh`,
+		right: `${COMMS_FRAME_INSET.right}cqh`,
+		bottom: `${COMMS_FRAME_INSET.bottom}cqh`,
+		left: `${COMMS_FRAME_INSET.left}cqh`,
+		pointerEvents: "none",
+		borderStyle: "solid",
+		borderWidth: `${COMMS_FRAME_BORDER.top}cqh ${COMMS_FRAME_BORDER.right}cqh ${COMMS_FRAME_BORDER.bottom}cqh ${COMMS_FRAME_BORDER.left}cqh`,
+		borderImageSource: COMMS_FRAME,
+		borderImageSlice: COMMS_FRAME_SLICE,
+		borderImageRepeat: "stretch"
+	},
+	// The caller, drawn at the size a character on stage would be so the window crops the same part of them however tall the stage is.
+	commsArt: {
+		position: "absolute",
+		left: "50%",
+		top: `${SPRITE_DROP_PCT - COMMS_TOP_CQH}cqh`,
+		width: "100cqh",
+		height: "100cqh",
+		transform: "translateX(-50%)",
+		objectFit: "contain",
+		objectPosition: "top",
+		display: "block"
+	},
+	commsScreen: { position: "absolute", inset: 0, pointerEvents: "none", backgroundImage: COMMS_SCREEN, backgroundSize: COMMS_SCREEN_SIZE },
 	// Everything that sits along the bottom of the scene, stacked so a taller dialogue box pushes the hint up instead of meeting it.
 	bottomStack: { position: "absolute", left: 0, right: 0, bottom: "3.5%", display: "flex", flexDirection: "column", alignItems: "center", gap: 1, px: 1 },
 	// The dialogue box and the choice menu are the same panel in the same place, so they share it rather than each drawing their own.
@@ -301,6 +395,8 @@ interface Stage {
 	darkened: boolean;
 	/** Whether the scene is under the night tint. */
 	night: boolean;
+	/** What the background is blanked to, leaving the cast against that colour until a later beat brings the picture back. */
+	blankedTo: "black" | "white" | null;
 }
 
 /**
@@ -343,25 +439,16 @@ function sceneImages(beats: StoryBeat[], missionBackground?: string): string[] {
 }
 
 /**
- * The transition a beat opens with, or null when it simply cuts.
+ * Whether a beat opens with a flash rather than simply cutting.
  *
- * The scripts write a fade as a numbered pair, and a beat commonly carries both halves at once: it comes up out of black, says its
- * line, and drops back into black on the way out. They are transitions rather than a state the scene sits in, so a beat carrying
- * one still shows its own background and cast. Folding them into a lasting wash blacked out one beat in seven.
+ * Only `白屏闪光` is a flash, and the scripts use it three times in all. The numbered pairs are not flashes: they blank the
+ * background and hold it, which `stageAt` carries instead.
  *
  * @param beat The beat, or null.
- * @returns The colour to fade up from, or null.
+ * @returns Whether the beat opens with a flash.
  */
-function fadeAt(beat: StoryBeat | null): "black" | "white" | null {
-	for (const op of beat?.ops ?? []) {
-		if (op.type.startsWith("whitescreen")) {
-			return "white";
-		}
-		if (op.type.startsWith("blackscreen") || op.type.startsWith("fadePoint")) {
-			return "black";
-		}
-	}
-	return null;
+function fadeAt(beat: StoryBeat | null): boolean {
+	return (beat?.ops ?? []).some((op) => op.type === "whiteFlash");
 }
 
 /** A shake the script asked for on one beat. */
@@ -413,7 +500,7 @@ function pageText(page: StoryPage): string {
  * @returns The stage.
  */
 function stageAt(beats: StoryBeat[], upTo: number): Stage {
-	const stage: Stage = { background: null, bgm: null, darkened: false, night: false };
+	const stage: Stage = { background: null, bgm: null, darkened: false, night: false, blankedTo: null };
 	for (let index = 0; index <= upTo && index < beats.length; index++) {
 		for (const op of beats[index]?.ops ?? []) {
 			switch (op.type) {
@@ -423,6 +510,7 @@ function stageAt(beats: StoryBeat[], upTo: number): Stage {
 						// A new scene starts in the clear, or a dimming meant for the last one would hang over it.
 						stage.darkened = false;
 						stage.night = false;
+						stage.blankedTo = null;
 					}
 					break;
 				case "bgm":
@@ -438,6 +526,20 @@ function stageAt(beats: StoryBeat[], upTo: number): Stage {
 					break;
 				case "night":
 					stage.night = true;
+					break;
+				// The scripts write these as numbered pairs. The first blanks the background and the cast plays on against the bare
+				// colour, which is how a scene holds a beat apart without cutting away. The second brings the picture back.
+				case "blackscreenOn":
+				case "fadePointOn":
+					stage.blankedTo = "black";
+					break;
+				case "whitescreenOn":
+					stage.blankedTo = "white";
+					break;
+				case "blackscreenOff":
+				case "fadePointOff":
+				case "whitescreenOff":
+					stage.blankedTo = null;
 					break;
 				default:
 					break;
@@ -623,6 +725,7 @@ export default function Story() {
 					{
 						key: `${sprite.prefab}-${position}`,
 						prefab: sprite.prefab,
+						calling: sprite.tags.commsBox !== undefined,
 						// The expression the script asked for, or the plain pose when the game ships no art for it.
 						src: storySpriteUrl(stem, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0)
 					}
@@ -990,23 +1093,36 @@ export default function Story() {
 					<Box
 						// Keyed on the beat so a shake restarts when the reader reaches another one, rather than only on the first.
 						key={shake ? `shake-${beatIndex}` : "stage"}
-						sx={[styles.stage, { background: backing }, shake ? shakeSx(shake) : {}]}
+						sx={[styles.stage, { bgcolor: stage.blankedTo === "white" ? "#ffffff" : "#000000" }, shake ? shakeSx(shake) : {}]}
 						onClick={advance}
 						role="button"
 						tabIndex={-1}
 						aria-label="Advance the scene"
 					>
+						<Box sx={[styles.scene, { background: backing, opacity: stage.blankedTo === null ? 1 : 0 }]} />
+
 						<Box sx={styles.sprites}>
-							{cast.map((member, position) => (
-								<Box key={member.key} sx={[styles.spriteSlot, { left: `${(100 * (position + 1)) / (cast.length + 1)}%` }]}>
-									<Box component="img" src={member.src} alt={member.prefab} sx={styles.spriteArt} />
-								</Box>
-							))}
+							{cast.map((member, position) => {
+								const left = `${(100 * (position + 1)) / (cast.length + 1)}%`;
+								return member.calling ? (
+									<Box key={member.key} sx={[styles.comms, { left }]}>
+										<Box sx={styles.commsCrop}>
+											<Box component="img" src={member.src} alt={member.prefab} sx={styles.commsArt} />
+											<Box sx={styles.commsScreen} />
+										</Box>
+										<Box sx={styles.commsFrame} />
+									</Box>
+								) : (
+									<Box key={member.key} sx={[styles.spriteSlot, { left }]}>
+										<Box component="img" src={member.src} alt={member.prefab} sx={styles.spriteArt} />
+									</Box>
+								);
+							})}
 						</Box>
 
 						<Box sx={[styles.wash, { bgcolor: "#0a1020", opacity: stage.night ? 0.42 : 0 }]} />
 						<Box sx={[styles.wash, { bgcolor: "#000", opacity: stage.darkened ? 0.55 : 0 }]} />
-						{fade !== null && <Box key={`fade-${beatIndex}`} sx={[styles.fade, { bgcolor: fade === "white" ? "#ffffff" : "#000000" }]} />}
+						{fade && <Box key={`fade-${beatIndex}`} sx={[styles.fade, { bgcolor: "#ffffff" }]} />}
 
 						<Box sx={styles.stageControls} onClick={stopBubbling}>
 							{plates.map((plate) => (

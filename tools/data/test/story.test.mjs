@@ -155,3 +155,9 @@ test("a script skips blank lines and tallies its unknown tags", () => {
 	assert.equal(unknown.get("某个新标签"), 2);
 	assert.equal(Object.hasOwn(beats[0], "unknown"), false);
 });
+
+test("a comms window stays open until the caller leaves the stage", () => {
+	const { beats } = parseScript(["Alpha(0)<通讯框>;Beta(0)||:one", "Alpha(0);Beta(0)||:two", "Beta(0)||:three", "Alpha(0);Beta(0)||:four"].join("\n"));
+	const calling = beats.map((beat) => beat.sprites.filter((sprite) => sprite.tags.commsBox !== undefined).map((sprite) => sprite.prefab));
+	assert.deepEqual(calling, [["Alpha"], ["Alpha"], [], []]);
+});
