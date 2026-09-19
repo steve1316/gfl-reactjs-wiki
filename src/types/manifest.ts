@@ -68,6 +68,8 @@ export interface AssetsManifest {
 		backgrounds: string[];
 		/** Whether the dialogue chrome is published. */
 		ui: boolean;
+		/** Published audio cue names, lowercased. */
+		audio?: string[];
 	};
 	/** Faction emblem slugs that have art, such as `sangvis-ferri`. Absent until the emblems are published. */
 	factions?: string[];

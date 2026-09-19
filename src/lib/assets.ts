@@ -365,6 +365,16 @@ export function storyBackgroundUrl(code: string): string {
 }
 
 /**
+ * URL for a story music or sound cue.
+ *
+ * @param cue The cue name a script names, such as `BGM_Frontline`.
+ * @returns An absolute URL.
+ */
+export function storyAudioUrl(cue: string): string {
+	return join(ASSET_BASE, `story/audio/${cue.toLowerCase()}.opus`);
+}
+
+/**
  * URL for one piece of the game's dialogue chrome.
  *
  * @param name The piece's published stem, such as `layerbord`.

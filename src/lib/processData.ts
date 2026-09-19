@@ -186,6 +186,19 @@ export function hasStorySprite(prefab: string, expression = 0): boolean {
 }
 
 /**
+ * Whether a story audio cue is hosted.
+ *
+ * Some music the scripts name belongs to retired events and is no longer shipped, so a cue that is not listed plays nothing rather
+ * than asking for a file that does not exist.
+ *
+ * @param cue The cue name a script names.
+ * @returns True when the manifest lists that cue.
+ */
+export function hasStoryAudio(cue: string): boolean {
+	return manifest.story?.audio?.includes(cue.toLowerCase()) ?? false;
+}
+
+/**
  * Whether a story background is hosted.
  *
  * @param code The scene code the mission table names.
