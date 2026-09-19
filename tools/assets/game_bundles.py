@@ -1455,6 +1455,8 @@ def load_story(site_dir):
         A `(sprites, backgrounds)` pair, where `sprites` maps each prefab to the non-zero expression indices the scripts ask it for.
         Both are empty when no story data is generated yet.
     """
+    # `black` and `White` are entries in the game's background table but are washes rather than pictures, so there is nothing to fetch.
+    washes = {"black", "white"}
     story_dir = os.path.join(site_dir, "story")
     if not os.path.isdir(story_dir):
         return {}, []
@@ -1471,6 +1473,12 @@ def load_story(site_dir):
                     wanted = sprites.setdefault(sprite["prefab"], set())
                     if sprite.get("expression"):
                         wanted.add(sprite["expression"])
+                # A scene changes background mid-way far more often than its mission names one, and those are the ones that were
+                # being missed: the mission table names 383 backgrounds where the scripts between them ask for 600.
+                for op in beat.get("ops", []):
+                    value = op.get("value")
+                    if op.get("type") == "background" and value and value.lower() not in washes:
+                        backgrounds.add(value)
     for name in os.listdir(story_dir):
         if not name.startswith("chapter-") or not name.endswith(".json"):
             continue

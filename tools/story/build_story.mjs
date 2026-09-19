@@ -29,6 +29,9 @@ const SCRIPT_DIR = path.join("asset", "avgtxt");
 /** Where the generated story data is written. */
 const OUT_DIR = path.join("src", "data", "story");
 
+/** The game's background table, one name a line, indexed by a script's `BIN` tag. */
+const BACKGROUND_TABLE = "profiles.txt";
+
 /** Where each scene's beats are written, one file each. */
 const SCENE_DIR = path.join(OUT_DIR, "scenes");
 
@@ -58,6 +61,51 @@ export function sceneFile(name) {
  * @param {string} dir The upstream checkout.
  * @returns {Map<string, string>} Lowercased script name to its path.
  */
+/**
+ * Read the game's background table.
+ *
+ * A script names its background as `<BIN>n</BIN>`, and `n` indexes this file: one name a line, counted from zero. The names are the
+ * scene codes the art is published under, so `BIN 7` is the eighth line, `雪地`. Two of them, `black` and `White`, are washes rather
+ * than pictures and have no art to publish.
+ *
+ * @param {string} dir The upstream checkout.
+ * @returns {string[]} The background names, indexed as the scripts index them.
+ */
+function readBackgrounds(dir) {
+	const file = path.join(dir, SCRIPT_DIR, BACKGROUND_TABLE);
+	if (!fs.existsSync(file)) {
+		return [];
+	}
+	return fs
+		.readFileSync(file, "utf8")
+		.split(/\r?\n/)
+		.map((line) => line.trim());
+}
+
+/**
+ * Replace each background op's index with the name it points at.
+ *
+ * Done here rather than in the player so a scene ships the name of its own background, and nothing downstream has to carry a
+ * 906-entry table to read one scene.
+ *
+ * @param {object[]} beats The scene's beats, edited in place.
+ * @param {string[]} backgrounds The background table.
+ */
+function resolveBackgrounds(beats, backgrounds) {
+	for (const beat of beats) {
+		for (const op of beat.ops) {
+			// Only `BIN` is an index. The two `Pic` tags in the data carry a sprite list and are left alone.
+			if (op.type !== "background" || op.raw !== "BIN" || !/^\d+$/.test(op.value ?? "")) {
+				continue;
+			}
+			const name = backgrounds[Number(op.value)];
+			if (name) {
+				op.value = name;
+			}
+		}
+	}
+}
+
 function indexScripts(dir) {
 	const root = path.join(dir, SCRIPT_DIR);
 	const found = new Map();
@@ -98,6 +146,7 @@ function parts(value) {
  */
 export function buildStory(upstream, dir) {
 	const scripts = indexScripts(dir);
+	const backgrounds = readBackgrounds(dir);
 	const playback = upstream.stc("story_playback");
 	const missions = upstream.stc("story_util");
 
@@ -148,6 +197,7 @@ export function buildStory(upstream, dir) {
 					continue;
 				}
 				const parsed = parseScript(fs.readFileSync(file, "utf8"));
+				resolveBackgrounds(parsed.beats, backgrounds);
 				for (const [tag, count] of parsed.unknown) {
 					unknownTags.set(tag, (unknownTags.get(tag) ?? 0) + count);
 				}

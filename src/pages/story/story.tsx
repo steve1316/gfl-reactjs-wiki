@@ -78,14 +78,12 @@ const EFFECT_VOLUME = 0.6;
 const DIALOGUE_PANEL = hasStoryUi() ? `url(${storyUiUrl("dialogueborder_1")})` : "none";
 
 /**
- * The `BIN` values that name no picture at all, so the scene plays against black.
+ * The two entries in the game's background table that are a wash rather than a picture, so they have no art to publish.
  *
- * Most of a script's `BIN` numbers are scene-local indices the game resolves in code it does not ship, but these two are used the
- * same way everywhere, to drop the scene to black between places. `9` alone is 31% of every background change in the data. `10`
- * sounds like white, and the game's own player even names its file that way, but that file is a near-transparent black over a
- * black page, so it reads as black there too.
+ * `White` reads as its name suggests, but the game's own player draws it as a near-transparent black over a black page, so it
+ * comes out black there. Ours follows that rather than the name.
  */
-const BIN_BLACKOUTS = new Set(["9", "10"]);
+const BACKGROUND_WASHES = new Set(["black", "white"]);
 
 /** How wide the dialogue box sits, as a share of the stage, matching the game's own layout. */
 const BOX_WIDTH_PCT = 46;
@@ -546,11 +544,16 @@ export default function Story() {
 	const scenery = useMemo(() => (mission?.background && hasStoryBackground(mission.background) ? storyBackgroundUrl(mission.background) : null), [mission]);
 	// A beat asking for black or white overrides the scene's own picture, which is how the scripts cut between places.
 	const backing = useMemo(() => {
-		if (stage.background !== null && BIN_BLACKOUTS.has(stage.background)) {
+		if (stage.background !== null && BACKGROUND_WASHES.has(stage.background.toLowerCase())) {
 			return "#000000";
 		}
+		// The beat names its own background now, so the mission's is only the opening shot before any beat has changed it.
+		const code = stage.background ?? mission?.background ?? null;
+		if (code !== null && hasStoryBackground(code)) {
+			return `url(${storyBackgroundUrl(code)}) center / cover no-repeat`;
+		}
 		return scenery ? `url(${scenery}) center / cover no-repeat` : backdrop(stage.background);
-	}, [stage.background, scenery]);
+	}, [stage.background, scenery, mission]);
 	const backlog = useMemo(() => beats.slice(0, beatIndex + 1).flatMap((entry) => entry.pages.map((entryPage) => ({ speaker: entry.speaker, text: pageText(entryPage) }))), [beats, beatIndex]);
 
 	useEffect(() => {
