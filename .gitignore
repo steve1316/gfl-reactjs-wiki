@@ -42,9 +42,12 @@ tools/assets/.cache/
 tools/assets/.staging/
 tools/assets/.staging-*/
 
+# Third-party tools fetched for the asset pipeline, such as the vgmstream decoder.
+tools/assets/.tools/
+
 # Run logs from the importer and the asset tools, which are written to the repo root on purpose so they can be followed live.
 *.log
-story_publish.json
+*_publish.json
 
 # superpowers brainstorming session files
 .superpowers/
