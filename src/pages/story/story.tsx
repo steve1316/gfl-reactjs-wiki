@@ -148,6 +148,17 @@ const SPRITE_IN = {
 	}
 };
 
+/**
+ * Where the player stops laying its chrome over the scene and stacks it underneath instead.
+ *
+ * Keyed on the viewport's shape rather than on `orientation`, so a narrow desktop window gets the readable layout too instead of
+ * being a case nobody thought about. A phone in portrait is 0.46, a phone in landscape 2.45, a tablet either way 0.75 or 1.33.
+ */
+const STACKED = "@media (max-aspect-ratio: 13/10)";
+
+/** How many spoken lines the stacked layout keeps above the current one, to fill the space the 16:9 scene cannot use. */
+const TRANSCRIPT_LINES = 4;
+
 /** Carried on every link into a scene from inside the player, telling it to open at the start rather than resume. */
 const OPEN_AT_START = { restart: true };
 
@@ -189,11 +200,20 @@ const styles = {
 			...queries
 		};
 	},
-	stage: {
+	// Holds the scene and its chrome. Above the breakpoint it is exactly the scene's box and the chrome is laid over it; below, it
+	// becomes a column and the chrome falls into flow underneath.
+	player: {
 		position: "relative",
 		// Whichever of the two the space allows: a `width: 100%` with a capped height stretched the scene instead of shrinking it.
 		width: "min(100cqw, calc(100cqh * 16 / 9))",
 		aspectRatio: "16 / 9",
+		[STACKED]: { width: "100%", height: "100%", aspectRatio: "auto", display: "flex", flexDirection: "column" }
+	},
+	stage: {
+		position: "relative",
+		width: "100%",
+		aspectRatio: "16 / 9",
+		flex: "none",
 		overflow: "hidden",
 		// What a blanked background shows through as. The scene's own picture covers it whenever the scene is not blanked.
 		bgcolor: "#000000",
@@ -257,11 +277,33 @@ const styles = {
 	},
 	commsScreen: { position: "absolute", inset: 0, pointerEvents: "none", backgroundImage: COMMS_SCREEN, backgroundSize: COMMS_SCREEN_SIZE },
 	// Everything that sits along the bottom of the scene, stacked so a taller dialogue box pushes the hint up instead of meeting it.
-	bottomStack: { position: "absolute", left: 0, right: 0, bottom: "3.5%", display: "flex", flexDirection: "column", alignItems: "center", gap: 1, px: 1 },
+	bottomStack: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: "3.5%",
+		display: "flex",
+		flexDirection: "column",
+		alignItems: "center",
+		gap: 1,
+		px: 1,
+		// Below the breakpoint it takes whatever height the scene leaves, so the panel grows rather than the page ending in black.
+		[STACKED]: { position: "static", flex: 1, minHeight: 0, alignItems: "stretch", px: 1.5, pt: 1.5, pb: 1 }
+	},
+	// The lines already read, kept above the current one where the stacked layout has room for them. It takes the slack the scene
+	// leaves rather than the panel doing it, since the panel's frame is one drawing and stretching it warps the notch and the bar.
+	transcript: {
+		display: "none",
+		[STACKED]: { display: "flex", flexDirection: "column", justifyContent: "flex-end", flex: 1, minHeight: 0, overflow: "hidden", px: 0.5, pb: 0.5 }
+	},
+	transcriptLine: { fontSize: 14, lineHeight: 1.55, color: "text.disabled", mb: 0.75 },
+	transcriptSpeaker: { fontWeight: 700, color: "text.secondary" },
 	// The dialogue box and the choice menu are the same panel in the same place, so they share it rather than each drawing their own.
 	panel: {
 		position: "relative",
 		width: { xs: "94%", sm: `${BOX_WIDTH_PCT}%` },
+		// Never shrinks: it is a flex item in the stacked column, and letting it give way clipped the last line of a long beat.
+		[STACKED]: { width: "100%", flexShrink: 0 },
 		boxSizing: "border-box",
 		// The panel carries its own mark in the bottom right, so the text is kept clear of that corner.
 		p: { xs: 1.5, sm: 2.5 },
@@ -272,7 +314,7 @@ const styles = {
 	},
 	// One height, whatever the beat holds. The panel art carries a notch in its top right, and letting the box grow for a longer
 	// line or for the end row restretched that art until the text sat under it.
-	box: { position: "relative", minHeight: { xs: "8.6em", sm: "9.6em" } },
+	box: { position: "relative", minHeight: { xs: "8.6em", sm: "9.6em" }, [STACKED]: { minHeight: "13em" } },
 	// The panel's flowing content, lifted over the drawn frame. The end row is positioned against the panel instead, so it is
 	// deliberately left out of this.
 	panelBody: { position: "relative" },
@@ -282,8 +324,26 @@ const styles = {
 	wash: { position: "absolute", inset: 0, pointerEvents: "none", transition: `opacity ${WASH_MS}ms ease` },
 	// A beat's own transition, played once as it arrives and then gone, rather than a wash left sitting over the scene.
 	fade: { position: "absolute", inset: 0, pointerEvents: "none", animation: `storyFade ${WASH_MS}ms ease-out both`, "@keyframes storyFade": { from: { opacity: 1 }, to: { opacity: 0 } } },
-	// The game keeps its controls in the top left of the scene itself, as small square plates rather than a toolbar.
-	stageControls: { position: "absolute", top: "1%", left: "1.3%", display: "flex", gap: { xs: 0.5, sm: 1 } },
+	// The game keeps its controls in the top left of the scene itself, as small square plates rather than a toolbar. Below the
+	// breakpoint they become a row under the scene, where a thumb reaches them and they are not eating the picture.
+	stageControls: {
+		position: "absolute",
+		top: "1%",
+		left: "1.3%",
+		display: "flex",
+		gap: { xs: 0.5, sm: 1 },
+		[STACKED]: {
+			position: "static",
+			flex: "none",
+			justifyContent: "center",
+			px: 1,
+			py: 1,
+			bgcolor: "rgba(0, 0, 0, 0.35)",
+			borderTop: "1px solid",
+			borderBottom: "1px solid",
+			borderColor: "divider"
+		}
+	},
 	stageButton: {
 		minWidth: 0,
 		// Eight plates at full size overrun a phone, so they lose their labels and some of their padding first.
@@ -372,7 +432,17 @@ const styles = {
 	// started at the very top of the box ran straight into it.
 	speaker: { fontWeight: 800, color: "secondary.main", mb: 0.5, lineHeight: 1.6, height: "1.6em" },
 	// A fixed run of lines, scrolling past it, so a one-line beat and a three-line beat leave the box the same shape.
-	text: { whiteSpace: "pre-wrap", lineHeight: 1.7, height: "3.4em", overflowY: "auto" },
+	// A fixed height, so the panel's frame is drawn at one size whatever the beat holds. Two lines is right at 46% of a wide stage
+	// and far too few at 384px, where the same sentence wraps to four, so the stacked layout gets its own.
+	text: {
+		whiteSpace: "pre-wrap",
+		lineHeight: 1.7,
+		height: "3.4em",
+		overflowY: "auto",
+		// The frame's amber bar reaches across the top right. At 46% of a wide stage no line is long enough to meet it; at 384px
+		// every line is, so the first one is cut short around it the way text wraps around a picture.
+		[STACKED]: { height: "8.5em", "&::before": { content: '""', float: "right", width: "31%", height: "1.7em" } }
+	},
 	caret: { display: "inline-block", width: "0.5em", textAlign: "center", opacity: 0.7 },
 	backlogLine: { py: 0.75, borderBottom: "1px solid", borderColor: "divider" }
 } satisfies Record<string, SxProps<Theme>>;
@@ -759,6 +829,13 @@ export default function Story() {
 		return scenery ? `url(${scenery}) center / cover no-repeat` : backdrop(stage.background);
 	}, [stage.background, scenery, mission]);
 	const backlog = useMemo(() => beats.slice(0, beatIndex + 1).flatMap((entry) => entry.pages.map((entryPage) => ({ speaker: entry.speaker, text: pageText(entryPage) }))), [beats, beatIndex]);
+	// The last few lines actually read, for the stacked layout to show above the current one. Bounded at the current page rather
+	// than the current beat, since a beat holds several pages and the later ones have not been reached yet.
+	const transcript = useMemo(() => {
+		const earlier = beats.slice(0, beatIndex).flatMap((entry) => entry.pages.map((entryPage) => ({ speaker: entry.speaker, text: pageText(entryPage) })));
+		const read = beat === null ? [] : beat.pages.slice(0, pageIndex).map((entryPage) => ({ speaker: beat.speaker, text: pageText(entryPage) }));
+		return [...earlier, ...read].slice(-TRANSCRIPT_LINES);
+	}, [beats, beatIndex, beat, pageIndex]);
 
 	useEffect(() => {
 		document.title = mission ? `${mission.title} - Story` : "Story";
@@ -1089,15 +1166,11 @@ export default function Story() {
 					<CircularProgress aria-label="Loading the scene" />
 				</Box>
 			) : (
-				<>
+				<Box sx={styles.player} onClick={advance} role="button" tabIndex={-1} aria-label="Advance the scene">
 					<Box
 						// Keyed on the beat so a shake restarts when the reader reaches another one, rather than only on the first.
 						key={shake ? `shake-${beatIndex}` : "stage"}
 						sx={[styles.stage, { bgcolor: stage.blankedTo === "white" ? "#ffffff" : "#000000" }, shake ? shakeSx(shake) : {}]}
-						onClick={advance}
-						role="button"
-						tabIndex={-1}
-						aria-label="Advance the scene"
 					>
 						<Box sx={[styles.scene, { background: backing, opacity: stage.blankedTo === null ? 1 : 0 }]} />
 
@@ -1124,116 +1197,119 @@ export default function Story() {
 						<Box sx={[styles.wash, { bgcolor: "#000", opacity: stage.darkened ? 0.55 : 0 }]} />
 						{fade && <Box key={`fade-${beatIndex}`} sx={[styles.fade, { bgcolor: "#ffffff" }]} />}
 
-						<Box sx={styles.stageControls} onClick={stopBubbling}>
-							{plates.map((plate) => (
-								<Button
-									key={plate.key}
-									variant="outlined"
-									sx={[styles.stageButton, plate.gap ? styles.plateGap : {}, plate.running ? styles.stageButtonRunning : {}]}
-									onClick={plate.onClick}
-									disabled={plate.disabled}
-									aria-label={plate.aria}
-								>
-									{plate.icon}
-									<Box component="span" sx={styles.stageButtonLabel}>
-										{plate.label}
-									</Box>
-								</Button>
-							))}
-						</Box>
-
 						<Box sx={styles.hud}>
 							{mission?.title ?? sceneName} &middot; Beat {beatIndex + 1} of {beats.length}
 							{stage.bgm ? ` \u00b7 ${stage.bgm}` : ""}
 						</Box>
-
-						<Box sx={styles.bottomStack}>
-							{hintOpen && (
-								<Box sx={styles.hint} onClick={stopBubbling}>
-									<span>
-										<Box component="kbd" sx={styles.key}>
-											Space
-										</Box>
-										or
-										<Box component="kbd" sx={styles.key}>
-											&rarr;
-										</Box>
-										next line
-									</span>
-									<span>
-										<Box component="kbd" sx={styles.key}>
-											&larr;
-										</Box>
-										back
-									</span>
-									<span>
-										<Box component="kbd" sx={styles.key}>
-											Esc
-										</Box>
-										menu
-									</span>
-									<Button size="small" color="inherit" onClick={dismissHint}>
-										Got it
-									</Button>
-								</Box>
-							)}
-
-							{pending ? (
-								<Box sx={[styles.panel, styles.choices]} onClick={stopBubbling}>
-									<StoryPanelFrame marked={false} />
-									<Typography variant="caption" color="text.secondary">
-										Choose
-									</Typography>
-									{pending.options.map((option) => (
-										<Button
-											key={option.label}
-											size="small"
-											variant="outlined"
-											color="secondary"
-											sx={styles.choiceButton}
-											onClick={() => choose(timeline.pendingIndex, option.label)}
-										>
-											{option.text}
-										</Button>
-									))}
-								</Box>
-							) : (
-								<Box sx={[styles.panel, styles.box]}>
-									<StoryPanelFrame />
-									<Box sx={styles.panelBody}>
-										{/* Always drawn, so narration starts on the same line a spoken beat does rather than riding up into the frame. */}
-										<Typography variant="subtitle2" sx={styles.speaker} aria-hidden={!beat?.speaker}>
-											{beat?.speaker ?? ""}
-										</Typography>
-										<Typography variant="body1" sx={styles.text}>
-											{renderTyped(page, typed)}
-											{!done && (
-												<Box component="span" sx={styles.caret}>
-													|
-												</Box>
-											)}
-										</Typography>
-									</Box>
-									{ended && (
-										<Stack direction="row" spacing={1.5} sx={styles.ending} onClick={stopBubbling}>
-											<Box component="span" sx={styles.endingLabel}>
-												Scene end.
-											</Box>
-											{nextScene && (
-												<Button size="small" color="secondary" component={RouterLink} to={`/story/${chapterId}/${encodeURIComponent(nextScene)}`} state={OPEN_AT_START}>
-													Next scene
-												</Button>
-											)}
-											<Button size="small" onClick={restart}>
-												Read again
-											</Button>
-										</Stack>
-									)}
-								</Box>
-							)}
-						</Box>
 					</Box>
-				</>
+
+					<Box sx={styles.stageControls} onClick={stopBubbling}>
+						{plates.map((plate) => (
+							<Button
+								key={plate.key}
+								variant="outlined"
+								sx={[styles.stageButton, plate.gap ? styles.plateGap : {}, plate.running ? styles.stageButtonRunning : {}]}
+								onClick={plate.onClick}
+								disabled={plate.disabled}
+								aria-label={plate.aria}
+							>
+								{plate.icon}
+								<Box component="span" sx={styles.stageButtonLabel}>
+									{plate.label}
+								</Box>
+							</Button>
+						))}
+					</Box>
+
+					<Box sx={styles.bottomStack}>
+						{hintOpen && (
+							<Box sx={styles.hint} onClick={stopBubbling}>
+								<span>
+									<Box component="kbd" sx={styles.key}>
+										Space
+									</Box>
+									or
+									<Box component="kbd" sx={styles.key}>
+										&rarr;
+									</Box>
+									next line
+								</span>
+								<span>
+									<Box component="kbd" sx={styles.key}>
+										&larr;
+									</Box>
+									back
+								</span>
+								<span>
+									<Box component="kbd" sx={styles.key}>
+										Esc
+									</Box>
+									menu
+								</span>
+								<Button size="small" color="inherit" onClick={dismissHint}>
+									Got it
+								</Button>
+							</Box>
+						)}
+
+						{/* Only drawn where the chrome is stacked, since the overlay layout has no room for it and the Log covers it there. */}
+						<Box sx={styles.transcript} aria-hidden>
+							{transcript.map((entry, index) => (
+								<Typography key={`${entry.speaker ?? ""}-${index}`} sx={styles.transcriptLine}>
+									{entry.speaker && <Box component="span" sx={styles.transcriptSpeaker}>{`${entry.speaker}: `}</Box>}
+									{entry.text}
+								</Typography>
+							))}
+						</Box>
+
+						{pending ? (
+							<Box sx={[styles.panel, styles.choices]} onClick={stopBubbling}>
+								<StoryPanelFrame marked={false} />
+								<Typography variant="caption" color="text.secondary">
+									Choose
+								</Typography>
+								{pending.options.map((option) => (
+									<Button key={option.label} size="small" variant="outlined" color="secondary" sx={styles.choiceButton} onClick={() => choose(timeline.pendingIndex, option.label)}>
+										{option.text}
+									</Button>
+								))}
+							</Box>
+						) : (
+							<Box sx={[styles.panel, styles.box]}>
+								<StoryPanelFrame />
+								<Box sx={styles.panelBody}>
+									{/* Always drawn, so narration starts on the same line a spoken beat does rather than riding up into the frame. */}
+									<Typography variant="subtitle2" sx={styles.speaker} aria-hidden={!beat?.speaker}>
+										{beat?.speaker ?? ""}
+									</Typography>
+									<Typography variant="body1" sx={styles.text}>
+										{renderTyped(page, typed)}
+										{!done && (
+											<Box component="span" sx={styles.caret}>
+												|
+											</Box>
+										)}
+									</Typography>
+								</Box>
+								{ended && (
+									<Stack direction="row" spacing={1.5} sx={styles.ending} onClick={stopBubbling}>
+										<Box component="span" sx={styles.endingLabel}>
+											Scene end.
+										</Box>
+										{nextScene && (
+											<Button size="small" color="secondary" component={RouterLink} to={`/story/${chapterId}/${encodeURIComponent(nextScene)}`} state={OPEN_AT_START}>
+												Next scene
+											</Button>
+										)}
+										<Button size="small" onClick={restart}>
+											Read again
+										</Button>
+									</Stack>
+								)}
+							</Box>
+						)}
+					</Box>
+				</Box>
 			)}
 
 			{/* One long-lived element for the music. It sits outside the stage so redrawing a beat never restarts the track. */}
