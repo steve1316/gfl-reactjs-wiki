@@ -2,16 +2,28 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 
-import { Box, Button, Chip, CircularProgress, Container, Drawer, Slider, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Drawer, Slider, Stack, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
+
+import MenuIcon from "@mui/icons-material/Menu";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ReplayIcon from "@mui/icons-material/Replay";
+import KeyboardIcon from "@mui/icons-material/Keyboard";
+import HistoryIcon from "@mui/icons-material/History";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
+import FastForwardIcon from "@mui/icons-material/FastForward";
 
 import LoadError from "../../components/LoadError";
 import ScrollToTop from "../../components/ScrollToTop";
 import { storyAudioUrl, storyBackgroundUrl, storySpriteUrl, storyUiUrl } from "../../lib/assets";
-import { loadStoryChapter, loadStoryScene } from "../../lib/data";
+import { loadStoryChapter, loadStoryIndex, loadStoryScene } from "../../lib/data";
 import { hasStoryAudio, hasStoryBackground, hasStorySprite, hasStoryUi, storySpriteStem } from "../../lib/processData";
 import { branchRegions, buildTimeline } from "../../lib/storyBranches";
-import type { StoryBeat, StoryChapter, StoryPage, StoryScene } from "../../types/story";
+import type { StoryBeat, StoryChapter, StoryChapterSummary, StoryPage, StoryScene } from "../../types/story";
 
 /** How long one character takes to type at the middle speed, in milliseconds. */
 const TYPE_MS = 28;
@@ -24,6 +36,26 @@ const PROGRESS_KEY = "storyProgress";
 
 /** Where the reader's choice to silence the story is remembered. */
 const MUTED_KEY = "storyMuted";
+
+/** Where the fact that the reader has already been shown the keys is remembered. */
+const HINT_KEY = "storyKeysSeen";
+
+/**
+ * The text speed slider: how many characters a second, as a multiple of `TYPE_MS`.
+ *
+ * It opens at half the old default, which read too fast to follow, and tops out at what used to be the default.
+ */
+const SPEED_MIN = 0.25;
+const SPEED_MAX = 1;
+const SPEED_STEP = 0.25;
+const SPEED_DEFAULT = 0.5;
+
+/** The game's own playback types, as the headings the scene menu groups chapters under. */
+const CHAPTER_GROUPS: { type: number; label: string }[] = [
+	{ type: 1, label: "Main Story" },
+	{ type: 2, label: "Story Events" },
+	{ type: 3, label: "Minor Events" }
+];
 
 /** How loud the music sits under the dialogue, and how loud a sound effect fires over it. */
 const MUSIC_VOLUME = 0.35;
@@ -38,8 +70,19 @@ const EFFECT_VOLUME = 0.6;
  */
 const DIALOGUE_PANEL = hasStoryUi() ? `url(${storyUiUrl("dialogueborder_1")})` : "none";
 
-/** The game's own comms frame, drawn around a character who is calling in rather than present. */
-const COMMS_FRAME = hasStoryUi() ? `url(${storyUiUrl("layerbord")})` : "none";
+/**
+ * The `BIN` values that name a flat wash rather than one of the scene's pictures.
+ *
+ * Most of a script's `BIN` numbers are scene-local indices the game resolves in code it does not ship, but these two are used the
+ * same way everywhere: to drop to black between scenes, or flash to white. `9` alone is 31% of every background change in the data.
+ */
+const BIN_WASHES: Record<string, string> = { "9": "#000000", "10": "#ffffff" };
+
+/** How wide the dialogue box sits, as a share of the stage, matching the game's own layout. */
+const BOX_WIDTH_PCT = 46;
+
+/** How far a character is dropped below the top of the stage, as a share of its height. */
+const SPRITE_DROP_PCT = 20;
 
 /** How long a screen fade takes to wash in or out, in milliseconds. */
 const WASH_MS = 450;
@@ -51,35 +94,30 @@ const SHAKE_UNIT = 0.0015;
 const SHAKE_MAX_S = 1.2;
 
 const styles = {
-	stage: { position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 2, overflow: "hidden", bgcolor: "#05070c", cursor: "pointer", userSelect: "none" },
-	sprites: { position: "absolute", inset: 0, display: "flex", alignItems: "stretch", justifyContent: "space-between", px: { xs: 1, sm: 4 } },
-	// Lifted just clear of the dialogue box, so a character stands on the scene's ground rather than behind the text.
-	spriteSide: { height: "100%", alignItems: "flex-end", pb: "15%" },
-	spriteArt: { height: "88%", width: "auto", maxWidth: { xs: 160, sm: 320 }, objectFit: "contain", objectPosition: "bottom", display: "block" },
-	// A character calling in sits inside the game's comms frame instead of standing on the scene's ground.
-	comms: {
-		height: "58%",
-		aspectRatio: "256 / 208",
-		alignSelf: "center",
-		backgroundImage: COMMS_FRAME,
-		backgroundSize: "100% 100%",
-		backgroundRepeat: "no-repeat",
-		display: "flex",
-		alignItems: "flex-end",
-		justifyContent: "center",
+	// The scene takes the whole of what the navbar leaves, and sits centred in it when the window is taller than 16:9.
+	main: { height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", bgcolor: "#05070c" },
+	stage: {
+		position: "relative",
+		width: "100%",
+		aspectRatio: "16 / 9",
+		maxHeight: "100%",
 		overflow: "hidden",
-		// Keeps the character off the frame's own border and its lettering.
-		px: "9%",
-		pt: "8%",
-		pb: "14%"
+		bgcolor: "#05070c",
+		cursor: "pointer",
+		userSelect: "none"
 	},
-	commsArt: { height: "100%", width: "100%", objectFit: "contain", objectPosition: "bottom", display: "block" },
+	sprites: { position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" },
+	// One slot per character on stage, spread evenly across the full width: one sits centred, two at a third and two thirds.
+	// Each is a square the height of the stage, dropped so the character is framed from the waist up, as the game draws them.
+	spriteSlot: { position: "absolute", top: `${SPRITE_DROP_PCT}%`, height: "100%", aspectRatio: "1 / 1", transform: "translateX(-50%)" },
+	spriteArt: { width: "100%", height: "100%", objectFit: "contain", objectPosition: "top", display: "block" },
 	// The dialogue box and the choice menu are the same panel in the same place, so they share it rather than each drawing their own.
 	panel: {
 		position: "absolute",
-		left: 0,
-		right: 0,
-		bottom: 0,
+		left: "50%",
+		transform: "translateX(-50%)",
+		width: { xs: "94%", sm: `${BOX_WIDTH_PCT}%` },
+		bottom: "3.5%",
 		// The panel carries its own mark in the bottom right, so the text is kept clear of that corner.
 		p: { xs: 1.5, sm: 2.5 },
 		pb: { xs: 2.5, sm: 3.5 },
@@ -89,13 +127,75 @@ const styles = {
 		// Behind the panel in case it has not loaded, so the text never sits straight on the scene art.
 		bgcolor: "rgba(6, 10, 18, 0.84)"
 	},
-	box: { minHeight: "34%" },
+	box: { minHeight: "16%" },
 	// The choice menu takes the dialogue box's place, so the stage behind it stays visible while the reader decides.
 	choices: { display: "flex", flexDirection: "column", gap: 1 },
-	// The washes and tints sit over the scene but under the dialogue, so a line spoken over a blackout is still readable.
+	// The tints sit over the scene but under the dialogue, so a line spoken over a darkened scene is still readable.
 	wash: { position: "absolute", inset: 0, pointerEvents: "none", transition: `opacity ${WASH_MS}ms ease` },
-	// A vignette rather than a full wash: the game's "black point" closes the scene in from the edges.
-	vignette: { background: "radial-gradient(circle, rgba(0,0,0,0) 20%, rgba(0,0,0,0.92) 78%)" },
+	// A beat's own transition, played once as it arrives and then gone, rather than a wash left sitting over the scene.
+	fade: { position: "absolute", inset: 0, pointerEvents: "none", animation: `storyFade ${WASH_MS}ms ease-out both`, "@keyframes storyFade": { from: { opacity: 1 }, to: { opacity: 0 } } },
+	// The game keeps its controls in the top left of the scene itself, as small square plates rather than a toolbar.
+	stageControls: { position: "absolute", top: "1%", left: "1.3%", display: "flex", gap: { xs: 0.5, sm: 1 } },
+	stageButton: {
+		minWidth: 0,
+		// Eight plates at full size overrun a phone, so they lose their labels and some of their padding first.
+		width: { xs: 36, sm: 45 },
+		height: { xs: 36, sm: 45 },
+		p: 0.25,
+		flexDirection: "column",
+		gap: 0,
+		color: "common.white",
+		borderColor: "rgba(255, 255, 255, 0.53)",
+		bgcolor: "rgba(0, 0, 0, 0.35)",
+		borderRadius: "3px",
+		lineHeight: 1,
+		textTransform: "none",
+		"&:hover": { borderColor: "common.white", bgcolor: "rgba(0, 0, 0, 0.6)" }
+	},
+	stageButtonLabel: { fontSize: 10, lineHeight: 1.1, display: { xs: "none", sm: "block" } },
+	// A gap opens before each group of plates, so navigation and playback read as separate sets rather than one long row.
+	plateGap: { ml: { xs: 1, sm: 1.75 } },
+	// Where the scene stands, quietly, out of the way of the art. It carries its own scrim, since plenty of scenes play on white.
+	hud: {
+		position: "absolute",
+		right: "1.3%",
+		bottom: "1.4%",
+		px: 1,
+		py: 0.25,
+		borderRadius: "3px",
+		bgcolor: "rgba(0, 0, 0, 0.45)",
+		fontSize: 12,
+		color: "rgba(255, 255, 255, 0.85)",
+		pointerEvents: "none"
+	},
+	// The keys, shown once and then only on request.
+	hint: {
+		position: "absolute",
+		left: "50%",
+		transform: "translateX(-50%)",
+		bottom: "24%",
+		display: "flex",
+		alignItems: "center",
+		flexWrap: "wrap",
+		justifyContent: "center",
+		rowGap: 0.5,
+		columnGap: 2,
+		maxWidth: "92%",
+		px: 2,
+		py: 1,
+		bgcolor: "rgba(8, 12, 20, 0.92)",
+		border: "1px solid",
+		borderColor: "rgba(255, 255, 255, 0.25)",
+		borderRadius: 1,
+		fontSize: 13
+	},
+	key: { display: "inline-block", px: 0.75, mx: 0.25, borderRadius: "3px", bgcolor: "#262b36", border: "1px solid #454f63", borderBottomWidth: "2px", fontSize: 12 },
+	menuRow: { display: "flex", alignItems: "baseline", gap: 1.25, px: 2, py: 0.75, fontSize: 13, borderLeft: "3px solid transparent", cursor: "pointer", "&:hover": { bgcolor: "action.hover" } },
+	menuRowOn: { bgcolor: "action.selected", borderLeftColor: "secondary.main" },
+	menuLabel: { color: "text.secondary", minWidth: 44, fontVariantNumeric: "tabular-nums" },
+	menuCount: { ml: "auto", color: "text.disabled", fontSize: 11 },
+	link: { textDecoration: "none", color: "text.primary" },
+	menuHead: { px: 2, pt: 1.5, pb: 0.5, fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: "secondary.main", fontWeight: 700 },
 	choiceButton: { justifyContent: "flex-start", textAlign: "left", textTransform: "none", lineHeight: 1.5 },
 	speaker: { fontWeight: 800, color: "secondary.main", mb: 0.5 },
 	text: { whiteSpace: "pre-wrap", lineHeight: 1.7 },
@@ -117,14 +217,32 @@ interface Stage {
 	background: string | null;
 	/** The music cue currently playing, or null before any is set. */
 	bgm: string | null;
-	/** The full-stage wash currently up, or null when the scene is in the clear. */
-	wash: "black" | "white" | null;
 	/** Whether the scene is dimmed, which scripts use to hold a moment back while something else is read. */
 	darkened: boolean;
 	/** Whether the scene is under the night tint. */
 	night: boolean;
-	/** Whether the scene is closed in by the vignette. */
-	vignette: boolean;
+}
+
+/**
+ * The transition a beat opens with, or null when it simply cuts.
+ *
+ * The scripts write a fade as a numbered pair, and a beat commonly carries both halves at once: it comes up out of black, says its
+ * line, and drops back into black on the way out. They are transitions rather than a state the scene sits in, so a beat carrying
+ * one still shows its own background and cast. Folding them into a lasting wash blacked out one beat in seven.
+ *
+ * @param beat The beat, or null.
+ * @returns The colour to fade up from, or null.
+ */
+function fadeAt(beat: StoryBeat | null): "black" | "white" | null {
+	for (const op of beat?.ops ?? []) {
+		if (op.type.startsWith("whitescreen")) {
+			return "white";
+		}
+		if (op.type.startsWith("blackscreen") || op.type.startsWith("fadePoint")) {
+			return "black";
+		}
+	}
+	return null;
 }
 
 /** A shake the script asked for on one beat. */
@@ -176,7 +294,7 @@ function pageText(page: StoryPage): string {
  * @returns The stage.
  */
 function stageAt(beats: StoryBeat[], upTo: number): Stage {
-	const stage: Stage = { background: null, bgm: null, wash: null, darkened: false, night: false, vignette: false };
+	const stage: Stage = { background: null, bgm: null, darkened: false, night: false };
 	for (let index = 0; index <= upTo && index < beats.length; index++) {
 		for (const op of beats[index]?.ops ?? []) {
 			switch (op.type) {
@@ -193,16 +311,6 @@ function stageAt(beats: StoryBeat[], upTo: number): Stage {
 						stage.bgm = op.value;
 					}
 					break;
-				case "blackscreenOn":
-					stage.wash = "black";
-					break;
-				case "whitescreenOn":
-					stage.wash = "white";
-					break;
-				case "blackscreenOff":
-				case "whitescreenOff":
-					stage.wash = null;
-					break;
 				case "darken":
 					stage.darkened = true;
 					break;
@@ -211,12 +319,6 @@ function stageAt(beats: StoryBeat[], upTo: number): Stage {
 					break;
 				case "night":
 					stage.night = true;
-					break;
-				case "fadePointOn":
-					stage.vignette = true;
-					break;
-				case "fadePointOff":
-					stage.vignette = false;
 					break;
 				default:
 					break;
@@ -326,8 +428,18 @@ export default function Story() {
 	const [choices, setChoices] = useState<Record<number, string>>({});
 	const [typed, setTyped] = useState(0);
 	const [auto, setAuto] = useState(false);
-	const [speed, setSpeed] = useState(1);
+	const [speed, setSpeed] = useState(SPEED_DEFAULT);
 	const [backlogOpen, setBacklogOpen] = useState(false);
+	const [menuOpen, setMenuOpen] = useState(false);
+	// The chapter list behind the scene menu, fetched the first time the menu is opened rather than on every scene.
+	const [menuChapters, setMenuChapters] = useState<StoryChapterSummary[] | null>(null);
+	const [hintOpen, setHintOpen] = useState(() => {
+		try {
+			return window.localStorage.getItem(HINT_KEY) !== "1";
+		} catch {
+			return true;
+		}
+	});
 	// Held in a ref as well so the keyboard handler can advance without being rebuilt on every character typed.
 	const advanceRef = useRef<() => void>(() => {});
 	// The looping music. One element reused across cues, so changing track does not leave the old one playing.
@@ -354,24 +466,24 @@ export default function Story() {
 	// Narrowed here rather than tested again in the JSX, so the menu reads one condition instead of two.
 	const pending = choosing ? timeline.pending : null;
 	const atEnd = timeline.pending === null && beats.length > 0 && atLast;
+
 	const stage = useMemo(() => stageAt(beats, beatIndex), [beats, beatIndex]);
 	const shake = useMemo(() => shakeAt(beat), [beat]);
+	const fade = fadeAt(beat);
 	// Resolved once a beat. Each sprite costs several scans of the published-art list, and the page re-renders on every typed character.
 	const cast = useMemo(
 		() =>
 			(beat?.sprites ?? []).flatMap((sprite, position) => {
-				// A slot with no art is not a character with a missing picture. Scripts use the same slot to carry an off-screen speaker's
-				// label, such as a description of a voice, so the stage shows nobody and the dialogue box still names who is talking.
-				const stem = storySpriteStem(sprite.prefab);
+				// A slot the script named without an expression is a voice off screen, and one with no published art is usually the same
+				// thing: a label such as a description of a voice. Either way the stage shows nobody and the box still names the speaker.
+				const stem = sprite.shown ? storySpriteStem(sprite.prefab) : null;
 				if (stem === null) {
 					return [];
 				}
 				return [
 					{
 						key: `${sprite.prefab}-${position}`,
-						side: sprite.side,
 						prefab: sprite.prefab,
-						comms: sprite.tags.commsBox !== undefined,
 						// The expression the script asked for, or the plain pose when the game ships no art for it.
 						src: storySpriteUrl(stem, hasStorySprite(sprite.prefab, sprite.expression) ? sprite.expression : 0)
 					}
@@ -383,11 +495,33 @@ export default function Story() {
 	// The mission names its own scene art. A beat's own `background` op is a scene-local index the game resolves in code the data does
 	// not ship, so it cannot be mapped to a picture - it still drives the fallback wash, which at least changes when the scene does.
 	const scenery = useMemo(() => (mission?.background && hasStoryBackground(mission.background) ? storyBackgroundUrl(mission.background) : null), [mission]);
+	// A beat asking for black or white overrides the scene's own picture, which is how the scripts cut between places.
+	const backing = useMemo(() => {
+		const wash = stage.background === null ? undefined : BIN_WASHES[stage.background];
+		if (wash !== undefined) {
+			return wash;
+		}
+		return scenery ? `url(${scenery}) center / cover no-repeat` : backdrop(stage.background);
+	}, [stage.background, scenery]);
 	const backlog = useMemo(() => beats.slice(0, beatIndex + 1).flatMap((entry) => entry.pages.map((entryPage) => ({ speaker: entry.speaker, text: pageText(entryPage) }))), [beats, beatIndex]);
 
 	useEffect(() => {
 		document.title = mission ? `${mission.title} - Story` : "Story";
 	}, [mission]);
+
+	useEffect(() => {
+		if (!menuOpen || menuChapters !== null) {
+			return;
+		}
+		let active = true;
+		loadStoryIndex().then(
+			(index) => active && setMenuChapters(index.chapters),
+			() => active && setMenuChapters([])
+		);
+		return () => {
+			active = false;
+		};
+	}, [menuOpen, menuChapters]);
 
 	useEffect(() => {
 		let active = true;
@@ -552,6 +686,17 @@ export default function Story() {
 	const toggleMuted = useCallback(() => setMuted((current) => !current), []);
 	// The stage advances on a click, so a click landing on a choice button must not also count as advancing the scene.
 	const stopBubbling = useCallback((event: MouseEvent) => event.stopPropagation(), []);
+	const openMenu = useCallback(() => setMenuOpen(true), []);
+	const closeMenu = useCallback(() => setMenuOpen(false), []);
+	const showHint = useCallback(() => setHintOpen(true), []);
+	const dismissHint = useCallback(() => {
+		setHintOpen(false);
+		try {
+			window.localStorage.setItem(HINT_KEY, "1");
+		} catch {
+			// Not remembering it only means the reader is reminded again, which is the safer way to fail.
+		}
+	}, []);
 	const openBacklog = useCallback(() => setBacklogOpen(true), []);
 	const closeBacklog = useCallback(() => setBacklogOpen(false), []);
 	const changeSpeed = useCallback((_event: Event, value: number | number[]) => setSpeed(Array.isArray(value) ? (value[0] ?? 1) : value), []);
@@ -567,175 +712,269 @@ export default function Story() {
 
 	useEffect(() => {
 		const onKey = (event: KeyboardEvent) => {
-			if (event.key === " " || event.key === "Enter" || event.key === "ArrowRight") {
+			// A reader typing into the search box in the navbar is not driving the scene.
+			const target = event.target as HTMLElement | null;
+			if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) {
+				return;
+			}
+			if (event.altKey || event.ctrlKey || event.metaKey) {
+				return;
+			}
+			const handlers: Record<string, () => void> = {
+				" ": () => advanceRef.current(),
+				Enter: () => advanceRef.current(),
+				ArrowRight: () => advanceRef.current(),
+				ArrowLeft: back,
+				Escape: () => setMenuOpen((open) => !open),
+				a: toggleAuto,
+				l: openBacklog,
+				m: toggleMuted,
+				"?": () => setHintOpen((open) => !open)
+			};
+			const run = handlers[event.key] ?? handlers[event.key.toLowerCase()];
+			if (run) {
 				event.preventDefault();
-				advanceRef.current();
-			} else if (event.key === "ArrowLeft") {
-				event.preventDefault();
-				back();
+				run();
 			}
 		};
 		window.addEventListener("keydown", onKey);
 		return () => window.removeEventListener("keydown", onKey);
-	}, [back]);
+	}, [back, toggleAuto, openBacklog, toggleMuted]);
+
+	// The plate row, described once and drawn from the description.
+	const plates = [
+		{ key: "menu", label: "Menu", aria: "Scenes menu", icon: <MenuIcon fontSize="small" />, onClick: openMenu, disabled: false, gap: false },
+		{ key: "back", label: "Back", aria: "Back a line", icon: <ChevronLeftIcon fontSize="small" />, onClick: back, disabled: beatIndex === 0 && pageIndex === 0, gap: true },
+		{ key: "next", label: "Next", aria: "Next line", icon: <ChevronRightIcon fontSize="small" />, onClick: advance, disabled: false, gap: false },
+		{ key: "reset", label: "Reset", aria: "Restart the scene", icon: <ReplayIcon fontSize="small" />, onClick: restart, disabled: false, gap: false },
+		{ key: "log", label: "Log", aria: "Backlog", icon: <HistoryIcon fontSize="small" />, onClick: openBacklog, disabled: false, gap: true },
+		{
+			key: "auto",
+			label: "Auto",
+			aria: auto ? "Stop autoplay" : "Autoplay",
+			icon: auto ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />,
+			onClick: toggleAuto,
+			disabled: false,
+			gap: false
+		},
+		{
+			key: "sound",
+			label: "Sound",
+			aria: muted ? "Turn sound on" : "Turn sound off",
+			icon: muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />,
+			onClick: toggleMuted,
+			disabled: false,
+			gap: false
+		},
+		{ key: "skip", label: "Skip", aria: "Skip to the end", icon: <FastForwardIcon fontSize="small" />, onClick: toEnd, disabled: atEnd || choosing, gap: false }
+	];
 
 	return (
-		<Box component="main" sx={{ py: 3 }}>
+		<Box component="main" sx={styles.main}>
 			<ScrollToTop />
-			<Container maxWidth="lg">
-				<Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: "wrap", alignItems: "center" }}>
-					<Typography component="h1" variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
-						{mission?.title ?? sceneName}
-					</Typography>
-					<Chip size="small" label={sceneName} />
-					<Button size="small" component={RouterLink} to="/story">
-						All chapters
-					</Button>
-				</Stack>
-
-				{failed ? (
-					<LoadError what="this scene" onRetry={retry} titleComponent="h2" />
-				) : !scene ? (
-					<Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-						<CircularProgress aria-label="Loading the scene" />
-					</Box>
-				) : (
-					<>
-						<Box
-							// Keyed on the beat so a shake restarts when the reader reaches another one, rather than only on the first.
-							key={shake ? `shake-${beatIndex}` : "stage"}
-							sx={[
-								styles.stage,
-								scenery ? { backgroundImage: `url(${scenery})`, backgroundSize: "cover", backgroundPosition: "center" } : { background: backdrop(stage.background) },
-								shake ? shakeSx(shake) : {}
-							]}
-							onClick={advance}
-							role="button"
-							tabIndex={-1}
-							aria-label="Advance the scene"
-						>
-							<Box sx={styles.sprites}>
-								{["left", "right"].map((side) => (
-									<Stack key={side} direction="row" spacing={1} sx={styles.spriteSide}>
-										{cast
-											.filter((member) => member.side === side)
-											.map((member) =>
-												member.comms ? (
-													<Box key={member.key} sx={styles.comms}>
-														<Box component="img" src={member.src} alt={member.prefab} sx={styles.commsArt} />
-													</Box>
-												) : (
-													<Box key={member.key} component="img" src={member.src} alt={member.prefab} sx={styles.spriteArt} />
-												)
-											)}
-									</Stack>
-								))}
-							</Box>
-
-							<Box sx={[styles.wash, { bgcolor: "#0a1020", opacity: stage.night ? 0.42 : 0 }]} />
-							<Box sx={[styles.wash, { bgcolor: "#000", opacity: stage.darkened ? 0.55 : 0 }]} />
-							<Box sx={[styles.wash, styles.vignette, { opacity: stage.vignette ? 1 : 0 }]} />
-							<Box sx={[styles.wash, { bgcolor: stage.wash === "white" ? "#fff" : "#000", opacity: stage.wash === null ? 0 : 1 }]} />
-
-							{pending ? (
-								<Box sx={[styles.panel, styles.choices]} onClick={stopBubbling}>
-									<Typography variant="caption" color="text.secondary">
-										Choose
-									</Typography>
-									{pending.options.map((option) => (
-										<Button
-											key={option.label}
-											size="small"
-											variant="outlined"
-											color="secondary"
-											sx={styles.choiceButton}
-											onClick={() => choose(timeline.pendingIndex, option.label)}
-										>
-											{option.text}
-										</Button>
-									))}
+			{failed ? (
+				<LoadError what="this scene" onRetry={retry} titleComponent="h2" />
+			) : !scene ? (
+				<Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+					<CircularProgress aria-label="Loading the scene" />
+				</Box>
+			) : (
+				<>
+					<Box
+						// Keyed on the beat so a shake restarts when the reader reaches another one, rather than only on the first.
+						key={shake ? `shake-${beatIndex}` : "stage"}
+						sx={[styles.stage, { background: backing }, shake ? shakeSx(shake) : {}]}
+						onClick={advance}
+						role="button"
+						tabIndex={-1}
+						aria-label="Advance the scene"
+					>
+						<Box sx={styles.sprites}>
+							{cast.map((member, position) => (
+								<Box key={member.key} sx={[styles.spriteSlot, { left: `${(100 * (position + 1)) / (cast.length + 1)}%` }]}>
+									<Box component="img" src={member.src} alt={member.prefab} sx={styles.spriteArt} />
 								</Box>
-							) : (
-								<Box sx={[styles.panel, styles.box]}>
-									{beat?.speaker && (
-										<Typography variant="subtitle2" sx={styles.speaker}>
-											{beat.speaker}
-										</Typography>
-									)}
-									<Typography variant="body1" sx={styles.text}>
-										{renderTyped(page, typed)}
-										{!done && (
-											<Box component="span" sx={styles.caret}>
-												|
-											</Box>
-										)}
-									</Typography>
-									{full === "" && (
-										<Typography variant="body2" color="text.secondary">
-											{beat && beat.ops.length > 0 ? beat.ops.map((op) => op.type).join(", ") : "..."}
-										</Typography>
-									)}
-								</Box>
-							)}
+							))}
 						</Box>
 
-						<Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: "wrap", rowGap: 1, alignItems: "center" }}>
-							<Button size="small" onClick={back} disabled={beatIndex === 0 && pageIndex === 0}>
-								Back
-							</Button>
-							<Button size="small" variant={auto ? "contained" : "outlined"} onClick={toggleAuto}>
-								{auto ? "Auto on" : "Auto"}
-							</Button>
-							<Button size="small" onClick={toggleMuted}>
-								{muted ? "Sound off" : "Sound on"}
-							</Button>
-							<Button size="small" onClick={openBacklog}>
-								Backlog
-							</Button>
-							<Button size="small" onClick={restart}>
-								Restart
-							</Button>
-							<Tooltip title={timeline.pending ? "The scene branches ahead, so it cannot be skipped past the choice" : ""}>
-								<span>
-									<Button size="small" onClick={toEnd} disabled={atEnd || choosing}>
-										Skip to end
-									</Button>
-								</span>
-							</Tooltip>
-							<Box sx={{ width: 150, display: "flex", alignItems: "center", gap: 1 }}>
-								<Typography variant="caption" color="text.secondary">
-									Speed
-								</Typography>
-								<Slider size="small" min={0.5} max={3} step={0.5} value={speed} onChange={changeSpeed} aria-label="Text speed" valueLabelDisplay="auto" />
-							</Box>
-							<Typography variant="caption" color="text.secondary" sx={{ ml: "auto" }}>
-								Beat {beatIndex + 1} of {beats.length}
-								{stage.bgm ? ` - ${stage.bgm}` : ""}
-							</Typography>
-						</Stack>
+						<Box sx={[styles.wash, { bgcolor: "#0a1020", opacity: stage.night ? 0.42 : 0 }]} />
+						<Box sx={[styles.wash, { bgcolor: "#000", opacity: stage.darkened ? 0.55 : 0 }]} />
+						{fade !== null && <Box key={`fade-${beatIndex}`} sx={[styles.fade, { bgcolor: fade === "white" ? "#ffffff" : "#000000" }]} />}
 
-						{mission && mission.scripts.length > 1 && (
-							<Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap", rowGap: 1 }}>
-								{mission.scripts.map((script) => (
-									<Tooltip key={script} title={script}>
-										<Chip
-											size="small"
-											label={script}
-											color={script === sceneName ? "secondary" : "default"}
-											component={RouterLink}
-											to={`/story/${chapterId}/${encodeURIComponent(script)}`}
-											clickable
-										/>
-									</Tooltip>
-								))}
-							</Stack>
+						<Box sx={styles.stageControls} onClick={stopBubbling}>
+							{plates.map((plate) => (
+								<Button
+									key={plate.key}
+									variant="outlined"
+									sx={[styles.stageButton, plate.gap ? styles.plateGap : {}]}
+									onClick={plate.onClick}
+									disabled={plate.disabled}
+									aria-label={plate.aria}
+								>
+									{plate.icon}
+									<Box component="span" sx={styles.stageButtonLabel}>
+										{plate.label}
+									</Box>
+								</Button>
+							))}
+						</Box>
+
+						<Box sx={styles.hud}>
+							{mission?.title ?? sceneName} &middot; Beat {beatIndex + 1} of {beats.length}
+							{stage.bgm ? ` \u00b7 ${stage.bgm}` : ""}
+						</Box>
+
+						{hintOpen && (
+							<Box sx={styles.hint} onClick={stopBubbling}>
+								<span>
+									<Box component="kbd" sx={styles.key}>
+										Space
+									</Box>
+									or
+									<Box component="kbd" sx={styles.key}>
+										&rarr;
+									</Box>
+									next line
+								</span>
+								<span>
+									<Box component="kbd" sx={styles.key}>
+										&larr;
+									</Box>
+									back
+								</span>
+								<span>
+									<Box component="kbd" sx={styles.key}>
+										Esc
+									</Box>
+									menu
+								</span>
+								<Button size="small" color="inherit" onClick={dismissHint}>
+									Got it
+								</Button>
+							</Box>
 						)}
-					</>
-				)}
-			</Container>
+
+						{pending ? (
+							<Box sx={[styles.panel, styles.choices]} onClick={stopBubbling}>
+								<Typography variant="caption" color="text.secondary">
+									Choose
+								</Typography>
+								{pending.options.map((option) => (
+									<Button key={option.label} size="small" variant="outlined" color="secondary" sx={styles.choiceButton} onClick={() => choose(timeline.pendingIndex, option.label)}>
+										{option.text}
+									</Button>
+								))}
+							</Box>
+						) : (
+							<Box sx={[styles.panel, styles.box]}>
+								{beat?.speaker && (
+									<Typography variant="subtitle2" sx={styles.speaker}>
+										{beat.speaker}
+									</Typography>
+								)}
+								<Typography variant="body1" sx={styles.text}>
+									{renderTyped(page, typed)}
+									{!done && (
+										<Box component="span" sx={styles.caret}>
+											|
+										</Box>
+									)}
+								</Typography>
+								{full === "" && (
+									<Typography variant="body2" color="text.secondary">
+										{beat && beat.ops.length > 0 ? beat.ops.map((op) => op.type).join(", ") : "..."}
+									</Typography>
+								)}
+							</Box>
+						)}
+					</Box>
+				</>
+			)}
 
 			{/* One long-lived element for the music. It sits outside the stage so redrawing a beat never restarts the track. */}
 			<Box component="audio" ref={musicRef} loop preload="none" aria-hidden sx={{ display: "none" }} />
+
+			<Drawer anchor="left" open={menuOpen} onClose={closeMenu}>
+				<Box sx={{ width: { xs: 300, sm: 380 }, display: "flex", flexDirection: "column", height: "100%" }} role="presentation">
+					<Stack direction="row" spacing={1} sx={{ px: 2, py: 1.5, alignItems: "baseline", borderBottom: "1px solid", borderColor: "divider" }}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1 }}>
+							Scenes
+						</Typography>
+						<Button size="small" component={RouterLink} to="/story" onClick={closeMenu}>
+							All chapters
+						</Button>
+					</Stack>
+
+					<Box sx={{ flex: 1, overflowY: "auto", py: 0.5 }}>
+						{/* The scenes of the mission being read sit at the top, since moving within a mission is the commonest jump. */}
+						{mission && mission.scripts.length > 1 && (
+							<>
+								<Typography sx={styles.menuHead}>This mission</Typography>
+								{mission.scripts.map((script) => (
+									<Box
+										key={script}
+										component={RouterLink}
+										to={`/story/${chapterId}/${encodeURIComponent(script)}`}
+										onClick={closeMenu}
+										sx={[styles.menuRow, styles.link, script === sceneName ? styles.menuRowOn : {}]}
+									>
+										<Box component="span" sx={styles.menuLabel}>
+											{script}
+										</Box>
+									</Box>
+								))}
+							</>
+						)}
+
+						{menuChapters === null ? (
+							<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+								<CircularProgress size={24} aria-label="Loading the chapters" />
+							</Box>
+						) : (
+							CHAPTER_GROUPS.map((group) => {
+								const rows = menuChapters.filter((entry) => entry.type === group.type).sort((left, right) => left.order - right.order);
+								if (rows.length === 0) {
+									return null;
+								}
+								return (
+									<Box key={group.type}>
+										<Typography sx={styles.menuHead}>{group.label}</Typography>
+										{rows.map((entry) => (
+											<Box
+												key={entry.id}
+												component={RouterLink}
+												to={`/story/${entry.id}`}
+												onClick={closeMenu}
+												sx={[styles.menuRow, styles.link, entry.id === chapterId ? styles.menuRowOn : {}]}
+											>
+												<Box component="span" sx={styles.menuLabel}>
+													{entry.label}
+												</Box>
+												<Box component="span">{entry.name}</Box>
+												<Box component="span" sx={styles.menuCount}>
+													{entry.missions}
+												</Box>
+											</Box>
+										))}
+									</Box>
+								);
+							})
+						)}
+					</Box>
+
+					<Stack spacing={1} sx={{ px: 2, py: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
+						<Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+							<Typography variant="caption" color="text.secondary">
+								Speed
+							</Typography>
+							<Slider size="small" min={SPEED_MIN} max={SPEED_MAX} step={SPEED_STEP} value={speed} onChange={changeSpeed} aria-label="Text speed" valueLabelDisplay="auto" />
+						</Stack>
+						<Button size="small" startIcon={<KeyboardIcon fontSize="small" />} onClick={showHint} sx={{ justifyContent: "flex-start" }}>
+							Keyboard shortcuts
+						</Button>
+					</Stack>
+				</Box>
+			</Drawer>
 
 			<Drawer anchor="right" open={backlogOpen} onClose={closeBacklog}>
 				<Box sx={{ width: { xs: 300, sm: 420 }, p: 2 }} role="presentation">

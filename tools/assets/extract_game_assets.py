@@ -327,18 +327,19 @@ def compose_equip_icon(icon, background):
     return Image.alpha_composite(canvas, layer).convert("RGB")
 
 
-def encode_webp(image, quality):
-    """Encode an image as lossy WebP with every encoder option set explicitly.
+def encode_webp(image, quality, lossless=False):
+    """Encode an image as WebP with every encoder option set explicitly.
 
     Args:
         image: An RGB or RGBA image.
-        quality: WebP quality, 0-100.
+        quality: WebP quality, 0-100. Read as the compression effort when `lossless` is set.
+        lossless: Encode without loss. Worth it for flat UI art, where a lossy pass smears hairlines and dot grids.
 
     Returns:
         The encoded bytes.
     """
     buffer = io.BytesIO()
-    image.save(buffer, "WEBP", lossless=False, quality=quality, method=WEBP_METHOD, alpha_quality=100, exact=False)
+    image.save(buffer, "WEBP", lossless=lossless, quality=quality, method=WEBP_METHOD, alpha_quality=100, exact=lossless)
     return buffer.getvalue()
 
 
@@ -1198,7 +1199,7 @@ def extract_story_ui_item(item, cache_dir, staging, loader=unity_load):
         if not stem or not re.search(r"[a-z0-9]", stem):
             continue
         try:
-            data = encode_webp(image, CARD_QUALITY)
+            data = encode_webp(image, CARD_QUALITY, lossless=True)
             write_file(staging, f"story/ui/{stem}.webp", data, REPORT_TIERS[("story_ui", "image")], result)
         except Exception as exc:
             result["missing"].append({"key": item["key"], "role": name, "reason": f"encode or write failed: {exc!r}"})
